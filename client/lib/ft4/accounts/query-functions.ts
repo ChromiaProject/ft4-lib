@@ -36,7 +36,7 @@ import {
   createTransferHistoryEntryFromResponse,
 } from "./transfer-history";
 import { Account, RateLimit } from "./types";
-import { getCrosschainTransferHistoryEntries } from "@ft4/crosschain/queries";
+import { getCrosschainTransferHistoryEntries as getCrosschainTransferHistoryEntriesFiltered } from "@ft4/crosschain/queries";
 import { createCrosschainTransferHistoryEntryObject } from "@ft4/asset/asset-query-functions";
 
 //this will be outdated as soon as another tx is sent to the same account:
@@ -142,7 +142,7 @@ export function createAccountObject(
         amount,
       );
     },
-    getCrosschainTransferHistoryEntries: async (
+    getCrosschainTransferHistoryEntriesFiltered: async (
       limit: OptionalLimit = null,
       cursor: OptionalPageCursor = null,
     ) => {
@@ -151,7 +151,7 @@ export function createAccountObject(
         CrosschainTransferhistoryEntryResponse
       >(
         connection,
-        getCrosschainTransferHistoryEntries(limit, cursor),
+        getCrosschainTransferHistoryEntriesFiltered(limit, cursor),
         (entries) =>
           entries.map((entry) =>
             createCrosschainTransferHistoryEntryObject(entry),

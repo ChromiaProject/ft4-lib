@@ -30,13 +30,9 @@ export {
   getAssetsByType,
   getAssetDetailsForCrosschainRegistration,
   getAssetsFiltered,
-  getAssetByRowId,
   getBalancesFiltered,
-  getBalanceByRowId,
   getTransferHistoryEntriesFiltered,
-  getTransferHistoryEntryByRowId,
   getCrosschainTransferHistoryEntriesFiltered,
-  getCrosschainTransferHistoryEntryByRowId,
   createBalanceObject,
 } from "./asset-query-functions";
 

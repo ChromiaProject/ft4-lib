@@ -14,17 +14,6 @@ import { BufferId, PaginatedEntity } from "@ft4/utils";
 import { TransferHistoryEntryResponse } from "@ft4/accounts";
 import { CrosschainTransferhistoryEntryResponse } from "@ft4/accounts/transfer-history";
 
-export function assetByRowId(
-  rowId: number,
-): QueryObject<AssetResponse, { rowid: number }> {
-  return {
-    name: "ft4.get_asset_by_rowid",
-    args: {
-      rowid: rowId,
-    },
-  };
-}
-
 export function assetById(
   assetId: BufferId,
 ): QueryObject<AssetResponse, { asset_id: Buffer }> {
@@ -135,7 +124,6 @@ export function assetsFiltered(
     args: {
       asset_filter: assetFilter
         ? [
-            assetFilter?.rowids ?? [],
             assetFilter?.ids ?? [],
             assetFilter?.name ?? null,
             assetFilter?.symbol ?? null,
@@ -144,17 +132,6 @@ export function assetsFiltered(
         : null,
       page_size: limit,
       page_cursor: cursor,
-    },
-  };
-}
-
-export function balanceByRowId(
-  rowId: number,
-): QueryObject<BalanceResponse, { rowid: number }> {
-  return {
-    name: "ft4.get_balance_by_rowid",
-    args: {
-      rowid: rowId,
     },
   };
 }
@@ -210,11 +187,7 @@ export function balancesFiltered(
     name: "ft4.get_balances_filtered",
     args: {
       balance_filter: balanceFilter
-        ? [
-            balanceFilter?.rowids ?? [],
-            balanceFilter?.accountId ?? null,
-            balanceFilter?.assetId ?? null,
-          ]
+        ? [balanceFilter?.accountIds ?? null, balanceFilter?.assetIds ?? null]
         : null,
       page_size: limit,
       page_cursor: cursor,
@@ -258,26 +231,14 @@ export function transferHistoryEntriesFiltered(
     args: {
       transfer_history_entry_filter: transferHistoryEntryFilter
         ? [
-            transferHistoryEntryFilter?.rowids ?? [],
-            transferHistoryEntryFilter?.accountId ?? null,
-            transferHistoryEntryFilter?.assetId ?? null,
-            transferHistoryEntryFilter?.transactionRid ?? null,
+            transferHistoryEntryFilter?.accountIds ?? null,
+            transferHistoryEntryFilter?.assetIds ?? null,
+            transferHistoryEntryFilter?.transactionRids ?? null,
             transferHistoryEntryFilter?.opIndex ?? null,
           ]
         : null,
       page_size: limit,
       page_cursor: cursor,
-    },
-  };
-}
-
-export function transferHistoryEntryByRowId(
-  rowId: number,
-): QueryObject<TransferHistoryEntryResponse, { rowid: number }> {
-  return {
-    name: "ft4.get_transfer_history_entry_by_rowid",
-    args: {
-      rowid: rowId,
     },
   };
 }
@@ -308,26 +269,14 @@ export function crossChainTransferHistoryEntriesFiltered(
       crosschain_transfer_history_entry_filter:
         crosschainTransferHistoryEntryFilter
           ? [
-              crosschainTransferHistoryEntryFilter?.rowids ?? [],
-              crosschainTransferHistoryEntryFilter?.accountId ?? null,
-              crosschainTransferHistoryEntryFilter?.assetId ?? null,
+              crosschainTransferHistoryEntryFilter?.accountIds ?? null,
+              crosschainTransferHistoryEntryFilter?.assetIds ?? null,
               crosschainTransferHistoryEntryFilter?.transactionRid ?? null,
               crosschainTransferHistoryEntryFilter?.opIndex ?? null,
             ]
           : null,
       page_size: limit,
       page_cursor: cursor,
-    },
-  };
-}
-
-export function crosschainTransferHistoryEntryByRowId(
-  rowId: number,
-): QueryObject<CrosschainTransferhistoryEntryResponse, { rowid: number }> {
-  return {
-    name: "ft4.get_crosschain_transfer_history_entry_by_rowid",
-    args: {
-      rowid: rowId,
     },
   };
 }

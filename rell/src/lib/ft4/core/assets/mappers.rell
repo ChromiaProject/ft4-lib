@@ -5,7 +5,6 @@
  */
 function map_asset(asset: asset) {
     return (
-        rowid = asset.rowid,
         id = asset.id,
         name = asset.name,
         symbol = asset.symbol,
@@ -24,7 +23,6 @@ function map_asset(asset: asset) {
  */
 function map_balance(balance: balance) {
     return (
-        rowid = balance.rowid,
         asset = (
             map_asset(balance.asset)
         ),

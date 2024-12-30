@@ -76,7 +76,6 @@ function test_can_revert_canceled_transfer_once_but_not_twice() {
 
     val expected = [
         assets.transfer_detail(
-            rowid = transfer_history_entry.rowid,
             blockchain_rid = chain_context.blockchain_rid,
             account_id = alice.account.id,
             asset_id = asset_valid.id,
@@ -86,7 +85,6 @@ function test_can_revert_canceled_transfer_once_but_not_twice() {
             transaction_rid = transfer_history_entry.transaction.tx_rid
         ),
         assets.transfer_detail(
-            rowid = crosschain_transfer_history_entry.rowid,
             blockchain_rid = target_blockchain_rid,
             account_id = recipient_account_id,
             asset_id = asset_valid.id,
@@ -191,7 +189,6 @@ function test_can_revert_unapplied_transfer_once_but_not_twice() {
 
     val expected = [
         assets.transfer_detail(
-            rowid = transfer_history_entry.rowid,
             blockchain_rid = chain_context.blockchain_rid,
             account_id = alice.account.id,
             asset_id = asset_valid.id,
@@ -201,7 +198,6 @@ function test_can_revert_unapplied_transfer_once_but_not_twice() {
             transaction_rid = transfer_history_entry.transaction.tx_rid
         ),
         assets.transfer_detail(
-            rowid = crosschain_transfer_history_entry.rowid,
             blockchain_rid = target_blockchain_rid,
             account_id = recipient_account_id,
             asset_id = asset_valid.id,

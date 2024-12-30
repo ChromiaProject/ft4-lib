@@ -27,7 +27,7 @@ function setBalanceFilter(
   account_id: Buffer | null = null,
   asset_id: Buffer | null = null,
 ): BalanceFilter {
-  return { rowids, accountId: account_id, assetId: asset_id };
+  return { rowids, accountIds: account_id, assetIds: asset_id };
 }
 
 function setCrosschainAndTransferHistoryEntryFilter(
@@ -39,9 +39,9 @@ function setCrosschainAndTransferHistoryEntryFilter(
 ): TransferHistoryEntryFilter | CrosschainTransferHistoryEntryFilter {
   return {
     rowids,
-    accountId: account_id,
-    assetId: asset_id,
-    transactionRid: transaction_rid,
+    accountIds: account_id,
+    assetIds: asset_id,
+    transactionRids: transaction_rid,
     opIndex: op_index,
   };
 }
@@ -56,13 +56,13 @@ describe("Asset queries using filter", () => {
   });
   describe("getAssets", () => {
     it("returns empty pagination without filter", async () => {
-      const { data } = await connection.getAssets(null, 1);
+      const { data } = await connection.getAssetsFiltered(null, 1);
 
       const foundAsset = data.find((item) => item.rowId === 999) ?? null;
       expect(foundAsset).toBe(null);
     });
     it("returns empty pagination with filter", async () => {
-      const { data } = await connection.getAssets(
+      const { data } = await connection.getAssetsFiltered(
         setAssetFilter([0], [mockBuffer], mockString, mockString, mockString),
         1,
       );
@@ -75,7 +75,7 @@ describe("Asset queries using filter", () => {
         "asset_paginated_without_filter_0",
         "ASSET_PAGINATED_WITHOUT_FILTER_0",
       );
-      const { data } = await connection.getAssets(null, 100);
+      const { data } = await connection.getAssetsFiltered(null, 100);
       const foundAsset = data.find(
         (item) => item.id.toString("hex") === asset.id.toString("hex"),
       );
@@ -100,7 +100,7 @@ describe("Asset queries using filter", () => {
         "asset_paginated_with_filter_1",
         "ASSET_PAGINATED_WITH_FILTER_1",
       );
-      const { data } = await connection.getAssets(
+      const { data } = await connection.getAssetsFiltered(
         setAssetFilter(
           [asset.rowId!],
           [asset.id],
@@ -129,13 +129,13 @@ describe("Asset queries using filter", () => {
   });
   describe("getBalances", () => {
     it("returns empty pagination without filter", async () => {
-      const { data } = await connection.getBalances(null, 1);
+      const { data } = await connection.getBalancesFiltered(null, 1);
 
       const foundBalance = data.find((item) => item.rowId === 999) ?? null;
       expect(foundBalance).toBe(null);
     });
     it("returns empty pagination with filter", async () => {
-      const { data } = await connection.getBalances(
+      const { data } = await connection.getBalancesFiltered(
         setBalanceFilter([0], mockBuffer, mockBuffer),
         1,
       );
@@ -153,7 +153,7 @@ describe("Asset queries using filter", () => {
         .build();
 
       const balance = await account.getBalanceByAssetId(asset.id);
-      const { data } = await connection.getBalances(null, 100);
+      const { data } = await connection.getBalancesFiltered(null, 100);
       const foundBalance = data.find(
         (item) =>
           item.asset.id.toString("hex") === balance!.asset.id.toString("hex"),
@@ -193,7 +193,7 @@ describe("Asset queries using filter", () => {
         asset.id,
       );
 
-      const { data } = await connection.getBalances(
+      const { data } = await connection.getBalancesFiltered(
         setBalanceFilter([balance!.rowId!], account.id, balance!.asset.id),
         100,
       );
@@ -224,14 +224,17 @@ describe("Asset queries using filter", () => {
   });
   describe("getTransferHistoryEntries", () => {
     it("returns empty pagination without filter", async () => {
-      const { data } = await connection.getTransferHistoryEntries(null, 10);
+      const { data } = await connection.getTransferHistoryEntriesFiltered(
+        null,
+        10,
+      );
 
       const foundTransferHistoryEntry =
         data.find((item) => item.rowid === 999) ?? null;
       expect(foundTransferHistoryEntry).toBe(null);
     });
     it("returns empty pagination with filter", async () => {
-      const { data } = await connection.getTransferHistoryEntries(
+      const { data } = await connection.getTransferHistoryEntriesFiltered(
         setCrosschainAndTransferHistoryEntryFilter(
           [0],
           mockBuffer,
@@ -269,7 +272,10 @@ describe("Asset queries using filter", () => {
           senderHistory.data[0].rowid,
         );
 
-      const { data } = await connection.getTransferHistoryEntries(null, 100);
+      const { data } = await connection.getTransferHistoryEntriesFiltered(
+        null,
+        100,
+      );
 
       const foundTransferHistoryEntry = data.find(
         (item) => item.rowid === senderTransferHistoryEntry?.rowid,
@@ -327,7 +333,7 @@ describe("Asset queries using filter", () => {
           senderHistory.data[0].rowid,
         );
 
-      const { data } = await connection.getTransferHistoryEntries(
+      const { data } = await connection.getTransferHistoryEntriesFiltered(
         setCrosschainAndTransferHistoryEntryFilter(
           [senderHistory.data[0].rowid],
           senderAccount.id,

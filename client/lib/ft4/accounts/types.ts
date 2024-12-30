@@ -164,7 +164,7 @@ export interface Account {
    * @param cursor - where the page should start
    * @returns Paginated crosschain transfer history entries
    */
-  getCrosschainTransferHistoryEntries: (
+  getCrosschainTransferHistoryEntriesFiltered: (
     limit?: OptionalLimit,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<CrosschainTransferHistoryEntry>>;

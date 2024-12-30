@@ -70,7 +70,6 @@ function test_locked_asset_balances_can_be_fetched_when_one_asset_locked() {
             (
                 type = "LISTING",
                 asset = (
-                    rowid = asset.rowid,
                     id = asset.id,
                     name = "test",
                     symbol = "TST",
@@ -103,7 +102,6 @@ function test_locked_asset_balance_increments_when_asset_consecutively_locked() 
             (
                 type = "LOCK1",
                 asset = (
-                    rowid = asset.rowid,
                     id = asset.id,
                     name = "test",
                     symbol = "TST",
@@ -136,7 +134,6 @@ function test_locked_asset_balances_can_be_fetched_when_one_asset_lock_to_two_di
             (
                 type = "LOCK1",
                 asset = (
-                    rowid = asset.rowid,
                     id = asset.id,
                     name = "test",
                     symbol = "TST",
@@ -151,7 +148,6 @@ function test_locked_asset_balances_can_be_fetched_when_one_asset_lock_to_two_di
             (
                 type = "LOCK2",
                 asset = (
-                    rowid = asset.rowid,
                     id = asset.id,
                     name = "test",
                     symbol = "TST",
@@ -186,7 +182,6 @@ function test_locked_asset_balances_can_be_fetched_when_two_assets_locked() {
             (
                 type = "LOCK1",
                 asset = (
-                    rowid = asset1.rowid,
                     id = asset1.id,
                     name = "test1",
                     symbol = "TST1",
@@ -201,7 +196,6 @@ function test_locked_asset_balances_can_be_fetched_when_two_assets_locked() {
             (
                 type = "LOCK1",
                 asset = (
-                    rowid = asset2.rowid,
                     id = asset2.id,
                     name = "test2",
                     symbol = "TST2",
@@ -235,7 +229,6 @@ function test_locked_asset_balances_can_be_filtered_by_lock_type() {
             (
                 type = "LOCK2",
                 asset = (
-                    rowid = asset.rowid,
                     id = asset.id,
                     name = "test",
                     symbol = "TST",

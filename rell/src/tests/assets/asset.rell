@@ -251,7 +251,6 @@ function test_register_asset_with_trimmed_icon_url() {
 }
 
 struct gtv_asset {
-    rowid;
     id: byte_array;
     name;
     symbol: text;
@@ -263,7 +262,6 @@ struct gtv_asset {
 }
 
 struct gtv_balance {
-    rowid: integer;
     amount: big_integer;
     asset: gtv_asset;
 }
@@ -316,14 +314,11 @@ function test_paginated_asset_balances_have_correct_format() {
     val asset1 = test.create_asset("test1", "TST1", 0);
     admin.external.mint(alice.account.id, asset1.id, 10L).sign(test.admin_priv_key()).run();
     val result = assets.external.get_asset_balances(alice.account.id, 1, null);
-    val balance_rowid = assets.balance @ { .asset.id == asset1.id, .account == alice.account } ( .rowid );
 
     assert_equals(result, ft4_utils.paged_result(     
         data = [
             (
-                rowid = balance_rowid,
                 asset = (
-                    rowid = asset1.rowid,
                     id = asset1.id,
                     name = "test1",
                     symbol = "TST1",
@@ -350,7 +345,6 @@ function test_assets_by_name_are_paginated() {
     val page2 = assets.external.get_assets_by_name("test1", 1, page1.next_cursor);
 
     val asset1 = assets.asset @ { .symbol == "TST1" }(
-        rowid = asset.rowid,
         id = asset.id,
         name = asset.name,
         symbol = asset.symbol,
@@ -362,7 +356,6 @@ function test_assets_by_name_are_paginated() {
     );
     
     val asset2 = assets.asset @ { .symbol == "TST2" }(
-        rowid = asset.rowid,
         id = asset.id,
         name = asset.name,
         symbol = asset.symbol,
@@ -426,7 +419,6 @@ function test_paginated_assets_have_correct_format() {
     val asset1 = test.create_asset("test1", "TST1", 0);
     val all_assets = assets.external.get_all_assets(3, null).data;
     assert_equals(gtv_asset.from_gtv_pretty(all_assets[0]), gtv_asset(
-        rowid = asset1.rowid,
         id = asset1.id,
         name = asset1.name,
         symbol = asset1.symbol,
@@ -446,7 +438,6 @@ function test_it_gets_asset_by_symbol() {
     assert_equals(
         response.data[0],
         (
-            rowid = asset1.rowid,
             id = asset1.id,
             name = "test1",
             symbol = "TST1",

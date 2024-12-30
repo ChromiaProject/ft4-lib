@@ -84,15 +84,6 @@ query get_assets_filtered(asset_filter: assets.asset_filter?, page_size: integer
 }
 
 /**
- * Returns the details of an asset given its rowid
- * 
- * @param rowid  rowid of the asset to fetch
- */
-query get_asset_by_rowid(rowid) {
-    return assets.asset @? { rowid } ( assets.map_asset($) );
-}
-
-/**
  * Returns paginated and filtered details of all assets based on the applied filter
  * 
  * @param balance_filter  a struct containing the keys and indexes of the balance entity to enable filtering for the balances to fetch
@@ -104,15 +95,6 @@ query get_balances_filtered(balance_filter: assets.balance_filter?, page_size: i
         assets.get_balances_filtered(balance_filter, page_size, page_cursor),
         page_size
     );
-}
-
-/**
- * Returns the details of balance given its rowid
- * 
- * @param rowid  rowid of the balance to fetch
- */
-query get_balance_by_rowid(rowid) {
-    return assets.balance @? { rowid } ( assets.map_balance($) );
 }
 
 /**
@@ -135,15 +117,6 @@ query get_transfer_history_entries_filtered(
         ),
         page_size
     );
-}
-
-/**
- * Returns the details of transfer history entry given its rowid
- * 
- * @param rowid  rowid of the transfer history entry to fetch
- */
-query get_transfer_history_entry_by_rowid(rowid) {
-    return assets.transfer_history_entry @? { rowid } ( assets.extract_data_from_transfer_history_entry($) );
 }
 
 /**
@@ -178,15 +151,6 @@ query get_crosschain_transfer_history_entries_filtered(
         ),
         page_size
     );
-}
-
-/**
- * Returns the details of crosschain_transfer_history_entry given its rowid
- * 
- * @param rowid  rowid of the crosschain_transfer_history_entry to fetch
- */
-query get_crosschain_transfer_history_entry_by_rowid(rowid) {
-    return assets.crosschain_transfer_history_entry @? { rowid } ( assets.extract_details_from_crosschain_transfer_history_entry($) );
 }
 
 /**

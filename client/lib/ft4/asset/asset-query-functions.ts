@@ -7,12 +7,8 @@ import {
   assetsByName,
   assetsByType,
   assetDetailsForCrosschainRegistration,
-  assetByRowId,
-  balanceByRowId,
   assetsFiltered,
   balancesFiltered,
-  transferHistoryEntryByRowId,
-  crosschainTransferHistoryEntryByRowId,
   transferHistoryEntriesFiltered,
   crossChainTransferHistoryEntriesFiltered,
 } from "./asset-queries";
@@ -193,7 +189,7 @@ export async function getBalancesByAccountId(
  * that are registered on a blockchain as a paginated entity
  *
  * @param queryable - object to use when querying the blockchain
- * @param assetFilter - object of AssetFilter that can be list of rowids, id, name, symbol and type
+ * @param assetFilter - object of AssetFilter that can be list of id, name, symbol and type
  * @param limit - maximum page size
  * @param cursor - where the page should start
  */
@@ -211,26 +207,11 @@ export async function getAssetsFiltered(
 }
 
 /**
- * Retrieves asset information using its rowid.
- * @param queryable - object to use when querying the blockchain
- * @param rowId - the rowid of the asset to fetch
- * @returns The asset details, or null if no asset with the specified rowid was found
- */
-export async function getAssetByRowId(
-  queryable: Queryable,
-  rowId: number,
-): Promise<Asset | null> {
-  return await queryable
-    .query(assetByRowId(rowId))
-    .then((res) => (res !== null ? createAssetObject(res) : null));
-}
-
-/**
  * Retrieves all balances based on the filtering options provided in BalanceFilter and
  * that are registered on a blockchain as a paginated entity
  *
  * @param queryable - object to use when querying the blockchain
- * @param balanceFilter - object of BalanceFilter that can be list of rowids, account_id and asset_id
+ * @param balanceFilter - object of BalanceFilter that can be list of account_id and asset_id
  * @param limit - maximum page size
  * @param cursor - where the page should start
  */
@@ -248,26 +229,11 @@ export async function getBalancesFiltered(
 }
 
 /**
- * Retrieves balance information using its rowid.
- * @param queryable - object to use when querying the blockchain
- * @param rowId - the rowid of the balance to fetch
- * @returns The balance details, or null if no balance with the specified rowid was found
- */
-export async function getBalanceByRowId(
-  queryable: Queryable,
-  rowId: number,
-): Promise<Balance | null> {
-  return await queryable
-    .query(balanceByRowId(rowId))
-    .then((res) => (res !== null ? createBalanceObject(res) : null));
-}
-
-/**
  * Retrieves all transfer history entries based on the filtering options provided in TransferHistoryEntryFilter
  * as a paginated entity
  *
  * @param queryable - object to use when querying the blockchain
- * @param transferHistoryEntryFilter - object of TransferHistoryEntryFilter that can be list of rowids,
+ * @param transferHistoryEntryFilter - object of TransferHistoryEntryFilter that can be list of,
  * account_id, asset_id, transaction_rid and op_index
  * @param limit - maximum page size
  * @param cursor - where the page should start
@@ -290,29 +256,12 @@ export async function getTransferHistoryEntriesFiltered(
 }
 
 /**
- * Retrieves transfer history entry information using its rowid.
- * @param queryable - object to use when querying the blockchain
- * @param rowId - the rowid of the transfer history entry to fetch
- * @returns The transfer history details, or null if no transfer history entry with the specified rowid was found
- */
-export async function getTransferHistoryEntryByRowId(
-  queryable: Queryable,
-  rowId: number,
-): Promise<TransferHistoryEntry | null> {
-  return await queryable
-    .query(transferHistoryEntryByRowId(rowId))
-    .then((res) =>
-      res !== null ? createTransferHistoryEntryFromResponse(res) : null,
-    );
-}
-
-/**
  * Retrieves all crosschain transfer history entries based on the filtering options provided in CrosschainTransferHistoryEntryFilter
  * as a paginated entity
  *
  * @param queryable - object to use when querying the blockchain
  * @param crosschainTransferHistoryEntryFilter - object of CrosschainTransferHistoryEntryFilter that can be
- * list of rowids, account_id, asset_id, transaction_rid and op_index
+ * list of, account_id, asset_id, transaction_rid and op_index
  * @param limit - maximum page size
  * @param cursor - where the page should start
  */
@@ -339,26 +288,8 @@ export async function getCrosschainTransferHistoryEntriesFiltered(
   );
 }
 
-/**
- * Retrieves crosschain transfer history entry information using its rowid.
- * @param queryable - object to use when querying the blockchain
- * @param rowId - the rowid of the crosschain transfer history entry to fetch
- * @returns The crosschain transfer history details, or null if no crosschain transfer history entry with the specified rowid was found
- */
-export async function getCrosschainTransferHistoryEntryByRowId(
-  queryable: Queryable,
-  rowId: number,
-): Promise<CrosschainTransferHistoryEntry | null> {
-  return await queryable
-    .query(crosschainTransferHistoryEntryByRowId(rowId))
-    .then((res) =>
-      res !== null ? createCrosschainTransferHistoryEntryObject(res) : null,
-    );
-}
-
 export function createBalanceObject(balance: BalanceResponse): Balance {
   return Object.freeze({
-    rowId: balance.rowid,
     asset: createAssetObject(balance.asset),
     amount: createAmountFromBalance(balance.amount, balance.asset.decimals),
   });
@@ -371,7 +302,6 @@ export function createBalanceObject(balance: BalanceResponse): Balance {
  */
 export function createAssetObject(asset: AssetResponse): Asset {
   return Object.freeze({
-    rowId: asset.rowid,
     id: asset.id,
     name: asset.name,
     symbol: asset.symbol,
@@ -407,7 +337,6 @@ export function createCrosschainTransferHistoryEntryObject(
   crosschainTransferHistoryEntry: CrosschainTransferhistoryEntryResponse,
 ): CrosschainTransferHistoryEntry {
   return Object.freeze({
-    rowid: crosschainTransferHistoryEntry.rowid,
     blockchainRid: crosschainTransferHistoryEntry.blockchain_rid,
     accountId: crosschainTransferHistoryEntry.account_id,
     assetId: crosschainTransferHistoryEntry.asset_id,

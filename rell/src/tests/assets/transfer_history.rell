@@ -164,7 +164,6 @@ function test_transfer_history_entry() {
             delta = entry.delta,
             decimals = entry.asset.decimals,
             asset = (
-                rowid = entry.asset.rowid,
                 id = entry.asset.id,
                 name = entry.asset.name,
                 symbol = entry.asset.symbol,
@@ -229,7 +228,6 @@ function test_transfer_details() {
 
     val expected = [
         assets.transfer_detail(
-            rowid = last_two_transfer_history_entries[1].rowid,
             blockchain_rid = chain_context.blockchain_rid,
             account_id = alice.account.id,
             asset_id = asset.id,
@@ -239,7 +237,6 @@ function test_transfer_details() {
             transaction_rid = last_two_transfer_history_entries[1].transaction.tx_rid
         ),
         assets.transfer_detail(
-            rowid = last_two_transfer_history_entries[0].rowid,
             blockchain_rid = chain_context.blockchain_rid,
             account_id = bob.account.id,
             asset_id = asset.id,

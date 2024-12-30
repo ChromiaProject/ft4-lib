@@ -167,82 +167,54 @@ export interface Connection extends Queryable {
   ) => Promise<PaginatedEntity<Asset>>;
 
   /**
-   * {@inheritdoc asset.getAssets}
-   * @param assetFilter - The asset filter (rowids, id, name, symbol and type) that can be applied to the query results
+   * {@inheritdoc asset.getAssetsFiltered}
+   * @param assetFilter - The asset filter (list of ids, name, symbol and type) that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
    */
-  getAssets: (
+  getAssetsFiltered: (
     assetFilter: AssetFilter | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Asset>>;
 
   /**
-   * {@inheritdoc asset.getAssetByRowId
-   * @param rowId - The rowid of the asset to retrieve
-   */
-  getAssetByRowId: (rowId: number) => Promise<Asset | null>;
-
-  /**
-   * {@inheritdoc asset.getBalances}
-   * @param balanceFilter - The balance filter (rowids, account_id and asset_id) that can be applied to the query results
+   * {@inheritdoc asset.getBalancesFiltered}
+   * @param balanceFilter - The balance filter (list of account_ids and list of asset_ids) that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
    */
-  getBalances: (
+  getBalancesFiltered: (
     balanceFilter: BalanceFilter | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Balance>>;
 
   /**
-   * {@inheritdoc asset.getBalanceByRowId
-   * @param rowId - The rowid of the balance to retrieve
-   */
-  getBalanceByRowId: (rowId: number) => Promise<Balance | null>;
-
-  /**
-   * {@inheritdoc asset.getTransferHistoryEntries}
+   * {@inheritdoc asset.getTransferHistoryEntriesFiltered}
    * @param transferHistoryEntryFilter - The transfer history entry filter
-   * (rowids, account_id, asset_id, transaction_rid and op_index) that can be applied to the query results
+   * (list of account_ids, list of asset_ids, list of transaction_rids and op_index) that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
    */
-  getTransferHistoryEntries: (
+  getTransferHistoryEntriesFiltered: (
     transferHistoryEntryFilter: TransferHistoryEntryFilter | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<TransferHistoryEntry>>;
 
   /**
-   * {@inheritdoc asset.getTransferHistoryEntryByRowId
-   * @param rowId - The rowid of the transfer history entry to retrieve
-   */
-  getTransferHistoryEntryByRowId: (
-    rowId: number,
-  ) => Promise<TransferHistoryEntry | null>;
-
-  /**
-   * {@inheritdoc asset.getCrosschainTransferHistoryEntries}
+   * {@inheritdoc asset.getCrosschainTransferHistoryEntriesFiltered}
    * @param crosschainTransferHistoryEntryFilter - The crosschain transfer history entry filter
-   * (rowids, account_id, asset_id, transaction_rid and op_index) that can be applied to the query results
+   * (list of account_ids, list of asset_ids, list of transaction_rids and op_index) that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
    */
-  getCrosschainTransferHistoryEntries: (
+  getCrosschainTransferHistoryEntriesFiltered: (
     crosschainTransferHistoryEntryFilter: CrosschainTransferHistoryEntryFilter | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<CrosschainTransferHistoryEntry>>;
-
-  /**
-   * {@inheritdoc asset.getCrosschainTransferHistoryEntryByRowId
-   * @param rowId - The rowid of the crosschain transfer history entry to retrieve
-   */
-  getCrosschainTransferHistoryEntryByRowId: (
-    rowId: number,
-  ) => Promise<CrosschainTransferHistoryEntry | null>;
 
   /**
    * {@inheritDoc accounts.getTransferDetails}

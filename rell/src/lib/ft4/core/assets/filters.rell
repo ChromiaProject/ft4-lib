@@ -10,7 +10,6 @@
 function get_assets_filtered(asset_filter: asset_filter?, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return asset @* {
-        if (asset_filter?.rowids??) .rowid in asset_filter?.rowids!! else true,
         if (asset_filter?.ids??) .id in asset_filter?.ids!! else true,
         if (asset_filter?.name??) .name == asset_filter?.name else true,
         if (asset_filter?.symbol??) .symbol == asset_filter?.symbol else true,
@@ -36,9 +35,8 @@ function get_assets_filtered(asset_filter: asset_filter?, page_size: integer?, p
 function get_balances_filtered(balance_filter: balance_filter?, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return balance @* {
-        if (balance_filter?.rowids??) .rowid in balance_filter?.rowids!! else true,
-        if (balance_filter?.account_id??) .account.id == balance_filter?.account_id else true,
-        if (balance_filter?.asset_id??) .asset.id == balance_filter?.asset_id else true,
+        if (balance_filter?.account_ids??) .account.id in balance_filter?.account_ids!! else true,
+        if (balance_filter?.asset_ids??) .asset.id in balance_filter?.asset_ids!! else true,
         .rowid > (before_rowid ?: rowid(0))
     }(
         utils.pagination_result(
@@ -65,16 +63,15 @@ function get_transfer_history_entries_filtered(
     page_size: integer?,
     page_cursor: text?
 ) {
-    utils.validate_composite_indexes_op_index_and_tx_rid(
-        transfer_history_entry_filter?.op_index,
-        transfer_history_entry_filter?.transaction_rid
+    utils.validate_composite_indexes_tx_rids_and_op_index(
+        transfer_history_entry_filter?.transaction_rids,
+        transfer_history_entry_filter?.op_index
     );
     val before_rowid = utils.before_rowid(page_cursor);
     return transfer_history_entry @* {
-        if (transfer_history_entry_filter?.rowids??) .rowid in transfer_history_entry_filter?.rowids!! else true,
-        if (transfer_history_entry_filter?.account_id??) .account.id == transfer_history_entry_filter?.account_id else true,
-        if (transfer_history_entry_filter?.asset_id??) .asset.id == transfer_history_entry_filter?.asset_id else true,
-        if (transfer_history_entry_filter?.transaction_rid??) .transaction.tx_rid == transfer_history_entry_filter?.transaction_rid else true,
+        if (transfer_history_entry_filter?.account_ids??) .account.id in transfer_history_entry_filter?.account_ids!! else true,
+        if (transfer_history_entry_filter?.asset_ids??) .asset.id in transfer_history_entry_filter?.asset_ids!! else true,
+        if (transfer_history_entry_filter?.transaction_rids??) .transaction.tx_rid in transfer_history_entry_filter?.transaction_rids!! else true,
         if (transfer_history_entry_filter?.op_index??) .op_index == transfer_history_entry_filter?.op_index else true,
         .rowid > (before_rowid ?: rowid(0))
     } (
@@ -104,16 +101,15 @@ function get_crosschain_transfer_history_entries_filtered(
     page_size: integer?,
     page_cursor: text?
 ) {
-    utils.validate_composite_indexes_op_index_and_tx_rid(
-        crosschain_transfer_history_entry_filter?.op_index,
-        crosschain_transfer_history_entry_filter?.transaction_rid
+    utils.validate_composite_indexes_tx_rids_and_op_index(
+        crosschain_transfer_history_entry_filter?.transaction_rids,
+        crosschain_transfer_history_entry_filter?.op_index
     );
     val before_rowid = utils.before_rowid(page_cursor);
     return crosschain_transfer_history_entry @* {
-        if (crosschain_transfer_history_entry_filter?.rowids??) .rowid in crosschain_transfer_history_entry_filter?.rowids!! else true,
-        if (crosschain_transfer_history_entry_filter?.account_id??) .account_id == crosschain_transfer_history_entry_filter?.account_id else true,
-        if (crosschain_transfer_history_entry_filter?.asset_id??) .asset.id == crosschain_transfer_history_entry_filter?.asset_id else true,
-        if (crosschain_transfer_history_entry_filter?.transaction_rid??) .transaction.tx_rid == crosschain_transfer_history_entry_filter?.transaction_rid else true,
+        if (crosschain_transfer_history_entry_filter?.account_ids??) .account_id in crosschain_transfer_history_entry_filter?.account_ids!! else true,
+        if (crosschain_transfer_history_entry_filter?.asset_ids??) .asset.id in crosschain_transfer_history_entry_filter?.asset_ids!! else true,
+        if (crosschain_transfer_history_entry_filter?.transaction_rids??) .transaction.tx_rid in crosschain_transfer_history_entry_filter?.transaction_rids!! else true,
         if (crosschain_transfer_history_entry_filter?.op_index??) .op_index == crosschain_transfer_history_entry_filter?.op_index else true,
         .rowid > (before_rowid ?: rowid(0))
     } (

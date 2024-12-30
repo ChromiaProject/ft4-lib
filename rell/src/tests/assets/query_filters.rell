@@ -26,25 +26,25 @@ function test_get_paginated_assets_without_filter() {
     ));
 }
 
-function test_get_paginated_assets_filtered_by_rowids() {
+function test_get_paginated_assets_filtered_by_single_asset_id() {
     val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
     val asset = minted_assets[0];
 
     val fetched_assets = assets.external.get_assets_filtered(
         helpers.set_asset_filter(
-            [asset.rowid]
+            ids = [asset.id]
         ),
         1,
         null
     );
-
     assert_equals(fetched_assets, utils.paged_result(
         next_cursor = null,
         data = [mocks.format_expected_asset_assertion(asset).to_gtv_pretty()]
     ));
 }
 
-function test_get_paginated_assets_filtered_by_id() {
+// Todo
+function test_get_paginated_assets_filtered_by_multiple_asset_ids() {
     val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
     val asset = minted_assets[0];
 
@@ -116,7 +116,6 @@ function test_get_paginated_assets_using_all_filter_no_assets() {
     val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
     val assets = assets.external.get_assets_filtered(
         helpers.set_asset_filter(
-            [rowid(1)],
             [x"0000"],
             "unknown",
             "UNKNOWN",
@@ -137,7 +136,6 @@ function test_get_paginated_assets_using_all_filter() {
 
     val fetched_assets = assets.external.get_assets_filtered(
         helpers.set_asset_filter(
-            rowids = [asset1.rowid, asset2.rowid],
             ids = [asset1.id],
             name = asset1.name,
             symbol = asset1.symbol,
@@ -181,31 +179,13 @@ function test_get_paginated_balances_without_filter() {
     ));
 }
 
-function test_get_paginated_balances_filtered_by_rowids() {
-    val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
-    val balance = helpers.get_last_balance();
-
-    val fetched_balances = assets.external.get_balances_filtered(
-        helpers.set_balance_filter(
-            [balance.rowid]
-        ),
-        1,
-        null
-    );
-
-    assert_equals(fetched_balances, utils.paged_result(
-        next_cursor = null,
-        data = [mocks.format_expected_balance_assertion(balance).to_gtv_pretty()]
-    ));
-}
-
-function test_get_paginated_balances_filtered_by_account_id() {
+function test_get_paginated_balances_filtered_by_single_account_id() {
     val (alice, minted_assets) = helpers.register_account_create_and_mint_assets();
     val balance = helpers.get_last_balance();
 
     val fetched_balances = assets.external.get_balances_filtered(
         helpers.set_balance_filter(
-            account_id = alice.account.id
+            account_ids = [alice.account.id]
         ),
         1,
         null
@@ -217,13 +197,51 @@ function test_get_paginated_balances_filtered_by_account_id() {
     ));
 }
 
-function test_get_paginated_balances_filtered_by_asset_id() {
+// Todo
+function test_get_paginated_balances_filtered_by_multiple_account_ids() {
+    val (alice, minted_assets) = helpers.register_account_create_and_mint_assets();
+    val balance = helpers.get_last_balance();
+
+    val fetched_balances = assets.external.get_balances_filtered(
+        helpers.set_balance_filter(
+            account_ids = [alice.account.id]
+        ),
+        1,
+        null
+    );
+
+    assert_equals(fetched_balances, utils.paged_result(
+        next_cursor = null,
+        data = [mocks.format_expected_balance_assertion(balance).to_gtv_pretty()]
+    ));
+}
+
+function test_get_paginated_balances_filtered_by_single_asset_id() {
     val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
     val balance = helpers.get_last_balance();
 
     val fetched_balances = assets.external.get_balances_filtered(
         helpers.set_balance_filter(
-            asset_id = minted_assets[0].id
+            asset_ids = [minted_assets[0].id]
+        ),
+        1,
+        null
+    );
+
+    assert_equals(fetched_balances, utils.paged_result(
+        next_cursor = null,
+        data = [mocks.format_expected_balance_assertion(balance).to_gtv_pretty()]
+    ));
+}
+
+// Todo
+function test_get_paginated_balances_filtered_by_multiple_asset_ids() {
+    val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
+    val balance = helpers.get_last_balance();
+
+    val fetched_balances = assets.external.get_balances_filtered(
+        helpers.set_balance_filter(
+            asset_ids = [minted_assets[0].id]
         ),
         1,
         null
@@ -242,9 +260,8 @@ function test_get_paginated_balances_using_all_filter_no_balances() {
 
     val fetched_balances = assets.external.get_balances_filtered(
         helpers.set_balance_filter(
-            rowids = [balance.rowid],
-            account_id = bob.account.id,
-            asset_id = minted_assets[0].id
+            account_ids = [bob.account.id],
+            asset_ids = [minted_assets[0].id]
         ),
         1,
         null
@@ -262,9 +279,8 @@ function test_get_paginated_balances_using_all_filter() {
 
     val fetched_balances = assets.external.get_balances_filtered(
         helpers.set_balance_filter(
-            rowids = [balance.rowid],
-            account_id = alice.account.id,
-            asset_id = minted_assets[0].id
+            account_ids = [alice.account.id],
+            asset_ids = [minted_assets[0].id]
         ),
         1,
         null
@@ -276,14 +292,29 @@ function test_get_paginated_balances_using_all_filter() {
     ));
 }
 
-function test_get_transfer_history_entries_filtered_requires_composite_indexes() {
+function test_get_transfer_history_entries_filtered_requires_transaction_rids_composite_index() {
     val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
     val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
     assert_fails(
-        "INVALID FILTER: Composite index (transaction, op_index) - transaction_rid filter is required",
+        "INVALID FILTER: Composite index (transaction_rids, op_index) - transaction_rids filter cannot be empty",
         assets.external.get_transfer_history_entries_filtered(
             helpers.set_transfer_history_entry_filter(
                 op_index = transfer_history_entry.op_index
+            ),
+            1,
+            null, *
+        )
+    );
+}
+
+function test_get_transfer_history_entries_filtered_requires_op_index_composite_index() {
+    val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
+    val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
+    assert_fails(
+        "INVALID FILTER: Composite index (transaction_rids, op_index) - op_index filter is required",
+        assets.external.get_transfer_history_entries_filtered(
+            helpers.set_transfer_history_entry_filter(
+                transaction_rids = [transfer_history_entry.transaction.tx_rid]
             ),
             1,
             null, *
@@ -307,13 +338,13 @@ function test_get_paginated_transfer_history_entries_without_filter() {
     ));
 }
 
-function test_get_paginated_transfer_history_entries_filtered_by_rowids() {
+function test_get_paginated_transfer_history_entries_filtered_by_single_account_id() {
     val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
     val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
 
     val fetched_transfer_history_entries = assets.external.get_transfer_history_entries_filtered(
         helpers.set_transfer_history_entry_filter(
-            rowids = [transfer_history_entry.rowid]
+            account_ids = [transfer_history_entry.account.id]
         ),
         1,
         null
@@ -325,13 +356,14 @@ function test_get_paginated_transfer_history_entries_filtered_by_rowids() {
     ));
 }
 
-function test_get_paginated_transfer_history_entries_filtered_by_account_id() {
+// Todo
+function test_get_paginated_transfer_history_entries_filtered_by_multiple_account_ids() {
     val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
     val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
 
     val fetched_transfer_history_entries = assets.external.get_transfer_history_entries_filtered(
         helpers.set_transfer_history_entry_filter(
-            account_id = transfer_history_entry.account.id
+            account_ids = [transfer_history_entry.account.id]
         ),
         1,
         null
@@ -343,13 +375,13 @@ function test_get_paginated_transfer_history_entries_filtered_by_account_id() {
     ));
 }
 
-function test_get_paginated_transfer_history_entries_filtered_by_asset_id() {
+function test_get_paginated_transfer_history_entries_filtered_by_single_asset_id() {
     val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
     val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
 
     val fetched_transfer_history_entries = assets.external.get_transfer_history_entries_filtered(
         helpers.set_transfer_history_entry_filter(
-            asset_id = transfer_history_entry.asset.id
+            asset_ids = [transfer_history_entry.asset.id]
         ),
         1,
         null
@@ -361,13 +393,14 @@ function test_get_paginated_transfer_history_entries_filtered_by_asset_id() {
     ));
 }
 
-function test_get_paginated_transfer_history_entries_filtered_by_transaction_rid() {
+// Todo
+function test_get_paginated_transfer_history_entries_filtered_by_multiple_asset_ids() {
     val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
     val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
 
     val fetched_transfer_history_entries = assets.external.get_transfer_history_entries_filtered(
         helpers.set_transfer_history_entry_filter(
-            transaction_rid = transfer_history_entry.transaction.tx_rid
+            asset_ids = [transfer_history_entry.asset.id]
         ),
         1,
         null
@@ -379,14 +412,52 @@ function test_get_paginated_transfer_history_entries_filtered_by_transaction_rid
     ));
 }
 
-function test_get_paginated_transfer_history_entries_filtered_by_op_index_and_transaction_rid() {
+
+function test_get_paginated_transfer_history_entries_filtered_by_single_transaction_rid() {
+    val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
+    val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
+
+    val fetched_transfer_history_entries = assets.external.get_transfer_history_entries_filtered(
+        helpers.set_transfer_history_entry_filter(
+            transaction_rids = [transfer_history_entry.transaction.tx_rid]
+        ),
+        1,
+        null
+    );
+
+    assert_equals(fetched_transfer_history_entries, utils.paged_result(
+        next_cursor = null,
+        data = [mocks.format_expected_transfer_history_entry_assertion(transfer_history_entry).to_gtv_pretty()]
+    ));
+}
+
+// todo
+function test_get_paginated_transfer_history_entries_filtered_by_multiple_transaction_rids() {
+    val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
+    val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
+
+    val fetched_transfer_history_entries = assets.external.get_transfer_history_entries_filtered(
+        helpers.set_transfer_history_entry_filter(
+            transaction_rids = [transfer_history_entry.transaction.tx_rid]
+        ),
+        1,
+        null
+    );
+
+    assert_equals(fetched_transfer_history_entries, utils.paged_result(
+        next_cursor = null,
+        data = [mocks.format_expected_transfer_history_entry_assertion(transfer_history_entry).to_gtv_pretty()]
+    ));
+}
+
+function test_get_paginated_transfer_history_entries_filtered_by_op_index_and_transaction_rids() {
     val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
     val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
 
     val fetched_transfer_history_entries = assets.external.get_transfer_history_entries_filtered(
         helpers.set_transfer_history_entry_filter(
             op_index = transfer_history_entry.op_index,
-            transaction_rid = transfer_history_entry.transaction.tx_rid
+            transaction_rids = [transfer_history_entry.transaction.tx_rid]
         ),
         1,
         null
@@ -405,10 +476,9 @@ function test_get_paginated_transfer_history_entries_using_all_filter_no_transfe
 
     val fetched_transfer_history_entries = assets.external.get_transfer_history_entries_filtered(
         helpers.set_transfer_history_entry_filter(
-            rowids = [transfer_history_entry.rowid],
-            account_id = bob.account.id,
-            asset_id = transfer_history_entry.asset.id,
-            transaction_rid = transfer_history_entry.transaction.tx_rid,
+            account_ids = [bob.account.id],
+            asset_ids = [transfer_history_entry.asset.id],
+            transaction_rids = [transfer_history_entry.transaction.tx_rid],
             op_index = 0
         ),
         1,
@@ -427,10 +497,9 @@ function test_get_paginated_transfer_history_entries_using_all_filter() {
 
     val fetched_transfer_history_entries = assets.external.get_transfer_history_entries_filtered(
         helpers.set_transfer_history_entry_filter(
-            rowids = [transfer_history_entry.rowid],
-            account_id = transfer_history_entry.account.id,
-            asset_id = transfer_history_entry.asset.id,
-            transaction_rid = transfer_history_entry.transaction.tx_rid,
+            account_ids = [transfer_history_entry.account.id],
+            asset_ids = [transfer_history_entry.asset.id],
+            transaction_rids = [transfer_history_entry.transaction.tx_rid],
             op_index = 0
         ),
         1,
@@ -460,27 +529,11 @@ function test_get_paginated_crosschain_transfer_history_entries_without_filter()
     ));
 }
 
-function test_get_paginated_crosschain_transfer_history_entries_filtered_by_rowids() {
+function test_get_paginated_crosschain_transfer_history_entries_filtered_by_single_account_id() {
     val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
-            rowids = [crosschain_transfer_history_entry.rowid]
-        ),
-        1,
-        null
-    );
-
-    assert_equals(fetched_crosschain_transfer_history_entries, utils.paged_result(
-        next_cursor = null,
-        data = [mocks.format_expected_crosschain_transfer_history_entry_assertion(crosschain_transfer_history_entry).to_gtv_pretty()]
-    ));
-}
-
-function test_get_paginated_crosschain_transfer_history_entries_filtered_by_account_id() {
-    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
-    val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
-        helpers.set_crosschain_transfer_history_entry_filter(
-            account_id = crosschain_transfer_history_entry.account_id
+            account_ids = [crosschain_transfer_history_entry.account_id]
         ),
         1,
         null
@@ -491,11 +544,12 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_acco
     ));
 }
 
-function test_get_paginated_crosschain_transfer_history_entries_filtered_by_asset_id() {
+// Todo
+function test_get_paginated_crosschain_transfer_history_entries_filtered_by_multiple_account_ids() {
     val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
-            asset_id = crosschain_transfer_history_entry.asset.id
+            account_ids = [crosschain_transfer_history_entry.account_id]
         ),
         1,
         null
@@ -506,11 +560,11 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_asse
     ));
 }
 
-function test_get_paginated_crosschain_transfer_history_entries_filtered_by_transaction_rid() {
+function test_get_paginated_crosschain_transfer_history_entries_filtered_by_single_asset_id() {
     val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
-            transaction_rid = crosschain_transfer_history_entry.transaction.tx_rid
+            asset_ids = [crosschain_transfer_history_entry.asset.id]
         ),
         1,
         null
@@ -521,11 +575,57 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_tran
     ));
 }
 
+// Todo
+function test_get_paginated_crosschain_transfer_history_entries_filtered_by_multiple_asset_ids() {
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
+        helpers.set_crosschain_transfer_history_entry_filter(
+            asset_ids = [crosschain_transfer_history_entry.asset.id]
+        ),
+        1,
+        null
+    );
+    assert_equals(fetched_crosschain_transfer_history_entries, utils.paged_result(
+        next_cursor = null,
+        data = [mocks.format_expected_crosschain_transfer_history_entry_assertion(crosschain_transfer_history_entry).to_gtv_pretty()]
+    ));
+}
 
-function test_get_crosschain_transfer_history_entries_filtered_requires_composite_indexes() {
+function test_get_paginated_crosschain_transfer_history_entries_filtered_by_single_transaction_rid() {
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
+        helpers.set_crosschain_transfer_history_entry_filter(
+            transaction_rids = [crosschain_transfer_history_entry.transaction.tx_rid]
+        ),
+        1,
+        null
+    );
+    assert_equals(fetched_crosschain_transfer_history_entries, utils.paged_result(
+        next_cursor = null,
+        data = [mocks.format_expected_crosschain_transfer_history_entry_assertion(crosschain_transfer_history_entry).to_gtv_pretty()]
+    ));
+}
+
+// todo
+function test_get_paginated_crosschain_transfer_history_entries_filtered_by_multiple_transaction_rids() {
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
+        helpers.set_crosschain_transfer_history_entry_filter(
+            transaction_rids = [crosschain_transfer_history_entry.transaction.tx_rid]
+        ),
+        1,
+        null
+    );
+    assert_equals(fetched_crosschain_transfer_history_entries, utils.paged_result(
+        next_cursor = null,
+        data = [mocks.format_expected_crosschain_transfer_history_entry_assertion(crosschain_transfer_history_entry).to_gtv_pretty()]
+    ));
+}
+
+function test_get_crosschain_transfer_history_entries_filtered_requires_transaction_rids_composite_index() {
     val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     assert_fails(
-        "INVALID FILTER: Composite index (transaction, op_index) - transaction_rid filter is required",
+        "INVALID FILTER: Composite index (transaction_rids, op_index) - transaction_rids filter cannot be empty",
         assets.external.get_crosschain_transfer_history_entries_filtered(
             helpers.set_crosschain_transfer_history_entry_filter(
                 op_index = crosschain_transfer_history_entry.op_index
@@ -536,12 +636,26 @@ function test_get_crosschain_transfer_history_entries_filtered_requires_composit
     );
 }
 
-function test_get_paginated_crosschain_transfer_history_entries_filtered_by_op_index_and_transaction_rid() {
+function test_get_crosschain_transfer_history_entries_filtered_requires_op_index_composite_index() {
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    assert_fails(
+        "INVALID FILTER: Composite index (transaction_rids, op_index) - op_index filter is required",
+        assets.external.get_crosschain_transfer_history_entries_filtered(
+            helpers.set_crosschain_transfer_history_entry_filter(
+                transaction_rids = [crosschain_transfer_history_entry.transaction.tx_rid]
+            ),
+            1,
+            null, *
+        )
+    );
+}
+
+function test_get_paginated_crosschain_transfer_history_entries_filtered_by_op_index_and_transaction_rids() {
     val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
             op_index = crosschain_transfer_history_entry.op_index,
-            transaction_rid = crosschain_transfer_history_entry.transaction.tx_rid
+            transaction_rids = [crosschain_transfer_history_entry.transaction.tx_rid]
         ),
         1,
         null
@@ -554,13 +668,13 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_op_i
 
 function test_get_paginated_crosschain_transfer_history_entries_using_all_filter_no_crosschain_transfer_history_entries() {
     val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    val mock_buffer = x"0000";
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
-            rowids = [rowid(999)],
-            account_id = crosschain_transfer_history_entry.account_id,
-            asset_id = crosschain_transfer_history_entry.asset.id,
-            transaction_rid = crosschain_transfer_history_entry.transaction.tx_rid,
-            op_index = crosschain_transfer_history_entry.op_index
+            account_ids = [mock_buffer],
+            asset_ids = [mock_buffer],
+            transaction_rids = [mock_buffer],
+            op_index = 0
         ),
         1,
         null
@@ -575,10 +689,9 @@ function test_get_paginated_crosschain_transfer_history_entries_using_all_filter
     val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
-            rowids = [crosschain_transfer_history_entry.rowid],
-            account_id = crosschain_transfer_history_entry.account_id,
-            asset_id = crosschain_transfer_history_entry.asset.id,
-            transaction_rid = crosschain_transfer_history_entry.transaction.tx_rid,
+            account_ids = [crosschain_transfer_history_entry.account_id],
+            asset_ids = [crosschain_transfer_history_entry.asset.id],
+            transaction_rids = [crosschain_transfer_history_entry.transaction.tx_rid],
             op_index = crosschain_transfer_history_entry.op_index
         ),
         1,

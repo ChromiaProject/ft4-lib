@@ -4,7 +4,6 @@ import { Buffer } from "buffer";
 export const ASSET_TYPE_FT4 = "ft4";
 
 export type Asset = {
-  rowId?: number;
   id: Buffer;
   name: string;
   symbol: string;
@@ -16,7 +15,6 @@ export type Asset = {
 };
 
 export type AssetResponse = {
-  rowid: number;
   id: Buffer;
   name: string;
   symbol: string;
@@ -52,13 +50,11 @@ export type CrosschainAssetRegistrationResponse = {
 export type RawAmount = { value: bigint; decimals: number };
 
 export type Balance = {
-  rowId?: number;
   asset: Asset;
   amount: Amount;
 };
 
 export type BalanceResponse = {
-  rowid?: number;
   asset: AssetResponse;
   amount: bigint;
 };
@@ -74,32 +70,28 @@ export type SupportedNumber = string | number | Amount;
 export type AnyAssetAmount = RawAmount | Amount;
 
 export type AssetFilter = {
-  rowids: Array<number>;
-  ids: Array<Buffer>;
+  ids?: Array<Buffer> | null;
   name?: string | null;
   symbol?: string | null;
   type?: string | null;
 };
 
 export type BalanceFilter = {
-  rowids: Array<number>;
-  accountId?: Buffer | null;
-  assetId?: Buffer | null;
+  accountIds?: Array<Buffer> | null;
+  assetIds?: Array<Buffer> | null;
 };
 
 export type TransferHistoryEntryFilter = {
-  rowids: Array<number>;
-  accountId?: Buffer | null;
-  assetId?: Buffer | null;
-  transactionRid?: Buffer | null;
+  accountIds?: Array<Buffer> | null;
+  assetIds?: Array<Buffer> | null;
+  transactionRids?: Array<Buffer> | null;
   opIndex?: number | null;
 };
 
 export type CrosschainTransferHistoryEntryFilter = {
-  rowids: Array<number>;
-  accountId?: Buffer | null;
-  assetId?: Buffer | null;
-  transactionRid?: Buffer | null;
+  accountIds?: Array<Buffer> | null;
+  assetIds?: Array<Buffer> | null;
+  transactionRid?: Array<Buffer> | null;
   opIndex?: number | null;
 };
 

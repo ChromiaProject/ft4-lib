@@ -47,7 +47,6 @@ function test_init_transfer_history() {
 
     val expected = [
         assets.transfer_detail(
-            rowid = last_two_transfer_history_entries[1].rowid,
             blockchain_rid = chain_context.blockchain_rid,
             account_id = alice.account.id,
             asset_id = asset.id,
@@ -57,7 +56,6 @@ function test_init_transfer_history() {
             transaction_rid = last_two_transfer_history_entries[1].transaction.tx_rid
         ),
         assets.transfer_detail(
-            rowid = last_crosschain_transfer_history_entry.rowid,
             blockchain_rid = target_blockchain_rid,
             account_id = bob.account.id,
             asset_id = asset.id,
@@ -121,7 +119,6 @@ function test_apply_transfer_history() {
 
     val expected = [
         assets.transfer_detail(
-            rowid = last_transfer_history_entry.rowid,
             blockchain_rid = chain_context.blockchain_rid,
             account_id = bob.account.id,
             asset_id = asset.id,
@@ -131,7 +128,6 @@ function test_apply_transfer_history() {
             transaction_rid = last_transfer_history_entry.transaction.tx_rid
         ),
         assets.transfer_detail(
-            rowid = last_crosschain_transfer_history_entry.rowid,
             blockchain_rid = sender_blockchain_rid,
             account_id = sender_account_id,
             asset_id = asset.id,

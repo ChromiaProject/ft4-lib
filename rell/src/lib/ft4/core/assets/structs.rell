@@ -1,5 +1,4 @@
 struct asset_filter {
-    rowids: list<rowid>?;
     ids: list<byte_array>?;
     name: text?;
     symbol: text?;
@@ -7,24 +6,21 @@ struct asset_filter {
 }
 
 struct balance_filter {
-    rowids: list<rowid>?;
-    account_id: byte_array?;
-    asset_id: byte_array?;
+    account_ids: list<byte_array>?;
+    asset_ids: list<byte_array>?;
 }
 
 struct transfer_history_entry_filter {
-    rowids: list<rowid>?;
-    account_id: byte_array?;
-    asset_id: byte_array?;
-    transaction_rid: byte_array?;
+    account_ids: list<byte_array>?;
+    asset_ids: list<byte_array>?;
+    transaction_rids: list<byte_array>?;
     op_index: integer?;
 }
 
 struct crosschain_transfer_history_entry_filter {
-    rowids: list<rowid>?;
-    account_id: byte_array?;
-    asset_id: byte_array?;
-    transaction_rid: byte_array?;
+    account_ids: list<byte_array>?;
+    asset_ids: list<byte_array>?;
+    transaction_rids: list<byte_array>?;
     op_index: integer?;
 }
 
@@ -41,8 +37,6 @@ struct filter {
  * describe a `transfer_history_entry` and a `crosschain_transfer_history_entry`.
  */
 struct transfer_detail {
-    /** The rowid of the entity associated with the transfer history entry */
-    rowid: rowid;
     /** The blockchain on which the transfer happened */
     blockchain_rid: byte_array;
     /** The account whose balance was affected */

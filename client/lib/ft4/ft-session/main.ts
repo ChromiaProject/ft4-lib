@@ -48,13 +48,9 @@ import {
   getAssetsByName,
   getAssetsByType,
   getAssetsFiltered,
-  getAssetByRowId,
   getBalancesFiltered,
   getTransferHistoryEntriesFiltered,
-  getTransferHistoryEntryByRowId,
   getCrosschainTransferHistoryEntriesFiltered,
-  getCrosschainTransferHistoryEntryByRowId,
-  getBalanceByRowId,
 } from "@ft4/asset";
 import {
   AuthDataService,
@@ -188,19 +184,17 @@ export function createConnection(client: IClient): Connection {
     ) => getAssetsByType(connection, type, limit, cursor),
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
       getAllAssets(connection, limit, cursor),
-    getAssets: (
+    getAssetsFiltered: (
       assetFilter: AssetFilter,
       limit?: number,
       cursor: OptionalPageCursor = null,
     ) => getAssetsFiltered(connection, assetFilter, limit, cursor),
-    getAssetByRowId: (rowId: number) => getAssetByRowId(connection, rowId),
-    getBalances: (
+    getBalancesFiltered: (
       balanceFilter: BalanceFilter,
       limit?: number,
       cursor: OptionalPageCursor = null,
     ) => getBalancesFiltered(connection, balanceFilter, limit, cursor),
-    getBalanceByRowId: (rowId: number) => getBalanceByRowId(connection, rowId),
-    getTransferHistoryEntries: (
+    getTransferHistoryEntriesFiltered: (
       transferHistoryEntryFilter: TransferHistoryEntryFilter,
       limit?: number,
       cursor: OptionalPageCursor = null,
@@ -211,9 +205,7 @@ export function createConnection(client: IClient): Connection {
         limit,
         cursor,
       ),
-    getTransferHistoryEntryByRowId: (rowId: number) =>
-      getTransferHistoryEntryByRowId(connection, rowId),
-    getCrosschainTransferHistoryEntries: (
+    getCrosschainTransferHistoryEntriesFiltered: (
       crosschainTransferHistoryEntryFilter: CrosschainTransferHistoryEntryFilter,
       limit?: number,
       cursor: OptionalPageCursor = null,
@@ -224,8 +216,6 @@ export function createConnection(client: IClient): Connection {
         limit,
         cursor,
       ),
-    getCrosschainTransferHistoryEntryByRowId: (rowId: number) =>
-      getCrosschainTransferHistoryEntryByRowId(connection, rowId),
     getTransferDetails: (txRid: BufferId, opIndex: number) =>
       getTransferDetails(connection, txRid, opIndex),
     getTransferDetailsByAsset: (

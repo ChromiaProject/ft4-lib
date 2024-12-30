@@ -377,7 +377,7 @@ describe("Crosschain transfer", () => {
     });
 
     const crosschainHistory =
-      await account00.getCrosschainTransferHistoryEntries();
+      await account00.getCrosschainTransferHistoryEntriesFiltered();
 
     const expectedCrosschainTransferHistoryEntry =
       await connection00.getCrosschainTransferHistoryEntryByRowId(
@@ -407,10 +407,8 @@ describe("Crosschain transfer", () => {
       const client00 = await createChromiaClientToMultichain(multichain00.rid);
       const connection00 = createConnection(client00);
 
-      const { data } = await connection00.getCrosschainTransferHistoryEntries(
-        null,
-        1,
-      );
+      const { data } =
+        await connection00.getCrosschainTransferHistoryEntriesFiltered(null, 1);
 
       const foundCrosschainTransferHistoryEntry =
         data.find((item) => item.rowid === 999) ?? null;
@@ -422,16 +420,17 @@ describe("Crosschain transfer", () => {
 
       const client00 = await createChromiaClientToMultichain(multichain00.rid);
       const connection00 = createConnection(client00);
-      const { data } = await connection00.getCrosschainTransferHistoryEntries(
-        {
-          rowids: [0],
-          accountId: mockBuffer,
-          assetId: mockBuffer,
-          transactionRid: mockBuffer,
-          opIndex: 0,
-        },
-        1,
-      );
+      const { data } =
+        await connection00.getCrosschainTransferHistoryEntriesFiltered(
+          {
+            rowids: [0],
+            accountIds: mockBuffer,
+            assetIds: mockBuffer,
+            transactionRid: mockBuffer,
+            opIndex: 0,
+          },
+          1,
+        );
 
       const foundCrosschainTransferHistoryEntry =
         data.find((item) => item.rowid === 999) ?? null;
@@ -526,12 +525,13 @@ describe("Crosschain transfer", () => {
       });
 
       const crosschainHistory =
-        await account00.getCrosschainTransferHistoryEntries();
+        await account00.getCrosschainTransferHistoryEntriesFiltered();
 
-      const { data } = await connection00.getCrosschainTransferHistoryEntries(
-        null,
-        100,
-      );
+      const { data } =
+        await connection00.getCrosschainTransferHistoryEntriesFiltered(
+          null,
+          100,
+        );
 
       const foundCrosschainTransferHistoryEntry = data.find((item) =>
         crosschainHistory.data.some(
@@ -642,18 +642,19 @@ describe("Crosschain transfer", () => {
       });
 
       const crosschainHistory =
-        await account00.getCrosschainTransferHistoryEntries();
+        await account00.getCrosschainTransferHistoryEntriesFiltered();
 
-      const { data } = await connection00.getCrosschainTransferHistoryEntries(
-        {
-          rowids: [crosschainHistory.data[0].rowid],
-          accountId: crosschainHistory.data[0].accountId,
-          assetId: crosschainHistory.data[0].assetId,
-          transactionRid: crosschainHistory.data[0].transactionId,
-          opIndex: crosschainHistory.data[0].opIndex,
-        },
-        100,
-      );
+      const { data } =
+        await connection00.getCrosschainTransferHistoryEntriesFiltered(
+          {
+            rowids: [crosschainHistory.data[0].rowid],
+            accountIds: crosschainHistory.data[0].accountId,
+            assetIds: crosschainHistory.data[0].assetId,
+            transactionRid: crosschainHistory.data[0].transactionId,
+            opIndex: crosschainHistory.data[0].opIndex,
+          },
+          100,
+        );
 
       const foundCrosschainTransferHistoryEntry = data.find((item) =>
         crosschainHistory.data.some(

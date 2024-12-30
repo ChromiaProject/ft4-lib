@@ -32,7 +32,6 @@ export type TransferHistoryEntryResponse = {
 };
 
 export type TransferHistoryEntry = {
-  rowid: number;
   isInput: boolean;
   delta: Amount;
   asset: Asset;
@@ -46,7 +45,6 @@ export type TransferHistoryEntry = {
 };
 
 export type CrosschainTransferhistoryEntryResponse = {
-  rowid: number;
   blockchain_rid: Buffer;
   account_id: Buffer;
   asset_id: Buffer;
@@ -57,7 +55,6 @@ export type CrosschainTransferhistoryEntryResponse = {
 };
 
 export type CrosschainTransferHistoryEntry = {
-  rowid: number;
   blockchainRid: Buffer;
   accountId: Buffer;
   assetId: Buffer;
