@@ -1,4 +1,4 @@
-import { AccountFiltered } from "@ft4/accounts";
+import { AccountResponse } from "@ft4/accounts";
 import { Asset, AssetResponse } from "@ft4/asset";
 import { EventEmitter, Listener } from "@ft4/events";
 import { BufferId } from "@ft4/utils";
@@ -194,7 +194,7 @@ export type Transfer = {
 export type PendingTransferResponse_ = {
   transaction_rid: Buffer;
   op_index: number;
-  sender_account: AccountFiltered;
+  sender_account: AccountResponse;
 };
 
 // Similar type as PendingTransfer, the difference is that PendingTransfer transaction RawGtx is used in existing functions
@@ -203,5 +203,5 @@ export type PendingTransferResponse_ = {
 export type PendingTransfer_ = {
   transactionId: Buffer;
   opIndex: number;
-  senderAccount: AccountFiltered;
+  senderAccount: AccountResponse;
 };

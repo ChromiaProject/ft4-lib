@@ -39,8 +39,8 @@ export type RateLimitResponse = {
   lastUpdate: number;
 };
 
-export type AccountFiltered = {
-  id: Buffer;
+export type AccountResponse = {
+  id: BufferId;
   type: string;
 };
 

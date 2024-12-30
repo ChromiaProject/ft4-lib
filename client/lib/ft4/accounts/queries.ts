@@ -4,7 +4,7 @@ import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import {
   RawAnyAuthDescriptor,
   RateLimitResponse,
-  AccountFiltered,
+  AccountResponse,
 } from "@ft4/accounts";
 import { BufferId } from "@ft4/utils";
 import {
@@ -26,7 +26,7 @@ export function RateLimitQuery(
 
 export function accountById(
   id: BufferId,
-): QueryObject<AccountFiltered | null, { id: Buffer }> {
+): QueryObject<AccountResponse | null, { id: Buffer }> {
   return {
     name: "ft4.get_account_by_id",
     args: {

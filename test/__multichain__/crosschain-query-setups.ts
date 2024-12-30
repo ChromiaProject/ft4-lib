@@ -31,7 +31,7 @@ import {
   AuthFlag,
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/accounts";
-import { encryption, gtv } from "postchain-client";
+import { encryption, gtv, IClient } from "postchain-client";
 import {
   feeAssets,
   registerAccount,
@@ -309,9 +309,8 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
     5,
   );
 
-  await registerCrosschainAsset(
+  await getOrRegisterCrosschainAsset(
     testContext.connection1.client,
-    adminUser().signatureProvider,
     asset.id,
     testContext.multichain0.rid,
   );
@@ -353,7 +352,6 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
     recipientId,
     asset.id,
     feeAmount,
-    /*ttl=*/ 5000,
   );
 
   await senderSession.account.recallUnclaimedCrosschainTransfer(transferRef);
@@ -483,4 +481,21 @@ export function setPendingTransferFilter(
   senderAccountId: Buffer | null = null,
 ) {
   return { transactionIds, initOpIndex, senderAccountId };
+}
+
+async function getOrRegisterCrosschainAsset(
+  client: IClient,
+  assetId: Buffer,
+  originMultichainRid: Buffer,
+): Promise<void> {
+  try {
+    await registerCrosschainAsset(
+      client,
+      adminUser().signatureProvider,
+      assetId,
+      originMultichainRid,
+    );
+  } catch (error) {
+    console.error(error);
+  }
 }

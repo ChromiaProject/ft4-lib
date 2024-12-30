@@ -33,7 +33,7 @@ import {
   TransferHistoryFilter,
   createTransferHistoryEntryFromResponse,
 } from "./transfer-history";
-import { Account, AccountFiltered, RateLimit } from "./types";
+import { Account, AccountResponse, RateLimit } from "./types";
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
@@ -280,8 +280,8 @@ export async function getAccountMainAuthDescriptor(
 }
 
 export function createAccountObjectFiltered(
-  account: AccountFiltered,
-): AccountFiltered {
+  account: AccountResponse,
+): AccountResponse {
   return Object.freeze({
     id: account.id,
     type: account.type,
