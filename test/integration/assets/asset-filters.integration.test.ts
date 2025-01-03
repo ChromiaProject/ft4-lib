@@ -223,8 +223,9 @@ describe("Asset queries using filter", () => {
 
       const { data } = await connection.getTransferHistoryEntriesFiltered(
         null,
-        2,
+        100,
       );
+
       const foundTransferHistoryEntry = data.find((item) =>
         senderHistory.data.some(
           (element) =>
@@ -233,11 +234,22 @@ describe("Asset queries using filter", () => {
         ),
       );
 
-      expect(JSON.stringify(data[0])).toStrictEqual(
+      const foundExpectedTransferHistoryEntry =
+        await connection.getTransferHistoryEntriesFiltered(
+          setCrosschainAndTransferHistoryEntryFilter(
+            null,
+            null,
+            [foundTransferHistoryEntry!.transactionId],
+            foundTransferHistoryEntry!.opIndex,
+          ),
+          1,
+        );
+
+      expect(JSON.stringify(foundTransferHistoryEntry)).toStrictEqual(
         JSON.stringify({
-          rowid: foundTransferHistoryEntry!.rowid,
-          isInput: foundTransferHistoryEntry!.isInput,
-          delta: foundTransferHistoryEntry!.delta,
+          rowid: foundExpectedTransferHistoryEntry.data[0].rowid,
+          isInput: foundExpectedTransferHistoryEntry.data[0].isInput,
+          delta: foundExpectedTransferHistoryEntry.data[0].delta,
           asset: {
             id: asset.id,
             name: asset.name,
@@ -248,13 +260,15 @@ describe("Asset queries using filter", () => {
             type: asset.type,
             supply: BigInt(200),
           },
-          data: foundTransferHistoryEntry!.data,
-          timestamp: foundTransferHistoryEntry!.timestamp,
-          transactionId: foundTransferHistoryEntry!.transactionId,
-          blockHeight: foundTransferHistoryEntry!.blockHeight,
-          operationName: foundTransferHistoryEntry!.operationName,
-          opIndex: foundTransferHistoryEntry!.opIndex,
-          isCrosschain: foundTransferHistoryEntry!.isCrosschain,
+          data: foundExpectedTransferHistoryEntry!.data[0].data,
+          timestamp: foundExpectedTransferHistoryEntry.data[0].timestamp,
+          transactionId:
+            foundExpectedTransferHistoryEntry.data[0].transactionId,
+          blockHeight: foundExpectedTransferHistoryEntry.data[0].blockHeight,
+          operationName:
+            foundExpectedTransferHistoryEntry.data[0].operationName,
+          opIndex: foundExpectedTransferHistoryEntry.data[0].opIndex,
+          isCrosschain: foundExpectedTransferHistoryEntry.data[0].isCrosschain,
         }),
       );
     });
