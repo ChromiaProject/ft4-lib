@@ -409,8 +409,7 @@ describe("Crosschain transfer", () => {
         }).buildAndSendWithAnchoring();
       });
 
-      const crosschainHistory =
-        await account00.getCrosschainTransferHistoryEntriesFiltered();
+      const crosschainHistory = await account00.getTransferHistory();
 
       const { data } =
         await connection00.getCrosschainTransferHistoryEntriesFiltered(
@@ -428,9 +427,9 @@ describe("Crosschain transfer", () => {
 
       expect(JSON.stringify(foundCrosschainTransferHistoryEntry)).toStrictEqual(
         JSON.stringify({
-          blockchainRid: crosschainHistory.data[0].blockchainRid,
-          accountId: crosschainHistory.data[0].accountId,
-          assetId: crosschainHistory.data[0].assetId,
+          blockchainRid: multichain00.rid,
+          accountId: account00.id,
+          assetId: asset00.id,
           delta: crosschainHistory.data[0].delta,
           isInput: crosschainHistory.data[0].isInput,
           opIndex: crosschainHistory.data[0].opIndex,
@@ -525,14 +524,15 @@ describe("Crosschain transfer", () => {
         }).buildAndSendWithAnchoring();
       });
 
-      const crosschainHistory =
-        await account00.getCrosschainTransferHistoryEntriesFiltered();
+      // const crosschainHistory =
+      //   await account00.getCrosschainTransferHistoryEntriesFiltered();
+      const crosschainHistory = await account00.getTransferHistory();
 
       const { data } =
         await connection00.getCrosschainTransferHistoryEntriesFiltered(
           setCrosschainAndTransferHistoryEntryFilter(
-            [crosschainHistory.data[0].accountId],
-            [crosschainHistory.data[0].assetId],
+            [account00.id],
+            [asset00.id],
             [crosschainHistory.data[0].transactionId],
             crosschainHistory.data[0].opIndex,
           ),
@@ -549,9 +549,9 @@ describe("Crosschain transfer", () => {
 
       expect(JSON.stringify(foundCrosschainTransferHistoryEntry)).toStrictEqual(
         JSON.stringify({
-          blockchainRid: crosschainHistory.data[0].blockchainRid,
-          accountId: crosschainHistory.data[0].accountId,
-          assetId: crosschainHistory.data[0].assetId,
+          blockchainRid: multichain00,
+          accountId: account00.id,
+          assetId: asset00.id,
           delta: crosschainHistory.data[0].delta,
           isInput: crosschainHistory.data[0].isInput,
           opIndex: crosschainHistory.data[0].opIndex,
