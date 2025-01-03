@@ -352,6 +352,7 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
     recipientId,
     asset.id,
     feeAmount,
+    5000, // ttl
   );
 
   await senderSession.account.recallUnclaimedCrosschainTransfer(transferRef);
