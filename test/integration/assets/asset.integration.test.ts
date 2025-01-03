@@ -225,29 +225,4 @@ describe("Asset", () => {
     const asset = await getNewAsset(client, "Test Asset 3", "TST3", 0, "");
     expect(asset).not.toBeNull();
   });
-
-  it("returns null when the asset for rowid is not found or does not exist", async () => {
-    const expectedAsset = await connection.getAssetByRowId(0);
-
-    expect(expectedAsset).toBeNull();
-  });
-
-  it("returns an asset by rowid", async () => {
-    const assetName = "mockAssetName";
-    const asset = await getNewAsset(client, assetName, assetName.toUpperCase());
-    const assetRowId = asset.rowId!;
-    const expectedAsset = await connection.getAssetByRowId(assetRowId);
-
-    expect(expectedAsset).toMatchObject({
-      rowId: assetRowId,
-      id: asset.id,
-      name: assetName,
-      symbol: asset.symbol,
-      decimals: asset.decimals,
-      blockchainRid,
-      iconUrl: asset.iconUrl,
-      type: asset.type,
-      supply: asset.supply,
-    });
-  });
 });

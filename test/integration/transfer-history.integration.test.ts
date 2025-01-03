@@ -10,7 +10,7 @@ import {
   TransferHistoryType,
   getTransferHistoryFromHeight,
 } from "@ft4/accounts";
-import { Asset, createAmount, createAmountFromBalance } from "@ft4/asset";
+import { Asset, createAmount } from "@ft4/asset";
 import { createInMemoryFtKeyStore } from "@ft4/authentication";
 import {
   Connection,
@@ -367,59 +367,5 @@ describe("Transfer history", () => {
     );
 
     expect(transferHistory.data.length).toEqual(3);
-  });
-
-  it("returns null when the transfer histroy entry for rowid is not found or does not exist", async () => {
-    const expectedTransferHistoryEntries =
-      await connection.getTransferHistoryEntryByRowId(0);
-
-    expect(expectedTransferHistoryEntries).toBeNull();
-  });
-
-  it("returns transfer histroy entry by rowid", async () => {
-    const senderAccount = await AccountBuilder.account(connection)
-      .withBalance(asset, 200)
-      .withPoints(1)
-      .build();
-
-    const recipientAccount = await AccountBuilder.account(connection).build();
-    const amount = createAmountFromBalance(BigInt(10));
-    await senderAccount.transfer(recipientAccount.id, asset.id, amount);
-
-    const history = await senderAccount.getTransferHistory();
-    const transferHistoryEntry = await senderAccount.getTransferHistoryEntry(
-      history.data[0].rowid,
-    );
-
-    const expectedTransferHistoryEntries =
-      await connection.getTransferHistoryEntryByRowId(
-        transferHistoryEntry!.rowid,
-      );
-
-    expect(JSON.stringify(expectedTransferHistoryEntries)).toStrictEqual(
-      JSON.stringify({
-        rowid: transferHistoryEntry!.rowid,
-        isInput: transferHistoryEntry!.isInput,
-        delta: transferHistoryEntry!.delta,
-        asset: {
-          rowId: asset.rowId,
-          id: asset.id,
-          name: asset.name,
-          symbol: asset.symbol,
-          decimals: asset.decimals,
-          blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
-          iconUrl: asset.iconUrl,
-          type: asset.type,
-          supply: BigInt(2200),
-        },
-        data: transferHistoryEntry!.data,
-        timestamp: transferHistoryEntry!.timestamp,
-        transactionId: transferHistoryEntry!.transactionId,
-        blockHeight: transferHistoryEntry!.blockHeight,
-        operationName: transferHistoryEntry!.operationName,
-        opIndex: transferHistoryEntry!.opIndex,
-        isCrosschain: transferHistoryEntry!.isCrosschain,
-      }),
-    );
   });
 });

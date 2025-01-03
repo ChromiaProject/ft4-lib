@@ -97,7 +97,7 @@ describe("Orchestrator", () => {
 
     const balance = await account2.getBalanceByAssetId(asset.id);
     expect(JSON.stringify(balance)).toStrictEqual(
-      JSON.stringify({ rowId: balance!.rowId, asset, amount }),
+      JSON.stringify({ asset, amount }),
     );
   });
 
@@ -187,7 +187,6 @@ describe("Orchestrator", () => {
 
     expect(JSON.stringify(balance)).toStrictEqual(
       JSON.stringify({
-        rowId: balance!.rowId,
         asset,
         amount,
       }),

@@ -96,7 +96,6 @@ function extract_operation_name(entry: transfer_history_entry): text {
  */
 function extract_data_from_transfer_history_entry(entry: transfer_history_entry) {
     return (
-        // Todo CIP2 the id should be removed when we introduce breaking changes
         id = entry.rowid,
         delta = entry.delta,
         decimals = entry.asset.decimals,
@@ -221,6 +220,7 @@ function get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, as
  */
 function extract_details_from_transfer_history_entry(entry: transfer_history_entry) {
     return transfer_detail(
+        rowid = entry.rowid,
         blockchain_rid = chain_context.blockchain_rid,
         account_id = entry.account.id,
         asset_id = entry.asset.id,
@@ -242,6 +242,7 @@ function extract_details_from_account_creation_transfer(
     transfer: transfer_strategy.account_creation_transfer
 ) {
     return transfer_detail(
+        rowid = transfer.rowid,
         blockchain_rid = transfer.sender_blockchain_rid,
         account_id = transfer.sender_id,
         asset_id = transfer.asset.id,
@@ -263,6 +264,7 @@ function extract_details_from_crosschain_transfer_history_entry(
     entry: crosschain_transfer_history_entry
 ) {
     return transfer_detail(
+        rowid = entry.rowid,
         blockchain_rid = entry.blockchain_rid,
         account_id = entry.account_id,
         asset_id = entry.asset.id,

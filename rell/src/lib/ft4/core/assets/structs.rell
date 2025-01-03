@@ -37,6 +37,8 @@ struct filter {
  * describe a `transfer_history_entry` and a `crosschain_transfer_history_entry`.
  */
 struct transfer_detail {
+    /** The rowid of the entity associated with the transfer history entry */
+    rowid: rowid;
     /** The blockchain on which the transfer happened */
     blockchain_rid: byte_array;
     /** The account whose balance was affected */

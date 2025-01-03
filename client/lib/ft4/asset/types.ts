@@ -91,7 +91,7 @@ export type TransferHistoryEntryFilter = {
 export type CrosschainTransferHistoryEntryFilter = {
   accountIds?: Array<Buffer> | null;
   assetIds?: Array<Buffer> | null;
-  transactionRid?: Array<Buffer> | null;
+  transactionRids?: Array<Buffer> | null;
   opIndex?: number | null;
 };
 

@@ -100,20 +100,14 @@ export function allAssets(
 }
 
 export function assetsFiltered(
-  assetFilter: AssetFilter | null,
-  limit: OptionalLimit,
-  cursor: OptionalPageCursor,
+  assetFilter?: AssetFilter | null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
 ): QueryObject<
   PaginatedEntity<AssetResponse>,
   {
     asset_filter:
-      | [
-          Array<number>,
-          Array<Buffer>,
-          string | null,
-          string | null,
-          string | null,
-        ]
+      | [Array<Buffer> | null, string | null, string | null, string | null]
       | null;
     page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
@@ -172,13 +166,13 @@ export function balancesByAccountId(
 }
 
 export function balancesFiltered(
-  balanceFilter: BalanceFilter | null,
-  limit: OptionalLimit,
-  cursor: OptionalPageCursor,
+  balanceFilter?: BalanceFilter | null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
 ): QueryObject<
   PaginatedEntity<BalanceResponse>,
   {
-    balance_filter: [Array<number>, Buffer | null, Buffer | null] | null;
+    balance_filter: [Array<Buffer> | null, Array<Buffer> | null] | null;
     page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
@@ -207,18 +201,17 @@ export function assetDetailsForCrosschainRegistration(
 }
 
 export function transferHistoryEntriesFiltered(
-  transferHistoryEntryFilter: TransferHistoryEntryFilter | null,
-  limit: OptionalLimit,
-  cursor: OptionalPageCursor,
+  transferHistoryEntryFilter?: TransferHistoryEntryFilter | null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
 ): QueryObject<
   PaginatedEntity<TransferHistoryEntryResponse>,
   {
     transfer_history_entry_filter:
       | [
-          Array<number>,
-          Buffer | null,
-          Buffer | null,
-          Buffer | null,
+          Array<Buffer> | null,
+          Array<Buffer> | null,
+          Array<Buffer> | null,
           number | null,
         ]
       | null;
@@ -244,18 +237,17 @@ export function transferHistoryEntriesFiltered(
 }
 
 export function crossChainTransferHistoryEntriesFiltered(
-  crosschainTransferHistoryEntryFilter: CrosschainTransferHistoryEntryFilter | null,
-  limit: OptionalLimit,
-  cursor: OptionalPageCursor,
+  crosschainTransferHistoryEntryFilter?: CrosschainTransferHistoryEntryFilter | null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
 ): QueryObject<
   PaginatedEntity<CrosschainTransferhistoryEntryResponse>,
   {
     crosschain_transfer_history_entry_filter:
       | [
-          Array<number>,
-          Buffer | null,
-          Buffer | null,
-          Buffer | null,
+          Array<Buffer> | null,
+          Array<Buffer> | null,
+          Array<Buffer> | null,
           number | null,
         ]
       | null;
@@ -271,7 +263,7 @@ export function crossChainTransferHistoryEntriesFiltered(
           ? [
               crosschainTransferHistoryEntryFilter?.accountIds ?? null,
               crosschainTransferHistoryEntryFilter?.assetIds ?? null,
-              crosschainTransferHistoryEntryFilter?.transactionRid ?? null,
+              crosschainTransferHistoryEntryFilter?.transactionRids ?? null,
               crosschainTransferHistoryEntryFilter?.opIndex ?? null,
             ]
           : null,

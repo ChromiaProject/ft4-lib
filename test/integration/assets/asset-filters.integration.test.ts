@@ -1,50 +1,15 @@
 import { AccountBuilder, getNewAsset, useChromiaNode } from "@ft4-test/util";
 import { Asset, getBalanceByAccountId } from "@ft4/asset";
-import {
-  AssetFilter,
-  BalanceFilter,
-  CrosschainTransferHistoryEntryFilter,
-  TransferHistoryEntryFilter,
-} from "@ft4/asset/types";
 import { Connection, createConnection } from "@ft4/ft-session";
 import { IClient } from "postchain-client";
+import {
+  setAssetFilter,
+  setBalanceFilter,
+  setCrosschainAndTransferHistoryEntryFilter,
+} from "./asset-filter-helpers";
 
 let client: IClient;
 let connection: Connection;
-
-function setAssetFilter(
-  rowids: Array<number> = [],
-  ids: Array<Buffer>,
-  name: string | null = null,
-  symbol: string | null = null,
-  type: string | null = null,
-): AssetFilter {
-  return { rowids, ids, name, symbol, type };
-}
-
-function setBalanceFilter(
-  rowids: Array<number> = [],
-  account_id: Buffer | null = null,
-  asset_id: Buffer | null = null,
-): BalanceFilter {
-  return { rowids, accountIds: account_id, assetIds: asset_id };
-}
-
-function setCrosschainAndTransferHistoryEntryFilter(
-  rowids: Array<number> = [],
-  account_id: Buffer | null = null,
-  asset_id: Buffer | null = null,
-  transaction_rid: Buffer | null = null,
-  op_index: number | null = null,
-): TransferHistoryEntryFilter | CrosschainTransferHistoryEntryFilter {
-  return {
-    rowids,
-    accountIds: account_id,
-    assetIds: asset_id,
-    transactionRids: transaction_rid,
-    opIndex: op_index,
-  };
-}
 
 describe("Asset queries using filter", () => {
   const getClient = useChromiaNode();
@@ -58,12 +23,12 @@ describe("Asset queries using filter", () => {
     it("returns empty pagination without filter", async () => {
       const { data } = await connection.getAssetsFiltered(null, 1);
 
-      const foundAsset = data.find((item) => item.rowId === 999) ?? null;
+      const foundAsset = data.find((item) => item.id === mockBuffer) ?? null;
       expect(foundAsset).toBe(null);
     });
     it("returns empty pagination with filter", async () => {
       const { data } = await connection.getAssetsFiltered(
-        setAssetFilter([0], [mockBuffer], mockString, mockString, mockString),
+        setAssetFilter([mockBuffer], mockString, mockString, mockString),
         1,
       );
 
@@ -82,7 +47,6 @@ describe("Asset queries using filter", () => {
 
       expect(JSON.stringify(foundAsset)).toStrictEqual(
         JSON.stringify({
-          rowId: asset.rowId,
           id: asset.id,
           name: asset.name,
           symbol: asset.symbol,
@@ -101,13 +65,7 @@ describe("Asset queries using filter", () => {
         "ASSET_PAGINATED_WITH_FILTER_1",
       );
       const { data } = await connection.getAssetsFiltered(
-        setAssetFilter(
-          [asset.rowId!],
-          [asset.id],
-          asset.name,
-          asset.symbol,
-          asset.type,
-        ),
+        setAssetFilter([asset.id], asset.name, asset.symbol, asset.type),
         1,
       );
       const foundAsset = data.find(
@@ -115,7 +73,6 @@ describe("Asset queries using filter", () => {
       );
 
       expect(foundAsset).toMatchObject({
-        rowId: asset.rowId,
         id: asset.id,
         name: asset.name,
         symbol: asset.symbol,
@@ -131,12 +88,13 @@ describe("Asset queries using filter", () => {
     it("returns empty pagination without filter", async () => {
       const { data } = await connection.getBalancesFiltered(null, 1);
 
-      const foundBalance = data.find((item) => item.rowId === 999) ?? null;
+      const foundBalance =
+        data.find((item) => item.asset.id === mockBuffer) ?? null;
       expect(foundBalance).toBe(null);
     });
     it("returns empty pagination with filter", async () => {
       const { data } = await connection.getBalancesFiltered(
-        setBalanceFilter([0], mockBuffer, mockBuffer),
+        setBalanceFilter([mockBuffer], [mockBuffer]),
         1,
       );
 
@@ -161,9 +119,7 @@ describe("Asset queries using filter", () => {
 
       expect(JSON.stringify(foundBalance)).toStrictEqual(
         JSON.stringify({
-          rowId: balance?.rowId,
           asset: {
-            rowId: asset.rowId,
             id: asset.id,
             name: asset.name,
             symbol: asset.symbol,
@@ -194,7 +150,7 @@ describe("Asset queries using filter", () => {
       );
 
       const { data } = await connection.getBalancesFiltered(
-        setBalanceFilter([balance!.rowId!], account.id, balance!.asset.id),
+        setBalanceFilter([account.id], [balance!.asset.id]),
         100,
       );
 
@@ -205,9 +161,7 @@ describe("Asset queries using filter", () => {
 
       expect(JSON.stringify(foundBalance)).toStrictEqual(
         JSON.stringify({
-          rowId: balance?.rowId,
           asset: {
-            rowId: asset.rowId,
             id: asset.id,
             name: asset.name,
             symbol: asset.symbol,
@@ -230,16 +184,15 @@ describe("Asset queries using filter", () => {
       );
 
       const foundTransferHistoryEntry =
-        data.find((item) => item.rowid === 999) ?? null;
+        data.find((item) => item.asset.id === mockBuffer) ?? null;
       expect(foundTransferHistoryEntry).toBe(null);
     });
     it("returns empty pagination with filter", async () => {
       const { data } = await connection.getTransferHistoryEntriesFiltered(
         setCrosschainAndTransferHistoryEntryFilter(
-          [0],
-          mockBuffer,
-          mockBuffer,
-          mockBuffer,
+          [mockBuffer],
+          [mockBuffer],
+          [mockBuffer],
           0,
         ),
         1,
@@ -267,27 +220,25 @@ describe("Asset queries using filter", () => {
       );
 
       const senderHistory = await senderAccount.getTransferHistory();
-      const senderTransferHistoryEntry =
-        await senderAccount.getTransferHistoryEntry(
-          senderHistory.data[0].rowid,
-        );
 
       const { data } = await connection.getTransferHistoryEntriesFiltered(
         null,
-        100,
+        2,
+      );
+      const foundTransferHistoryEntry = data.find((item) =>
+        senderHistory.data.some(
+          (element) =>
+            element.transactionId.toString("hex") ===
+            item.transactionId.toString("hex"),
+        ),
       );
 
-      const foundTransferHistoryEntry = data.find(
-        (item) => item.rowid === senderTransferHistoryEntry?.rowid,
-      );
-
-      expect(JSON.stringify(foundTransferHistoryEntry)).toStrictEqual(
+      expect(JSON.stringify(data[0])).toStrictEqual(
         JSON.stringify({
-          rowid: senderTransferHistoryEntry!.rowid,
-          isInput: senderTransferHistoryEntry!.isInput,
-          delta: senderTransferHistoryEntry!.delta,
+          rowid: foundTransferHistoryEntry!.rowid,
+          isInput: foundTransferHistoryEntry!.isInput,
+          delta: foundTransferHistoryEntry!.delta,
           asset: {
-            rowId: asset.rowId,
             id: asset.id,
             name: asset.name,
             symbol: asset.symbol,
@@ -297,13 +248,13 @@ describe("Asset queries using filter", () => {
             type: asset.type,
             supply: BigInt(200),
           },
-          data: senderTransferHistoryEntry!.data,
-          timestamp: senderTransferHistoryEntry!.timestamp,
-          transactionId: senderTransferHistoryEntry!.transactionId,
-          blockHeight: senderTransferHistoryEntry!.blockHeight,
-          operationName: senderTransferHistoryEntry!.operationName,
-          opIndex: senderTransferHistoryEntry!.opIndex,
-          isCrosschain: senderTransferHistoryEntry!.isCrosschain,
+          data: foundTransferHistoryEntry!.data,
+          timestamp: foundTransferHistoryEntry!.timestamp,
+          transactionId: foundTransferHistoryEntry!.transactionId,
+          blockHeight: foundTransferHistoryEntry!.blockHeight,
+          operationName: foundTransferHistoryEntry!.operationName,
+          opIndex: foundTransferHistoryEntry!.opIndex,
+          isCrosschain: foundTransferHistoryEntry!.isCrosschain,
         }),
       );
     });
@@ -328,29 +279,31 @@ describe("Asset queries using filter", () => {
 
       const senderHistory = await senderAccount.getTransferHistory();
 
-      const senderTransferHistoryEntry =
-        await senderAccount.getTransferHistoryEntry(
-          senderHistory.data[0].rowid,
-        );
-
       const { data } = await connection.getTransferHistoryEntriesFiltered(
         setCrosschainAndTransferHistoryEntryFilter(
-          [senderHistory.data[0].rowid],
-          senderAccount.id,
-          senderHistory.data[0].asset.id,
-          senderHistory.data[0].transactionId,
+          [senderAccount.id],
+          [senderHistory.data[0].asset.id],
+          [senderHistory.data[0].transactionId],
           senderHistory.data[0].opIndex,
         ),
         2,
       );
+
+      const foundTransferHistoryEntry = data.find((item) =>
+        senderHistory.data.some(
+          (element) =>
+            element.transactionId.toString("hex") ===
+            item.transactionId.toString("hex"),
+        ),
+      );
+
       expect(JSON.stringify(data)).toStrictEqual(
         JSON.stringify([
           {
-            rowid: senderTransferHistoryEntry!.rowid,
-            isInput: senderTransferHistoryEntry!.isInput,
-            delta: senderTransferHistoryEntry!.delta,
+            rowid: foundTransferHistoryEntry!.rowid,
+            isInput: foundTransferHistoryEntry!.isInput,
+            delta: foundTransferHistoryEntry!.delta,
             asset: {
-              rowId: asset.rowId,
               id: asset.id,
               name: asset.name,
               symbol: asset.symbol,
@@ -360,13 +313,13 @@ describe("Asset queries using filter", () => {
               type: asset.type,
               supply: BigInt(200),
             },
-            data: senderTransferHistoryEntry!.data,
-            timestamp: senderTransferHistoryEntry!.timestamp,
-            transactionId: senderTransferHistoryEntry!.transactionId,
-            blockHeight: senderTransferHistoryEntry!.blockHeight,
-            operationName: senderTransferHistoryEntry!.operationName,
-            opIndex: senderTransferHistoryEntry!.opIndex,
-            isCrosschain: senderTransferHistoryEntry!.isCrosschain,
+            data: foundTransferHistoryEntry!.data,
+            timestamp: foundTransferHistoryEntry!.timestamp,
+            transactionId: foundTransferHistoryEntry!.transactionId,
+            blockHeight: foundTransferHistoryEntry!.blockHeight,
+            operationName: foundTransferHistoryEntry!.operationName,
+            opIndex: foundTransferHistoryEntry!.opIndex,
+            isCrosschain: foundTransferHistoryEntry!.isCrosschain,
           },
         ]),
       );
