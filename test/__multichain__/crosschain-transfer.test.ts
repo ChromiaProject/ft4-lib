@@ -19,7 +19,7 @@ import {
 import { createConnection } from "@ft4/ft-session";
 import { registerAccount, registrationStrategy } from "@ft4/registration";
 import { transactionBuilder } from "@ft4/transaction-builder";
-import { BufferId } from "@ft4/utils";
+import { BufferId, getTransactionRid } from "@ft4/utils";
 import { Operation, RawGtx, gtv } from "postchain-client";
 
 describe("Crosschain transfer", () => {
@@ -365,6 +365,7 @@ describe("Crosschain transfer", () => {
         10000000000000,
       );
 
+      const applyState = {} as any;
       await new Promise<void>((resolve, reject) => {
         const onAnchoredHandler = async (
           data: {
@@ -383,6 +384,8 @@ describe("Crosschain transfer", () => {
             reject(new Error("No data provided"));
             return;
           }
+          applyState.tx = data?.tx;
+          applyState.opIndex = data?.opIndex;
           const iccfProofOperation = await data.createProof(multichain01.rid);
           try {
             await transactionBuilder(
@@ -409,31 +412,40 @@ describe("Crosschain transfer", () => {
         }).buildAndSendWithAnchoring();
       });
 
-      const crosschainHistory = await account00.getTransferHistory();
-
       const { data } =
         await connection00.getCrosschainTransferHistoryEntriesFiltered(
           null,
           100,
         );
 
-      const foundCrosschainTransferHistoryEntry = data.find((item) =>
-        crosschainHistory.data.some(
-          (element) =>
-            element.transactionId.toString("hex") ===
-            item.transactionId.toString("hex"),
-        ),
+      const transactionRid = getTransactionRid(applyState.tx);
+
+      const matchingCrosschainTransferHistoryEntry =
+        await connection00.getCrosschainTransferHistoryEntriesFiltered(
+          setCrosschainAndTransferHistoryEntryFilter(
+            null,
+            null,
+            [transactionRid],
+            applyState.opIndex,
+          ),
+          1,
+        );
+
+      const foundCrosschainTransferHistoryEntry = data.find(
+        (item) =>
+          item.transactionId.toString("hex") === transactionRid.toString("hex"),
       );
 
       expect(JSON.stringify(foundCrosschainTransferHistoryEntry)).toStrictEqual(
         JSON.stringify({
-          blockchainRid: multichain00.rid,
-          accountId: account00.id,
+          rowid: matchingCrosschainTransferHistoryEntry.data[0].rowid,
+          blockchainRid: multichain01.rid,
+          accountId: account01.id,
           assetId: asset00.id,
-          delta: crosschainHistory.data[0].delta,
-          isInput: crosschainHistory.data[0].isInput,
-          opIndex: crosschainHistory.data[0].opIndex,
-          transactionId: crosschainHistory.data[0].transactionId,
+          delta: matchingCrosschainTransferHistoryEntry.data[0].delta,
+          isInput: matchingCrosschainTransferHistoryEntry.data[0].isInput,
+          opIndex: matchingCrosschainTransferHistoryEntry.data[0].opIndex,
+          transactionId: transactionRid,
         }),
       );
     });
@@ -480,6 +492,7 @@ describe("Crosschain transfer", () => {
         10000000000000,
       );
 
+      const applyState = {} as any;
       await new Promise<void>((resolve, reject) => {
         const onAnchoredHandler = async (
           data: {
@@ -498,6 +511,8 @@ describe("Crosschain transfer", () => {
             reject(new Error("No data provided"));
             return;
           }
+          applyState.tx = data?.tx;
+          applyState.opIndex = data?.opIndex;
           const iccfProofOperation = await data.createProof(multichain01.rid);
           try {
             await transactionBuilder(
@@ -524,38 +539,45 @@ describe("Crosschain transfer", () => {
         }).buildAndSendWithAnchoring();
       });
 
-      // const crosschainHistory =
-      //   await account00.getCrosschainTransferHistoryEntriesFiltered();
-      const crosschainHistory = await account00.getTransferHistory();
+      const transactionRid = getTransactionRid(applyState.tx);
 
       const { data } =
         await connection00.getCrosschainTransferHistoryEntriesFiltered(
           setCrosschainAndTransferHistoryEntryFilter(
-            [account00.id],
+            [account01.id],
             [asset00.id],
-            [crosschainHistory.data[0].transactionId],
-            crosschainHistory.data[0].opIndex,
+            [transactionRid],
+            applyState.opIndex,
           ),
           100,
         );
 
-      const foundCrosschainTransferHistoryEntry = data.find((item) =>
-        crosschainHistory.data.some(
-          (element) =>
-            element.transactionId.toString("hex") ===
-            item.transactionId.toString("hex"),
-        ),
+      const matchingCrosschainTransferHistoryEntry =
+        await connection00.getCrosschainTransferHistoryEntriesFiltered(
+          setCrosschainAndTransferHistoryEntryFilter(
+            null,
+            null,
+            [transactionRid],
+            applyState.opIndex,
+          ),
+          1,
+        );
+
+      const foundCrosschainTransferHistoryEntry = data.find(
+        (item) =>
+          item.transactionId.toString("hex") === transactionRid.toString("hex"),
       );
 
-      expect(JSON.stringify(foundCrosschainTransferHistoryEntry)).toStrictEqual(
+      expect(JSON.stringify(foundCrosschainTransferHistoryEntry)).toEqual(
         JSON.stringify({
-          blockchainRid: multichain00,
-          accountId: account00.id,
+          rowid: matchingCrosschainTransferHistoryEntry.data[0].rowid,
+          blockchainRid: multichain01.rid,
+          accountId: account01.id,
           assetId: asset00.id,
-          delta: crosschainHistory.data[0].delta,
-          isInput: crosschainHistory.data[0].isInput,
-          opIndex: crosschainHistory.data[0].opIndex,
-          transactionId: crosschainHistory.data[0].transactionId,
+          delta: matchingCrosschainTransferHistoryEntry.data[0].delta,
+          isInput: matchingCrosschainTransferHistoryEntry.data[0].isInput,
+          opIndex: matchingCrosschainTransferHistoryEntry.data[0].opIndex,
+          transactionId: transactionRid,
         }),
       );
     });
