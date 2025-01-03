@@ -50,6 +50,7 @@ function format_expected_transfer_history_entry_assertion(
 
 function format_expected_crosschain_transfer_history_entry_assertion(assets.crosschain_transfer_history_entry) {
     return assets.transfer_detail(
+        rowid = crosschain_transfer_history_entry.rowid,
         blockchain_rid = crosschain_transfer_history_entry.blockchain_rid,
         account_id = crosschain_transfer_history_entry.account_id,
         asset_id = crosschain_transfer_history_entry.asset.id,
