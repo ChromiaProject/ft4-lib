@@ -19,7 +19,7 @@ describe("Asset queries using filter", () => {
     client = getClient();
     connection = createConnection(client);
   });
-  describe("getAssets", () => {
+  describe("getAssetsFiltered", () => {
     it("returns empty pagination without filter", async () => {
       const { data } = await connection.getAssetsFiltered(null, 1);
 
@@ -84,7 +84,7 @@ describe("Asset queries using filter", () => {
       });
     });
   });
-  describe("getBalances", () => {
+  describe("getBalancesFiltered", () => {
     it("returns empty pagination without filter", async () => {
       const { data } = await connection.getBalancesFiltered(null, 1);
 
@@ -111,11 +111,25 @@ describe("Asset queries using filter", () => {
         .build();
 
       const balance = await account.getBalanceByAssetId(asset.id);
-      const { data } = await connection.getBalancesFiltered(null, 100);
-      const foundBalance = data.find(
+      let result = await connection.getBalancesFiltered(null);
+
+      let foundBalance = result.data.find(
         (item) =>
           item.asset.id.toString("hex") === balance!.asset.id.toString("hex"),
       );
+
+      while (!foundBalance) {
+        result = await connection.getBalancesFiltered(
+          null,
+          undefined,
+          result.nextCursor,
+        );
+
+        foundBalance = result.data.find(
+          (item) =>
+            item.asset.id.toString("hex") === balance!.asset.id.toString("hex"),
+        );
+      }
 
       expect(JSON.stringify(foundBalance)).toStrictEqual(
         JSON.stringify({

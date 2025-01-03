@@ -120,18 +120,6 @@ query get_transfer_history_entries_filtered(
 }
 
 /**
- * Returns all crosschain transfer history entries paginated
- * @param page_size    the size of the pages to retrieve
- * @param page_cursor  a pointer to where the page should start
- */
-query get_crosschain_transfer_history_entries(page_size: integer?, page_cursor: text?) {
-    return utils.make_page(
-        assets.get_paginated_crosschain_transfer_history_entries(page_size, page_cursor),
-        page_size
-    );
-}
-
-/**
  * Returns paginated and filtered details of all crosschain  entries based on the applied filter
  * 
  * @param crosschain_transfer_history_entry_filter  a struct containing the keys and indexes of the crosschain transfer history entry entity to enable filtering for the data to fetch

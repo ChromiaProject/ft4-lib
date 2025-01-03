@@ -28,16 +28,12 @@ import {
 } from "./queries";
 import { AnyAuthDescriptor, gtv } from "./auth-descriptor";
 import {
-  CrosschainTransferHistoryEntry,
-  CrosschainTransferhistoryEntryResponse,
   TransferHistoryEntry,
   TransferHistoryEntryResponse,
   TransferHistoryFilter,
   createTransferHistoryEntryFromResponse,
 } from "./transfer-history";
 import { Account, RateLimit } from "./types";
-import { getCrosschainTransferHistoryEntries as getCrosschainTransferHistoryEntriesFiltered } from "@ft4/crosschain/queries";
-import { createCrosschainTransferHistoryEntryObject } from "@ft4/asset/asset-query-functions";
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
@@ -140,22 +136,6 @@ export function createAccountObject(
         recipientId,
         assetId,
         amount,
-      );
-    },
-    getCrosschainTransferHistoryEntriesFiltered: async (
-      limit: OptionalLimit = null,
-      cursor: OptionalPageCursor = null,
-    ) => {
-      return retrievePaginatedEntity<
-        CrosschainTransferHistoryEntry,
-        CrosschainTransferhistoryEntryResponse
-      >(
-        connection,
-        getCrosschainTransferHistoryEntriesFiltered(limit, cursor),
-        (entries) =>
-          entries.map((entry) =>
-            createCrosschainTransferHistoryEntryObject(entry),
-          ),
       );
     },
   });

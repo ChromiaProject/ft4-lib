@@ -8,7 +8,6 @@ import {
 } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
-  CrosschainTransferHistoryEntry,
   TransferHistoryEntry,
   TransferHistoryFilter,
 } from "./transfer-history";
@@ -158,16 +157,6 @@ export interface Account {
     assetId: BufferId,
     amount: bigint,
   ) => Promise<PendingTransfer | null>;
-  /**
-   * Retrieves all crosschain transfer history entries paginated
-   * @param limit - maximum page size
-   * @param cursor - where the page should start
-   * @returns Paginated crosschain transfer history entries
-   */
-  getCrosschainTransferHistoryEntriesFiltered: (
-    limit?: OptionalLimit,
-    cursor?: OptionalPageCursor,
-  ) => Promise<PaginatedEntity<CrosschainTransferHistoryEntry>>;
 }
 
 /**

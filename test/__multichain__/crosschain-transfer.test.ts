@@ -286,7 +286,7 @@ describe("Crosschain transfer", () => {
     expect(senderRecord.blockchainRid).toEqual(connection00.blockchainRid);
   });
 
-  describe("getCrosschainTransferHistoryEntries", () => {
+  describe("getCrosschainTransferHistoryEntriesFiltered", () => {
     const mockBuffer = Buffer.alloc(32);
     it("returns empty pagination without filter", async () => {
       const { multichain00 } = await fetchBlockchains();
