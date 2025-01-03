@@ -8,21 +8,41 @@ function transfer_message(gtv) {
             assets.format_amount_with_decimals(params.amount, asset.decimals),
             asset.name,
             asset.id,
-            params.receiver_id
+            params.recipient_id
         );
 }
 
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(transfer).mount_name,
-    flags = ["T"],
+    flags = [accounts.auth_flags.TRANSFER],
     message = transfer_message(*)
 );
 
-operation transfer(receiver_id: byte_array, asset_id: byte_array, amount: big_integer) {
+/**
+ * Transfers tokens to a certain recipient. 
+ * - if the recipient exists, a normal transfer will take place;
+ * - otherwise:
+ *   - if account creation on transfer is enabled, the account registration procedure will
+ *     be started;
+ *   - an error is thrown
+ * 
+ * Must be signed by an auth descriptor with `accounts.auth_flags.TRANSFER`
+ * 
+ * Throws if the required assets cannot be transferred. Common cases include:
+ * - the sender account's balance is lower than `amount`
+ * - the amount to transfer is not in the accepted range (0, 2^256) (exclusive)
+ * - some conditions added in development through transfer extensions (`before_transfer` or
+ *   `after_transfer`) aren't met
+ *
+ * @param recipient_id  the account that should receive the transfer or be created
+ * @param asset_id      id of the asset that should be sent
+ * @param amount        the amount to transfer
+ */
+operation transfer(recipient_id: byte_array, asset_id: byte_array, amount: big_integer) {
     val sender = auth.authenticate();
     val asset = assets.Asset(asset_id);
-    assets.Unsafe.transfer_to_recipient_id(sender, receiver_id, asset, amount);
+    assets.Unsafe.transfer_to_recipient_id(sender, recipient_id, asset, amount);
 }
 
 function recall_unclaimed_transfer_message(gtv) {
@@ -37,10 +57,26 @@ function recall_unclaimed_transfer_message(gtv) {
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(recall_unclaimed_transfer).mount_name,
-    flags = ["T"],
+    flags = [accounts.auth_flags.TRANSFER],
     message = recall_unclaimed_transfer_message(*)
 );
 
+/**
+ * Allows recalling a transfer that was sent to a non-existing account and was not used
+ * to create the account.
+ * 
+ * Must be signed by an auth descriptor with `accounts.auth_flags.TRANSFER`
+ * 
+ * Throws if recalling is impossible. Common cases include:
+ * - account registration on transfer is not allowed
+ * - some conditions added in development through recall_on_internal_transfer extensions
+ *   (`recall_on_internal_transfer`) aren't met
+ * 
+ * @param transfer_tx_rid       the rid of the transfer which contains the original transfer.
+ *                              Can be fetched e.g., by using `crosschain.get_pending_transfers_for_account`
+ * @param transfer_op_index     the index of the transfer operation inside the transaction
+ *                              referred to by the `transfer_tx_rid` parameter.
+ */
 operation recall_unclaimed_transfer(transfer_tx_rid: byte_array, transfer_op_index: integer) {
     val account = auth.authenticate();
     assets.Unsafe.recall_unclaimed_transfer(account, transfer_tx_rid, transfer_op_index);
@@ -49,7 +85,7 @@ operation recall_unclaimed_transfer(transfer_tx_rid: byte_array, transfer_op_ind
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(burn).mount_name,
-    flags = ["T"],
+    flags = [accounts.auth_flags.TRANSFER],
     message = burn_message(*)
 );
 
@@ -64,6 +100,21 @@ function burn_message(gtv) {
         );
 }
 
+/**
+ * Deletes tokens from an account's balance, decreasing the total supply by the amount
+ * being burned.
+ * 
+ * Must be signed by an auth descriptor with `accounts.auth_flags.TRANSFER`
+ *  
+ * Throws if the required assets cannot be burned. Common cases include:
+ * - the account balance is lower than `amount`
+ * - the amount to burn is not in the accepted range (0; 2^256) (exclusive)
+ * - some conditions added in development through burn extensions (`before_burn` or
+ *   `after_burn`) aren't met
+ * 
+ * @param asset_id  id of the asset to burn
+ * @param amount    the amount of tokens to burn
+ */
 operation burn(asset_id: byte_array, amount: big_integer) {
     val account = auth.authenticate();
     assets.Unsafe.burn(account, assets.Asset(asset_id), amount);

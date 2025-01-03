@@ -14,6 +14,9 @@
               - name: subscription_strategy_missing_test_asset_00
                 issuing_blockchain_rid: {chain00_rid}
                 min_amount: 1000L
+              - name: crosschain-transfer-original-sender-test-asset
+                issuing_blockchain_rid: {chain00_rid}
+                min_amount: 10L
             strategy:
               - fee
               - subscription
@@ -25,6 +28,9 @@
               - name: fee_strategy_timeout_test_asset_00
                 issuing_blockchain_rid: {chain00_rid}
                 min_amount: 1000000L
+              - name: crosschain-transfer-original-sender-test-asset
+                issuing_blockchain_rid: {chain00_rid}
+                min_amount: 10L
             strategy:
               - fee
             sender_blockchain: {chain00_rid}

@@ -12,7 +12,7 @@ object MISCONFIGURED_ACCOUNT {
         accounts.auth_descriptor(
             accounts.auth_type.S,
             [
-                set(["A", "T"]).to_gtv(),
+                set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]).to_gtv(),
                 x"039CF7CA604FB1D1D7BDDAD731E350D22AB18A97C106A42AA0D7FCF9524465A7C2".to_gtv()
             ],
             null.to_gtv()

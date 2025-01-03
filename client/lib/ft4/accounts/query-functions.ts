@@ -74,6 +74,7 @@ export function createAccountObject(
   accountId: BufferId,
 ): Account {
   return Object.freeze({
+    connection,
     id: formatter.ensureBuffer(accountId),
     blockchainRid: formatter.toBuffer(connection.client.config.blockchainRid),
     getBalanceByAssetId: (assetId: BufferId) =>

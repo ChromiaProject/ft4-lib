@@ -1,25 +1,77 @@
+/** The variables that an auth descriptor rule can check against. */
 enum rule_variable {
+    /** the height of the block we're currently in, relative to the genesis block */
 	block_height,
+    /** the timestamp of the last block that was confirmed */
 	block_time,
+    /** the number of operation the auth descriptor has been used for */
 	op_count
 }
 
+/** The comparison operator that the auth descriptor rule will use. */
 enum rule_operator {
-	lt,
-	le,
-	eq,
-	ge,
-	gt
+	/** whether the current value is less than the value defined in the rule */
+    lt,
+	/** whether the current value is less than or equal to the value defined in the rule */
+    le,
+	/** whether the current value is equal to the value defined in the rule */
+    eq,
+	/** whether the current value is greater than or equal to the value defined in the rule */
+    ge,
+	/** whether the current value is greater than the value defined in the rule */
+    gt
 }
 
+/**
+ * The expression of a single rule.
+ * 
+ * Three statuses of the expression are of interest. We want to know whether a rule is:
+ * - violated or valid;
+ * - active or inactive;
+ * - expired or not.
+ * 
+ * A rule can be **violated**, which means that the given rule condition is currently false.
+ * 
+ * A rule can also be **inactive**, which means that the given rule condition has never been
+ * true, but will be in the future.
+ * 
+ * The status of every possible rule expression can either:
+ * - always be "active";
+ * - trigger once, going from "inactive" to "active".
+ * 
+ * This gives us the definition of expired:
+ * A rule is **expired** if it is both violated and active, meaning that it doesn't allow
+ * the auth descriptor to be used and will never change state.
+ * 
+ * Examples:
+ * 
+ * |     Rule      | active | violated | expired |
+ * | ------------  | ------ | -------- | ------- |
+ * | "time < 1000" |  true  |   true   |  true   |
+ * | "time < 1e10" |  true  |   false  |  false  |
+ * | "time > 1000" |  true  |   false  |  false  |
+ * | "time > 1e10" |  false |   true   |  false  |
+ */
 struct rule_expression {
+    /** The operator of the rule, e.g. "greater than" */
 	operator: rule_operator;
+    /** The variable to check for validity, e.g. "timestamp" */
 	variable: rule_variable;
+    /** The value the variable should be checked against, e.g. "1000" */
 	value: integer;
 }
 
+/**
+ * Used to simplify rule creation, it describes a rule without the operator.
+ * 
+ * This struct shouldn't generally be handled by developers, the intended workflow is
+ * `less_than(block_height(10));`, which should give a `rule_expression` without ever
+ * handling `rule_parameters`
+ */
 struct rule_parameters {
+    /** The variable of the rule */
 	variable: rule_variable;
+    /** The value to check against */
 	value: integer;
 }
 
@@ -27,6 +79,11 @@ struct rule_parameters {
  * Operator functions
  */
 
+/**
+ * Composes a rule from the `rule_parameters` and the `gt` operator
+ * 
+ * @param rule_parameters   the variable and value to use in the rule
+ */
 function greater_than(rule_parameters): rule_expression {
     return rule_expression(
         rule_parameters.variable,
@@ -35,6 +92,11 @@ function greater_than(rule_parameters): rule_expression {
     );
 }
 
+/**
+ * Composes a rule from the `rule_parameters` and the `ge` operator
+ * 
+ * @param rule_parameters   the variable and value to use in the rule
+ */
 function greater_or_equal(rule_parameters): rule_expression {
     return rule_expression(
         rule_parameters.variable,
@@ -43,6 +105,11 @@ function greater_or_equal(rule_parameters): rule_expression {
     );
 }
 
+/**
+ * Composes a rule from the `rule_parameters` and the `eq` operator
+ * 
+ * @param rule_parameters   the variable and value to use in the rule
+ */
 function equals(rule_parameters): rule_expression {
     return rule_expression(
         rule_parameters.variable,
@@ -51,6 +118,11 @@ function equals(rule_parameters): rule_expression {
     );
 }
 
+/**
+ * Composes a rule from the `rule_parameters` and the `lt` operator
+ * 
+ * @param rule_parameters   the variable and value to use in the rule
+ */
 function less_than(rule_parameters): rule_expression {
     return rule_expression(
         rule_parameters.variable,
@@ -59,6 +131,11 @@ function less_than(rule_parameters): rule_expression {
     );
 }
 
+/**
+ * Composes a rule from the `rule_parameters` and the `le` operator
+ * 
+ * @param rule_parameters   the variable and value to use in the rule
+ */
 function less_or_equal(rule_parameters): rule_expression {
     return rule_expression(
         rule_parameters.variable,
@@ -71,6 +148,12 @@ function less_or_equal(rule_parameters): rule_expression {
  * Rule variable functions
  */
 
+/**
+ * First step in creating a `rule_expression` based on `block_height`. Should be passed
+ * to an operator function, e.g. `less_than(block_height(100))`
+ * 
+ * @param integer   the value to use in the rule
+ */
 function block_height(integer): rule_parameters {
     return rule_parameters(
         rule_variable.block_height,
@@ -78,6 +161,12 @@ function block_height(integer): rule_parameters {
     );
 }
 
+/**
+ * First step in creating a `rule_expression` based on `block_time`. Should be passed
+ * to an operator function, e.g. `less_than(block_time(1000))`
+ * 
+ * @param integer   the value to use in the rule
+ */
 function block_time(integer): rule_parameters {
     return rule_parameters(
         rule_variable.block_time,
@@ -85,6 +174,12 @@ function block_time(integer): rule_parameters {
     );
 }
 
+/**
+ * First step in creating a `rule_expression` based on `op_count`. Should be passed
+ * to an operator function, e.g. `less_than(op_count(10))`
+ * 
+ * @param integer   the value to use in the rule
+ */
 function op_count(integer): rule_parameters {
     return rule_parameters(
         rule_variable.op_count,

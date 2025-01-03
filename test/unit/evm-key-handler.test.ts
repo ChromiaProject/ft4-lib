@@ -40,7 +40,7 @@ describe("EVM key handler", () => {
     null,
   );
   const authService = createFakeAuthDataService({
-    foo: { flags: ["T"], message },
+    foo: { flags: [AuthFlag.Transfer], message },
   });
 
   it("signs a message", async () => {
@@ -259,7 +259,7 @@ describe("EVM key handler", () => {
     const adId = deriveAuthDescriptorId(ad);
     const accountId = adId;
     const authDataService = createFakeAuthDataService({
-      foo: { flags: ["T"], message: "" },
+      foo: { flags: [AuthFlag.Transfer], message: "" },
     });
 
     const evmKeyHandler = createEvmKeyHandler(

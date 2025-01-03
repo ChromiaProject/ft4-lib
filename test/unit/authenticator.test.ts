@@ -50,10 +50,10 @@ describe("Authenticator", () => {
       query: jest.fn(),
     };
     const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
-      "A",
+      AuthFlag.Account,
     ]);
     const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor([
-      "T",
+      AuthFlag.Transfer,
     ]);
     keyPair1 = kp1;
     keyPair2 = kp2;
@@ -106,7 +106,7 @@ describe("Authenticator", () => {
       nonInteractiveKeyStore.createKeyHandler(authDescriptor2);
     const authDataService = createFakeAuthDataService({
       foo: {
-        flags: ["T"],
+        flags: [AuthFlag.Transfer],
         message: "",
       },
     });
@@ -129,7 +129,7 @@ describe("Authenticator", () => {
   describe("getAllowedAuthHandler", () => {
     it("downloads all auth handlers", () => {
       connection.query.mockReturnValueOnce([
-        { name: "foo", flags: ["T"], dynamic: false },
+        { name: "foo", flags: [AuthFlag.Transfer], dynamic: false },
       ]);
 
       const authenticator = createAuthenticator(
@@ -144,7 +144,7 @@ describe("Authenticator", () => {
 
     it("returns null if no matching auth handler", async () => {
       connection.query.mockReturnValueOnce([
-        { name: "foo", flags: ["T"], dynamic: false },
+        { name: "foo", flags: [AuthFlag.Transfer], dynamic: false },
       ]);
 
       const authenticator = createAuthenticator(
@@ -161,7 +161,9 @@ describe("Authenticator", () => {
 
     it("returns key handler selected by backend", async () => {
       connection.query
-        .mockReturnValueOnce([{ name: "foo", flags: ["T"], dynamic: false }])
+        .mockReturnValueOnce([
+          { name: "foo", flags: [AuthFlag.Transfer], dynamic: false },
+        ])
         .mockReturnValueOnce(ftKeyHandler2.authDescriptor.id);
 
       const authenticator = createAuthenticator(
@@ -178,7 +180,9 @@ describe("Authenticator", () => {
 
     it("only submits auth descriptors with matching flags", async () => {
       connection.query
-        .mockReturnValueOnce([{ name: "foo", flags: ["T"], dynamic: true }])
+        .mockReturnValueOnce([
+          { name: "foo", flags: [AuthFlag.Transfer], dynamic: true },
+        ])
         .mockReturnValueOnce(ftKeyHandler2.authDescriptor.id);
 
       const authenticator = createAuthenticator(
@@ -194,7 +198,9 @@ describe("Authenticator", () => {
 
     it("does not call backend if auth handler is not dynamic", async () => {
       connection.query
-        .mockReturnValueOnce([{ name: "foo", flags: ["T"], dynamic: false }])
+        .mockReturnValueOnce([
+          { name: "foo", flags: [AuthFlag.Transfer], dynamic: false },
+        ])
         .mockReturnValueOnce(ftKeyHandler1.authDescriptor.id);
 
       const authenticator = createAuthenticator(
@@ -217,7 +223,9 @@ describe("Authenticator", () => {
       ];
 
       connection.query
-        .mockReturnValueOnce([{ name: "foo", flags: ["T"], dynamic: true }])
+        .mockReturnValueOnce([
+          { name: "foo", flags: [AuthFlag.Transfer], dynamic: true },
+        ])
         .mockReturnValueOnce(keyHandlers[1].authDescriptor.id);
 
       const authenticator = createAuthenticator(
@@ -242,8 +250,14 @@ describe("Authenticator", () => {
       ];
 
       connection.query
-        .mockReturnValueOnce([{ name: "foo", flags: ["T"], dynamic: true }])
-        .mockReturnValueOnce({ name: "app", flags: ["A", "T"], dynamic: true });
+        .mockReturnValueOnce([
+          { name: "foo", flags: [AuthFlag.Transfer], dynamic: true },
+        ])
+        .mockReturnValueOnce({
+          name: "app",
+          flags: [AuthFlag.Account, AuthFlag.Transfer],
+          dynamic: true,
+        });
 
       const authenticator = createAuthenticator(
         Buffer.alloc(0),

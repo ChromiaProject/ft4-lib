@@ -13,6 +13,8 @@ import { BufferId } from "@ft4/utils";
 import { Blockchain } from "./types";
 import { adminUser } from "./util";
 
+const NODE_URL = "http://localhost:7740";
+
 export async function createChromiaClientToMultichain(
   blockchainRid: BufferId,
   nodeUrl?: string,
@@ -20,7 +22,7 @@ export async function createChromiaClientToMultichain(
   // const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
 
   // const url = nodeUrl || "http://thedockerhost:7740";
-  const url = nodeUrl || "http://docker:7740";
+  const url = nodeUrl || NODE_URL;
   return createClient({
     directoryNodeUrlPool: url,
     blockchainRid: blockchainRid.toString("hex"),
@@ -30,7 +32,7 @@ export async function createChromiaClientToMultichain(
 export async function createChromiaClient(nodeUrl?: string, iid = 0) {
   const url =
     // nodeUrl || process.env.TEST_NODE_URL || "http://thedockerhost:7740";
-    nodeUrl || process.env.TEST_NODE_URL || "http://docker:7740";
+    nodeUrl || process.env.TEST_NODE_URL || NODE_URL;
   return createClient({
     nodeUrlPool: url,
     blockchainIid: iid,
@@ -138,7 +140,7 @@ export async function fetchBlockchains(
   }
   const client = await createClient({
     // nodeUrlPool: "http://thedockerhost:7740",
-    nodeUrlPool: "http://docker:7740",
+    nodeUrlPool: NODE_URL,
     blockchainIid: 0,
   });
 

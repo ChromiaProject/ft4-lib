@@ -1,31 +1,94 @@
 import ^.{ get_module_args };
 
+/**
+ * A cursor that points to where pages should start in paginated queries.
+ * 
+ * @see paged_result for more info on pagination
+ */
 struct page_cursor {
+    /** The last rowid that was retrieved in the last page */
     before_rowid: rowid? = null;
 }
 
+/**
+ * An element of a page that should be returned by paginated queries.
+ * 
+ * @see paged_result for more info on pagination
+ */
 struct pagination_result {
+    /** GTV-encoded element */
     data: gtv;
+    /** The rowid of this element */
     rowid: rowid;
 }
 
+/**
+ * Encodes a `page_cursor` into a base64 string to make it more manageable for the frontend
+ *
+ * @param page_cursor   the page_cursor to be encoded
+ */
 function encode_cursor(page_cursor) = page_cursor.to_bytes().to_base64();
 
+/**
+ * Decodes a `page_cursor` from a base64 string, received as a query parameter.
+ *
+ * @param cursor    the base64 page_cursor to be decoded
+ */
 function decode_cursor(cursor: text) = page_cursor.from_bytes(byte_array.from_base64(cursor));
 
+/**
+ * The return type of all paginated queries. It contains a list of results of the query, and a
+ * cursor which can be used to retrieve the next page.
+ * 
+ * In general, when a paginated query looks like this:
+ * `get_my_data(page_size: integer?, page_cursor: text?)`
+ * - `page_size` determines the number of results to be returned, defaulting to
+ *   `query_max_page_size` as defined in the module args if null or higher than that value.
+ * - `page_cursor` determines where the results should start from, defaulting to the first page.
+ * 
+ * The returned results will be a paged result with:
+ * - `data`: a list of the expected data, encoded as GTVs
+ * - `next_cursor`: a base64 encoded `page_cursor` that can be passed as `page_cursor` to the
+ *   same query to retrieve the next page of data
+ * 
+ * The cursors are not supposed to be interpreted in any way on the front-end. To avoid
+ * unexpected behavior, only pass cursors received from a query to that same query.
+ */
 struct paged_result {
+    /**
+     * base64-encoded `page_cursor`, that can be passed back to the query to retrieve the
+     * next page
+     */
     next_cursor: text?;
+    /** list of GTV-encoded entries, of the return type expected from the query */
     data: list<gtv>;
 }
 
+/** Utility function that returns an empty page with no next page */
 function null_page() = paged_result(
     next_cursor = null,
     data = list<gtv>()
 );
 
+/**
+ * Used to calculate the page size for the current query. The value will be:
+ * - `query_max_page_size` if `page_size` is null or higher than that value
+ * - `page_size` otherwise
+ * 
+ * @param page_size     the requested size of the page
+ */
 function fetch_data_size(page_size: integer? = get_module_args().query_max_page_size) = 
+    // adding +1 should help with next page null situation when current page size is equal to max page size
     min(get_module_args().query_max_page_size, page_size ?: get_module_args().query_max_page_size) + 1;
 
+/**
+ * Returns the rowid of the last retrieved element, given the base64-encoded `page_cursor`.
+ * 
+ * Useful to retrieve the rowid where the last query stopped, to start retrieving a new page
+ * from there.
+ * 
+ * @param page_cursor   the base64-encoded cursor
+ */
 function before_rowid(page_cursor: text?) {
     var before_rowid: rowid? = null;
     if (page_cursor??) {
@@ -35,16 +98,24 @@ function before_rowid(page_cursor: text?) {
     return before_rowid;
 }
 
-
+/**
+ * Creates a page from a list of `pagination_result`s and the expected size of the page.
+ * It will never return pages bigger than `query_max_page_size`.
+ * 
+ * Used by paginated queries to build the actual `paged_result` that will be returned.
+ * 
+ * Throws `"PAGE SIZE TOO SMALL"` if `page_size` is less than 1
+ * 
+ * @param pagination_results    the data that should be inside the page
+ * @param page_size             the expected size of the page
+ */
 function make_page(pagination_results: list<pagination_result>, page_size: integer?): paged_result {
     if (page_size != null) {
-        require(page_size > 0, "Must return at least one item");
+        require(page_size > 0, "PAGE SIZE TOO SMALL: Must return at least one item");
     }
     if (empty(pagination_results)) {
          return null_page();
     }
-    // adding +1 should help with next page null situation when current page size
-    // is equal to max page size
     if(pagination_results.size() < fetch_data_size(page_size)) {
         return paged_result(
             next_cursor = null,

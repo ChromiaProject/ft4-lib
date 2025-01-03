@@ -2,20 +2,20 @@
 module;
 
 import lib.ft4.auth;
-import ^^^.lib.ft4.test.utils. { evm_sign };
-import ^^.assets.utils;
+import lib.ft4.accounts;
+import test: lib.ft4.test.core;
+import test_op: lib.ft4.test.operations;
 import auth_ext: ^^.extensions.auth.*;
 import ^^^.lib.ft4.utils.{ derive_nonce };
-import test_operations: ^^.operations;
 import ^^^.lib.ft4.utils.{ latest_time };
+import test_operations: ^^.operations;
 
 function test_before_and_after_authenticate_extensions_are_called_with_ft_auth() {
-    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
+    val alice = test.register_account_open(rell.test.keypairs.alice, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]);
 
     // Perform an authentication operation
     rell.test.tx()
-        .op(alice.ft_auth())
-        .op(test_operations.test_auth.test_authenticated_operation())
+        .op(alice.ft_auth(test_op.authenticated_operation()))
         .sign(rell.test.keypairs.alice)
         .run();
     
@@ -32,10 +32,10 @@ function test_before_and_after_authenticate_extensions_are_called_with_ft_auth()
 }
 
 function test_before_and_after_authenticate_extensions_are_called_with_evm_auth() {
-    val alice = utils.evm_register_alice(["A", "T", "E"]); // "E" flag is required by `test_empty_auth_message`
+    val alice = test.register_alice_evm([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER, "E"]); // "E" flag is required by `test_empty_auth_message`
 
     val op = test_operations.test_auth.test_empty_auth_message();
-    val signature = evm_sign(
+    val signature = test.evm_sign(
       "Blockchain:\n%s\n\n\n\nNonce: %s".format(
         chain_context.blockchain_rid.to_hex(),
         derive_nonce(op.to_gtx_operation(), 0)
@@ -63,7 +63,7 @@ function test_before_and_after_authenticate_extensions_are_called_with_evm_auth(
 }
 
 function test_cannot_sign_only_ft_auth_op() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .sign(rell.test.keypairs.alice)
@@ -71,10 +71,10 @@ function test_cannot_sign_only_ft_auth_op() {
 }
 
 function test_cannot_sign_only_evm_auth_op() {
-    val alice = utils.evm_register_alice();
+    val alice = test.register_alice_evm();
 
     val op = test_operations.test_auth.test_empty_auth_message();
-    val signature = evm_sign(
+    val signature = test.evm_sign(
       "Blockchain:\n%s\n\n\n\nNonce: %s".format(
         chain_context.blockchain_rid.to_hex(),
         derive_nonce(op.to_gtx_operation(), 0)
@@ -89,7 +89,7 @@ function test_cannot_sign_only_evm_auth_op() {
 }
 
 function test_cannot_sign_invalid_ops_with_ft_auth() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
     val invalid_ops = [
         rell.test.op("nop"),
         gtx_operation(name = "timeb", args = [(latest_time()).to_gtv(), (latest_time() * 2).to_gtv()]).to_test_op(),
@@ -110,7 +110,7 @@ function test_cannot_sign_invalid_ops_with_ft_auth() {
 }
 
 function test_cannot_sign_invalid_ops_with_evm_auth() {
-    val alice = utils.evm_register_alice();
+    val alice = test.register_alice_evm();
     val invalid_ops = [
         rell.test.op("nop"),
         gtx_operation(name = "timeb", args = [(latest_time()).to_gtv(), (latest_time() * 2).to_gtv()]).to_test_op(),
@@ -118,11 +118,12 @@ function test_cannot_sign_invalid_ops_with_evm_auth() {
         gtx_operation(name = "ft4.ft_auth", args = [x"".to_gtv(), x"".to_gtv()]).to_test_op(),
         gtx_operation(name = "ft4.evm_auth", args = [x"".to_gtv(), x"".to_gtv(), list<auth.signature>().to_gtv()]).to_test_op(),
         gtx_operation(name = "ft4.evm_signatures", args = [list<byte_array>().to_gtv(), list<auth.signature>().to_gtv()]).to_test_op(),
+        gtx_operation(name = "unauthable_op", args = []).to_test_op(),
     ];
 
     for (invalid_op in invalid_ops) {
         val op = test_operations.test_auth.test_empty_auth_message();
-        val signature = evm_sign(
+        val signature = test.evm_sign(
             "Blockchain:\n%s\n\n\n\nNonce: %s".format(
                 chain_context.blockchain_rid.to_hex(),
                 derive_nonce(op.to_gtx_operation(), 0)

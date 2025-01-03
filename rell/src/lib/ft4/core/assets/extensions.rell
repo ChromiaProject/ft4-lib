@@ -1,12 +1,104 @@
 
+/**
+ * Extendable function that allows the developer to add more functionality to the
+ * `transfer` function, before the transfer happens.
+ * 
+ * This allows, for example, to add fees on transfer or check that any given condition
+ * is present before the transfer can be completed.
+ * 
+ * If this function throws an exception, the assets will not be transferred.
+ * 
+ * Throws if any extension of this function throws.
+ * 
+ * @param from    the account that started the transfer
+ * @param to      the account that should receive the transfer
+ * @param asset   the asset that should be sent
+ * @param amount  the amount to transfer
+ */
 @extendable function before_transfer(from: accounts.account, to: accounts.account, asset, amount: big_integer);
 
+/**
+ * Extendable function that allows the developer to add more functionality to the
+ * `transfer` function, after the transfer happens.
+ * 
+ * This allows, for example, to add fees on transfer or check that any given condition
+ * is present after the transfer is completed.
+ * 
+ * If this function throws an exception, the assets will not be transferred.
+ * 
+ * Throws if any extension of this function throws.
+ * 
+ * @param from    the account that started the transfer
+ * @param to      the account that should receive the transfer
+ * @param asset   the asset that should be sent
+ * @param amount  the amount to transfer
+ */
 @extendable function after_transfer(from: accounts.account, to: accounts.account, asset, amount: big_integer);
 
+/**
+ * Extendable function that allows the developer to add more functionality to the
+ * `mint` function, before the mint happens.
+ * 
+ * This allows, for example, to check that any given condition is present before minting
+ * is allowed.
+ * 
+ * If this function throws an exception, the asset will not be minted.
+ * 
+ * Throws if any extension of this function throws.
+ * 
+ * @param account   the account that is going to receive the newly minted tokens
+ * @param asset     the asset that is going to be minted
+ * @param amount    the amount of tokens that is going to be minted
+ */
 @extendable function before_mint(accounts.account, asset, amount: big_integer);
 
+/**
+ * Extendable function that allows the developer to add more functionality to the
+ * `mint` function, after the mint happens.
+ * 
+ * This allows, for example, to check that any given condition is present after
+ * the tokens have been minted.
+ * 
+ * If this function throws an exception, the asset will not be minted.
+ * 
+ * Throws if any extension of this function throws.
+ * 
+ * @param account   the account that has received the newly minted tokens
+ * @param asset     the asset that has been minted
+ * @param amount    the amount of tokens that have been minted
+ */
 @extendable function after_mint(accounts.account, asset, amount: big_integer);
 
+/**
+ * Extendable function that allows the developer to add more functionality to the
+ * `burn` function, before the burn happens.
+ * 
+ * This allows, for example, to check that any given condition is present before burning
+ * is allowed.
+ * 
+ * If this function throws an exception, the asset will not be burned.
+ * 
+ * Throws if any extension of this function throws.
+ * 
+ * @param account   the account that is going to lose the burned tokens
+ * @param asset     the asset that is going to be burned
+ * @param amount    the amount of tokens that is going to be burned
+ */
 @extendable function before_burn(accounts.account, asset, amount: big_integer);
 
+/**
+ * Extendable function that allows the developer to add more functionality to the
+ * `burn` function, after the burn happens.
+ * 
+ * This allows, for example, to check that any given condition is present after
+ * the tokens have been burned.
+ * 
+ * If this function throws an exception, the asset will not be burned.
+ * 
+ * Throws if any extension of this function throws.
+ * 
+ * @param account   the account that has lost the burned tokens
+ * @param asset     the asset that has been burned
+ * @param amount    the amount of tokens that have been burned
+ */
 @extendable function after_burn(accounts.account, asset, amount: big_integer);

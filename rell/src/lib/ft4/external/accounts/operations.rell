@@ -9,7 +9,7 @@ function delete_auth_descriptor_resolver(args: gtv, account_id: byte_array, auth
     if (params.auth_descriptor_id in auth_descriptor_ids) return params.auth_descriptor_id;
 
     for (ad in accounts.account_auth_descriptor @* { .account.id == account_id, .id in auth_descriptor_ids }) {
-        if (accounts.has_flags(ad, ["A"])) return ad.id;
+        if (accounts.has_flags(ad, [accounts.auth_flags.ACCOUNT])) return ad.id;
     }
 
     return null;
@@ -23,8 +23,26 @@ function () = auth.add_overridable_auth_handler(
     resolver = delete_auth_descriptor_resolver(*)
 );
 
+/**
+ * Deletes the auth descriptor with the specified id.
+ * 
+ * Must be signed by an auth descriptor with `accounts.auth_flags.ACCOUNT`. 
+ * 
+ * If the auth descriptor to delete is the same that is authorizing the operation,
+ * the account flag restriction is removed.
+ * 
+ * *Note:* Deleting an auth descriptor using this operation will delete the auth 
+ * descriptor from every account it is associated with.
+ * 
+ * If the provided auth descriptor happens to be the main auth descriptor of any account,
+ * this operation will fail.
+ * 
+ * @param auth_descriptor_id    the id of the auth descriptor to delete
+ */
 operation delete_auth_descriptor(auth_descriptor_id: byte_array) {
-    val account = auth.authenticate();
+    val (account, auth_desc_after, deleted_descriptors)  = auth.authenticate_and_return_context();
+    val descriptor_is_deleted = deleted_descriptors @? {auth_descriptor_id==.id}(.id) != null;
+    if(descriptor_is_deleted) return;
     accounts.delete_auth_descriptor(
         accounts.auth_descriptor_by_id(account, auth_descriptor_id)
     );
@@ -50,7 +68,7 @@ function delete_auth_descriptors_for_signer_resolver(args: gtv, account_id: byte
     }
 
     for (ad in accounts.account_auth_descriptor @* { .account.id == account_id, .id in auth_descriptor_ids }) {
-        if (accounts.has_flags(ad, ["A"])) return ad.id;
+        if (accounts.has_flags(ad, [accounts.auth_flags.ACCOUNT])) return ad.id;
     }
 
     return null;
@@ -64,6 +82,20 @@ function () = auth.add_overridable_auth_handler(
     resolver = delete_auth_descriptors_for_signer_resolver(*)
 );
 
+/**
+ * Deletes all auth descriptors from an account for which the provided signer is included in
+ * the signers array.
+ * 
+ * Must be signed by an auth descriptor with `accounts.auth_flags.ACCOUNT`.
+ * 
+ * *Note:* Deleting an auth descriptor using this operation will delete the auth 
+ * descriptor from every account it is associated with.
+ * 
+ * If any of the matched auth descriptors happens to be the main auth descriptor of any account,
+ * this operation will fail.
+ * 
+ * @param signer    the signer for which to delete auth descriptors
+ */
 operation delete_auth_descriptors_for_signer(signer: byte_array) {
     val account = auth.authenticate();
 
@@ -95,11 +127,21 @@ function delete_all_auth_descriptors_except_main_resolver(args: gtv, account_id:
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(delete_all_auth_descriptors_except_main).mount_name,
-    flags = ["A"],
+    flags = [accounts.auth_flags.ACCOUNT],
     message = delete_all_auth_descriptors_except_main_message(*),
     resolver = delete_all_auth_descriptors_except_main_resolver(*)
 );
 
+/**
+ * This operation does what it says on the label, it removes all the auth descriptors
+ * that is associated with an account except for the main one. 
+ * 
+ * This function can be called only by the main auth descriptor, which is also supposed to
+ * have the `accounts.auth_flags.ACCOUNT`.
+ * 
+ * *Note:* Deleting auth descriptors using this operation will delete the auth 
+ * descriptors from every account they are associated with.
+ */
 operation delete_all_auth_descriptors_except_main() {
     val account = auth.authenticate();
     accounts.delete_all_auth_descriptors_except_main(account);
@@ -115,10 +157,23 @@ function add_auth_descriptor_message(gtv) {
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(add_auth_descriptor).mount_name,
-    flags = ["A"],
+    flags = [accounts.auth_flags.ACCOUNT],
     message = add_auth_descriptor_message(*)
 );
 
+/**
+ * Adds a new auth descriptor to an account. The account in question will be 
+ * the account which is referred to by the preceding auth operation.
+ * 
+ * Must be signed by an auth descriptor with `accounts.auth_flags.ACCOUNT`
+ * that is already associated with the account, as well as the signer of the new auth
+ * descriptor.
+ * In case the new auth descriptor is a multi sig auth descriptor, every signer
+ * that is part of the auth descriptor must sign this operation, even if the number of
+ * required signatures is less than the number of signers.
+ * 
+ * @param new_desc  the auth descriptor to add to the account
+ */
 operation add_auth_descriptor(new_desc: accounts.auth_descriptor) {
     val account = auth.authenticate();
     val signers = accounts.get_signers(new_desc);
@@ -146,11 +201,29 @@ function update_main_auth_descriptor_resolver(args: gtv, account_id: byte_array,
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(update_main_auth_descriptor).mount_name,
-    flags = ["A"],
+    flags = [accounts.auth_flags.ACCOUNT],
     message = update_main_auth_descriptor_message(*),
     resolver = update_main_auth_descriptor_resolver(*)
 );
 
+/**
+ * Sets provided auth descriptor as main auth descriptor, deleting the previous one.
+ * 
+ * Must be signed by an auth descriptor with `accounts.auth_flags.ACCOUNT` and it must
+ * be signed by all the signers contained in the new auth descriptor. Any combination of
+ * swapping single sig and multisig auth descriptors as main auth descriptor is valid, so long
+ * as the number of signatures requirements are fulfilled.
+ * 
+ * Throws an error if the new auth descriptor has any other value than `GTV_NULL`
+ * in the `rules` field.
+ * 
+ * Throws an error if the new auth descriptor does not have all the mandatory flags.
+ * 
+ * @see core.accounts.auth_flags_config for information on mandatory flags
+ * 
+ * @param new_desc  the auth descriptor which will become the new main auth descriptor of the
+ *                  account.
+ */
 operation update_main_auth_descriptor(new_desc: accounts.auth_descriptor) {
     val account = auth.authenticate();
     auth.verify_signers(accounts.get_signers(new_desc));

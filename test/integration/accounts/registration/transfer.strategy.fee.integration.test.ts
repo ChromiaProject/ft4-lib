@@ -6,6 +6,7 @@ import {
 import {
   AnyAuthDescriptorRegistration,
   AuthenticatedAccount,
+  AuthFlag,
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/accounts";
 import { Amount, Asset, createAmountFromBalance } from "@ft4/asset";
@@ -49,7 +50,7 @@ describe("Test transfer with fee", () => {
     recipientId = gtv.gtvHash(keyPair.pubKey);
     keyStore = createInMemoryFtKeyStore(keyPair);
     authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
