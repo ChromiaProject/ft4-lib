@@ -44,7 +44,7 @@ function () = auth.add_overridable_auth_handler(
  * 
  * Throws `"MISSING ASSET"` if the asset does not exist on this chain
  * 
- * Throws `"INVALID BRID"` if the RID's length is not 32 bytes
+ * Throws `"INVALID BRID"` if the hops RIDs length are not 32 bytes
  * 
  * Throws if additional conditions provided through extensions of `before_init_transfer` and
  * `after_init_transfer` are not satisfied
