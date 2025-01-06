@@ -713,6 +713,10 @@ function get_paginated_accounts_by_type(type: text, page_size: integer?, page_cu
  * Throws `"MULTISIG REQUIREMENT TOO HIGH"` if a multi-sig
  * auth descriptor's `required_signature` parameter is greater than the number of signers
  *
+ * Throws `"UNSUPPORTED SIGNER"` if the signer's size does not match either:
+ *  - `EVM_ADDRESS_SIZE` length of 20 bytes
+ *  - `FT_PUBKEY_SIZE` length of 33 bytes
+ * 
  * @param auth_descriptor   the auth descriptor to check
  */
 function validate_auth_descriptor_args(auth_descriptor) {

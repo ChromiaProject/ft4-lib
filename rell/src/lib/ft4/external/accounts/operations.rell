@@ -94,6 +94,10 @@ function () = auth.add_overridable_auth_handler(
  * If any of the matched auth descriptors happens to be the main auth descriptor of any account,
  * this operation will fail.
  * 
+ *  Throws `"UNSUPPORTED SIGNER"` if the signer's size does not match either:
+ *  - `EVM_ADDRESS_SIZE` length of 20 bytes
+ *  - `FT_PUBKEY_SIZE` length of 33 bytes
+ * 
  * @param signer    the signer for which to delete auth descriptors
  */
 operation delete_auth_descriptors_for_signer(signer: byte_array) {
