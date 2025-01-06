@@ -40,6 +40,8 @@ function () = auth.add_overridable_auth_handler(
  * The functionality provided by `init_transfer` can be modified by extending
  * `before_init_transfer` and `after_init_transfer`
  * 
+ * Throws `"INVALID RECIPIENT ID"` if the recipient's id length is not less or equal to 1024 bytes.
+ * 
  * Throws `"`TRANSFER EXPIRED"` if deadline is a past timestamp
  * 
  * Throws `"MISSING ASSET"` if the asset does not exist on this chain
