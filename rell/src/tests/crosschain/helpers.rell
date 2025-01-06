@@ -69,7 +69,7 @@ function cancel_unapply_transfer_and_retrieve_unapplied_transfer(
     asset_symbol: text = mocks.ASSET_SYMBOL,
     deadline: integer = rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 2
 ) {
-    val target_blockchain_rid = x"cc".repeat(32);
+    val target_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
     val (init_transfer_tx, source_blockchain_rid) = common_helpers.create_crosschain_init_transfer_with_auth_operations(
         deadline = deadline,
         asset_name = asset_name,
@@ -120,7 +120,7 @@ function init_apply_recall_transfer(
 ) {
     val sender_account_id = rell.test.keypairs.alice.pub;
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
-    val source_blockchain_rid = x"aa".repeat(32);
+    val source_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
     val recipient_id = rell.test.keypairs.alice.pub;
     val asset = test.create_crosschain_asset(asset_name, asset_symbol, 10, source_blockchain_rid, "", source_blockchain_rid);
     val init_tx = gtx_transaction(
@@ -172,7 +172,7 @@ function init_transfer_and_get_pending_transfer(
    
     rell.test.tx()
         .op(auth.external.ft_auth(sender_account_data.account.id, sender_account_data.auth_descriptor_id))
-        .op(crosschain.external.init_transfer(recipient_account_data.account.id, asset.id, 1, ["1".to_bytes()], 10000000000000))
+        .op(crosschain.external.init_transfer(recipient_account_data.account.id, asset.id, 1, [mocks.BLOCKCHAIN_RID_ONE], 10000000000000))
         .nop()
         .sign(sender_account_data.keypair)
         .run();
@@ -188,7 +188,7 @@ function init_revert_canceled_transfer_and_retrieve_reverted_transfer(
 ) {
     val asset_valid = test.create_asset(asset_name, asset_symbol, 1);
 
-    val target_blockchain_rid = x"DDDD";
+    val target_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
     test.mint(sender_account_data.account, asset_valid, 10L);
 
     rell.test.tx()
