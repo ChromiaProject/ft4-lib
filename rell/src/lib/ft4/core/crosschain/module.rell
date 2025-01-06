@@ -4,6 +4,8 @@ module;
 import ^^.utils;
 import ^^.core.assets;
 
+val MAX_PATH_LENGTH = 100;
+
 /**
  * Returns whether crosschain transfers can be used to create new accounts.
  * Developers should not generally extend this function, as it is handled by the account

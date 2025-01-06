@@ -9,6 +9,7 @@ import test_op: lib.ft4.test.operations;
 import test: lib.ft4.test.core;
 import ^^.operations.iccf_op.{ iccf_proof };
 import common_helpers: ^^.common.helpers;
+import ^.mocks;
 
 function test_can_revert_canceled_transfer_once_but_not_twice() {
     val alice = test.register_alice();
@@ -16,7 +17,7 @@ function test_can_revert_canceled_transfer_once_but_not_twice() {
     val recipient_auth_descriptor_id = "recipient auth descriptor".hash();
     val asset_valid = test.create_asset("validAsset", "va", 1);
 
-    val target_blockchain_rid = x"DDDD";
+    val target_blockchain_rid = mocks.MOCK_BLOCKCHAIN_RID;
     test.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
@@ -113,8 +114,8 @@ function test_can_revert_unapplied_transfer_once_but_not_twice() {
     val recipient_auth_descriptor_id = "recipient auth descriptor".hash();
     val asset_valid = test.create_asset("validAsset", "va", 1);
 
-    val intermediate_blockchain_rid = x"CCCC";
-    val target_blockchain_rid = x"DDDD";
+    val intermediate_blockchain_rid = mocks.MOCK_BLOCKCHAIN_RID;
+    val target_blockchain_rid = mocks.MOCK_BLOCKCHAIN_RID_TWO;
     test.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
@@ -228,7 +229,7 @@ function test_can_not_revert_canceled_transfer_before_expiry() {
     val recipient_auth_descriptor_id = "recipient auth descriptor".hash();
     val asset_valid = test.create_asset("validAsset", "va", 1);
 
-    val target_blockchain_rid = x"DDDD";
+    val target_blockchain_rid = mocks.MOCK_BLOCKCHAIN_RID;
     test.mint(alice.account, asset_valid, 10L);
 
     val deadline = rell.test.last_block_time + rell.test.DEFAULT_BLOCK_INTERVAL * 2;
@@ -329,7 +330,7 @@ function test_can_not_revert_without_proof() {
     val recipient_auth_descriptor_id = "recipient auth descriptor".hash();
     val asset_valid = test.create_asset("validAsset", "va", 1);
 
-    val target_blockchain_rid = x"DDDD";
+    val target_blockchain_rid = mocks.MOCK_BLOCKCHAIN_RID;
     test.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
@@ -375,7 +376,7 @@ function test_can_not_revert_with_wrong_op() {
     val recipient_auth_descriptor_id = "recipient auth descriptor".hash();
     val asset_valid = test.create_asset("validAsset", "va", 1);
 
-    val target_blockchain_rid = x"DDDD";
+    val target_blockchain_rid = mocks.MOCK_BLOCKCHAIN_RID;
     test.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
@@ -416,8 +417,8 @@ function test_can_not_revert_transfer_canceled_on_wrong_chain() {
     val recipient_auth_descriptor_id = "recipient auth descriptor".hash();
     val asset_valid = test.create_asset("validAsset", "va", 1);
 
-    val target_blockchain_rid = x"DDDD";
-    val wrong_blockchain_rid = x"FFFF";
+    val target_blockchain_rid = mocks.MOCK_BLOCKCHAIN_RID;
+    val wrong_blockchain_rid = mocks.MOCK_BLOCKCHAIN_RID_TWO;
     test.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
@@ -467,9 +468,9 @@ function test_can_not_revert_transfer_unapplied_on_wrong_chain() {
     val recipient_auth_descriptor_id = "recipient auth descriptor".hash();
     val asset_valid = test.create_asset("validAsset", "va", 1);
 
-    val intermediate_blockchain_rid = x"CCCC";
-    val target_blockchain_rid = x"DDDD";
-    val wrong_blockchain_rid = x"FFFF";
+    val intermediate_blockchain_rid = mocks.MOCK_BLOCKCHAIN_RID;
+    val target_blockchain_rid = mocks.MOCK_BLOCKCHAIN_RID_TWO;
+    val wrong_blockchain_rid = x"cc".repeat(32);
     test.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()

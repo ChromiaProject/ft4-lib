@@ -1,0 +1,4 @@
+@test module;
+
+val MOCK_BLOCKCHAIN_RID = x"aa".repeat(32);
+val MOCK_BLOCKCHAIN_RID_TWO = x"bb".repeat(32);
