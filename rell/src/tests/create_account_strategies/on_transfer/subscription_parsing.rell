@@ -6,7 +6,7 @@ import ^^^^.lib.ft4.accounts.strategies.transfer.subscription;
 function test_get_subscription_config_reads_yml_correctly() {
     val config = subscription.subscription_assets();
     val expected = [
-        transfer.fee_asset(id = x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa", amount = 2L),
+        transfer.fee_asset(id = x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa", amount = 10L),
         transfer.fee_asset(
             issuing_blockchain_rid = x"0000000000000000000000000000000000000000000000000000000000000000", // current blockchain_rid in Rell tests
             name = "test1",
@@ -22,7 +22,10 @@ function test_get_subscription_config_reads_yml_correctly() {
 
     assert_equals(subscription.subscription_period_days(), 30);
 
-    assert_equals(subscription.free_operations(), set(["free_operation"]));
+    assert_equals(
+        subscription.free_operations(),
+        set(["free_operation", rell.meta(subscription.renew_subscription).mount_name])
+    );
 
     assert_equals(subscription.subscription_account_id(), rell.test.pubkeys.charlie);
 }

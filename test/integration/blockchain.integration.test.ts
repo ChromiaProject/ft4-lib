@@ -34,4 +34,10 @@ describe("Blockchain", () => {
 
     expect(info).toEqual("1.0.0");
   });
+
+  it("should provide ft4 rell-side API version number", async () => {
+    const info = await connection.getApiVersion();
+
+    expect(info).toEqual(1);
+  });
 });

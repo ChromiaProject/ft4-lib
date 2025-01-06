@@ -1,6 +1,34 @@
+/**
+ * Fetches the message that the user must sign in order to register
+ * an account, provided that they are using evm signatures.
+ * 
+ * Throws if the strategy cannot be found. If `strategy_name` is correct, this could also be
+ * caused by having misconfigured the registration defined in the function that extends
+ * `strategy` in such a way that the strategy name and the `_strategy.op.mount_name` are not
+ * the same value.
+ * 
+ * @param strategy_operation            the operation that will be used to represent the strategy
+ * @param register_account_operation    the operation that will be used to register the account
+ */
 query get_register_account_message(
     strategy_operation: gtx_operation,
     register_account_operation: gtx_operation
 ) = strategies.get_register_account_message(strategy_operation, register_account_operation);
 
+/**
+ * Fetches an array of registrations strategies that are currently enabled on this chain.
+ */
 query get_enabled_registration_strategies(): set<text> = strategies.strategy().keys();
+
+/**
+ * Retrieves the id of the account that will the result of registering
+ * an account using the provided strategy operation. 
+ * 
+ * Usually called before the account is registered, but it will give the
+ * same result after the account was registered as well.
+ * 
+ * @param strategy_operation    the operation which represents the strategy with which the
+ *                              account will be registered.
+ */
+query get_account_id_for_strategy(strategy_operation: gtx_operation)
+    = strategies.get_account_id_for_strategy(strategy_operation);

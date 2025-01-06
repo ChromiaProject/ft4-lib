@@ -6,6 +6,7 @@ import {
 import {
   AnyAuthDescriptorRegistration,
   AuthenticatedAccount,
+  AuthFlag,
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/accounts";
 import {
@@ -58,7 +59,7 @@ describe("Test transfer strategy", () => {
       .withPoints(1)
       .build();
     adToRegister = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
     defaultAmount = createAmount(100, asset.decimals);

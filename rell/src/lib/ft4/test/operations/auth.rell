@@ -1,0 +1,71 @@
+module;
+
+import lib.ft4.auth;
+import lib.ft4.accounts;
+
+/**
+ * An operation to register an account using the provided auth descriptor
+ * 
+ * @param auth_descriptor   the main auth desctiptor to use for the account
+ */
+operation register_account(accounts.auth_descriptor) {
+    accounts.create_account_with_auth(auth_descriptor);
+}
+
+function authenticated_operation_message(gtv) {
+    return "";
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = rell.meta(authenticated_operation).mount_name,
+    flags = [accounts.auth_flags.ACCOUNT],
+    message = authenticated_operation_message(*)
+);
+/**
+ * An operation that only calls the authenticate function.
+ * Can be used to test authentication logic.
+ */
+operation authenticated_operation() {
+  auth.authenticate();
+}
+
+/**
+ * Operation to add the specified auth descriptor to the specified account.
+ * 
+ * @param account           the account to which the auth desctiptor is to be added
+ * @param auth_descriptor   the auth descriptor to add to the account
+ */
+operation add_ad_to_account(accounts.account, accounts.auth_descriptor) {
+    accounts.add_auth_descriptor(account, auth_descriptor);
+}
+
+/**
+ * An operation that will consume one rate limit point from the specified account
+ * 
+ * @param account_id    the id of the account from which to consume the point
+ */
+operation consume_point(account_id: byte_array) {
+    var state = require(
+        accounts.rl_state @? { accounts.account @ { .id == account_id } },
+        "Rate limiter state not found for the account with ID: %s".format(account_id)
+    );
+
+    require(state.points > 0, "Insufficient rate limiter points");
+
+	state.points -= 1;
+    state.last_update = op_context.last_block_time;
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = rell.meta(rejected_op).mount_name,
+    flags = [accounts.auth_flags.ACCOUNT]
+);
+
+/**
+ * An operation which will always cause the transaction to fail.
+ */
+operation rejected_op() {
+    require(false, "always rejected");
+}

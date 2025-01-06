@@ -32,7 +32,7 @@ export default async function () {
 
   // Start a Chromia node container
   const container = await new GenericContainer(
-    "registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.20.0",
+    "registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.20.12",
   )
     .withNetwork(network)
     .withCopyDirectoriesToContainer([
@@ -52,7 +52,7 @@ export default async function () {
       "-s",
       "configs/jest-test.yml",
       "-np",
-      "rell/config/jest-test/node-config.properties",
+      "rell/config/jest-test-gitlab/node-config.properties",
       "--wipe",
     ])
     .withWaitStrategy(Wait.forLogMessage("Node is initialized"))

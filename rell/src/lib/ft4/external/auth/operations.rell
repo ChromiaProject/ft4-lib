@@ -1,4 +1,42 @@
-
+/**
+ * For an operation to be authorized by an EVM signer, a specific message must be retrieved
+ * using `get_auth_message_template`. That template will contain some of the following
+ * placeholders:
+ * - core.auth.ACCOUNT_ID_PLACEHOLDER
+ * - core.auth.AUTH_DESCRIPTOR_ID_PLACEHOLDER
+ * - core.auth.NONCE_PLACEHOLDER
+ * - core.auth.BLOCKCHAIN_RID_PLACEHOLDER
+ * 
+ * Those must be replaced with the corresponding value:
+ * - the ID of the account and auth descriptor that are currently being used to sign the
+ *   operation auth message for the first two;
+ * - a valid nonce, as would be created by `utils.derive_nonce` with the current counter value
+ *   of the auth descriptor being used; if multiple operations are authenticated with evm_auth
+ *   using the same auth descriptor, the counter must increase by one on every subsequent
+ *   operation;
+ * - the rid of the blockchain.
+ * 
+ * The message must be signed following a standard EIP-191 implementation by all signers
+ * defined in the auth descriptor used to authenticate, and the signatures must be passed
+ * to the `signatures` parameter in the same order as they can be found in the auth
+ * descriptor's `signer` field (inside `args`). If any signer did not need to sign (e.g. the
+ * auth descriptor is a multi-sig, and only some signatures are required), that signature
+ * must be left null.
+ * 
+ * The transaction will then contain
+ * - evm_auth
+ * - the operation that is being authorized
+ * 
+ * with nothing else inbetween them. Other operations may be added before and after these two.
+ * 
+ * Throws if the next operation is blacklisted or this is the last operation in the transaction
+ * 
+ * @see core.auth._auth_handler for more details on operation authorization
+ * 
+ * @param account_id            The ID of the account that is calling the next operation
+ * @param auth_descriptor_id    The ID of the auth descriptor that is authorizing the operation
+ * @param signatures            The signatures of the operation's auth message
+ */
 operation evm_auth(
     account_id: byte_array,
     auth_descriptor_id: byte_array,
@@ -7,6 +45,34 @@ operation evm_auth(
     auth.require_regular_next_operation();
 }
 
+/**
+ * When it is required that an EVM signer signs an operation, but the signer is not part of
+ * an account auth descriptor yet, this operation must be used.
+ * 
+ * The operation must contain:
+ * - evm_signers
+ * - if required, an auth operation or a strategy operation
+ * - the operation that is being authorized
+ * 
+ * with nothing else inbetween them. Other operations may be added before and after these two.
+ * 
+ * Throws if:
+ * - the operation that is being authorized is not whitelisted,
+ * - there's no operation after this one, or
+ * - there is only one operation after this one, and it's an auth or strategy operation
+ * 
+ * @see core.auth.is_evm_signatures_authorized_operation for information on whitelisting
+ * operations to be able to accept EVM signatures that are not part of an auth descriptor
+ * 
+ * @see evm_auth for information on how to retrieve messages and properly sign them
+ * 
+ * @see core.auth.is_auth_op for information on what is an auth operation
+ * 
+ * @see core.accounts.strategies.is_strategy_op for information on what is a strategy operation
+ * 
+ * @param signers       The EVM addresses of signers (without `0x`)
+ * @param signatures    The signatures of the operation's auth message
+ */
 operation evm_signatures(
     signers: list<byte_array>, 
     signatures: list<auth.signature?>
@@ -14,6 +80,24 @@ operation evm_signatures(
     auth.require_evm_signatures_can_be_used();
 }
 
+/**
+ * For an operation to be authorized by an FT signer, this operation must be called beforehand.
+ *  
+ * The transaction must then contain
+ * - ft_auth
+ * - the operation that is being authorized
+ * 
+ * with nothing else inbetween them. Other operations may be added before and after these two.
+ * The whole transaction must be signed by all the signers that are required by the auth
+ * descriptor.
+ * 
+ * Throws if the next operation is blacklisted or this is the last operation in the transaction
+ * 
+ * @see core.auth._auth_handler for more details on operation authorization
+ * 
+ * @param account_id            The ID of the account that is calling the next operation
+ * @param auth_descriptor_id    The ID of the auth descriptor that is authorizing the operation
+ */
 operation ft_auth(
     account_id: byte_array,
     auth_descriptor_id: byte_array

@@ -1,10 +1,32 @@
+/** the name of this module, for more readable errors */
 val MODULE_NAME = "lib.ft4.core.accounts.strategy.transfer.fee";
 
+/** The configuration for this module, to be defined in the `chromia.yml` */
 struct module_args {
+    /**
+     * Which asset(s) can be used to pay the registration fee.
+     * Parsed as one or a list of `transfer.fee_asset`s
+     * 
+     * @see transfer.fee_asset for what values are expected here
+     */
     asset: gtv;
+    /** The account that receives the fee payments. If null, a default value will be used */
     fee_account: byte_array? = null;
 }
 
+/**
+ * Returns the assets configured in `module_args.asset`.
+ */
 function fee_assets(): list<transfer.fee_asset> = transfer.parse_fee_assets(chain_context.args.asset, MODULE_NAME);
 
+/**
+ * Returns the ID of the account that receives the fee payments, or null for the default one
+ * 
+ * To get the account, the proper usage is:
+ * ```
+ * val account = transfer.ensure_chain_fee_account(fee_account_id());
+ * ```
+ * 
+ * @see transfer.ensure_chain_fee_account if the actual account is needed.
+ */
 function fee_account_id(): byte_array? = chain_context.args.fee_account;

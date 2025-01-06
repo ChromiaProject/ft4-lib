@@ -1,6 +1,6 @@
 import { Amount, Balance } from "@ft4/asset";
 import { Authenticator, KeyStore } from "@ft4/authentication";
-import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
+import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import {
   BufferId,
   PaginatedEntity,
@@ -22,7 +22,7 @@ import {
   TransactionReceipt,
   Web3PromiEvent,
 } from "postchain-client";
-import { TransactionWithReceipt } from "@ft4/transaction-builder/index";
+import { TransactionWithReceipt } from "@ft4/transaction-builder";
 
 export type RateLimit = {
   points: number;
@@ -49,6 +49,7 @@ export type RateLimitResponse = {
 export interface Account {
   id: Buffer;
   blockchainRid: Buffer;
+  connection: Connection;
   /**
    * Retrieves all the balances of all assets that is available on the account and returns them as
    * a paginated entity.
@@ -276,13 +277,16 @@ export interface AuthenticatedAccount extends Account {
    * @param recipientId - ID of the recipient.
    * @param assetId - ID of the asset to be transferred.
    * @param amount - The amount to be transferred.
-   *
+   * @param ttl - timeout of this transfer in milliseconds. If the transfer has not been
+   * completed within this timeout, it can be reverted.
+   * This argument is designed to be combined with one of the time functions, e.g., {@link authentication.days}.
    */
   crosschainTransfer: (
     targetChainRid: BufferId,
     recipientId: BufferId,
     assetId: BufferId,
     amount: Amount,
+    ttl?: number,
   ) => Web3PromiEvent<
     TransferRef,
     {

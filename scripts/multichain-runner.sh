@@ -8,10 +8,15 @@ NODE_PORT=9870
 API_PORT=7740
 # API_PORT=80
 
-CHROMIA_NODE_VERSION='3.16.0'
-DIRECTORY_CHAIN_VERSION='1.28.0'
+CHROMIA_NODE_VERSION='3.22.5'
+DIRECTORY_CHAIN_VERSION='1.75.2'
 
-BASE_CONFIG_DIR="rell/config/jest-test/multichain"
+if $GITLAB; then
+    BASE_CONFIG_DIR="rell/config/jest-test-gitlab/multichain"
+else
+    BASE_CONFIG_DIR="rell/config/jest-test/multichain"
+fi
+
 DEPENDENCIES_PATH="rell/dep"
 
 PMC_CONFIG="$BASE_CONFIG_DIR/.pmc/config"
@@ -161,9 +166,6 @@ run_main_logic() {
           -d postgres:14.9-alpine3.18 > /dev/null
     fi
 
-    # docker ps
-    # docker inspect $DOCKER_POSTGRES_NAME    
-
     debug "Creating PMC config..."
 
     # Create the directory for PMC config if it doesn't exist
@@ -200,8 +202,10 @@ run_main_logic() {
     # export GENESIS_HOST_NAME=docker
     # export GENESIS_API_URL=docker:7740
 
-    sed -i -e 's/localhost/docker/g' $DEPENDENCIES_PATH/directory-chain/chromia.yml
-       
+    if $GITLAB; then
+        log "Editing Directory Chain for GitLab..."
+        sed -i -e 's/localhost/docker/g' $DEPENDENCIES_PATH/directory-chain/chromia.yml
+    fi 
 
     log "Installing Directory Chain dependencies..."
     chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml > /dev/null
@@ -224,6 +228,7 @@ run_main_logic() {
     done
 
     log "Running node container..."
+    mkdir logs
     # $DOCKER -H $DOCKER_HOST network create -d bridge localnet
     $DOCKER run \
         --name $DOCKER_NODE_NAME \
@@ -237,26 +242,39 @@ run_main_logic() {
         -p $NODE_PORT:9870/tcp \
         -p $API_PORT:7740/tcp \
         registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:${CHROMIA_NODE_VERSION} \
-        run-node > ./multichain-postchain.log &
+        run-node > ./logs/multichain-postchain.log &
 
     debug "Fetching manager chain BRID..."
     BRID=""
     retry_count=0
 
 
-    # Loop until BRID receives a non-empty value or until 10 tries
-    while [ -z "$BRID" ] && [ $retry_count -lt 500 ]; do
+    # Loop until BRID receives a non-empty value or until 100 tries
+    while [ -z "$BRID" ] && [ $retry_count -lt 100 ]; do
       # Attempt to fetch the value
-      BRID=$(curl -s http://docker:7740/brid/iid_0)
+      if $GITLAB; then
+        BRID=$(curl -s http://docker:7740/brid/iid_0)
+      else
+        BRID=$(curl -s http://localhost:7740/brid/iid_0)
+      fi
 
       # Increment retry counter
-      ((retry_count++))      
+      ((retry_count++))
       # Wait for the correct BRID
       if [ ${#BRID} -ne 64 ]; then
         BRID=""
         sleep 1
       fi
     done
+
+     
+    # Wait for the correct BRID
+    if [ ${#BRID} -ne 64 ]; then
+        err "Did not find the BRID for chain0, exiting" 
+        cat ./logs/multichain-postchain.log
+        exit 1
+    fi
+
 
     log "Got manager chain BRID: $BRID"
     export MULTICHAIN_D1_BRID=$BRID
@@ -282,12 +300,20 @@ run_main_logic() {
 
     log "Network verified successfully."
 
+    debug "Creating voterset"
+    pmc voterset create \
+        --name manager \
+        --threshold 1 \
+        --pubkeys $(pmc config --get pubkey --file $PMC_CONFIG) \
+        -cfg $PMC_CONFIG
+
     debug "Adding container for the multichain test blockchains"
     pmc container add \
         --name ft4_multichain_test \
         --cluster system \
-        --pubkeys $(pmc config --get pubkey --file $PMC_CONFIG) \
-        -cfg $PMC_CONFIG
+        --voter-set manager \
+        -cfg $PMC_CONFIG \
+        --proposal
 
     log "Building and adding blockchains to the container..."
     for chain_num in $(bash scripts/chain-numbers.sh $NUM_BLOCKCHAINS)

@@ -12,12 +12,12 @@ import lib.ft4.accounts.{
   greater_than,
   greater_or_equal
 };
-import ^^.assets.utils;
-import test_op: ^^.operations;
+import test_op: lib.ft4.test.operations;
 import auth_op: ^^.operations.auth;
-import test_utils: ^^^.lib.ft4.test.utils;
+import test: lib.ft4.test.core;
 
 val rules_violated_error_message = "The rules for this auth descriptor have been violated";
+val rules_expired_auth_descriptor = "EXPIRED AUTH DESCRIPTOR: The rules for this auth descriptor have been violated";
 function missing_ad_error_message(ad_id: byte_array, account_id: byte_array) {
   return "Auth descriptor '%s' not found for account '%s'".format(ad_id, account_id);
 }
@@ -30,15 +30,15 @@ struct account_data {
 }
 
 function setup_account_with_rules(rules: gtv) {
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T", "E"]);
+  val alice = test.register_account_open(rell.test.keypairs.alice, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER, "E"]);
 
   return add_expiring_auth_descriptor(alice.account, rules);
 }
 
 function add_expiring_auth_descriptor(accounts.account, rules: gtv) {
-  val bob_ad = test_utils.create_auth_descriptor(
+  val bob_ad = test.create_auth_descriptor(
     rell.test.pubkeys.bob,
-    ["A", "E"],
+    [accounts.auth_flags.ACCOUNT, "E"],
     rules
   );
   
@@ -136,7 +136,7 @@ namespace test_basic_functionality {
   }
 
   function test_cannot_setup_with_too_many_rules() {
-    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
+    val alice = test.register_account_open(rell.test.keypairs.alice, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]);
 
     val rule_list = list<accounts.rule_expression>();
     for (i in range(accounts.get_max_allowed_auth_descriptor_rules() + 1)) {
@@ -150,9 +150,9 @@ namespace test_basic_functionality {
     }
     val rules = accounts.serialize_rules(rule_list);
 
-    val bob_ad = test_utils.create_auth_descriptor(
+    val bob_ad = test.create_auth_descriptor(
       rell.test.pubkeys.bob,
-      ["A"],
+      [accounts.auth_flags.ACCOUNT],
       rules
     );
     
@@ -178,8 +178,10 @@ namespace test_multiple_ops_with_op_count {
         less_or_equal(op_count(3))
       ])
     );
+
+    //the ad expires during the fourth call, is invalid on fifth call
     authenticate_account_signed_tx(acc_data, 4).run_must_fail(
-      missing_ad_error_message(acc_data.auth_descriptor_id, acc_data.account.id)
+      rules_expired_auth_descriptor
     );
   }
 
@@ -201,7 +203,7 @@ namespace test_multiple_ops_with_op_count {
     );
     authenticate_account_signed_tx(acc_data, 3).run();
     authenticate_account_signed_tx(acc_data).run_must_fail(
-      missing_ad_error_message(acc_data.auth_descriptor_id, acc_data.account.id)
+      rules_expired_auth_descriptor
     );
   }
 }
@@ -253,12 +255,12 @@ namespace test_deletion_after_expiration {
     
     //run twice to have unique rid
     authenticate_account_signed_tx(acc_data, 2).run();
-    //auth desc has been deleted
-    assert_false(accounts.account_auth_descriptor @? { .id == acc_data.auth_descriptor_id }??);
-    
+    //auth desc expired during last call and is still not deleted but will fail on next authenticate
+    assert_true(accounts.account_auth_descriptor @? { .id == acc_data.auth_descriptor_id }??);
+   
     //6th authentication: should fail
     authenticate_account_signed_tx(acc_data).run_must_fail(
-      missing_ad_error_message(acc_data.auth_descriptor_id, acc_data.account.id)
+      rules_expired_auth_descriptor
     );
   }
 
@@ -301,7 +303,7 @@ namespace test_deletion_after_expiration {
   }
 
   function test_delete_only_expired_auth_descriptors() {
-    val account = utils.create_test_account(rell.test.keypairs.alice, ["A", "T", "E"]).account;
+    val account = test.register_account_open(rell.test.keypairs.alice, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER, "E"]).account;
     val acc_data_valid = [
       add_expiring_auth_descriptor(account, 
         accounts.serialize_rules([

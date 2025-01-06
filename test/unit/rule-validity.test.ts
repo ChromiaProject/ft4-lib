@@ -71,13 +71,13 @@ describe("Rules", () => {
   );
 
   const validRules = [
-    lessThan(opCount(CURR_OP_COUNT + 1)),
+    lessThan(opCount(CURR_OP_COUNT + 2)),
     lessThan(blockTime(CURR_TIME + 100)),
     lessThan(blockHeight(CURR_HEIGHT + 1)),
     lessOrEqual(opCount(CURR_OP_COUNT + 1)),
     lessOrEqual(blockTime(CURR_TIME + 100)),
     lessOrEqual(blockHeight(CURR_HEIGHT + 1)),
-    lessOrEqual(opCount(CURR_OP_COUNT)),
+    lessOrEqual(opCount(CURR_OP_COUNT + 1)),
     lessOrEqual(blockHeight(CURR_HEIGHT)),
     equals(blockHeight(CURR_HEIGHT)),
     greaterOrEqual(opCount(CURR_OP_COUNT + 1)),

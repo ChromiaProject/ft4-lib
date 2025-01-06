@@ -27,8 +27,8 @@ import {
   createConnection,
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
-import { AuthorizationError } from "@ft4/transaction-builder";
 import { nop, op } from "@ft4/utils";
+import { AuthorizationError } from "@ft4/transaction-builder";
 import { newSignatureProvider } from "postchain-client";
 
 let connection: Connection;
@@ -125,15 +125,12 @@ describe("Key store interactor", () => {
 
   it("authenticates with the correct auth descriptor", async () => {
     const emptyAuthenticatedOp = op("test_perform_large_transfer", 10, "text");
-
     const keyPair1 = newSignatureProvider();
     const keyPair2 = newSignatureProvider();
-
     const account = await AccountBuilder.account(connection)
       .withSigner(keyPair1)
       .withPoints(5)
       .build();
-
     const ad2 = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account],
       keyPair2.pubKey,
@@ -145,7 +142,6 @@ describe("Key store interactor", () => {
       connection.client,
       createInMemoryFtKeyStore(keyPair2),
     ).getSession(account.id);
-
     const ad3 = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account],
       keyPair2.pubKey,
@@ -228,11 +224,12 @@ describe("Key store interactor", () => {
     expect(ad2Session.account.authenticator.keyHandlers.length).toEqual(1);
     expect(session.account.authenticator.keyHandlers.length).toEqual(2);
 
-    // make ad2 expire
+    const authDescriptors = await account.getAuthDescriptors();
+
+    // delete ad2
     await ad2Session
       .transactionBuilder()
-      .add(emptyAuthenticatedOp)
-      .add(nop())
+      .add(deleteAuthDescriptor(authDescriptors[1].id))
       .buildAndSend();
 
     await expect(

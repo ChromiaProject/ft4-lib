@@ -44,7 +44,7 @@ export function pendingTransfersForAccount(
 }
 
 export function lastPendingTransferForAccount(
-  senderId: BufferId,
+  accountId: BufferId,
   targetBlockchainRid: BufferId,
   recipientId: BufferId,
   assetId: BufferId,
@@ -52,7 +52,7 @@ export function lastPendingTransferForAccount(
 ): QueryObject<
   PendingTransferResponse,
   {
-    sender_id: Buffer;
+    account_id: Buffer;
     target_blockchain_rid: Buffer;
     recipient_id: Buffer;
     asset_id: Buffer;
@@ -62,7 +62,7 @@ export function lastPendingTransferForAccount(
   return {
     name: "ft4.crosschain.get_last_pending_transfer_for_account",
     args: {
-      sender_id: formatter.ensureBuffer(senderId),
+      account_id: formatter.ensureBuffer(accountId),
       target_blockchain_rid: formatter.ensureBuffer(targetBlockchainRid),
       recipient_id: formatter.ensureBuffer(recipientId),
       asset_id: formatter.ensureBuffer(assetId),

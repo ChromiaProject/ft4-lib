@@ -1,3 +1,6 @@
-
+/**
+ * Returns a list of assets that can be used to pay for the registration fee, alongside the
+ * amount to be paid.
+ */
 query get_fee_assets(): list<(asset_id: byte_array, amount: big_integer)> =
         transfer.resolve_fee_assets(fee_assets()) @* {} ((asset_id = $[0], amount = $[1]));
