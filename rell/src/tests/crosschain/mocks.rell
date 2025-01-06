@@ -3,11 +3,11 @@
 import lib.ft4.assets;
 import lib.ft4.crosschain;
 
-val issuing_blockchain_rid = x"aa".repeat(32);
-val origin_blockchain_rid = x"bb".repeat(32);
-val asset_name = "Test asset";
-val icon_url = "https://filehub.chromia.com/project/collection/1";
-val asset_symbol = "TST";
+val BLOCKCHAIN_RID_ONE = x"aa".repeat(32);
+val BLOCKCHAIN_RID_TWO = x"bb".repeat(32);
+val ASSET_NAME = "Test asset";
+val ICON_URL = "https://filehub.chromia.com/project/collection/1";
+val ASSET_SYMBOL = "TST";
 
 function format_expected_asset_origin_assertion(assets.asset, crosschain.asset_origin) {
     val mapped_asset_origin = crosschain.map_asset_origin(asset_origin);

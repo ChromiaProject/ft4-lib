@@ -93,7 +93,7 @@ function test_get_recalled_transfers_using_all_filter_no_recalled_transfers() {
 
 function test_get_recalled_transfers_using_all_filter() {
     val recalled_transfer_one = crosschain_helpers.init_apply_recall_transfer();
-    val recalled_transfer_two = crosschain_helpers.init_apply_recall_transfer(mocks.asset_name + 1, mocks.asset_symbol + 1);
+    val recalled_transfer_two = crosschain_helpers.init_apply_recall_transfer(mocks.ASSET_NAME + 1, mocks.ASSET_SYMBOL + 1);
     val found_recalled_transfer = crosschain.external.get_recalled_transfers_filtered(
         crosschain_helpers.set_transfer_filter(
             init_tx_rids = [recalled_transfer_one.init_tx_rid, recalled_transfer_two.init_tx_rid],

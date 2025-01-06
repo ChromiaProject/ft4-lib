@@ -26,8 +26,8 @@ function get_last_crosschain_transfer_history_entry() {
 
 function create_crosschain_init_transfer_with_auth_operations(
     deadline: integer = 10000000000000,
-    asset_name: text = mocks.asset_name,
-    asset_symbol: text = mocks.asset_symbol,
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL,
     sender_account_id: byte_array = rell.test.keypairs.alice.pub,
     recipient_account_id: byte_array = rell.test.keypairs.bob.pub,
     target_blockchain_rid: byte_array? = null
@@ -63,8 +63,8 @@ function create_crosschain_init_transfer_with_auth_operations(
 }
 
 function mock_crosschain_transfer(
-    asset_name: text = mocks.asset_name,
-    asset_symbol: text = mocks.asset_symbol,
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL,
     sender_account_id: byte_array = rell.test.keypairs.alice.pub,
     recipient_account_id: byte_array = rell.test.keypairs.bob.pub
 ) {

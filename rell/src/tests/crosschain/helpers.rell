@@ -12,16 +12,16 @@ import lib.ft4.auth;
 import test: lib.ft4.test.core;
 
 function create_and_retrieve_crosschain_asset_and_asset_origin(
-    asset_name: text = mocks.asset_name,
-    asset_symbol: text = mocks.asset_symbol
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL
 ) {
     val asset = test.create_crosschain_asset(
         asset_name,
         asset_symbol,
         6,
-        mocks.issuing_blockchain_rid,
-        mocks.icon_url,
-        mocks.origin_blockchain_rid
+        mocks.BLOCKCHAIN_RID_ONE,
+        mocks.ICON_URL,
+        mocks.BLOCKCHAIN_RID_TWO
     );
 
     val asset_origin = crosschain.asset_origin @ {} (@omit @sort_desc .rowid, $) limit 1;
@@ -30,8 +30,8 @@ function create_and_retrieve_crosschain_asset_and_asset_origin(
 }
 
 function create_crosschain_transfer_and_retrieve_applied_transfer(
-    asset_name: text = mocks.asset_name,
-    asset_symbol: text = mocks.asset_symbol,
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL,
     sender_account_id: byte_array = rell.test.keypairs.alice.pub,
     recipient_account_id: byte_array = rell.test.keypairs.bob.pub,
 ) {
@@ -46,8 +46,8 @@ function create_crosschain_transfer_and_retrieve_applied_transfer(
 }
 
 function init_cancel_and_retrieve_canceled_transfer_crosschain_transfer(
-    asset_name: text = mocks.asset_name,
-    asset_symbol: text = mocks.asset_symbol,
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL,
 ) {
     val (tx, source_blockchain_rid) = common_helpers.create_crosschain_init_transfer_with_auth_operations(
         rell.test.DEFAULT_FIRST_BLOCK_TIME - 1,
@@ -65,8 +65,8 @@ function init_cancel_and_retrieve_canceled_transfer_crosschain_transfer(
 }
 
 function cancel_unapply_transfer_and_retrieve_unapplied_transfer(
-    asset_name: text = mocks.asset_name,
-    asset_symbol: text = mocks.asset_symbol,
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL,
     deadline: integer = rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 2
 ) {
     val target_blockchain_rid = x"cc".repeat(32);
@@ -115,8 +115,8 @@ function cancel_unapply_transfer_and_retrieve_unapplied_transfer(
 }
 
 function init_apply_recall_transfer(
-    asset_name: text = mocks.asset_name,
-    asset_symbol: text = mocks.asset_symbol
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL
 ) {
     val sender_account_id = rell.test.keypairs.alice.pub;
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
@@ -162,8 +162,8 @@ function run_block_after_timeout() {
 }
 
 function init_transfer_and_get_pending_transfer(
-    asset_name: text = mocks.asset_name,
-    asset_symbol: text = mocks.asset_symbol,
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL,
     sender_account_data: test.ft_account_data = test.register_alice(),
     recipient_account_data: test.ft_account_data = test.register_bob()
 ) {
@@ -181,8 +181,8 @@ function init_transfer_and_get_pending_transfer(
 }
 
 function init_revert_canceled_transfer_and_retrieve_reverted_transfer(
-    asset_name: text = mocks.asset_name,
-    asset_symbol: text = mocks.asset_symbol,
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL,
     sender_account_data: test.ft_account_data = test.register_alice(),
     recipient_account_data: test.ft_account_data = test.register_bob()
 ) {

@@ -40,9 +40,15 @@ function () = auth.add_overridable_auth_handler(
  * The functionality provided by `init_transfer` can be modified by extending
  * `before_init_transfer` and `after_init_transfer`
  * 
+ * Throws `"INVALID RECIPIENT ID"` if the recipient's id length is longer than 1024 bytes
+ * 
  * Throws `"`TRANSFER EXPIRED"` if deadline is a past timestamp
  * 
  * Throws `"MISSING ASSET"` if the asset does not exist on this chain
+ * 
+ * Throws `"HOPS SIZE EXCEEDED"` if the hops list size is not less than 100
+ * 
+ * Throws `"INVALID BRID"` if the hops RIDs length are not 32 bytes
  * 
  * Throws if additional conditions provided through extensions of `before_init_transfer` and
  * `after_init_transfer` are not satisfied
@@ -91,11 +97,21 @@ operation init_transfer(
         "TRANSFER EXPIRED: Parameter 'deadline' cannot be a past timestamp. Value: %s".format(deadline)
     );
 
+    utils.validate_recipient_id(recipient_id);
+
     val account = auth.authenticate();
     val asset = require(
         assets.asset @? { .id == asset_id }, 
         "MISSING ASSET: Asset not found '%s'".format(asset_id)
     );
+
+    require(
+        hops.size() <= crosschain.MAX_PATH_LENGTH,
+        "HOPS SIZE EXCEEDED: Found <%d> hops, but the maximum size is <%d>".format(hops.size(), crosschain.MAX_PATH_LENGTH)
+    );
+    for (hop in hops) {
+        utils.validate_blockchain_rid(hop);
+    }
 
     crosschain.before_init_transfer(
         account,

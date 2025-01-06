@@ -669,6 +669,25 @@ function verify_signers_with_message(ft_and_evm_signers: list<byte_array>, messa
 }
 
 /**
+ * Checks if the signer has the correct size
+ *  
+ *  Throws `"UNSUPPORTED SIGNER"` if the signer's size does not match either:
+ *  - `EVM_ADDRESS_SIZE` length of 20 bytes
+ *  - `FT_PUBKEY_SIZE` length of 33 bytes
+ * 
+ * Should be used to validate the signer's size of an evm address or an ft pubkey
+ * 
+ * Example: `validate_signer(x"")`
+ * will throw this error: UNSUPPORTED SIGNER: Unsupported signer x""
+ */
+function validate_signer(signer: byte_array) {
+    require(
+        signer.size() in [EVM_ADDRESS_SIZE, FT_PUBKEY_SIZE],
+        "UNSUPPORTED SIGNER: Unsupported signer <%s>".format(signer)
+    );
+}
+
+/**
  * Retrieves the signers and signatures from the `evm_signatures` operation. Returns empty
  * lists if the operation is not found.
  * 

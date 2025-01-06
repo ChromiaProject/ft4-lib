@@ -3,6 +3,7 @@
 import lib.ft4.auth;
 import xc: lib.ft4.crosschain;
 import test: lib.ft4.test.core;
+import ^.mocks;
 
 function test_it_registers_a_pending_transaction_in_init_transfer() {
   val alice = test.register_alice();
@@ -13,7 +14,7 @@ function test_it_registers_a_pending_transaction_in_init_transfer() {
 
   rell.test.tx()
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc.external.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()], 10000000000000))
+    .op(xc.external.init_transfer(bob.account.id, asset.id, 1, [mocks.BLOCKCHAIN_RID_ONE], 10000000000000))
     .sign(alice.keypair)
     .run();
 
@@ -30,11 +31,13 @@ function test_it_fetches_pending_transactions_for_the_specified_account() {
   test.mint(alice.account, asset, 1);
   test.mint(bob.account, asset, 1);
 
+  val target_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
+
   rell.test.tx()
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc.external.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()], 10000000000000))
+    .op(xc.external.init_transfer(bob.account.id, asset.id, 1, [target_blockchain_rid], 10000000000000))
     .op(auth.external.ft_auth(bob.account.id, bob.auth_descriptor_id))
-    .op(xc.external.init_transfer(alice.account.id, asset.id, 1, ["1".to_bytes()], 10000000000000))
+    .op(xc.external.init_transfer(alice.account.id, asset.id, 1, [target_blockchain_rid], 10000000000000))
     .sign(alice.keypair, bob.keypair)
     .run();
 
@@ -48,11 +51,13 @@ function test_get_pending_transfers_for_account_is_paginated() {
 
   test.mint(alice.account, asset_valid, 10);
 
+  val target_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
+
   rell.test.tx()
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc.external.init_transfer(bob.account.id, asset_valid.id, 1L, [x"abcdef"], 10000000000000))
+    .op(xc.external.init_transfer(bob.account.id, asset_valid.id, 1L, [target_blockchain_rid], 10000000000000))
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc.external.init_transfer(bob.account.id, asset_valid.id, 1L, [x"abcdef"], 10000000000000))
+    .op(xc.external.init_transfer(bob.account.id, asset_valid.id, 1L, [target_blockchain_rid], 10000000000000))
     .sign(rell.test.keypairs.alice)
     .run();
 

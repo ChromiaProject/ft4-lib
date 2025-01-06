@@ -63,6 +63,8 @@ namespace Unsafe {
     *   `after_transfer`) aren't met
     * - the sender account's balance is lower than `amount`
     * 
+    * Throws `"INVALID RECIPIENT ID"` if the recipient's id length is longer than 1024 bytes
+    * 
     * Throws `"INVALID RECIPIENT"` if the recipient does not exist and
     * `is_create_on_internal_transfer_enabled` returns false.
     * 
@@ -74,6 +76,7 @@ namespace Unsafe {
     * @param amount        the amount to transfer
     */
    function transfer_to_recipient_id(sender: accounts.account, recipient_id: byte_array, asset, amount: big_integer) {
+      utils.validate_recipient_id(recipient_id);
       val recipient = accounts.account @? { .id == recipient_id };
       if (recipient != null) {
           transfer(sender, recipient, asset, amount);
