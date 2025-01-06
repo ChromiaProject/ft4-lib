@@ -4,32 +4,59 @@ module;
 import ^^.utils;
 import ^^.version;
 
+/** The GTV representation of `null` */
 val GTV_NULL = null.to_gtv();
+/** The `byte_array` representation of `null` */
 val GTV_NULL_BYTES = null.to_gtv().to_bytes();
 
+/**
+ * Represents the rate limit configuration found on the `chromia.yml` file.
+ * It can be modified under `moduleArgs -> lib.ft4.core.accounts -> rate_limit`
+ */
 struct rate_limit_config {
+    /** is rate limiting active */
     active: boolean = true;
+    /** how many points at a maximum can an account have by default */
 	max_points: integer = 10;
+    /** how many milliseconds elapse before restoring one point */
     recovery_time: integer = 5000;
+    /** what's the starting amount of points when an account is created */
     points_at_account_creation: integer = 1;
 }
 
+/**
+ * Represents the auth descriptor configuration found on the `chromia.yml` file.
+ * It can be modified under `moduleArgs -> lib.ft4.core.accounts -> auth_descriptor`.
+ */
 struct auth_descriptor_config {
+    /** How many rules can be combined in a single auth descriptor */
     max_rules: integer = 8;
+    /** 
+     * How many auth descriptors can an account have at once.
+     * It will be set to 200 if it exceeds that value
+     */
     max_number_per_account: integer = 10;
 }
 
+/**
+ * The configuration defined in the `chromia.yml` file.
+ */
 struct module_args {
 	rate_limit: rate_limit_config = rate_limit_config();
     auth_descriptor: auth_descriptor_config = auth_descriptor_config();
     auth_flags: auth_flags_config = auth_flags_config();
 }
 
+/**
+ * Used instead of `module_args -> auth_descriptor.max_number_per_account`
+ * to limit the value to 200.
+ */
 val AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND = min(
     200,
     chain_context.args.auth_descriptor.max_number_per_account
 );
 
+/** Retrieves the auth descriptor config */
 function get_auth_descriptor_config() = chain_context.args.auth_descriptor;
 
 /**
@@ -38,55 +65,174 @@ function get_auth_descriptor_config() = chain_context.args.auth_descriptor;
  */
 val ACCOUNT_TYPE_USER = "FT4_USER";
 
+namespace auth_flags {
+    /**
+     * Constant that represents a flag which, when added to an auth descriptor
+     * gives the user of that auth descriptor "account" privileges to the account.
+     * 
+     * These privileges allows the user to add and remove auth descriptors from the
+     * account. In many ways this is similar to giving the user super access to the
+     * account, as they will be able to add new auth descriptors with any flag, thus 
+     * allowing any operation on the account.
+     */
+    val ACCOUNT = "A";
+    /**
+     * Constant that represents a flag which, when added to an auth descriptor
+     * gives the user of that auth descriptor "transfer" privileges to the account.
+     * 
+     * Having this flag will grant the user the right to move funds that are in the
+     * account, by for example transferring or burning them.
+     */
+    val TRANSFER = "T";
+}
+
+/**
+ * Types of authentication supported for auth descriptors.
+ * * S - Single signature
+ * * M - Multiple signatures (multisig)
+ */
 enum auth_type {
     S, M,
 }
 
+/**
+ * Used to represent `account_auth_descriptor` entities before creation.
+ *
+ * @see account_auth_descriptor
+ */
 struct auth_descriptor {
     auth_type;
     args: list<gtv>;
     rules: gtv;
 }
 
+/**
+ * Represents a user profile on a dapp. Multiple users could access this profile,
+ * if specifically setup to do so by making use of auth descriptors.
+ */
 entity account {
+    /** Uniquely represents an account */
     key id: byte_array;
+    /**
+     * Allows distinguishing user accounts from system and lock accounts.
+     * @see ACCOUNT_TYPE_USER for the standard type
+     * @see strategies.transfer.ACCOUNT_TYPE_FEE for an example of a system type
+     * @see assets.locking.ACCOUNT_TYPE_LOCK for information on lock types
+     */
     index type: text;
 }
 
+/**
+ * The auth descriptor that manages an account.
+ *
+ * It can only be substituted, not deleted. Every user account must have a main auth
+ * descriptor.
+ */
 entity main_auth_descriptor {
+    /** the account of which this auth descriptor is the manager of */
     key account;
+    /** the auth descriptor that manages the account */
     key auth_descriptor: account_auth_descriptor;
 }
 
+/**
+ * An entity that allows fine-tuned access control over accounts. It's used to specify
+ * what keypairs can access an account, and it can limit the conditions for access in
+ * some ways.
+ */
 entity account_auth_descriptor {
+    /** a unique identifier for the auth descriptor */
     id: byte_array;
+    /** the account it allows access to */
     key account, id;
     index id;
+    /** whether it's single-sig or multi-sig. It will influence the `args` property. */
     auth_type;
+    /**
+     * It specifies signers and level of access for the auth descriptor.
+     * It should be either of the following structs, encoded into a byte array:
+     * - `single_sig_args`, if `auth_type` is `S`
+     * - `multi_sig_args`, if `auth_type` is `M`
+     */
     args: byte_array;
+    /**
+     * Must be one of these values, converted to gtv and then encoded into a byte array:
+     * - **no rules**: `null` (when encoded, it will be converted to `GTV_NULL_BYTES`)
+     * - **a simple rule**: a `rule_expression`
+     * - **a complex rule**: a list starting with the value `"and"` and followed by
+     *   `rule_expression`s
+     * 
+     * The amount of rule expressions should always be less than or equal to
+     * `auth_descriptor_config.max_rules`.
+     * 
+     * After the expiration conditions are reached, this auth descriptor
+     * will automatically be deleted as soon as the account that owns it sends an
+     * operation.
+     *
+     * Must be `GTV_NULL_BYTES` if this is the `main_auth_descriptor` for the account.
+     * 
+     * @see `rule_expression` explains what it means to expire
+     */
     rules: byte_array;
+    /**
+     * Used for the `op_count` expiration rule, counts how many operations this auth
+     * descriptor has authenticated.
+     */
     mutable ctr: integer;
+    /** When was this auth descriptor registered */
     created: timestamp;
 }
 
+/** Represents a keypair that has access to an auth descriptor. */
 entity auth_descriptor_signer {
-    key account_auth_descriptor, id: byte_array;
+    /** Either the pubkey or, for EVM signers, the EVM address (without `0x`) */
+    id: byte_array;
+    /** the auth descriptor this signer can access */
+    key account_auth_descriptor, id;
 }
 
-// rate limiter
+/** Rate limiter state, keeping track of whether an account can do more operations. */
 entity rl_state {
+    /** The account that's being limited */
     key account;
+    /** How many points the account currently has */
     mutable points: integer;
+    /** When was the last time this account sent an operation */
     mutable last_update: timestamp;
+    /** How much time it takes to get one rate limit point back */
     mutable recovery_time: timestamp;
 }
 
-
+/**
+ * Adds an auth descriptor to an account.
+ * 
+ * Can only be called from an operation.
+ *
+ * Throws `"TOO MANY AUTH DESCRIPTORS"` if the account already has
+ * `AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND` number of auth descriptors registered to it.
+ *
+ * Throws if `auth_descriptor`'s `args` field is invalid. Common cases include:
+ * - if a multi-sig auth descriptor's `required_signatures` is 0 or less
+ * - if a multi-sig auth descriptor's `required_signature` parameter is greater than the number
+ *   of signers
+ *
+ * Throws if `auth_descriptor`'s `rules` field is invalid. Common cases include:
+ * - `rules` is a complex rule with too many rule components
+ * - `rules` has already expired
+ * - `rules` is not the valid GTV representation of a rule
+ * 
+ * @see account_auth_descriptor.rules for the list of valid GTV representations of rules
+ * 
+ * @param account           the account to add the auth descriptor to
+ * @param auth_descriptor   the auth descriptor to add
+ *
+ * @return The newly created `account_auth_descriptor` entity
+ */
 function add_auth_descriptor(account, auth_descriptor): account_auth_descriptor {
     require(
         (account_auth_descriptor @ { account } (@sum 1))  <
             AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND,
-        "Max <%d> auth descriptor count reached. Delete some before adding new ones."
+        "TOO MANY AUTH DESCRIPTORS: Max <%d> auth descriptor count reached. Delete some before adding new ones."
             .format(AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND)
     );
     
@@ -110,20 +256,57 @@ function add_auth_descriptor(account, auth_descriptor): account_auth_descriptor 
 }
 
 /**
- * Deletes old main auth descriptor and sets provided auth descriptor as main auth descriptor
+ * Sets provided auth descriptor as main auth descriptor, deleting the previous one.
+ * 
+ * Can only be called from an operation.
+ *
+ * Throws `"RESTRICTED MAIN AUTH"` if the auth descriptor's rules are not `GTV_NULL`
+ *
+ * Throws if any mandatory flags are missing on the auth descriptor.
+ * 
+ * Throws if the account has no main auth descriptor associated. This should normally not
+ * happen for user accounts.
+ * 
+ * Throws if the auth descriptor's `args` field is invalid. Common cases are:
+ * - the auth descriptor is a misconfigured multisig. `required_signatures` is:
+ *   - 0 or less
+ *   - greater than the number of signers
+ * 
+ * @see auth_flags_config for information on mandatory flags
+ *
+ * @param account           the account to change the main auth descriptor for
+ * @param auth_descriptor   the new auth descriptor to add as main
  */
 function update_main_auth_descriptor(account, auth_descriptor) {
-    require(auth_descriptor.rules == GTV_NULL, "Main auth descriptor cannot be restricted");
+    require(
+        auth_descriptor.rules == GTV_NULL,
+        "RESTRICTED MAIN AUTH: Main auth descriptor cannot be restricted"
+    );
     require_mandatory_flags(auth_descriptor);
     delete_main_auth_descriptor(account);
     val account_auth_descriptor = add_auth_descriptor(account, auth_descriptor);
     set_main_auth_descriptor(account, account_auth_descriptor);
 }
 
+/**
+ * Deletes the main auth descriptor for the account. It does not add a new one, so it leaves
+ * the account prone to being inaccessible.
+ * 
+ * Using this function directly on a user account might end up leaving it misconfigured. It's
+ * strongly advised to use `update_main_auth_descriptor` if the main auth descriptor should be
+ * changed.
+ * 
+ * Can only be called from an operation.
+ *
+ * Throws `"MISSING AUTH DESCRIPTOR"` if the account has no `main_auth_descriptor`
+ * associated.
+ *
+ * @param account   the account whose main auth descriptor should be removed
+ */
 function delete_main_auth_descriptor(account) {
     val main_auth_descriptor = require(
         main_auth_descriptor @? { account },
-        "Error deleting main auth descriptor of account <%s>. Auth descriptor not found".format(account.id)
+        "MISSING AUTH DESCRIPTOR: Error deleting main auth descriptor of account <%s>. Auth descriptor not found".format(account.id)
     );
 
     val auth_descriptor = main_auth_descriptor.auth_descriptor;
@@ -131,24 +314,61 @@ function delete_main_auth_descriptor(account) {
     delete_auth_descriptor(auth_descriptor);
 }
 
+/**
+ * Sets an auth descriptor as `main_auth_descriptor` of the account
+ * 
+ * Using this function directly on a user account might end up leaving it misconfigured. It's
+ * strongly advised to use `update_main_auth_descriptor` if the main auth descriptor should be
+ * changed.
+ * 
+ * Can only be called from an operation.
+ *
+ * Throws `"MAIN AUTH DESCRIPTOR EXISTS"` if the account has a main auth descriptor already.
+ *
+ * @param account                   the account to set the main auth descriptor for
+ * @param account_auth_descriptor   an auth descriptor already registered to the account
+ *                                  which should become the main one
+ */
 function set_main_auth_descriptor(account, account_auth_descriptor) {
     require(
         empty(main_auth_descriptor @? { account }),
-        "Error setting main auth descriptor. Main auth descriptor already exists"
+        "MAIN AUTH DESCRIPTOR EXISTS: Error setting main auth descriptor. Main auth descriptor already exists"
     );
 
     create main_auth_descriptor(account, account_auth_descriptor);
 }
 
+/**
+ * Deletes an auth descriptor that is not a main auth descriptor.
+ * 
+ * Can only be called from an operation.
+ *
+ * Throws `"DELETE MAIN UNAUTHORIZED"` if a main auth descriptor is passed.
+ * 
+ * @see update_main_auth_descriptor if you need to replace the main auth descriptor
+ * 
+ * @see delete_main_auth_descriptor if you need to delete the main auth descriptor
+ *
+ * @param auth_descriptor   the auth descriptor to delete
+ */
 function delete_auth_descriptor(auth_descriptor: account_auth_descriptor) {
     require(
         main_auth_descriptor @? { auth_descriptor } == null,
-        "Cannot delete main auth descriptor"
+        "DELETE MAIN UNAUTHORIZED: Cannot delete main auth descriptor"
     );
     delete auth_descriptor_signer @* { auth_descriptor };
     delete auth_descriptor;
 }
 
+/**
+ * Deletes all auth descriptors of an account that are not the main auth descriptor.
+ * This can be useful if you have many disposable auth descriptors you lost the keys to,
+ * like the ones created by logging in, and need to delete them to get back under the limit.
+ * 
+ * Can only be called from an operation.
+ *
+ * @param account   the account to delete auth descriptors for.
+ */
 function delete_all_auth_descriptors_except_main(account) {
     val main = main_auth_descriptor @ { account } ( .auth_descriptor );
     delete (ads: auth_descriptor_signer, ad: account_auth_descriptor) @* {
@@ -163,8 +383,33 @@ function delete_all_auth_descriptors_except_main(account) {
     };
 }
 
+/**
+ * Standard way of creating a user account. Account registration strategies call this function.
+ * 
+ * Can only be called from an operation.
+ *
+ * Throws `"RESTRICTED MAIN AUTH"` if the auth descriptor has expiration rules, i.e. if the
+ * `rules` field is not equivalent to the value of `GTV_NULL`.
+ *
+ * Throws if the auth descriptor is invalid. Common cases include:
+ * - errors with the `args` field:
+ *   - some required flags are missing
+ *   - in multi-sig auth descriptors, the `required_signatures` field:
+ *     - is 0 or less
+ *     - is greater than the number of signers
+ * 
+ * @see auth_flags_config.mandatory for the required flags
+ * 
+ * @see account_auth_descriptor.rules for the list of valid GTV representations of rules
+ *
+ * @param auth_descriptor   the main auth descriptor for the account.
+ * @param account_id        optionally, the id for this account.
+ */
 function create_account_with_auth(auth_descriptor, account_id: byte_array? = null): account {
-    require(auth_descriptor.rules == GTV_NULL, "Cannot create an account with a restricted auth descriptor");
+    require(
+        auth_descriptor.rules == GTV_NULL,
+        "RESTRICTED MAIN AUTH: Cannot create an account with a restricted auth descriptor"
+    );
     require_mandatory_flags(auth_descriptor);
 
     val id = account_id ?: get_account_id_from_signers(get_signers(auth_descriptor));
@@ -178,20 +423,29 @@ function create_account_with_auth(auth_descriptor, account_id: byte_array? = nul
     return account;
 }
 
+/**
+ * Checks that the auth descriptor contains all the flags deemed necessary for this dapp.
+ *
+ * Throws `"MISSING MANDATORY FLAGS"` if some are missing.
+ *
+ * @param auth_descriptor   the auth descriptor to check.
+ */
 function require_mandatory_flags(auth_descriptor) {
-    var flags = get_flags(auth_descriptor);
+    val flags = get_flags(auth_descriptor);
     val mandatory = get_auth_flags_config().mandatory;
     require(
         flags.contains_all(mandatory),
-        "Some of mandatory flags <%s> missing, found only <%s>".format(mandatory, flags)
+        "MISSING MANDATORY FLAGS: Some of mandatory flags <%s> missing, found only <%s>".format(mandatory, flags)
     );
 }
 
 /**
- * Creates an account without auth descriptor. Used to create different "system" account types,
+ * Creates an account without auth descriptor. Used to create different "system" account types
  * that cannot be directly accessed, e.g. POOL, FEE, BLOCKCHAIN, ... accounts.
  * 
- * @param account_id    account id
+ * Can only be called from an operation.
+ * 
+ * @param account_id    the created account id
  * @param type          account type specified as a free form text. Usually uppercase.
  */
 function create_account_without_auth(account_id: byte_array, type: text): account {
@@ -203,16 +457,21 @@ function create_account_without_auth(account_id: byte_array, type: text): accoun
 
 /**
  * Finds or creates an account of specific type.
+ * 
+ * Can only be called from an operation.
  *
- * @param account_id    account id
- * @param type          account type 
+ * Throws `"MISMATCHING TYPE"` if an account with given ID exists, but the type is not the one
+ * passed.
+ *
+ * @param account_id    account id to find
+ * @param type          expected account type 
  */
 function ensure_account_without_auth(account_id: byte_array, type: text): account {
     val account = account @? { .id == account_id };
     if (account??) {
         require(
             account.type == type,
-            "Found account <%s> of invalid type. Expected <%s>, found <%s>".format(account.id, type, account.type)
+            "MISMATCHING TYPE: Found account <%s> of invalid type. Expected <%s>, found <%s>".format(account.id, type, account.type)
         );
 
         return account;
@@ -221,6 +480,11 @@ function ensure_account_without_auth(account_id: byte_array, type: text): accoun
     }
 }
 
+/**
+ * Extracts the flags from an auth descriptor.
+ *
+ * @param auth_descriptor   the auth descriptor to extract flags from.
+ */
 function get_flags(auth_descriptor) {
     return when (auth_descriptor.auth_type) {
         S -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv()).flags;
@@ -229,13 +493,25 @@ function get_flags(auth_descriptor) {
 }
 
 /**
-* Checks if an `account_auth_descriptor` has all the specified flags
-*/
+ * Checks if an `account_auth_descriptor` has all the specified flags
+ *
+ * @param account_auth_descriptor   the account_auth_descriptor to check
+ * @param required_flags            the flags it should have
+ */
 function has_flags(account_auth_descriptor, required_flags: list<text>): boolean {
     val flags = get_flags_from_args(account_auth_descriptor.auth_type, account_auth_descriptor.args);
     return flags.contains_all(required_flags);
 }
 
+/**
+ * Associates new signers with an account.
+ * 
+ * Can only be called from an operation.
+ *
+ * @param account                   the account the auth descriptor refers to
+ * @param auth_descriptor           the auth descriptor to extract signers from
+ * @param account_auth_descriptor   the entity corresponding to the auth descriptor
+ */
 function add_signers(account, auth_descriptor, account_auth_descriptor) {
     create auth_descriptor_signer(
         get_signers(auth_descriptor) @* {}
@@ -243,21 +519,49 @@ function add_signers(account, auth_descriptor, account_auth_descriptor) {
     );
 }
 
+/**
+ * Default calculation for new account IDs.
+ *
+ * Throws `"NO SIGNERS"` if the list has no elements.
+ *
+ * @param signers   the signers for the main auth descriptor of the account
+ */
 function get_account_id_from_signers(signers: list<byte_array>) {
-    require(signers.size() > 0, "Cannot derive account id. Signers list is empty");
+    require(signers.size() > 0, "NO SIGNERS: Cannot derive account id. Signers list is empty");
     return if (signers.size() == 1) signers[0].hash() else signers @* {} (@sort $).hash();
 }
 
+/**
+ * Finds an auth descriptor based on its ID and the account it belongs to.
+ *
+ * Throws `"MISSING AUTH DESCRIPTOR"` if none is found.
+ *
+ * @param account   the account it belongs to
+ * @param id        the ID of the auth descriptor
+ */
 function auth_descriptor_by_id(account, id: byte_array) = require(
     account_auth_descriptor @? { account, id },
-    "Auth descriptor '%s' not found for account '%s'".format(id, account.id)
+    "MISSING AUTH DESCRIPTOR: Auth descriptor '%s' not found for account '%s'".format(id, account.id)
 );
 
+/**
+ * Finds an account based on its ID.
+ *
+ * Throws `"MISSING ACCOUNT"` if none is found.
+ *
+ * @param id    the ID of the account
+ */
 function account_by_id(id: byte_array) = require(
     account @? { id },
-    "Account not found: '%s'".format(id)
+    "MISSING ACCOUNT: Account not found: '%s'".format(id)
 );
 
+/**
+ * Creates a single signature auth descriptor given the arguments with no expiration rules.
+ *
+ * @param signer    The signer for the auth descriptor
+ * @param flags     The flags defining the level of authorization
+ */
 function single_sig_auth_descriptor(signer: byte_array, flags: set<text>) = auth_descriptor(
     auth_type = auth_type.S,
     args = list<gtv>.from_gtv(single_sig_args(
@@ -267,6 +571,14 @@ function single_sig_auth_descriptor(signer: byte_array, flags: set<text>) = auth
     GTV_NULL
 );
 
+// NO INPUT CHECKS!
+/**
+ * Creates a multi-signature auth descriptor given the arguments with no expiration rules.
+ *
+ * @param signers               The signers for the auth descriptor
+ * @param signatures_required   How many signers are needed to authorize an operation
+ * @param flags                 The flags defining the level of authorization
+ */
 function multi_sig_auth_descriptor(signers: list<byte_array>, signatures_required: integer, flags: set<text>) = auth_descriptor(
     auth_type = auth_type.M,
     args = list<gtv>.from_gtv(multi_sig_args(
@@ -277,6 +589,11 @@ function multi_sig_auth_descriptor(signers: list<byte_array>, signatures_require
     GTV_NULL
 );
 
+/**
+ * Returns all auth descriptors registered to an account.
+ *
+ * @param id    the account ID
+ */
 function get_auth_descriptors(id: byte_array) {
     return account_auth_descriptor @* {
         .account.id == id
@@ -285,6 +602,13 @@ function get_auth_descriptors(id: byte_array) {
     );
 }
 
+/**
+ * Returns all auth descriptors of which the signer takes part that are registered to
+ * a specific account.
+ *
+ * @param account_id    the account ID
+ * @param signer        the pubkey or EVM address (without 0x) of the signer
+ */
 function get_auth_descriptors_by_signer(account_id: byte_array, signer: byte_array) {
     return auth_descriptor_signer @* {
         .account_auth_descriptor.account.id == account_id,
@@ -294,6 +618,12 @@ function get_auth_descriptors_by_signer(account_id: byte_array, signer: byte_arr
     );
 }
 
+/**
+ * Extract info from an `account_auth_descriptor` in a more accessible format.
+ * Useful for queries that return auth descriptors.
+ *
+ * @param ad    The `account_auth_descriptor` to extract info from
+ */
 function get_auth_descriptor_data(ad: struct<account_auth_descriptor>) {
     return (
         id = ad.id,
@@ -305,7 +635,17 @@ function get_auth_descriptor_data(ad: struct<account_auth_descriptor>) {
     );
 }
 
-function get_paginated_accounts_by_signer(id: byte_array, page_size: integer?, page_cursor: text?) {
+/**
+ * Retrieves all accounts the given signer can interact with, paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ *
+ * @param id            the signer ID
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
+function get_paginated_accounts_by_signer(
+    id: byte_array, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return auth_descriptor_signer @* {
         id,
@@ -318,6 +658,15 @@ function get_paginated_accounts_by_signer(id: byte_array, page_size: integer?, p
     ) limit utils.fetch_data_size(page_size); 
 }
 
+/**
+ * Retrieves all accounts the given auth descriptor can interact with, paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ *
+ * @param id            the descriptor ID
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 function get_paginated_accounts_by_ad_id(id: byte_array, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return account_auth_descriptor @* {
@@ -331,6 +680,15 @@ function get_paginated_accounts_by_ad_id(id: byte_array, page_size: integer?, pa
     ) limit utils.fetch_data_size(page_size);
 }
 
+/**
+ * Retrieves all accounts of the given type, paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ *
+ * @param type          the type of the accounts to retrieve
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 function get_paginated_accounts_by_type(type: text, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return account @* {
@@ -344,15 +702,31 @@ function get_paginated_accounts_by_type(type: text, page_size: integer?, page_cu
     ) limit utils.fetch_data_size(page_size);    
 }
 
+/**
+ * Checks if the auth descriptor args correspond to `single_sig_args` or `multi_sig_args`,
+ * based on the descriptor's `auth_type`
+ * 
+ * Throws `"MULTISIG NEGATIVE REQUIREMENT"` if a multi-sig auth descriptor's
+ * `required_signatures` is 0 or less
+ * 
+ * Throws `"MULTISIG REQUIREMENT TOO HIGH"` if a multi-sig
+ * auth descriptor's `required_signature` parameter is greater than the number of signers
+ *
+ * @param auth_descriptor   the auth descriptor to check
+ */
 function validate_auth_descriptor_args(auth_descriptor) {
     when (auth_descriptor.auth_type) {
         S -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
         M -> {
             val args = multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
-            require(args.signatures_required > 0, "Required signatures must be positive");
-            require(args.signatures_required <= args.signers.size(), "Required signatures cannot be greater than number of signers");
+            require(args.signatures_required > 0, "MULTISIG NEGATIVE REQUIREMENT: Required signatures must be positive");
+            require(args.signatures_required <= args.signers.size(), "MULTISIG REQUIREMENT TOO HIGH: Required signatures cannot be greater than number of signers");
         }
     }
 }
 
+/**
+ * Returns the maximum number of rules that can be composed to limit the duration of
+ * an auth descriptor
+ */
 function get_max_allowed_auth_descriptor_rules() = chain_context.args.auth_descriptor.max_rules;

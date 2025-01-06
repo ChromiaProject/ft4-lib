@@ -1,17 +1,54 @@
+/** the name of this module, for more readable errors */
 val MODULE_NAME = "lib.ft4.core.accounts.strategy.transfer.subscription";
 
+/** The configuration for this module, to be defined in the `chromia.yml` */
 struct module_args {
+    /**
+     * Which asset(s) can be used to pay the subscription fee.
+     * Parsed as one or a list of `transfer.fee_asset`s
+     * 
+     * @see transfer.fee_asset for what values are expected here
+     */
     asset: gtv;
+    /** How long the subscription lasts */
     subscription_period_days: integer;
+    /**
+     * Which operations can be called without a subscription.
+     * `renew_subscription` does not need to be added here.
+     * 
+     * Parsed as a GTV-encoded `list<operation_mount_name: text>`
+     * 
+     * @see free_operations for more info
+     */
     free_operations: gtv = set<text>().to_gtv();
+    /** The account that receives the fee payments. If null, a default value will be used */
     subscription_account: byte_array? = null;
 }
 
+/**
+ * Returns the assets configured in `module_args.asset`.
+ */
 function subscription_assets(): list<transfer.fee_asset> =
         transfer.parse_fee_assets(chain_context.args.asset, MODULE_NAME);
 
+/** Returns the number of days a subscription lasts */
 function subscription_period_days(): integer = chain_context.args.subscription_period_days;
 
-function free_operations(): set<text> = set<text>.from_gtv(chain_context.args.free_operations);
+/** Returns a list of operations that are considered free on this chain */
+function free_operations(): set<text> {
+    val ops = set<text>.from_gtv(chain_context.args.free_operations);
+    ops.add(rell.meta(renew_subscription).mount_name);
+    return ops;
+}
 
+/**
+ * Returns the ID of the account that receives the fee payments, or null for the default one
+ * 
+ * To get the account, the proper usage is:
+ * ```
+ * val account = transfer.ensure_chain_fee_account(subscription_account_id());
+ * ```
+ * 
+ * @see transfer.ensure_chain_fee_account if the actual account is needed.
+ */
 function subscription_account_id(): byte_array? = chain_context.args.subscription_account;

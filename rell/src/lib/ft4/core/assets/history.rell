@@ -1,34 +1,83 @@
-
+/**
+ * Represents the movement of an asset in or out of an account.
+ * 
+ * @see crosschain_transfer_history_entry for cross-chain transfers only.
+ */
 @log entity transfer_history_entry {
-    op_index: integer = op_context.op_index; // helps to locate exact position of transfer entry in transaction
+    /**
+     * The index of the operation in the transaction.
+     * Points out the transfer operation in the transaction
+     */
+    op_index: integer = op_context.op_index;
+    /** The transaction where this movement happened. */
     index transaction, op_index;
 
+    /** The account whose balance was modified */
     index accounts.account;
+    /** The asset that was influenced */
     index asset;
+    /** How much of the asset was moved */
     delta: big_integer;
+    /** If true, this movement of tokens went into a transfer (and out of this account) */
     is_input: boolean;
 }
 
+/**
+ * Represents the cross-chain movement of an asset on the origin or target chain.
+ * No intermediate chain will store this information.
+ * 
+ * @see transfer_history_entry for all transfers including cross-chain.
+ */
 @log entity crosschain_transfer_history_entry {
-    op_index: integer = op_context.op_index; // helps to locate exact position of transfer entry in transaction
+    /**
+     * The index of the operation in the transaction.
+     * Points out the transfer operation in the transaction
+     */
+    op_index: integer = op_context.op_index;
+    /** The transaction where this movement happened. */
     index transaction, op_index;
 
+    /** The other chain involved in this transfer, besides the current one */
     blockchain_rid: byte_array;
+    /** The account on the other chain whose balance was modified */
     index account_id: byte_array;
+    /** The asset that was influenced */
     index asset;
+    /** How much of the asset was moved */
     delta: big_integer;
+    /**
+     * Since it refers to the other chain, if this value is true, this movement of tokens
+     * went into the transaction, out of the account and out of the other chain.
+     * It then went into the current chain, and into the account that received it, which
+     * is however stored in a `transfer_history_entry` which will have `is_input` set to false.
+     */
     is_input: boolean;
 }
 
+/** The type of a transfer, used for filtering in queries */
 enum transfer_type {
+    /** The tokens were moving out of the account balance */
     sent,
+    /** The tokens were moving into the account balance */
     received,
 }
 
+/** Filter used in queries, which allows to fetch only one direction of transfer */
 struct filter {
+    /**
+     * Whether you want to fetch outgoing or incoming transfers, or both if null.
+     */
     transfer_type?;
 }
 
+/**
+ * Takes a list of transfer history entries and builds a page that can be returned
+ * from paginated queries with it.
+ * 
+ * @see utils.pagination_result for information about pagination
+ * 
+ * @param entries   the list of transfer history entries
+ */
 function extract_data_from_transfer_history_list(
         entries: list<transfer_history_entry>
     ): list<(data:gtv,rowid:rowid)> {
@@ -38,11 +87,21 @@ function extract_data_from_transfer_history_list(
     );
 }
 
+/**
+ * Extracts the name of the operation that caused the transfer to happen.
+ * 
+ * @param entry     the entry that was created during the operation
+ */
 function extract_operation_name(entry: transfer_history_entry): text {
     val gtx = gtx_transaction.from_gtv(gtv.from_bytes(entry.transaction.tx_data));
     return gtx.body.operations[entry.op_index].name;
 }
 
+/**
+ * Maps an entry's info into a readable format for the frontend
+ * 
+ * @param entry     the entry that should be formatted
+ */
 function extract_data_from_transfer_history_entry(entry: transfer_history_entry) {
     return (
         id = entry.rowid,
@@ -62,6 +121,19 @@ function extract_data_from_transfer_history_entry(entry: transfer_history_entry)
     );
 }
 
+/**
+ * Fetches all transfers, allowing filtering in multiple ways. Paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param account       only return transfers from/to this account, or all accounts if null
+ * @param asset         only return transfers of this asset, or all assets if null
+ * @param filter        Whether to return only incoming, outgoing or all transfers
+ * @param height        Only return transfers that happened after this block height,
+ *                      or all transfers if null
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start 
+ */
 function get_paginated_transfers(accounts.account?, asset?, filter, height: integer?, page_size: integer?, page_cursor: text?) {
     var before_rowid: rowid? = null;
     if (page_cursor??) {
@@ -72,7 +144,7 @@ function get_paginated_transfers(accounts.account?, asset?, filter, height: inte
     val entries = transfer_history_entry @* {
         if (account == null) true else .account == account,
         if (asset == null) true else .asset == asset,
-        if (filter.transfer_type == null) true else .is_input == (filter.transfer_type!! == transfer_type.sent),
+        if (filter.transfer_type == null) true else .is_input == (filter.transfer_type == transfer_type.sent),
         if (height == null) true else (.transaction.block.block_height > height),
         if (before_rowid??) (.rowid < before_rowid) else true
     } (@sort_desc $) limit utils.fetch_data_size(page_size);
@@ -85,56 +157,136 @@ function get_paginated_transfers(accounts.account?, asset?, filter, height: inte
     );
 }
 
+/**
+ * Details about a transfer. It contains a limited set of information that can be used to
+ * describe a `transfer_history_entry` and a `crosschain_transfer_history_entry`.
+ */
 struct transfer_detail {
+    /** The blockchain on which the transfer happened */
     blockchain_rid: byte_array;
+    /** The account whose balance was affected */
     account_id: byte_array;
+    /** The asset that was moved */
     asset_id: byte_array;
+    /** The amount that was moved */
     delta: big_integer;
+    /** If true, this movement of tokens went into a transfer (and out of this account) */
     is_input: boolean;
 }
 
-function get_transfer_details(tx_rid: byte_array, op_index: integer): set<transfer_detail> {
-    val result = set(transfer_history_entry @*
-        { .transaction.tx_rid == tx_rid, op_index,
-            .account.type != crosschain.ACCOUNT_TYPE_BLOCKCHAIN }
-        (extract_details_from_transfer_history_entry($)));
+/**
+ * Returns a `transfer_detail` object for each `transfer_entry` that was registered during
+ * the operation specified.
+ * 
+ * @param tx_rid    The transaction where the operation was performed
+ * @param op_index  The index of the operation
+ */
+function get_transfer_details(tx_rid: byte_array, op_index: integer): list<transfer_detail> {
+    val result = transfer_history_entry @*
+        {
+            .transaction.tx_rid == tx_rid, op_index,
+            .account.type != crosschain.ACCOUNT_TYPE_BLOCKCHAIN,
+            (.account.type != transfer_strategy.ACCOUNT_TYPE_POOL or not .is_input),
+        }
+        (extract_details_from_transfer_history_entry($));
 
     result.add_all(crosschain_transfer_history_entry @*
         { .transaction.tx_rid == tx_rid, op_index }
         (extract_details_from_crosschain_transfer_history_entry($))
     );
 
+    result.add_all(transfer_strategy.account_creation_transfer @* {
+            .final_tx_rid == tx_rid,
+            .final_op_index == op_index,
+        } (extract_details_from_account_creation_transfer($))
+    );
+
     return result;
 }
 
-function get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, asset_id: byte_array): set<transfer_detail> {
-    val result = set(transfer_history_entry @*
-        { .transaction.tx_rid == tx_rid, op_index, .asset.id == asset_id,
-            .account.type != crosschain.ACCOUNT_TYPE_BLOCKCHAIN }
-        (extract_details_from_transfer_history_entry($)));
+/**
+ * Same as `get_transfer_details`, but restricts the results to transfer entries related
+ * to the asset specified.
+ * 
+ * @param tx_rid    The transaction where the operation was performed
+ * @param op_index  The index of the operation
+ * @param asset_id  Only return entries where this asset was transferred
+ */
+function get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, asset_id: byte_array): list<transfer_detail> {
+    val result = transfer_history_entry @*
+        {
+            .transaction.tx_rid == tx_rid, op_index, .asset.id == asset_id,
+            .account.type != crosschain.ACCOUNT_TYPE_BLOCKCHAIN,
+            (.account.type != transfer_strategy.ACCOUNT_TYPE_POOL or not .is_input),
+        }
+        (extract_details_from_transfer_history_entry($));
 
     result.add_all(crosschain_transfer_history_entry @*
         { .transaction.tx_rid == tx_rid, op_index, .asset.id == asset_id }
         (extract_details_from_crosschain_transfer_history_entry($))
     );
 
+    result.add_all(transfer_strategy.account_creation_transfer @* {
+            .final_tx_rid == tx_rid,
+            .final_op_index == op_index,
+            .asset.id == asset_id,
+        } (extract_details_from_account_creation_transfer($))
+    );
+
     return result;
 }
 
-function extract_details_from_transfer_history_entry(entry: transfer_history_entry) =
-    transfer_detail(
+/**
+ * Maps a `transfer_history_entry` to a `transfer_detail` object.
+ * This allows some functions to handle both `transfer_history_entry`s and
+ * `crosschain_transfer_history_entry`s as the same thing.
+ * 
+ * @param entry     the entry to map
+ */
+function extract_details_from_transfer_history_entry(entry: transfer_history_entry) {
+    return transfer_detail(
         blockchain_rid = chain_context.blockchain_rid,
         account_id = entry.account.id,
         asset_id = entry.asset.id,
         delta = entry.delta,
         is_input = entry.is_input
     );
+}
 
-function extract_details_from_crosschain_transfer_history_entry(entry: crosschain_transfer_history_entry) =
-    transfer_detail(
+/**
+ * Analogous to `extract_details_from_transfer_history_entry`, but extracts data from the
+ * account creation transfers. Allows for account creation transfers to show the actual sender,
+ * instead of the pool account.
+ * 
+ * @param transfer  the transfer to map
+ */
+function extract_details_from_account_creation_transfer(
+    transfer: transfer_strategy.account_creation_transfer
+) {
+    return transfer_detail(
+        blockchain_rid = transfer.sender_blockchain_rid,
+        account_id = transfer.sender_id,
+        asset_id = transfer.asset.id,
+        delta = transfer.amount,
+        is_input = true
+    );
+}
+
+/**
+ * Maps a `crosschain_transfer_history_entry` to a `transfer_detail` object.
+ * This allows some functions to handle both `transfer_history_entry`s and
+ * `crosschain_transfer_history_entry`s as the same thing.
+ * 
+ * @param entry     the entry to map
+ */
+function extract_details_from_crosschain_transfer_history_entry(
+    entry: crosschain_transfer_history_entry
+) {
+    return transfer_detail(
         blockchain_rid = entry.blockchain_rid,
         account_id = entry.account_id,
         asset_id = entry.asset.id,
         delta = entry.delta,
         is_input = entry.is_input
     );
+}

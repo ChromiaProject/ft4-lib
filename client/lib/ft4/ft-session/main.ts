@@ -68,6 +68,11 @@ import {
   Session,
 } from "./types";
 import { getEnabledRegistrationStrategies } from "@ft4/registration";
+import {
+  getAcceptableAuthDescriptors,
+  getConfigFromOptions,
+} from "@ft4/authentication/login";
+import { getApiVersion } from "@ft4/utils/main";
 
 /**
  * Uses the provided connection to create a new connection to the specified blockchain rid.
@@ -120,6 +125,7 @@ export function createConnection(client: IClient): Connection {
     ) => client.query<TReturn, TArgs>(nameOrQueryObject, args, callback),
     getConfig: () => getConfig(client),
     getVersion: () => getVersion(client),
+    getApiVersion: () => getApiVersion(client),
 
     getBlockHeight: async () => {
       const [block] = await client.getBlocksInfo(1);
@@ -365,6 +371,27 @@ export function createKeyStoreInteractor(
     },
     login: (loginOptions: LoginOptions) =>
       login(connection, keyStore, loginOptions),
+    hasActiveLogin: async (loginOptions: LoginOptions) => {
+      // if no keystore was passed, no keys are available
+      if (loginOptions.loginKeyStore === undefined) return false;
+
+      const ks = await loginOptions.loginKeyStore.getKeyStore(
+        formatter.ensureBuffer(loginOptions.accountId),
+      );
+
+      // if no keystore for this account was found, no keys are available
+      if (ks === null) return false;
+
+      // Get list of flags that will be added to new auth descriptor
+      const authDataService = createAuthDataService(connection);
+      const config = await getConfigFromOptions(authDataService, loginOptions);
+
+      const account = createAccountObject(connection, loginOptions.accountId);
+
+      const ads = await getAcceptableAuthDescriptors(account, ks, config.flags);
+
+      return ads.length > 0;
+    },
     onKeyStoreChanged: async (
       handler: (arg0: KeyStoreInteractor | null) => void,
     ) => {

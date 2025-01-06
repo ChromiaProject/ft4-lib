@@ -1,4 +1,5 @@
 import {
+  Account,
   AuthDescriptorRules,
   AuthFlag,
   AuthenticatedAccount,
@@ -27,6 +28,7 @@ import { Buffer } from "buffer";
 import { mapLoginConfigRulesToAuthDescriptorRules } from "./rules";
 import { LoginKeyStore, createInMemoryLoginKeyStore } from "./stores";
 import { LoginConfigOptions, LoginOptions, SessionWithLogout } from "./types";
+import { isAuthDescriptorValid } from "@ft4/accounts/query-functions";
 
 /**
  * Uses the provided keystore to log into the specified account
@@ -74,14 +76,9 @@ export async function login(
   // If they already exist then it will be used instead of adding a new auth descriptor
   if (loginKeyStore) {
     disposableKeyStore = loginKeyStore;
-    const disposableAuthDescriptors = await account.getAuthDescriptorsBySigner(
-      loginKeyStore.id,
-    );
-    disposableKeyHandlers = disposableAuthDescriptors
-      .filter((authDescriptor) =>
-        hasAuthDescriptorFlags(authDescriptor, config.flags),
-      )
-      .map((authDescriptor) => loginKeyStore.createKeyHandler(authDescriptor));
+    disposableKeyHandlers = (
+      await getAcceptableAuthDescriptors(account, loginKeyStore, config.flags)
+    ).map((ad) => loginKeyStore.createKeyHandler(ad));
   }
 
   // Key pair was not found in login key store,
@@ -235,4 +232,29 @@ export async function deleteDisposableAuthDescriptors(
     account.authenticator,
     deleteAuthDescriptorsForSigner(key.pubKey),
   );
+}
+
+export async function getAcceptableAuthDescriptors(
+  account: Account,
+  loginKeyStore: FtKeyStore,
+  flags: string[],
+) {
+  const allAuthDescriptors = await account.getAuthDescriptorsBySigner(
+    loginKeyStore.id,
+  );
+
+  const isValid = await Promise.all(
+    allAuthDescriptors.map(async (authDescriptor) => {
+      return (
+        hasAuthDescriptorFlags(authDescriptor, flags) &&
+        (await isAuthDescriptorValid(
+          account.connection,
+          account.id,
+          authDescriptor.id,
+        ))
+      );
+    }),
+  );
+
+  return allAuthDescriptors.filter((_ad, idx) => isValid[idx]);
 }

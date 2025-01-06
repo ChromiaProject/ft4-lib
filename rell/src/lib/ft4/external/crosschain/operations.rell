@@ -16,10 +16,69 @@ function init_transfer_message(gtv) {
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(init_transfer).mount_name,
-    flags = ["T"],
+    flags = [accounts.auth_flags.TRANSFER],
     message = init_transfer_message(*)
 );
 
+/*
+ * - sender account ID is equal to this chain's ID
+ * Should we worry about this?
+ */
+/** 
+ * Initializes a crosschain transfer, which is a transfer that goes to a different blockchain
+ * on the Chromia network.
+ * 
+ * Since this chain cannot communicate with any other chain, it is up to the client to
+ * perform the necessary steps to complete this transfer. Furthermore, this chain will
+ * not validate if the sender is allowed to send assets to the target chain or if the
+ * recipient account exists, meaning that when the client tries to apply the transfer
+ * on the target chain, it might not be accepted. Should that happen, the sender can
+ * recall their transfer after the deadline has expired.
+ * 
+ * Must be signed by an auth descriptor with `accounts.auth_flags.TRANSFER`
+ * 
+ * The functionality provided by `init_transfer` can be modified by extending
+ * `before_init_transfer` and `after_init_transfer`
+ * 
+ * Throws `"`TRANSFER EXPIRED"` if deadline is a past timestamp
+ * 
+ * Throws `"MISSING ASSET"` if the asset does not exist on this chain
+ * 
+ * Throws if additional conditions provided through extensions of `before_init_transfer` and
+ * `after_init_transfer` are not satisfied
+ * 
+ * Throws if the first transfer is misconfigured. Common cases are:
+ * - `hops[0]` is:
+ *   - equal to the sender account ID
+ *   - this blockchain's RID
+ *   - the ID of an account on this chain which is not a blockchain account
+ * - amount is:
+ *   - not in the accepted range (0, 2^256) (exclusive)
+ *   - higher than the account's balance
+ * - sender account ID is equal to this chain's ID
+ * 
+ * Requires the Transfer flag to be present on the auth descriptor that authorizes this
+ * operation.
+ * 
+ * @see core.crosschain.before_init_transfer to add custom logic before this operation
+ * 
+ * @see core.crosschain.after_init_transfer to add custom logic after this operation
+ * 
+ * @see core.crosschain.applied_transfers to know more about the crosschain transfer workflow
+ * 
+ * @see core.crosschain.ACCOUNT_TYPE_BLOCKCHAIN for more info on blockchain account entities
+ *
+ * @param recipient_id  the account that will receive the transfers on the final chain
+ * @param asset_id      the ID of the asset that is being transferred
+ * @param amount        the amount that is being transferred
+ * @param hops          an array of all the blockchain rids which this transfer needs to
+ *                      go through in order to reach the recipient on the target chain, which 
+ *                      will be the last entry in the array. The rid of this blockchain must
+ *                      not be included in the array.
+ * @param deadline      Time in milliseconds for which this transfer is valid, if the
+ *                      transfer were not completed within this deadline, it will be
+ *                      possible for the sender to recall it.
+ */
 operation init_transfer(
     recipient_id: byte_array,
     asset_id: byte_array,
@@ -29,7 +88,7 @@ operation init_transfer(
 ) {
     require(
         deadline > op_context.last_block_time,
-        "Parameter 'deadline' cannot be a past timestamp. Value: %s".format(deadline)
+        "TRANSFER EXPIRED: Parameter 'deadline' cannot be a past timestamp. Value: %s".format(deadline)
     );
 
     utils.validate_recipient_id(recipient_id);
@@ -37,7 +96,7 @@ operation init_transfer(
     val account = auth.authenticate();
     val asset = require(
         assets.asset @? { .id == asset_id }, 
-        "Asset not found '%s'".format(asset_id)
+        "MISSING ASSET: Asset not found '%s'".format(asset_id)
     );
 
     crosschain.before_init_transfer(
@@ -81,6 +140,93 @@ operation init_transfer(
     );
 }
 
+/**
+ * This operation must be called on every chain listed in the `hops` array
+ * provided to the `init_transfer` function which corresponds to this transfer.
+ * 
+ * When this is done, one of two things will happen:
+ *  - If this is an intermediary hop, this chain will update its internal record of
+ *    which chain that owns how much of what asset
+ *  - If this is the final hop, the transferred amount will be credited to the recipient account
+ * 
+ * In the case where this is the last hop and the recipient account does not exist,
+ * one of two things can happen:
+ *  - If the create on transfer account creation strategy is enabled, the assets will be received and
+ *    the recipient will be able create the account and claim them.
+ *  - If the feature is not enabled, the transfer will be rejected, in which case, the sender can
+ *    get their assets back by calling the `cancel_transfer` in the reverse hops order.
+ * 
+ * Anyone can call this operation on behalf of any transfer, but it needs to include an `iccf_proof`
+ * operation which prove that the transaction was applied in the previous hop.
+ * 
+ * The functionality provided by `apply_transfer` can be modified by extending
+ * `before_apply_transfer` and `after_apply_transfer`
+ * 
+ * Throws `"`TRANSFER EXPIRED"` if deadline is a past timestamp
+ * 
+ * Throws `"MISSING ACCOUNT"` if all these conditions apply:
+ * - this chain is the last chain in the crosschain transaction
+ * - the account corresponding to `recipient_id` does not exist
+ * - creating account on crosschain transfer is not enabled on this chain
+ * 
+ * Throws if additional conditions provided through extensions of `before_apply_transfer` and
+ * `after_apply_transfer` are not satisfied
+ * 
+ * Throws if the current transfer is misconfigured. Common cases are:
+ * - the next hop or the previous one are:
+ *   - equal to one another
+ *   - this blockchain's RID
+ *   - the ID of an account on this chain which is not a blockchain account
+ * - amount is:
+ *   - not in the accepted range (0, 2^256) (exclusive)
+ *   - higher than the blockchain account balance they're coming from
+ * - the asset is not registered on this chain
+ * - input is malformed:
+ *   - arguments found in `init_transfer_tx` and `previous_hop_tx` do not match
+ *   - `hop_index` is out of bounds
+ *   - `previous_hop_tx` has not been sent to the chain that comes before this one on the transfer
+ *     hops
+ * - the transfer has already been applied, canceled or unapplied on this chain.
+ * - the chain at `hop_index` on the init transaction is not this chain
+ * - the `op_index` on `previous_hop_tx` does not point to:
+ *   - `init_transfer` when `hop_index` is 0
+ *   - `apply_transfer` otherwise
+ * - the `init_tx_op_index` does not point to `init_transfer` on its `init_transfer_tx`
+ * - the operation preceding `init_transfer` is not an auth operation
+ * 
+ * Throws if all these conditions apply:
+ * - this chain is the last chain in the crosschain transaction
+ * - the account corresponding to `recipient_id` does not exist
+ * - creating account on crosschain transfer is enabled on this chain
+ * - the function implementing the account creation strategy being used (extension of 
+ *   `create_on_crosschain_transfer`) has conditions which are not satisfied
+ * 
+ * Throws if the transaction is missing the `iccf_proof` operation, which demonstrates that
+ * the block containing the `previous_hop_tx` has been anchored from the previous chain.
+ * 
+ * Requires no flags - no authorization is performed to apply a transfer.
+ * 
+ * @see core.auth.is_auth_op for information on auth operations
+ * 
+ * @see core.crosschain.before_apply_transfer to add custom logic before this operation
+ * 
+ * @see core.crosschain.after_apply_transfer to add custom logic after this operation
+ * 
+ * @see core.crosschain.applied_transfers to know more about the crosschain transfer workflow
+ * 
+ * @see core.crosschain.is_create_on_crosschain_transfer_enabled to know more about account
+ * creation on crosschain transfer
+ * 
+ * @param init_transfer_tx  the `gtx_transaction` that represents the tx containing the
+ *                          `init_transfer` operation on the initial chain
+ * @param init_tx_op_index  the index of the `init_transfer` operation in `init_transfer_tx`
+ * @param previous_hop_tx   the tx containing the `init_transfer` or `apply_transfer` operation
+ *                          from the previous step. In the first hop, `init_transfer_tx` and this
+ *                          argument will be the same
+ * @param op_index          the index of the `apply_transfer` operation in `previous_hop_tx`
+ * @param hop_index         which index in the hops array provided in the original transaction this
+ *                          chain represents.
+ */
 operation apply_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer,
@@ -98,7 +244,7 @@ operation apply_transfer(
 
     require(
         init_transfer_details.args.deadline >= op_context.last_block_time,
-        "This transfer has expired at timestamp <%s> (evaluated at timestamp <%s>). It can only be reverted."
+        "TRANSFER EXPIRED: This transfer has expired at timestamp <%s> (evaluated at timestamp <%s>). It can only be reverted."
             .format(init_transfer_details.args.deadline, op_context.last_block_time)
     );
 
@@ -137,7 +283,7 @@ operation apply_transfer(
             );
         } else {
             require(crosschain.is_create_on_crosschain_transfer_enabled(),
-                "Account <%s> does not exist and creating accounts on transfer is not enabled"
+                "MISSING ACCOUNT: Account <%s> does not exist and creating accounts on transfer is not enabled"
                     .format(init_transfer_details.args.recipient_id));
             crosschain.create_on_crosschain_transfer(
                 init_transfer_tx.body.blockchain_rid,
@@ -176,13 +322,41 @@ operation apply_transfer(
     );
 }
 
+/**
+ * This operation is to be called on the initial chain (the chain for which a crosschain
+ * transfer originated) once all hops are completed and the transfer has been successfully
+ * delivered to the recipient. Even if this operation is not called, the recipient will still
+ * receive their assets, but calling this operation will allow clients to stop displaying it 
+ * as ongoing to the user that sent it.
+ * 
+ * Anyone can call this operation, but it needs to include an `iccf_proof` operation that the
+ * final `apply_transfer` was performed.
+ * 
+ * Throws `"`INPUT ERROR"` if `op_index` does not point to an `apply_transfer` operation
+ * 
+ * Throws `"INCOMPLETE TRANSFER"` if the given `apply_transfer` was not called on the last
+ * chain; that is, if the `hop_index` parameter does not correspond to the last hop index.
+ * 
+ * Throws `"WRONG DESTINATION"` if the given `apply_transfer` was called on a chain that does
+ * not correspond to the `init_transfer`'s last chain in the `hops` parameter
+ * 
+ * Throws if the transaction is missing the `iccf_proof` operation, which demonstrates that
+ * the block containing the `final_apply_transfer_tx` has been anchored from the target chain.
+ * 
+ * Requires no flags - no authorization is performed to complete a transfer.
+ * 
+ * @param final_apply_transfer_tx   the transaction that was submitted and applied on the target chain
+ *                                  in order to complete the crosschain transfer.
+ * @param op_index                  the index for the `apply_transfer` operation in question in 
+ *                                  `final_apply_transfer_tx`
+ */
 operation complete_transfer(
     final_apply_transfer_tx: gtx_transaction,
     op_index: integer
 ) {
     require(
         final_apply_transfer_tx.body.operations[op_index].name == rell.meta(apply_transfer).mount_name,
-        "Operation at op_index was not apply_transfer"
+        "INPUT ERROR: Operation at op_index was not apply_transfer"
     );
 
     // map gtv args to struct
@@ -194,11 +368,11 @@ operation complete_transfer(
 
     require(
         final_apply_transfer_args.hop_index == init_transfer_args.hops.size() - 1,
-        "The provided transaction does not represent the final hop in this cross chain transfer"
+        "INCOMPLETE TRANSFER: The provided transaction does not represent the final hop in this cross chain transfer"
     );
     require(
         init_transfer_args.hops[final_apply_transfer_args.hop_index] == final_apply_transfer_tx.body.blockchain_rid,
-        "The provided transaction was not applied to the expected target chain"
+        "WRONG DESTINATION: The provided transaction was not applied to the expected target chain"
     );
 
     iccf.require_valid_proof(
@@ -211,6 +385,49 @@ operation complete_transfer(
     delete crosschain.pending_transfer @ { .transaction.tx_hash == init_transfer_tx_hash, .op_index == final_apply_transfer_args.init_tx_op_index };
 }
 
+/**
+ * Cancels a crosschain transfer that has expired. This operation must be called in place
+ * of `apply_transfer` to start the transfer canceling process. `unapply_transfer` must
+ * then be called on all previous chains to bring the funds back to the sender account.
+ * 
+ * Throws `"TRANSFER NOT EXPIRED"` if the transfer has not yet expired.
+ * 
+ * Throws in various cases of misconfiguration. Some examples:
+ * - the transfer has already been applied, canceled or unapplied on this chain.
+ * - the chain at `hop_index` on the init transaction is not this chain
+ * - the `op_index` on `previous_hop_tx` does not point to:
+ *   - `init_transfer` when `hop_index` is 0
+ *   - `apply_transfer` otherwise
+ * - the `init_tx_op_index` does not point to `init_transfer` on its `init_transfer_tx`
+ * - the operation preceding `init_transfer` is not an auth operation
+ * - arguments found in `init_transfer_tx` and `previous_hop_tx` do not match
+ * - `hop_index` is out of bounds
+ * - `previous_hop_tx` has not been sent to the chain that comes before this one on the
+ *   transfer hops
+ * 
+ * Throws if the transaction is missing the `iccf_proof` operation, which demonstrates that
+ * the block containing the `previous_hop_tx` has been anchored from the previous chain.
+ * 
+ * Anyone can call this operation, but it needs to include an `iccf_proof` operation that
+ * `apply_transfer` was performed on the previous chain.
+ * 
+ * @see core.auth.is_auth_op for information on auth operations
+ * 
+ * @see core.crosschain.applied_transfers to know more about the crosschain transfer workflow
+ * 
+ * @see core.crosschain.canceled_transfers to know more about transfer canceling
+ * 
+ * @see crosschain.unapply_transfer for information on 
+ * 
+ * @param init_transfer_tx  the transaction containing the `init_transfer` operation which 
+ *                          corresponds to the transfer to cancel
+ * @param init_tx_op_index  the index of the `init_transfer` operation in `init_transfer_tx`
+ * @param previous_hop_tx   the transaction containing the `apply_transfer` operation of the previous hop
+ * @param op_index          the index of the `apply_transfer` or `init_transfer` operation
+ *                          in `previous_hop_tx`
+ * @param hop_index         which index in the hops array provided in the original transaction this
+ *                          chain represents.
+ */
 operation cancel_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer,
@@ -228,13 +445,78 @@ operation cancel_transfer(
 
     require(
         init_transfer_details.args.deadline < op_context.last_block_time,
-        "This transfer has not yet expired. It can not be reverted before <%s> (evaluated at timestamp <%s>)."
+        "TRANSFER NOT EXPIRED: This transfer has not yet expired. It can not be reverted before <%s> (evaluated at timestamp <%s>)."
             .format(init_transfer_details.args.deadline, op_context.last_block_time)
     );
 
     create crosschain.canceled_transfers(init_transfer_details.tx_rid, init_tx_op_index);
 }
 
+/**
+ * Unapplies a crosschain transfer that has expired. This operation must be called if
+ * `apply_transfer` was already executed on this chain. To successfully unapply a transfer,
+ * it must have been:
+ * - canceled or any later hop (including the target chain), or
+ * - recalled on the target chain. 
+ * This operation should not be called on the init chain - `revert_transfer` should be used
+ * instead.
+ * 
+ * Throws `"INVALID TRANSFER"` if the transfer that is being unapplied was:
+ * - never applied on this chain
+ * - already canceled or unapplied
+ * 
+ * Throws `"INPUT ERROR"` if the input is malformed. This could be one of many different things:
+ * - arguments found in `init_transfer_tx` and `last_tx` do not match
+ * - `hop_index` is out of bounds or points to a different chain than this one
+ * - `hop_index` points to the target chain, where canceling or recall should happen (not unapplying)
+ * - `last_tx` has not been sent to the chain that comes after this one on the transfer hops
+ * 
+ * Throws`"UNSUPPORTED LAST OP"` if the operation found in `last_tx` at the given index is
+ * neither of the three supported operations:
+ * - `cancel_transfer` if the transfer was canceled before being applied on the chain that
+ *   came after this one on the transfer hops
+ * - `recall_unclaimed_transfer` if the transfer was applied on the target chain, it was sent
+ *   to a non-existing account, and it has expired
+ * - `unapply_transfer` if the transfer was canceled or recalled, and then unapplied on another
+ *   chain before reaching this one
+ * 
+ * Throws `"TRANSFER NOT EXPIRED"` if the transfer being reverted did not expire
+ * 
+ * Throws if the `init_tx_op_index` does not point to `init_transfer` on `init_transfer_tx`
+ * 
+ * Throws if the required assets cannot be transferred. While this could throw in all cases
+ * of misconfiguration considered possible for `apply_transfer`, to unapply a transfer it must
+ * first have been applied. This means that the most probable scenario for the transfer of
+ * funds to fail is if the sender blockchain account balance is lower than `amount`.
+ * 
+ * Other cases considered possible for `apply_transfer` are still possible, although unlikely.
+ * For example, the asset entity could have been deleted, which means that the asset is no
+ * longer registered on this chain.
+ * 
+ * Requires no flags - no authorization is performed to unapply a transfer.
+ * 
+ * @see apply_transfer for edge cases where this operation might throw
+ * 
+ * @see core.crosschain.applied_transfers to know more about the crosschain transfer workflow
+ * 
+ * @see core.crosschain.unapplied_transfers to know more about transfer unapplying
+ * 
+ * @see core.crosschain.canceled_transfers to know more about transfer canceling
+ * 
+ * @see core.crosschain.recalled_transfers to know more about transfer recall
+ * 
+ * @param init_transfer_tx  the transaction containing the `init_transfer` operation which 
+ *                          corresponds to the transfer to unapply
+ * @param init_tx_op_index  the index of the `init_transfer` operation in `init_transfer_tx`
+ * @param last_tx           the last transaction in this transfer flow, as sent to the previous hop.
+ *                          Note that "previous" in this context refers to the chain at n + 1 in the
+ *                          hops array in relation to this blockchain, since we are walking the hops
+ *                          array backwards.
+ *                          It must contain one of the three supported operations described above.
+ * @param last_op_index     the index of the supported operation in `last_tx`
+ * @param hop_index         which index in the hops array provided in the original transaction this
+ *                          chain represents.
+ */
 operation unapply_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer,
@@ -246,19 +528,19 @@ operation unapply_transfer(
 
     val (apply_tx_data, apply_op_index) = require_not_empty(
         crosschain.applied_transfers @? { .init_tx_rid == init_transfer_details.tx_rid, .init_op_index == init_tx_op_index} (.transaction.tx_data, .op_index),
-        "Transaction <%s> transfer at index <%s> was never applied on this chain."
+        "INVALID TRANSFER: Transaction <%s> transfer at index <%s> was never applied on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 
     require(
         crosschain.canceled_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
-        "Transaction <%s> transfer at index <%s> has already been canceled on this chain."
+        "INVALID TRANSFER: Transaction <%s> transfer at index <%s> has already been canceled on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 
     require(
         crosschain.unapplied_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
-        "Transaction <%s> transfer at index <%s> has already been unapplied on this chain."
+        "INVALID TRANSFER: Transaction <%s> transfer at index <%s> has already been unapplied on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 
@@ -269,70 +551,72 @@ operation unapply_transfer(
             val args = struct<cancel_transfer>.from_gtv(last_op.args.to_gtv());
             require(
                 init_transfer_tx == args.init_transfer_tx,
-                "init_transfer_tx must match argument of last_tx"
+                "INPUT ERROR: init_transfer_tx must match argument of last_tx"
             );
             require(
                 init_tx_op_index == args.init_tx_op_index,
-                "init_tx_op_index must match argument of last_tx"
+                "INPUT ERROR: init_tx_op_index must match argument of last_tx"
             );
             require(
                 args.previous_hop_tx.to_bytes() == apply_tx_data,
-                "last_tx's previous_hop_tx must be the apply_transfer to cancel"
+                "INPUT ERROR: last_tx's previous_hop_tx must be the apply_transfer to cancel"
             );
             require(
                 args.op_index == apply_op_index,
-                "last_tx's op_index must be the apply_transfer to cancel"
+                "INPUT ERROR: last_tx's op_index must be the apply_transfer to cancel"
             );
         }
         rell.meta(unapply_transfer).mount_name -> {
             val args = struct<unapply_transfer>.from_gtv(last_op.args.to_gtv());
             require(
                 init_transfer_tx == args.init_transfer_tx,
-                "init_transfer_tx must match argument of last_tx"
+                "INPUT ERROR: init_transfer_tx must match argument of last_tx"
             );
             require(
                 init_tx_op_index == args.init_tx_op_index,
-                "init_tx_op_index must match argument of last_tx"
+                "INPUT ERROR: init_tx_op_index must match argument of last_tx"
             );
         }
         rell.meta(recall_unclaimed_transfer).mount_name -> {
             val args = struct<recall_unclaimed_transfer>.from_gtv(last_op.args.to_gtv());
             require(
                 init_transfer_tx == args.init_transfer_tx,
-                "init_transfer_tx must match argument of last_tx"
+                "INPUT ERROR: init_transfer_tx must match argument of last_tx"
             );
             require(
                 init_tx_op_index == args.init_tx_op_index,
-                "init_tx_op_index must match argument of last_tx"
+                "INPUT ERROR: init_tx_op_index must match argument of last_tx"
             );
         }
         else -> {
-            require(false, "last_tx[last_op_index] must be %s, %s or %s".format(
+            require(false, "UNSUPPORTED LAST OP: last_tx[last_op_index] must be %s, %s or %s".format(
                 rell.meta(cancel_transfer).mount_name, rell.meta(unapply_transfer).mount_name, rell.meta(recall_unclaimed_transfer).mount_name)
             );
         }
     }
 
-    require(
+    require( 
         init_transfer_details.args.hops.size() > hop_index,
-        "Argument mismatch: init_transfer hops size (%d) is greater than hop_index (%d)".format(init_transfer_details.args.hops.size(), hop_index)
+        /* wrong! it's **SMALLER** */
+        "INPUT ERROR: Argument mismatch: init_transfer hops size (%d) is greater than hop_index (%d)"
+            .format(init_transfer_details.args.hops.size(), hop_index)
     );
 
     require(
         init_transfer_details.args.hops.size() - 1 != hop_index,
-        "Cannot unapply last step (%d)".format(hop_index)
+        "INPUT ERROR: Cannot unapply last step (%d)".format(hop_index)
     );
 
     val current_hop_blockchain_rid = init_transfer_details.args.hops[hop_index];
     require(
         current_hop_blockchain_rid == chain_context.blockchain_rid,
-        "This transaction hop must happen on a chain with blockchain_rid %s".format(current_hop_blockchain_rid)
+        "INPUT ERROR: This transaction hop must happen on a chain with blockchain_rid %s".format(current_hop_blockchain_rid)
     );
 
     val next_hop_blockchain_rid = init_transfer_details.args.hops[hop_index + 1];
     require(
         last_tx.body.blockchain_rid == next_hop_blockchain_rid,
-        "Argument mismatch: next hops (%s) and tx blockchain_rid (%s) don't correspond"
+        "INPUT ERROR: Argument mismatch: next hops (%s) and tx blockchain_rid (%s) don't correspond"
             .format(
                 next_hop_blockchain_rid, last_tx.body.blockchain_rid
             )
@@ -340,7 +624,7 @@ operation unapply_transfer(
 
     require(
         init_transfer_details.args.deadline < op_context.last_block_time,
-        "This transfer has not yet expired. It can not be reverted before <%s> (evaluated at timestamp <%s>)."
+        "TRANSFER NOT EXPIRED: This transfer has not yet expired. It can not be reverted before <%s> (evaluated at timestamp <%s>)."
             .format(init_transfer_details.args.deadline, op_context.last_block_time)
     );
 
@@ -362,6 +646,62 @@ operation unapply_transfer(
     create crosschain.unapplied_transfers(init_transfer_details.tx_rid, init_tx_op_index);
 }
 
+/**
+ * Reverts a transfer that was initialized on this chain, after it has expired.
+ * If a crosschain transfer is to be rolled back after expiring and the
+ * assets are to be returned to the original sender, after the process
+ * of walking the path backwards until the source chain, then this operation
+ * should be called as the final step on the source chain to complete the
+ * rollback. When this operation is called, the assets are returned back
+ * to the original sender.
+ * 
+ * Throws `"INVALID TRANSFER"` if the transfer that is being unapplied was:
+ * - never initialized on this chain
+ * - already reverted on this chain
+ * 
+ * Throws `"INPUT ERROR"` if the input is malformed. This could be one of many different things:
+ * - arguments found in `init_transfer_tx` and `last_tx` do not match
+ * - `last_tx` has not been sent to the chain that comes after this one on the transfer hops
+ * 
+ * Throws`"UNSUPPORTED LAST OP"` if the operation found in `last_tx` at the given index is
+ * neither of the three supported operations:
+ * - `unapply_transfer` if the transfer was canceled or recalled, but it had more than one hop
+ *   (i.e. it went from starting chain to target chain while going through at least another chain)
+ * - `cancel_transfer` if the transfer was canceled before being applied on the chain that came
+ *   after the init chain
+ * - `recall_unclaimed_transfer` if the transfer was applied on the target chain, it was sent
+ *   to a non-existing account, and it has expired
+ * 
+ * Throws `"TRANSFER NOT EXPIRED"` if the transfer being reverted did not expire
+ * 
+ * Throws if the `init_tx_op_index` does not point to `init_transfer` on `init_transfer_tx`
+ * 
+ * Throws if the required assets cannot be transferred. While this could throw in all cases
+ * of misconfiguration considered possible for `init_transfer`, to revert a transfer it must
+ * first have been applied. This means that the most probable scenario for the transfer of
+ * funds to fail is if the sender blockchain account balance is lower than `amount`.
+ * 
+ * Other cases considered possible for `init_transfer` are still possible, although unlikely.
+ * For example, the asset entity could have been deleted, which means that the asset is no
+ * longer registered on this chain.
+ * 
+ * Anyone can call this operation, but it needs to include an `iccf_proof` operation that
+ * `unapply_transfer` was performed on the previous chain.
+ * 
+ * @see core.crosschain.applied_transfers to know more about the crosschain transfer workflow
+ * 
+ * @see core.crosschain.reverted_transfers to know more about transfer reversal
+ * 
+ * @param init_transfer_tx  the transaction containing the `init_transfer` operation which 
+ *                          corresponds to the transfer to revert
+ * @param init_tx_op_index  the index of the `init_transfer` operation in `init_transfer_tx`
+ * @param last_tx           the last transaction in this transfer flow, as sent to the previous hop.
+ *                          Note that "previous" in this context refers to the chain at n + 1 in the
+ *                          hops array in relation to this blockchain, since we are walking the hops
+ *                          array backwards.
+ *                          It must contain one of the three supported operations described above.
+ * @param last_op_index     the index of `apply_transfer` operation in `last_tx`
+ */
 operation revert_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer,
@@ -378,7 +718,7 @@ operation revert_transfer(
     val next_hop_blockchain_rid = hops[0];
     require(
         last_tx.body.blockchain_rid == next_hop_blockchain_rid,
-        "Argument mismatch: next hops (%s) and tx blockchain_rid (%s) don't correspond"
+        "INPUT ERROR: Argument mismatch: next hops (%s) and tx blockchain_rid (%s) don't correspond"
             .format(
                 next_hop_blockchain_rid, last_tx.body.blockchain_rid
             )
@@ -386,7 +726,7 @@ operation revert_transfer(
 
     require(
         init_transfer_details.args.deadline < op_context.last_block_time,
-        "This transfer has not yet expired. It can not be reverted before <%s> (evaluated at timestamp <%s>)."
+        "TRANSFER NOT EXPIRED: This transfer has not yet expired. It can not be reverted before <%s> (evaluated at timestamp <%s>)."
             .format(init_transfer_details.args.deadline, op_context.last_block_time)
     );
 
@@ -397,37 +737,37 @@ operation revert_transfer(
             val args = struct<cancel_transfer>.from_gtv(last_op.args.to_gtv());
             require(
                 init_transfer_tx == args.init_transfer_tx,
-                "init_transfer_tx must match argument of last_tx"
+                "INPUT ERROR: init_transfer_tx must match argument of last_tx"
             );
             require(
                 init_tx_op_index == args.init_tx_op_index,
-                "init_tx_op_index must match argument of last_tx"
+                "INPUT ERROR: init_tx_op_index must match argument of last_tx"
             );
         }
         rell.meta(unapply_transfer).mount_name -> {
             val args = struct<unapply_transfer>.from_gtv(last_op.args.to_gtv());
             require(
                 init_transfer_tx == args.init_transfer_tx,
-                "init_transfer_tx must match argument of last_tx"
+                "INPUT ERROR: init_transfer_tx must match argument of last_tx"
             );
             require(
                 init_tx_op_index == args.init_tx_op_index,
-                "init_tx_op_index must match argument of last_tx"
+                "INPUT ERROR: init_tx_op_index must match argument of last_tx"
             );
         }
         rell.meta(recall_unclaimed_transfer).mount_name -> {
             val args = struct<recall_unclaimed_transfer>.from_gtv(last_op.args.to_gtv());
             require(
                 init_transfer_tx == args.init_transfer_tx,
-                "init_transfer_tx must match argument of last_tx"
+                "INPUT ERROR: init_transfer_tx must match argument of last_tx"
             );
             require(
                 init_tx_op_index == args.init_tx_op_index,
-                "init_tx_op_index must match argument of last_tx"
+                "INPUT ERROR: init_tx_op_index must match argument of last_tx"
             );
         }
         else -> {
-            require(false, "last_tx[last_op_index] must be %s, %s or %s".format(
+            require(false, "INPUT ERROR: last_tx[last_op_index] must be %s, %s or %s".format(
                 rell.meta(cancel_transfer).mount_name, rell.meta(unapply_transfer).mount_name, rell.meta(recall_unclaimed_transfer).mount_name)
             );
         }
@@ -441,13 +781,13 @@ operation revert_transfer(
 
     require(
         crosschain.reverted_transfer @? { .init_tx_rid == init_transfer_details.tx_rid, .init_op_index == init_tx_op_index } == null,
-        "Transaction <%s> transfer at index <%s> has already been reverted on this chain."
+        "INVALID TRANSFER: Transaction <%s> transfer at index <%s> has already been reverted on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 
     require(
       transaction @? { .tx_rid == init_transfer_details.tx_rid },
-      "Cannot revert cross-chain transfer for transaction <%s> at index <%d>. init_transfer not found."
+      "INVALID TRANSFER: Cannot revert cross-chain transfer for transaction <%s> at index <%d>. init_transfer not found."
           .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 
@@ -472,29 +812,81 @@ operation revert_transfer(
     create crosschain.reverted_transfer(init_tx_rid = init_transfer_details.tx_rid, init_op_index = init_tx_op_index);
 }
 
+/**
+ * Recalls an unclaimed transfer. A transfer does not generally need to be claimed, unless
+ * account registration on crosschain transfers is configured on the target chain.
+ * 
+ * If it is, when a crosschain transfer is sent to that chain and the recipient account does
+ * not exist, the transfer is considered the start of an account registration process. The
+ * account is not automatically created, and account registration strategies must be used to
+ * claim the transfer and create an account.
+ * 
+ * If this is not done within the transfer deadline, the transfer can be recalled on the
+ * target chain, unapplied on all intermediate chains if any, and reverted on the init chain
+ * to move the funds back to the original sender.
+ * 
+ * Throws `"ACCOUNT REGISTRATION DISABLED"` if this chain is not configured to allow account
+ * registration on crosschain transfers. This means that a transfer can never end up unclaimed.
+ * 
+ * Throws `"WRONG BLOCKCHAIN"` if the transfer has a target chain different from this one.
+ * 
+ * Throws `"INVALID TRANSACTION"` if the transaction has either:
+ * - never been applied here
+ * - already been recalled
+ *
+ * Throws if any conditions on the recall of crosschain account registration (defined as 
+ * extensions to `recall_on_crosschain_transfer`) are not met
+ * 
+ * Throws if `init_tx_op_index` does not point to `init_transfer` on `init_transfer_tx`
+ * 
+ * Throws if the operation preceding the `init_transfer` on `init_transfer_tx` is not an
+ * auth operation
+ * 
+ * This operation can be called by anyone after the timeout has expired.
+ * 
+ * @see core.auth.is_auth_op for information on auth operations
+ * 
+ * @see core.crosschain.applied_transfers to know more about the crosschain transfer workflow
+ * 
+ * @see core.crosschain.recalled_transfers to know more about transfer recalling
+ * 
+ * @see core.crosschain.create_on_crosschain_transfers for more information on registering
+ * accounts with crosschain transfers
+ * 
+ * @see core.accounts.strategies.register_account for more information on register account
+ * strategies
+ * 
+ * 
+ * @param init_transfer_tx  the init transaction, which contains `init_transfer`, as it was
+ *                          submitted to the init chain
+ * @param init_tx_op_index  the index of the `init_transfer` operation in `init_transfer_tx`
+ */
 operation recall_unclaimed_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer)
 {
-    require(crosschain.is_create_on_crosschain_transfer_enabled(), "Creating accounts on transfer is not enabled");
+    require(
+        crosschain.is_create_on_crosschain_transfer_enabled(),
+        "ACCOUNT REGISTRATION DISABLED: Creating accounts on transfer is not enabled"
+    );
 
     val init_transfer_details = get_init_transfer_details(init_transfer_tx, init_tx_op_index);
 
     val last_hop_blockchain_rid = init_transfer_details.args.hops[init_transfer_details.args.hops.size()-1];
     require(
         last_hop_blockchain_rid == chain_context.blockchain_rid,
-        "This transaction must happen on a chain with blockchain_rid %s".format(last_hop_blockchain_rid)
+        "WRONG BLOCKCHAIN: This transaction must happen on a chain with blockchain_rid %s".format(last_hop_blockchain_rid)
     );
 
     val apply_tx = require(
         crosschain.applied_transfers @? { .init_tx_rid == init_transfer_details.tx_rid, .init_op_index == init_tx_op_index },
-        "Transaction <%s> transfer at index <%s> has not been applied on this chain."
+        "INVALID TRANSACTION: Transaction <%s> transfer at index <%s> has not been applied on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 
     require(
         crosschain.recalled_transfers @? { init_transfer_details.tx_rid, init_tx_op_index } == null,
-        "Transaction <%s> transfer at index <%s> has already been recalled on this chain."
+        "INVALID TRANSACTION: Transaction <%s> transfer at index <%s> has already been recalled on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 
@@ -519,6 +911,51 @@ operation recall_unclaimed_transfer(
     create crosschain.recalled_transfers(init_transfer_details.tx_rid, init_tx_op_index);
 }
 
+/**
+ * Validates that the parameters are correct for an `apply_transfer` operation. Also used in
+ * other operations that require the same validation to occur (e.g. `cancel_transfer`)
+ * It does not verify whether the transfer expired.
+ * 
+ * Among other things, this function validates that:
+ *  - Transfer was not already applied on this chain
+ *  - Transfer was not already canceled on this chain
+ *  - Transfer was not already unapplied on this chain
+ *  - That the `init_transfer` details are correct
+ *  - The `iccf_proof` that states that this transfer was applied on the previous hop
+ * 
+ * Throws `"INVALID TRANSACTION"` if the transfer has already been applied, canceled or
+ * unapplied on this chain.
+ * 
+ * Throws `"INPUT ERROR"` if the input is malformed. Common scenarios include:
+ * - arguments found in `init_transfer_tx` and `previous_hop_tx` do not match
+ * - `hop_index` is out of bounds
+ * - `previous_hop_tx` has not been sent to the chain that comes before this one on the
+ *   transfer hops
+ * 
+ * Throws `"WRONG BLOCKCHAIN"` if the chain at `hop_index` on the init transaction is not this
+ * chain
+ * 
+ * Throws if the `op_index` does not point to `apply_transfer`
+ * 
+ * Throws if the `init_tx_op_index` does not point to `init_transfer` on its `init_transfer_tx`
+ * 
+ * Throws if the operation preceding `init_transfer` is not an auth operation
+ * 
+ * Throws if the transaction is missing the `iccf_proof` operation, which demonstrates that
+ * the block containing the `previous_hop_tx` has been anchored from the previous chain.
+ * 
+ * @see core.auth.is_auth_op for information on auth operations
+ * 
+ * @param init_transfer_tx  the init transaction, which contains `init_transfer`, as it was
+ *                          submitted to the starting chain
+ * @param init_tx_op_index  the index of the `init_transfer` operation in `init_transfer_tx`
+ * @param previous_hop_tx   the transaction that applied the transfer in the chain that comes
+ *                          before this one. Same as `init_transfer_tx` if this is the first
+ *                          chain where the transfer is applied.
+ * @param op_index          the index of the `apply_transfer` operation in `previous_hop_tx`
+ * @param hop_index         which index in the hops array provided in the original transaction this
+ *                          chain represents.
+ */
 function validate_apply_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer,
@@ -530,19 +967,19 @@ function validate_apply_transfer(
 
     require(
         crosschain.applied_transfers @? { .init_tx_rid == init_transfer_details.tx_rid, .init_op_index == init_tx_op_index} == null,
-        "Transaction <%s> transfer at index <%s> has already been applied on this chain."
+        "INVALID TRANSACTION: Transaction <%s> transfer at index <%s> has already been applied on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 
     require(
         crosschain.canceled_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
-        "Transaction <%s> transfer at index <%s> has already been canceled on this chain."
+        "INVALID TRANSACTION: Transaction <%s> transfer at index <%s> has already been canceled on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 
     require(
         crosschain.unapplied_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
-        "Transaction <%s> transfer at index <%s> has already been unapplied on this chain."
+        "INVALID TRANSACTION: Transaction <%s> transfer at index <%s> has already been unapplied on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 
@@ -554,36 +991,37 @@ function validate_apply_transfer(
 
         require(
             init_transfer_tx == previous_hop_tx,
-            "Invalid parameter. Previous hop tx must be equal to init transfer tx"
+            "INPUT ERROR: Invalid parameter. Previous hop tx must be equal to init transfer tx"
         );
 
         require(
             op_index == init_tx_op_index,
-            "Invalid parameter. init_transfer indices should be same"
+            "INPUT ERROR: Invalid parameter. init_transfer indices should be same"
         );
     } else {
         val previous_hop_details = get_apply_transfer_details(previous_hop_tx, op_index);
 
         require(
             init_transfer_details.tx_rid == previous_hop_details.init.tx_rid,
-            "apply_transfer of previous hop does not correspond to init_transfer"
+            "INPUT ERROR: apply_transfer of previous hop does not correspond to init_transfer"
         );
 
         require(
             init_tx_op_index == previous_hop_details.args.init_tx_op_index,
-            "This transfer does not correspond to transfer of provided previous hop"
+            "INPUT ERROR: This transfer does not correspond to transfer of provided previous hop"
         );
     }
 
     require(
         init_transfer_details.args.hops.size() > hop_index,
-        "Argument mismatch: init_transfer hops size (%d) is greater than hop_index (%d)".format(init_transfer_details.args.hops.size(), hop_index)
+        // WRONG! IS SMALLER
+        "INPUT ERROR: Argument mismatch: init_transfer hops size (%d) is greater than hop_index (%d)".format(init_transfer_details.args.hops.size(), hop_index)
     );
 
     val current_hop_blockchain_rid = init_transfer_details.args.hops[hop_index];
     require(
         current_hop_blockchain_rid == chain_context.blockchain_rid,
-        "This transaction hop must happen on a chain with blockchain_rid %s".format(current_hop_blockchain_rid)
+        "WRONG BLOCKCHAIN: This transaction hop must happen on a chain with blockchain_rid %s".format(current_hop_blockchain_rid)
     );
 
     val from_blockchain_rid = previous_hop_tx.body.blockchain_rid;
@@ -592,7 +1030,7 @@ function validate_apply_transfer(
         val previous_hop_blockchain_rid = init_transfer_details.args.hops[hop_index - 1];
         require(
             from_blockchain_rid == previous_hop_blockchain_rid,
-            "Argument mismatch: init_transfer hops (%s) and tx blockchain_rid (%s) don't correspond"
+            "INPUT ERROR: Argument mismatch: init_transfer hops (%s) and tx blockchain_rid (%s) don't correspond"
                 .format(
                     previous_hop_blockchain_rid, from_blockchain_rid
                 )
@@ -608,12 +1046,27 @@ function validate_apply_transfer(
     return (init_transfer_details, from_blockchain_rid);
 }
 
+/**
+ * Given a transaction that contains the `init_transfer` operation and the index it's at, this
+ * function retrieves the transaction RID, the arguments to the `init_transfer` operation and
+ * the ID of the sender account.
+ * 
+ * Throws `"INIT TRANSFER NOT FOUND"` if the `op_index` does not point to `init_transfer` on
+ * `tx`
+ * 
+ * Throws if the operation preceding the `init_transfer` is not an auth operation
+ * 
+ * @see core.auth.is_auth_op for information on auth operations
+ * 
+ * @param tx        the transaction containing the `init_transfer` operation
+ * @param op_index  the index of the `init_transfer` operation in `tx`
+ */
 function get_init_transfer_details(tx: gtx_transaction, op_index: integer) {
     val op = tx.body.operations[op_index]; 
 
     require(
         op.name == rell.meta(init_transfer).mount_name,
-        "Invalid parameters. Expected <%s> at index <%d>, found <%s>".format(rell.meta(init_transfer).mount_name, op_index, op.name)
+        "INIT TRANSFER NOT FOUND: Invalid parameters. Expected <%s> at index <%d>, found <%s>".format(rell.meta(init_transfer).mount_name, op_index, op.name)
     );
 
     val tx_rid = tx.body.hash();
@@ -629,12 +1082,31 @@ function get_init_transfer_details(tx: gtx_transaction, op_index: integer) {
     );
 }
 
+/**
+ * Given a transaction that contains the `apply_transfer` operation and the index it's at, this
+ * function retrieves the transaction RID, the arguments to the `init_transfer` operation and
+ * the details of the `init_transfer` as returned by `get_init_transfer_details`.
+ * 
+ * Throws `"APPLY TRANSFER NOT FOUND"` if the `op_index` does not point to `apply_transfer`
+ * 
+ * Throws if the `init_tx_op_index` of the `apply_transfer` operation does not point to
+ * `init_transfer` on its `init_transfer_tx`
+ * 
+ * Throws if the operation preceding the `init_transfer` is not an auth operation
+ * 
+ * @see get_init_transfer_details for information on what details it returns
+ * 
+ * @see core.auth.is_auth_op for information on auth operations
+ * 
+ * @param tx                the transaction containing the `apply_transfer` operation
+ * @param apply_op_index    the index of the `apply_transfer` operation in `tx`
+ */
 function get_apply_transfer_details(tx: gtx_transaction, apply_op_index: integer) {
     val op = tx.body.operations[apply_op_index];
 
     require(
         op.name == rell.meta(apply_transfer).mount_name,
-        "Invalid parameters. Expected <%s> at index <%d>, found <%s>".format(rell.meta(apply_transfer).mount_name, apply_op_index, op.name)
+        "APPLY TRANSFER NOT FOUND: Invalid parameters. Expected <%s> at index <%d>, found <%s>".format(rell.meta(apply_transfer).mount_name, apply_op_index, op.name)
     );
 
     val tx_rid = tx.body.hash();

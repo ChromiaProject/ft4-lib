@@ -5,18 +5,21 @@ import lib.ft4.admin;
 import lib.ft4.utils;
 import lib.ft4.assets;
 import lib.ft4.accounts;
-import assets_utils: ^^^.assets.utils;
-import ft_utils: ^^^^.lib.ft4.test.utils;
+import test: lib.ft4.test.core;
 import transfer_strategy: ^^^^.lib.ft4.accounts.strategies.transfer;
-import test_utils: ^^^.utils.utils;
+
+function get_last_transaction(): transaction {
+    val last_block = block @ {} (@omit @sort_desc .block_height, $) limit 1;
+    return transaction @ { last_block };
+}
 
 function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout() {
-    val alice = assets_utils.register_alice();
+    val alice = test.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
 
-    val asset = assets_utils.create_asset("test", "TEST", 1);
-    assets_utils.mint_to_account(alice, asset, 10);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 10);
 
     val allowed_assets = map(require(transfer_strategy.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
     val amount = allowed_assets[asset.id];
@@ -27,7 +30,9 @@ function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout() {
         .sign(alice.keypair)
         .run();
 
-    val tx_rid = test_utils.get_last_transaction().tx_rid;
+
+    val last_block = block @ {} (@omit @sort_desc .block_height, $) limit 1;
+    val tx_rid = transaction @ { last_block }.tx_rid;
 
     val account_creation_transfer_before = transfer_strategy.account_creation_transfer @? { recipient_id };
     assert_not_null(account_creation_transfer_before);

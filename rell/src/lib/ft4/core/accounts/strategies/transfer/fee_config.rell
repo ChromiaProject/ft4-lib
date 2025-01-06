@@ -1,12 +1,51 @@
-val _CONFIG_ERROR_TEXT_TEMPLATE = "Error in moduleArgs (%s): %s";
+/** A starting string for configuration errors in strategies using payments */
+val _CONFIG_ERROR_TEXT_TEMPLATE = "CONFIG ERROR: Error in moduleArgs (%s): %s";
 
+/**
+ * Represents an asset that will be paid for a new account registration
+ * This struct must contain either of these options:
+ * - `id`
+ * - `name` and `blockchain_rid`
+ * 
+ * If `id` and `name` are missing or both present, functions using this struct will
+ * consider it invalid.
+ * 
+ * If this value is being parsed from a GTV and `name` is present instead of `id`,
+ * `blockchain_rid` is optional. If missing, its value will be this chain's RID.
+ */
 struct fee_asset {
+    /** The ID of the asset */
     id: byte_array? = null;
+    /**
+     * The RID of the chain that issues the asset.
+     * When parsing from the `chromia.yml` or GTV format, it is interpreted as this chain
+     * if null.
+     */
     issuing_blockchain_rid: byte_array? = null;
+    /** The name of the asset */
     name: text? = null;
+    /** The amount of this asset that should be paid as a registration fee */
     amount: big_integer;
 }
 
+/**
+ * Parses a list of `fee_asset`s, and returns a map of all the ones that could be mapped to
+ * actual assets. This does not throw if an asset has not yet been registered, allowing
+ * assets to be added to the config a long time before actually registering them.
+ * 
+ * This function does not discern when a `fee_asset` entry is invalid. This is because it will
+ * typically be called after the `fee_asset` has been parsed and values have been fixed when
+ * possible. If improper input is provided, this function will behave this way:
+ * - if `id` is present, other values will be ignored
+ * - if `id` is missing, `name` and `blockchain_rid` must both be present - it will throw
+ *   otherwise
+ * 
+ * @see `fee_asset` for more information on when it is invalid.
+ * 
+ * @param config    the list of `fee_asset`s to parse.
+ * 
+ * @return a map of asset ID to fee amount to pay for that asset
+ */
 function resolve_fee_assets(config: list<fee_asset>): map<byte_array, big_integer> {
     val fee_assets = map<byte_array, big_integer>();
     for (fee_asset in config) {
@@ -17,6 +56,20 @@ function resolve_fee_assets(config: list<fee_asset>): map<byte_array, big_intege
     return fee_assets;
 }
 
+/**
+ * Parses the `module_args` for a module, where the value contained is a list of `fee_asset`s.
+ * 
+ * Throws `"CONFIG ERROR"` if `gtv` is neither a dictionary nor a list of dictionaries.
+ * 
+ * Throws if any of the assets is not a valid `fee_asset`.
+ * 
+ * @see fee_asset for a definition of invalid values.
+ * 
+ * @param gtv           the `module_args` for the module that is being parsed
+ * @param module_name   the name of the module for better errors
+ * 
+ * @return the parsed values
+ */
 function parse_fee_assets(gtv, module_name: text): list<fee_asset> {
     if (utils.is_dict(gtv)) {
         val input = map<name, gtv>.from_gtv_pretty(gtv);
@@ -28,19 +81,47 @@ function parse_fee_assets(gtv, module_name: text): list<fee_asset> {
     else {
         require(
             false,
-            _CONFIG_ERROR_TEXT_TEMPLATE.format(module_name, "asset only accepts a list of ids and amounts.")
+            _CONFIG_ERROR_TEXT_TEMPLATE.format(
+                module_name, "asset only accepts a list of ids and amounts."
+            )
         );
         return []; // will never happen
     }
 }
 
+/**
+ * Parses a dictionary retrieved from the `module_args` of a module and returns the
+ * corresponding `fee_asset`.
+ * 
+ * Throws `"CONFIG ERROR"` if the `fee_asset` is invalid.
+ * 
+ * @see fee_asset for a definition of invalid values.
+ * 
+ * @param input         the dictionary retrieved from the `module_args`
+ * @param module_name   the name of the module for better error messages
+ */
 function parse_fee_asset(input: map<name, gtv>, module_name: text): fee_asset {
-    require("id" in input or "name" in input, _CONFIG_ERROR_TEXT_TEMPLATE.format(module_name, "fee asset needs to have either 'id' or 'name'"));
-    require(not ("id" in input and "name" in input), _CONFIG_ERROR_TEXT_TEMPLATE.format(module_name, "fee asset cannot have both 'id' and 'name'"));
+    require(
+        "id" in input or "name" in input,
+        _CONFIG_ERROR_TEXT_TEMPLATE.format(
+            module_name,
+            "fee asset needs to have either 'id' or 'name'"
+        )
+    );
+    require(
+        not ("id" in input and "name" in input),
+        _CONFIG_ERROR_TEXT_TEMPLATE.format(
+            module_name,
+            "fee asset cannot have both 'id' and 'name'"
+        )
+    );
     return fee_asset(
         id = if ("id" in input) byte_array.from_gtv(input["id"]) else null,
-        issuing_blockchain_rid = if ("name" in input)
-            (if ("issuing_blockchain_rid" in input) byte_array.from_gtv(input["issuing_blockchain_rid"]) else chain_context.blockchain_rid)
+        issuing_blockchain_rid =
+            if ("name" in input)
+                (if ("issuing_blockchain_rid" in input)
+                    byte_array.from_gtv(input["issuing_blockchain_rid"]) 
+                else chain_context.blockchain_rid)
             else null,
         name = if ("name" in input) text.from_gtv(input["name"]) else null,
         amount = parse_amount(input["amount"])

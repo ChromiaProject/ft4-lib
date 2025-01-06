@@ -6,6 +6,20 @@ import ^^^^^.core.accounts;
 import ^^^^^.core.accounts.strategies;
 import transfer: ^;
 
+/**
+ * The operation that defines this strategy. The fee strategy allows users to register a new
+ * account by paying a one-time fee.
+ * 
+ * Throws if the next operation in the transaction is not accepted by
+ * `require_register_account_next_operation`
+ * 
+ * @see core.accounts.strategies._strategy for information on how to register an account
+ * using this strategy
+ * 
+ * @param asset_id      the ID of the asset used to pay the registration fee
+ * @param main          the main auth descriptor for the account that will be registered
+ * @param disposable    optionally, the disposable auth descriptor for the same account
+ */
 operation ras_transfer_fee(
    asset_id: byte_array,
    main: accounts.auth_descriptor,
@@ -14,6 +28,12 @@ operation ras_transfer_fee(
     strategies.require_register_account_next_operation();
 }
 
+/**
+ * Calculates the account details for the account that will be registered using the
+ * `ft4.ras_transfer_fee` strategy.
+ * 
+ * @param gtv   the parameters for the `ras_transfer_fee` operation, GTV-encoded
+ */
 function account_details(gtv) {
     val params = struct<ras_transfer_fee>.from_gtv(gtv);
     val signers = accounts.get_signers(params.main);
@@ -24,17 +44,34 @@ function account_details(gtv) {
     );
 }
 
+/**
+ * The `action` for the fee `_strategy`. Transfers the funds to the account, paying
+ * the fee that is required.
+ * 
+ * Throws `"FORBIDDEN ASSET"` if the asset:
+ * - cannot be used to pay the fee, or
+ * - is not found.
+ * 
+ * Throws if the chain configuration cannot be parsed.
+ * 
+ * @param account               the account that was registered
+ * @param strategy_params_gtv   the parameters for the `ras_transfer_fee` operation,
+ *                              GTV-encoded
+ */
 function transfer_action(accounts.account, strategy_params_gtv: gtv) {
 	transfer.do_transfer(account, "fee");
 
 	val strategy_params = struct<ras_transfer_fee>.from_gtv(strategy_params_gtv);
     val fee_assets = transfer.resolve_fee_assets(fee_assets());
-	val fee_amount = require(fee_assets.get_or_null(strategy_params.asset_id),
-        "Asset <%s> is not allowed to pay fee with".format(strategy_params.asset_id));
+	val fee_amount = require(
+        fee_assets.get_or_null(strategy_params.asset_id),
+        "FORBIDDEN ASSET: Asset <%s> is not allowed to pay fee with"
+            .format(strategy_params.asset_id)
+    );
     val asset = assets.Asset(strategy_params.asset_id);
 	assets.Unsafe.transfer(
 		account,
-		transfer.ensure_fee_account(fee_account_id(), chain_context.blockchain_rid),
+		transfer.ensure_chain_fee_account(fee_account_id()),
 		asset,
 		fee_amount);
 }

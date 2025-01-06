@@ -58,7 +58,7 @@ describe("Asset locking", () => {
     await session.call(
       ...amounts.map((amount, i) =>
         op(
-          "lock_asset",
+          "ft4.test.lock_asset",
           `LOCK${i + 1}`,
           account.id,
           asset.id,
@@ -92,7 +92,7 @@ describe("Asset locking", () => {
     await lockAmounts(account, asset1, [40, 30, 30]);
     await session.call(
       op(
-        "unlock_asset",
+        "ft4.test.unlock_asset",
         "LOCK2",
         account.id,
         asset1.id,

@@ -1,4 +1,13 @@
-
+/**
+ * Retrieves all lock accounts for the specified account. 
+ * 
+ * *Note:* Lock accounts are created lazily, so if the account
+ * has not yet used a lock account of a certain type, it will
+ * not be present in the list. Consequently, the list might
+ * be empty.
+ * 
+ * @param account_id    the id of the account to get lock accounts for
+ */
 query get_lock_accounts(account_id: byte_array) {
     val accounts = locking.get_lock_accounts(accounts.Account(account_id));
     return accounts @* {} (
@@ -7,6 +16,12 @@ query get_lock_accounts(account_id: byte_array) {
     );    
 }
 
+/**
+ * Same as `get_lock_accounts()` but if the account does not have any
+ * assets in in anymore, it will be omitted from the resulting list.
+ * 
+ * @param account_id    the id of the account to get lock accounts for
+ */
 query get_lock_accounts_with_non_zero_balances(account_id: byte_array) {
     val accounts = locking.get_lock_accounts_with_non_zero_balances(accounts.Account(account_id));
     return accounts @* {} (
@@ -15,6 +30,28 @@ query get_lock_accounts_with_non_zero_balances(account_id: byte_array) {
     );
 }
 
+/**
+ * Retrieves all balances of a certain asset that were locked from a certain account. Paginated,
+ * the returned data is a list of tuples containing the amount and a lock type label:
+ * `list<(lock type, amount)>`
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @see ACCOUNT_TYPE_LOCK for more information on lock accounts
+ * 
+ * @see get_locked_asset_aggregated_balance for a query that reports the sum of all these
+ * values
+ * 
+ * @see get_locked_asset_balances for a query that reports these values for all assets.
+ * 
+ * @param account_id    id of the account to fetch locked balances for
+ * @param asset_id      id of the asset to fetch balance for
+ * @param types         the type of lock accounts to return balance for
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ * 
+ * @return pagination result, where the data is a list of tuples: list<(text, amount)>
+ */
 query get_locked_asset_balance(
     account_id: byte_array,
     asset_id: byte_array,
@@ -34,6 +71,26 @@ query get_locked_asset_balance(
     );
 }
 
+/**
+ * Retrieves the total locked sum of the specified asset over various lock types, given the
+ * account that locked them.
+ * The returned value adds up the values that were locked, regardless of the lock type, for a
+ * single asset.
+ * 
+ * @see ACCOUNT_TYPE_LOCK for more information on lock accounts
+ * 
+ * @see get_locked_asset_balance for a function that reports all values separated by lock type
+ * 
+ * @see get_locked_asset_aggregated_balances for a function that reports this value for all
+ * assets.
+ *  
+ * @param account_id    id of the account to fetch locked balances for
+ * @param asset_id      id of the asset to fetch balance for
+ * @param types     optional list to specify what lock account types to include balances for.
+ *                  If not specified, balances will be included for all lock account types.
+ * 
+ * @return the sum of the locked asset across the specified lock account types
+ */
 query get_locked_asset_aggregated_balance(
     account_id: byte_array,
     asset_id: byte_array,
@@ -46,6 +103,27 @@ query get_locked_asset_aggregated_balance(
     );
 }
 
+/**
+ * Similar to `get_locked_asset_balance`, except that it allows retrieving the info for all
+ * locked assets.
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @see ACCOUNT_TYPE_LOCK for more information on lock accounts
+ * 
+ * @see get_locked_asset_balance for a query that reports all values for a single asset
+ * 
+ * @see get_locked_asset_aggregated_balances for a query that reports the sum of all these
+ * values, separated by asset
+ *  
+ * @param account_id    id of the account to fetch locked balances for
+ * @param types         optional list to specify what lock account types to include balances for.
+ *                      If not specified, balances will be fetched for all lock account types.
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ * 
+ * @return pagination result, where the data is a list of tuples: list<(type, asset, amount)>
+ */
 query get_locked_asset_balances(
     account_id: byte_array, 
     types: list<text>? = null, 
@@ -63,6 +141,27 @@ query get_locked_asset_balances(
     );
 }   
 
+/**
+ * Similar to `get_locked_asset_aggregated_balance`, except that it allows retrieving the info
+ * for all locked assets.
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @see ACCOUNT_TYPE_LOCK for more information on lock accounts
+ * 
+ * @see get_locked_asset_balances for a query that reports all values separated by lock type
+ * 
+ * @see get_locked_asset_aggregated_balance for a query that reports the summed values for
+ * a single asset
+ *  
+ * @param account_id    id of the account to fetch locked balances for
+ * @param types         optional list to specify what lock account types to include balances for.
+ *                      If not specified, balances will be fetched for all lock account types.
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ * 
+ * @return pagination result, where the data is a list of tuples: list<(asset, amount)>
+ */
 query get_locked_asset_aggregated_balances(
     account_id: byte_array, 
     types: list<text>? = null, 

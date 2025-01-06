@@ -6,7 +6,10 @@ import {
   mapAssetToCrosschainAssetRegistration,
   registerCrosschainAsset,
 } from "@ft4-test/util";
-import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
+import {
+  AuthFlag,
+  createSingleSigAuthDescriptorRegistration,
+} from "@ft4/accounts";
 import {
   mint,
   registerCrosschainAsset as adminRegisterCrosschainAsset,
@@ -125,7 +128,7 @@ describe("Fee account creation single step", () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -206,7 +209,7 @@ describe("Fee account creation single step", () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -287,7 +290,7 @@ describe("Fee account creation single step", () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -347,7 +350,7 @@ describe("Fee account creation single step", () => {
   it("can resume account registration when transfer is completed but account is not registered yet", async () => {
     const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -406,7 +409,7 @@ describe("Fee account creation single step", () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -481,7 +484,7 @@ describe("Fee account creation single step", () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -518,7 +521,7 @@ describe("Fee account creation single step", () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -548,7 +551,7 @@ describe("Fee account creation single step", () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -594,7 +597,7 @@ describe("Fee account creation single step", () => {
   it("throws error when account is already registered", async () => {
     const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -647,7 +650,7 @@ describe("Fee account creation single step", () => {
   it("can recall completed crosschain transfer if account is not registered after timeout, but not twice", async () => {
     const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 

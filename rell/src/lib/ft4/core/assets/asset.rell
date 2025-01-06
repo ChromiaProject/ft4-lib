@@ -1,16 +1,67 @@
-
+/**
+ * The type of fungible assets. By default, assets created with this library will have
+ * this asset type. Other libraries that handle assets might have their own types.
+ */
 val ASSET_TYPE_FT4 = "ft4";
 
+/**
+ * An asset represents anything that is fungible. It can be more than money,
+ * like resources in a game.
+ */
 entity asset {
+    /**
+    * Unique identifier for an instance of this entity
+    */
     key id: byte_array;
 
+    /**
+    * Display name of the asset. Need not be unique.
+    */
     name: text;
+
+    /**
+    * Symbol of this asset, typically an all caps string of
+    * three or four letters. Used for display purposes and
+    * need not be unique.
+    */
     symbol: text;
+
+    /**
+    * Number of decimals used by this asset, which will affect
+    * how to interpret a balance of this decimal. E.g., 
+    * 10000 with decimals 1 would be interpreted as 1000,0 while
+    * 10000 with decimals 2 would be interpreted as 100,00
+    */
     decimals: integer;
+
+    /**
+    * The rid of the blockchain that is issuing this asset if this
+    * is a cross chain asset. For non-cross chain assets, this field
+    * will be the same as this blockchain's RID.
+    */
     issuing_blockchain_rid: byte_array;
+
+    /**
+    * A URL to an icon for this asset. Used only for display
+    * purposes in UI applications.
+    */
     mutable icon_url: text;
+
+    /**
+    * The type of asset. Defaults to ASSET_TYPE_FT4
+    */
     type: text = ASSET_TYPE_FT4;
+
+    /**
+    * Integer representing the total supply of this asset.
+    * Can change as assets is minted/burnt.
+    */
     mutable total_supply: big_integer;
+
+    /**
+    * Attribute that contains additional data to discern assets that are
+    * registered with the same name and symbol.
+    */
     uniqueness_resolver: byte_array = x"";
 
     key issuing_blockchain_rid, name, uniqueness_resolver;
@@ -21,18 +72,52 @@ entity asset {
     index type;
 }
 
+/**
+* Returns the asset with the specified id as an entity. 
+* Throws `"MISSING ASSET"` if the asset is not found.
+*/
 function Asset(id: byte_array) = require(
     asset @? { id },
-    "Asset <%s> not found".format(id)
+    "MISSING ASSET: Asset <%s> not found".format(id)
 );
 
+/**
+ * Represents an account's holdings of a certain asset.
+ */
 entity balance {
+    /** The asset this balance refers to */
+    asset;
+    /** The account holding this balance */
     key accounts.account, asset;
+    /**
+     * How much of this asset is held by the account.
+     * If this reaches `0L`, it is deleted.
+     */
     mutable amount: big_integer;
 }
 
+/**
+ * The maximum value that should ever be represented when talking about assets.
+ * No balance, transfer, nor total_supply should ever exceed this to maintain
+ * compatibility with EVM's `int256`
+ */
 val max_asset_amount = big_integer.from_hex("ff".repeat(32));
 
+/**
+ * Adds a certain amount of money to an account. It does NOT update total supply, extra
+ * care is needed to either increase it or remove the assets from another account.
+ * 
+ * Only supposed to be called internally, use functions like `mint` or `transfer` whenever
+ * possible.
+ *
+ * Can only be called from an operation.
+ * 
+ * @param account   the account that should receive the asset increase
+ * @param asset     the asset that should be given to the account
+ * @param amount    the amount to give
+ * 
+ * @return the final balance of the account
+ */
 function increase_balance(accounts.account, asset, amount: big_integer): big_integer {
     val balance = balance @? { account, asset };
     if (balance != null) {
@@ -45,10 +130,29 @@ function increase_balance(accounts.account, asset, amount: big_integer): big_int
     }
 }
 
+/**
+ * Removes a certain amount of money from an account. It does NOT update total supply,
+ * extra care is needed to either decrease it or add the assets to another account.
+ * 
+ * Only supposed to be called internally, use functions like `burn` or `transfer` whenever
+ * possible.
+ * 
+ * Throws `"INSUFFICIENT BALANCE"` if the amount to be removed is higher than the amount
+ * the account holds, or if there's no balance connected to the account and asset given,
+ * which means the account has 0 of this asset.
+ *
+ * Can only be called from an operation.
+ * 
+ * @param account   the account from which the amount is to be removed
+ * @param asset     the asset to remove from the account
+ * @param amount    the amount to remove
+ * 
+ * @return the final balance of the account
+ */
 function deduct_balance(accounts.account, asset, amount: big_integer): big_integer {
     val balance = balance @? { account, asset };
-    require(balance, "User does not have asset <%s> in account <%s>".format(asset.id, account.id));
-    require(balance.amount >= amount, "Balance is too low");
+    require(balance, "INSUFFICIENT BALANCE: User does not have asset <%s> in account <%s>".format(asset.id, account.id));
+    require(balance.amount >= amount, "INSUFFICIENT BALANCE: Balance is too low");
 
    if (balance.amount - amount == 0L) {
        delete balance;
@@ -60,11 +164,22 @@ function deduct_balance(accounts.account, asset, amount: big_integer): big_integ
    }
 }
 
+/**
+ * Returns how much of an asset the account holds.
+ * 
+ * @param account   the account to query the balance for
+ * @param asset     the asset held by the account
+ */
 function get_asset_balance(accounts.account, asset): big_integer {
     val balance = balance @? {asset, account};
     return if (balance != null) balance.amount else 0L;
 }
 
+/**
+ * Maps an asset's info into a readable format for the frontend.
+ * 
+ * @param asset     the asset to retrieve
+ */
 function map_asset(asset: asset) {
     return (
         id = asset.id,
@@ -78,6 +193,15 @@ function map_asset(asset: asset) {
     );
 }
 
+/**
+ * Retrieves all the balances of a certain account, paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ *
+ * @param account_id    the id of the account
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 function get_paginated_asset_balances(account_id: byte_array, page_size: integer?, page_cursor: text?): list<utils.pagination_result> {
     val before_rowid = utils.before_rowid(page_cursor);
     return balance @* {
@@ -94,6 +218,15 @@ function get_paginated_asset_balances(account_id: byte_array, page_size: integer
     ) limit utils.fetch_data_size(page_size);
 }
 
+/**
+ * Retrieves all assets of a specified type, paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ *
+ * @param type          the type of assets to be returned
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 function get_assets_by_type(type: text, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return asset @* {
@@ -107,6 +240,14 @@ function get_assets_by_type(type: text, page_size: integer?, page_cursor: text?)
     ) limit utils.fetch_data_size(page_size);
 }
 
+/**
+ * Retrieves all registered assets, paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ *
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 function get_all_assets(page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return asset @* {
@@ -119,6 +260,11 @@ function get_all_assets(page_size: integer?, page_cursor: text?) {
     ) limit utils.fetch_data_size(page_size);
 }
 
+/**
+ * Retrieves all asset balances for a certain account.
+ * 
+ * @param account_id the id of the account
+ */
 function get_asset_balances(account_id: byte_array) {
     return balance @* { .account.id == account_id } (
         asset = map_asset(.asset),
@@ -126,8 +272,22 @@ function get_asset_balances(account_id: byte_array) {
     );
 }
 
+/**
+ * Creates a readable string representing the amount of tokens, given the raw
+ * representation of its amount and the decimals.
+ * 
+ * For example, `format_amount_with_decimals(11, 2)` will return `"0.11"`
+ * 
+ * Throws `"INVALID DECIMALS"` if decimals is negative.
+ * 
+ * @param amount    the value to be formatted
+ * @param decimals  the amount of decimals for the given token
+ */
 function format_amount_with_decimals(amount: big_integer, decimals: integer): text {
-    require(decimals >= 0, "Decimals must be non-negative. Received: %s".format(decimals));
+    require(
+        decimals >= 0,
+        "INVALID DECIMALS: Decimals must be non-negative. Received: %s".format(decimals)
+    );
     var amt = amount.to_text();
     if (decimals == 0) {
         return amt;
@@ -139,6 +299,15 @@ function format_amount_with_decimals(amount: big_integer, decimals: integer): te
     return amt;
 }
 
+/**
+ * Retrieves all assets with the given name, paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ *
+ * @param name          the name of the assets to retrieve
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 function get_paginated_assets_by_name(name, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return asset @* {
@@ -152,6 +321,15 @@ function get_paginated_assets_by_name(name, page_size: integer?, page_cursor: te
     ) limit utils.fetch_data_size(page_size);
 }
 
+/**
+ * Retrieves all assets with the given symbol, paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ *
+ * @param symbol        the symbol of the assets to retrieve
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 function get_paginated_assets_by_symbol(symbol: text, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return asset @* {
@@ -165,6 +343,14 @@ function get_paginated_assets_by_symbol(symbol: text, page_size: integer?, page_
     ) limit utils.fetch_data_size(page_size);
 }
 
+/**
+ * Outputs the details of an asset in a format that is used by other chains to register
+ * it as a crosschain asset.
+ * 
+ * Throws `"MISSING ASSET"` if the asset does not exist on this chain.
+ * 
+ * @param asset_id  the id of the asset
+ */
 function get_asset_details_for_crosschain_registration(asset_id: byte_array) {
     val asset = asset @? { .id == asset_id } (
         id = .id,
@@ -177,67 +363,178 @@ function get_asset_details_for_crosschain_registration(asset_id: byte_array) {
         uniqueness_resolver = .uniqueness_resolver
     );
 
-    return require(asset, "Asset <%s> not found.".format(asset_id));
+    return require(asset, "MISSING ASSET: Asset <%s> not found.".format(asset_id));
 }
 
+/**
+ * Ensures that an asset amount is in the interval (0; 2^256) (exclusive)
+ * 
+ * Throws `"INVALID AMOUNT"` if value is too high
+ * 
+ * Throws `"INVALID AMOUNT"` if value is too low
+ * 
+ * Should be used inside other functions, and the `name` parameter should be passed
+ * in a way that the error message is understood by the end users.
+ * 
+ * Example: `require_zero_exclusive_asset_amount_limits(-1, "Amount to mint")`
+ * will throw this error:
+ * `"INVALID AMOUNT: Amount to mint: value must be non-zero positive, actual: -1"`
+ * 
+ * @param value     the amount to check
+ * @param name      the name of the parameter for nicer error printing
+ */
 function require_zero_exclusive_asset_amount_limits(value: big_integer, name) {
     require(
         value <= max_asset_amount, 
-        "%s: value must be lower than 2^256, actual: %d".format(name, value)
+        "INVALID AMOUNT: %s: value must be lower than 2^256, actual: %d".format(name, value)
     );
     require(
         value > 0L, 
-         "%s: value must be non-zero positive, actual: %d".format(name, value)
+         "INVALID AMOUNT: %s: value must be non-zero positive, actual: %d".format(name, value)
     );
 }
 
+/**
+ * Tests whether an asset icon URL is invalid. It will not try to resolve the URL, but it will
+ * remove trailing and leading whitespace and check that the string looks like an URL.
+ * 
+ * Throws `"INVALID ASSET URL"` if the URL is over 2048 characters or it does not match
+ * this regex pattern: `^\S+:\/\/[^\s$.?#].[^\s]*$`
+ * 
+ * @param icon_url  the URL to trim and check
+ * 
+ * @return the URL with whitespace removed.
+ */
 function parse_icon_url(icon_url: text): text {
     val trimmed_icon_url = icon_url.trim();
     require(
         (trimmed_icon_url == "") or (trimmed_icon_url.size() <= 2048 and trimmed_icon_url.matches('^\\S+:\\/\\/[^\\s$.?#].[^\\s]*$')),
-        "Invalid URL for icon"
+        "INVALID ASSET URL: Invalid URL for icon"
     );
     return trimmed_icon_url;
 }
 
+/**
+ * Ensures that decimals are in the interval [0; 78] (inclusive)
+ * 
+ * Throws `"INVALID DECIMALS"` otherwise.
+ * 
+ * @param decimals  the number of decimals
+ */
 function validate_asset_decimals(decimals: big_integer) {
-    require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
+    require(
+        decimals >= 0 and decimals < 79,
+        "INVALID DECIMALS: Decimals must be between 0 and 78 (included)"
+    );
 }
 
+/**
+ * Ensures that the ID has exactly 32 bytes
+ * 
+ * Throws `"INVALID ID"` otherwise.
+ * 
+ * @param id    the id to validate
+ */
 function validate_asset_id(id: byte_array) {
-    require(id.size() == 32, "Invalid asset ID length <%d>, must be <32>".format(id.size()));
+    require(
+        id.size() == 32,
+        "INVALID ID: Invalid asset ID length <%d>, must be <32>".format(id.size())
+    );
 }
 
+/**
+ * Ensures that the text input is at most 1024 characters long.
+ * 
+ * Throws `"INVALID TEXT"` otherwise.
+ * 
+ * @param name  the text to validate
+ */
 function validate_asset_name(name) {
-    require(name.size() <= 1024, "Asset name cannot be longer than 1024 characters");
+    require(
+        name.size() <= 1024,
+        "INVALID TEXT: Asset name cannot be longer than 1024 characters"
+    );
 }
 
+/**
+ * Ensures that the text input is at most 1024 characters long.
+ * 
+ * Throws `"INVALID TEXT"` otherwise.
+ * 
+ * @param symbol    the text to validate
+ */
 function validate_asset_symbol(symbol: text) {
-    require(symbol.size() <= 1024, "Asset symbol cannot be longer than 1024 characters");
+    require(
+        symbol.size() <= 1024,
+        "INVALID TEXT: Asset symbol cannot be longer than 1024 characters"
+    );
 }
 
+/**
+ * Ensures that the text input is not empty and at most 1024 characters long.
+ * 
+ * Throws `"INVALID TYPE"` if `type` is empty or too long.
+ * 
+ * @param type  the text to validate
+ */
 function validate_asset_type(type: text) {
-    require(type.size() > 0, "Asset type cannot be an empty string");
-    require(type.size() <= 1024, "Asset type cannot be longer than 1024 characters");
+    require(type.size() > 0, "INVALID TYPE: Asset type cannot be an empty string");
+    require(type.size() <= 1024, "INVALID TYPE: Asset type cannot be longer than 1024 characters");
 }
 
+/**
+ * Ensures that the asset uniqueness resolver is at most 1024 bytes long.
+ * 
+ * Throws `"INVALID RESOLVER"` otherwise.
+ * 
+ * @param res   the byte array to validate
+ */
 function validate_asset_uniqueness_resolver(res: byte_array) {
-    require(res.size() <= 1024, "Asset uniqueness resolver cannot be longer than 1024 characters");
+    require(
+        res.size() <= 1024,
+        "INVALID RESOLVER: Asset uniqueness resolver cannot be longer than 1024 characters"
+    );
 }
 
 namespace Unsafe {
+    /**
+     * Creates new tokens, increasing the total supply by the amount being minted, and gives
+     * them to an account. It's marked as Unsafe, as it doesn't check who is authorizing the
+     * minting, meaning any user could mint tokens to any account if this was exposed.
+     * 
+     * The functionality of `mint` can be expanded by using `before_mint` and `after_mint`
+     * 
+     * Throws `"UNAUTHORIZED MINTING"` if the asset's issuing blockchain is not this blockchain
+     * 
+     * Throws `"INVALID AMOUNT"` if the asset's total supply, increased by the amount
+     * being minted, is higher than 2^256.
+     *  
+     * Throws if the required assets cannot be minted. Common cases include:
+     * - the amount to mint is not in the accepted range (0; 2^256) (exclusive)
+     * - some conditions added in development through mint extensions (`before_mint` or
+     *   `after_mint`) aren't met
+     * 
+     * Can only be called from an operation.
+     * 
+     * @param account   the account to give the newly minted tokens to
+     * @param asset     the asset to mint
+     * @param amount    the amount of tokens to mint
+     */
     function mint(accounts.account, asset, amount: big_integer) {
         require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
         require(
             asset.issuing_blockchain_rid == chain_context.blockchain_rid,
-            "Assets can only be minted on issuing chain"
+            "UNAUTHORIZED MINTING: Assets can only be minted on issuing chain"
         );
         before_mint(account, asset, amount);
         increase_balance(account, asset, amount);
 
         asset.total_supply += amount;
 
-        require(asset.total_supply <= max_asset_amount, "End total supply must be lower than 2^256");
+        require(
+            asset.total_supply <= max_asset_amount,
+            "SUPPLY OUT OF BOUNDS: End total supply must be lower than 2^256"
+        );
 
         create transfer_history_entry(
             account,
@@ -250,13 +547,40 @@ namespace Unsafe {
         after_mint(account, asset, amount);
     }
 
+    /**
+     * Deletes tokens from an account's balance, decreasing the total supply by the amount
+     * being burned. It's marked as Unsafe, as it doesn't check who is authorizing the
+     * burning, meaning any user could burn tokens from any account if this was exposed.
+     * 
+     * The functionality of `burn` can be expanded by using `before_burn` and `after_burn`
+     *  
+     * Throws if the required assets cannot be burned. Common cases include:
+     * - the amount to burn is not in the accepted range (0; 2^256) (exclusive)
+     * - some conditions added in development through burn extensions (`before_burn` or
+     *   `after_burn`) aren't met
+     * - the account balance is lower than `amount`
+     * 
+     * Throws `"UNAUTHORIZED BURNING"` if the asset's issuing blockchain is not this blockchain
+     * 
+     * Throws `"INSUFFICIENT BALANCE"` if the account does not have enough of the asset to
+     * burn
+     * 
+     * Can only be called from an operation.
+     * 
+     * @param account   the account to remove tokens from
+     * @param asset     the asset to burn
+     * @param amount    the amount of tokens to burn
+     */
     function burn(accounts.account, asset, amount: big_integer) {
         require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
         require(
             asset.issuing_blockchain_rid == chain_context.blockchain_rid,
             "Assets can only be burned on issuing chain"
         );
-        require(get_asset_balance(account, asset) >= amount, "Insufficient balance");
+        require(
+            get_asset_balance(account, asset) >= amount,
+            "INSUFFICIENT BALANCE: Insufficient balance"
+        );
 
         before_burn(account, asset, amount);
 
@@ -274,6 +598,28 @@ namespace Unsafe {
         after_burn(account, asset, amount);
     }
 
+    /**
+     * Registers a new asset on this chain. It's marked as Unsafe, as it allows creating
+     * entities and its usage must be restricted to ensure disk usage doesn't grow indefinitely.
+     * The starting supply will be 0.
+     * 
+     * Throws if the input parameters are invalid. Common cases include:
+     * - `blockchain_rid` is not 32 bytes long
+     * - strings are longer than 1024 characters
+     * - type is empty
+     * - uniqueness resolver is longer than 1024 bytes
+     * - decimals is not in the accepted range [0, 78] (inclusive)
+     * - `icon_url` is not a valid URL
+     * 
+     * Can only be called from an operation.
+     * 
+     * @param name              the name of the asset
+     * @param symbol            the symbol of the asset
+     * @param decimals          the decimals of the asset
+     * @param blockchain_rid    the RID of the asset issuing blockchain
+     * @param icon_url          the URL of the asset icon
+     * @param type              the type of the asset, defaults to `ASSET_TYPE_FT4`
+     */
     function register_asset(
         name,
         symbol: text,

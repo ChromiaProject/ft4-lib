@@ -1,7 +1,18 @@
+/**
+ * Defines general configurations that will be used by all modules
+ */
 struct module_args {
+    /**
+     * How big can pages be in paginated queries at max
+     * 
+     * @see utils.paged_result for more info on pagination
+     */
     query_max_page_size: integer = 100;
 }
 
+/**
+ * Utility function to retrieve the general configs in inner modules
+ */
 function get_module_args() {
     return chain_context.args;
 }

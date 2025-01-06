@@ -5,6 +5,41 @@ import ^^^.core.admin;
 import ^^^.assets;
 import ^^^.crosschain;
 
+/**
+ * Registers an asset coming from a different chain. This allows other chains to send
+ * this asset to accounts on this chain.
+ * 
+ * Throws if not called by an admin.
+ * 
+ * Throws if the asset cannot be registered. Common cases include:
+ * - the input parameters do not follow this criteria:
+ *   - IDs are not 32 bytes long
+ *   - strings are longer than 1024 characters
+ *   - type is empty
+ *   - uniqueness resolver is longer than 1024 bytes
+ *   - decimals is not in the accepted range [0, 78] (inclusive)
+ * - any of the two blockchain RIDs is this chain's RID
+ * - `icon_url` is not a valid URL
+ * 
+ * @see core.assets.parse_icon_url for information on URL validation
+ * 
+ * @param id                        the id of the asset to register
+ * @param name                      the name of the asset to register
+ * @param symbol                    the symbol (or ticker) of the asset to register
+ * @param decimals                  the amount of decimals this asset will have
+ * @param issuing_blockchain_rid    the blockchain that originally created the asset
+ *                                  to register, which is allowed to mint the asset.
+ * @param icon_url                  an URL to an icon of the asset to register, can be an
+ *                                  empty string in case of no icon url
+ * @param type                      the type of the asset to register, in most cases this
+ *                                  should be set to the value of `core.asset.ASSET_TYPE_FT4`
+ * @param uniqueness_resolver       a field that can contain data that allows to distinguish
+ *                                  between different assets with the same name and symbol.
+ *                                  In most cases, this is not needed and it can be set to `x""`
+ * @param origin_blockchain_rid     the blockchain we'll receive this asset from. This is
+ *                                  not necessarily the same as issuing_blockchain_rid, but
+ *                                  it will often be.
+ */
 operation register_crosschain_asset(
     id: byte_array,
     name,

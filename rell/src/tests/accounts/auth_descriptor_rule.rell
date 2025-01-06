@@ -1,9 +1,8 @@
 @test module;
 
 import acc: ^^^.lib.ft4.accounts;
-import asset_utils: ^^.assets.utils;
-import test_op: ^^.operations;
-import test_utils: ^^^.lib.ft4.test.utils;
+import test_op: lib.ft4.test.operations;
+import test: lib.ft4.test.core;
 
 function test_max_number_of_account_descriptor_rules() {
   rules_test(acc.serialize_rules([
@@ -91,6 +90,7 @@ function test_active_and_valid() {
 function test_active_and_invalid() {
   rell.test.block().run();
   rell.test.block().run();
+  rell.test.block().run();
 
   rules_test(acc.serialize_rules([
       acc.rule_expression(acc.rule_variable.block_height, acc.rule_operator.gt, 2),
@@ -100,7 +100,7 @@ function test_active_and_invalid() {
 }
 
 function rules_test(rules: gtv) {
-  val account = asset_utils.register_alice().account;
-  val bob_ad = test_utils.create_auth_descriptor(rell.test.keypairs.bob.pub, rules = rules);
+  val account = test.register_alice().account;
+  val bob_ad = test.create_auth_descriptor(rell.test.keypairs.bob.pub, rules = rules);
   return rell.test.tx().op(test_op.add_ad_to_account(account, bob_ad)).sign(rell.test.keypairs.bob);
 }

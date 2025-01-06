@@ -221,7 +221,7 @@ export async function createAccount(
 ) {
   await client.signAndSendUniqueTransaction(
     op(
-      "register_account_test",
+      "ft4.test.register_account",
       gtv.authDescriptorRegistrationToGtv(descriptor),
     ),
     adminUser().signatureProvider,
@@ -305,11 +305,11 @@ export function opToRellOp(operation: Operation): RellOperation {
 }
 
 export function emptyOp(): Operation {
-  return { name: "empty_op", args: [] };
+  return { name: "ft4.test.empty_op", args: [] };
 }
 
 export function rejectedOp(): Operation {
-  return { name: "rejected_op", args: [] };
+  return { name: "ft4.test.rejected_op", args: [] };
 }
 
 export function* numberGenerator(): Generator<number> {

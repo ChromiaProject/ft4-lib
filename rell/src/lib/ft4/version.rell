@@ -1,4 +1,8 @@
 @mount('ft4')
 module;
 
+/** Returns the version of the Rell FT4 library */
 query get_version(): text = "1.0.0";
+
+/** Returns the API version of the Rell FT4 library */
+query get_api_version(): integer = 1;

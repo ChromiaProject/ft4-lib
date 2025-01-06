@@ -43,7 +43,7 @@ describe("Transaction builder signing", () => {
       .build();
 
     const expectedTx = gtv.encode([
-      [blockchainRid, [["empty_op", []]], [signer.pubKey]],
+      [blockchainRid, [["ft4.test.empty_op", []]], [signer.pubKey]],
       [EMPTY_SIGNATURE],
     ]);
 
@@ -67,7 +67,7 @@ describe("Transaction builder signing", () => {
     const expectedTxWithoutSignatures: RawGtx = [
       [
         blockchainRid,
-        [["empty_op", []]],
+        [["ft4.test.empty_op", []]],
         [ftKeyStore1.id, signer2.pubKey, ftKeyStore3.id, signer4.pubKey],
       ],
       [],
@@ -98,7 +98,7 @@ describe("Transaction builder signing", () => {
       .build();
 
     const expectedTxWithoutSignatures: RawGtx = [
-      [blockchainRid, [["empty_op", []]], [ftKeyStore.id]],
+      [blockchainRid, [["ft4.test.empty_op", []]], [ftKeyStore.id]],
       [],
     ];
 
@@ -116,7 +116,7 @@ describe("Transaction builder signing", () => {
 
     const authenticator = createNoopAuthenticator(
       createFakeAuthDataService({
-        empty_op: { flags: [], message: emptyOpAuthMessage },
+        ["ft4.test.empty_op"]: { flags: [], message: emptyOpAuthMessage },
       }),
     );
     const tx = await transactionBuilder(authenticator, client)
@@ -138,7 +138,7 @@ describe("Transaction builder signing", () => {
               ],
             ],
           ],
-          ["empty_op", []],
+          ["ft4.test.empty_op", []],
         ],
         [],
       ],
@@ -155,7 +155,7 @@ describe("Transaction builder signing", () => {
 
     const authenticator = createNoopAuthenticator(
       createFakeAuthDataService({
-        empty_op: { flags: [], message: emptyOpAuthMessage },
+        ["ft4.test.empty_op"]: { flags: [], message: emptyOpAuthMessage },
       }),
     );
     const tx = await transactionBuilder(authenticator, client)
@@ -167,7 +167,7 @@ describe("Transaction builder signing", () => {
         blockchainRid,
         [
           ["ft4.evm_signatures", [[signer.address], [null]]],
-          ["empty_op", []],
+          ["ft4.test.empty_op", []],
         ],
         [],
       ],
@@ -188,7 +188,7 @@ describe("Transaction builder signing", () => {
 
     const authenticator = createNoopAuthenticator(
       createFakeAuthDataService({
-        empty_op: { flags: [], message: emptyOpAuthMessage },
+        ["ft4.test.empty_op"]: { flags: [], message: emptyOpAuthMessage },
       }),
     );
     const tx = await transactionBuilder(authenticator, client)
@@ -222,7 +222,7 @@ describe("Transaction builder signing", () => {
               ],
             ],
           ],
-          ["empty_op", []],
+          ["ft4.test.empty_op", []],
         ],
         [],
       ],
@@ -242,7 +242,7 @@ describe("Transaction builder signing", () => {
 
     const authenticator = createNoopAuthenticator(
       createFakeAuthDataService({
-        empty_op: { flags: [], message: emptyOpAuthMessage },
+        ["ft4.test.empty_op"]: { flags: [], message: emptyOpAuthMessage },
       }),
     );
     const tx = await transactionBuilder(authenticator, client)
@@ -267,7 +267,7 @@ describe("Transaction builder signing", () => {
               ],
             ],
           ],
-          ["empty_op", []],
+          ["ft4.test.empty_op", []],
         ],
         [ftKeyStore3.id, ftSigner4.pubKey],
       ],
@@ -291,7 +291,7 @@ describe("Transaction builder signing", () => {
       accountId,
       [keyStore.createKeyHandler(authDescriptor)],
       createFakeAuthDataService({
-        empty_op: { flags: [], message: emptyOpAuthMessage },
+        ["ft4.test.empty_op"]: { flags: [], message: emptyOpAuthMessage },
       }),
     );
 
@@ -315,7 +315,7 @@ describe("Transaction builder signing", () => {
             ],
           ],
           ["ft4.ft_auth", [accountId, authDescriptor.id]],
-          ["empty_op", []],
+          ["ft4.test.empty_op", []],
         ],
         [keyStore.id],
       ],
@@ -339,7 +339,7 @@ describe("Transaction builder signing", () => {
       accountId,
       [keyStore.createKeyHandler(authDescriptor)],
       createFakeAuthDataService({
-        empty_op: { flags: [], message: emptyOpAuthMessage },
+        ["ft4.test.empty_op"]: { flags: [], message: emptyOpAuthMessage },
       }),
     );
 
@@ -363,7 +363,7 @@ describe("Transaction builder signing", () => {
             ],
           ],
           ["ft4.ft_auth", [accountId, authDescriptor.id]],
-          ["empty_op", []],
+          ["ft4.test.empty_op", []],
         ],
         [keyStore.id],
       ],
@@ -386,14 +386,14 @@ describe("Transaction builder signing", () => {
       accountId,
       [keyStore3.createKeyHandler(authDescriptor3)],
       createFakeAuthDataService({
-        empty_op: { flags: [], message: emptyOpAuthMessage },
+        ["ft4.test.empty_op"]: { flags: [], message: emptyOpAuthMessage },
       }),
     );
     const authenticator2 = createAuthenticator(
       accountId,
       [ftKeyStore2.createKeyHandler(authDescriptor2)],
       createFakeAuthDataService({
-        empty_op: { flags: [], message: emptyOpAuthMessage },
+        ["ft4.test.empty_op"]: { flags: [], message: emptyOpAuthMessage },
       }),
     );
 
@@ -418,14 +418,14 @@ describe("Transaction builder signing", () => {
       accountId,
       [keyStore.createKeyHandler(authDescriptor)],
       createFakeAuthDataService({
-        empty_op: { flags: [], message: emptyOpAuthMessage },
+        ["ft4.test.empty_op"]: { flags: [], message: emptyOpAuthMessage },
       }),
     );
     const authenticator2 = createAuthenticator(
       accountId,
       [ftKeyStore2.createKeyHandler(authDescriptor)],
       createFakeAuthDataService({
-        empty_op: { flags: [], message: emptyOpAuthMessage },
+        ["ft4.test.empty_op"]: { flags: [], message: emptyOpAuthMessage },
       }),
     );
 
@@ -459,7 +459,7 @@ describe("Transaction builder signing", () => {
       accountId,
       [evmKeyStore1.createKeyHandler(authDescriptor)],
       createFakeAuthDataService({
-        empty_op: { flags: [], message: emptyOpAuthMessage },
+        ["ft4.test.empty_op"]: { flags: [], message: emptyOpAuthMessage },
       }),
     );
 
@@ -494,7 +494,7 @@ describe("Transaction builder signing", () => {
               ],
             ],
           ],
-          ["empty_op", []],
+          ["ft4.test.empty_op", []],
         ],
         [],
       ],
@@ -510,7 +510,7 @@ describe("Transaction builder signing", () => {
     const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
 
     const authDataService = createFakeAuthDataService({
-      empty_op: { flags: [], message: authMessageTemplate },
+      ["ft4.test.empty_op"]: { flags: [], message: authMessageTemplate },
     });
     const authenticator = createAuthenticator(accountId, [], authDataService);
 
@@ -521,7 +521,9 @@ describe("Transaction builder signing", () => {
       })
       .build();
 
-    await expect(promise).rejects.toThrow("Unable to sign operation empty_op");
+    await expect(promise).rejects.toThrow(
+      "Unable to sign operation ft4.test.empty_op",
+    );
   });
 
   it("throws error if auth_descriptor_id placeholder exists in auth message template but there is not auth operation", async () => {
@@ -530,7 +532,7 @@ describe("Transaction builder signing", () => {
     const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
 
     const authDataService = createFakeAuthDataService({
-      empty_op: { flags: [], message: authMessageTemplate },
+      ["ft4.test.empty_op"]: { flags: [], message: authMessageTemplate },
     });
     const authenticator = createAuthenticator(accountId, [], authDataService);
 
@@ -541,7 +543,9 @@ describe("Transaction builder signing", () => {
       })
       .build();
 
-    await expect(promise).rejects.toThrow("Unable to sign operation empty_op");
+    await expect(promise).rejects.toThrow(
+      "Unable to sign operation ft4.test.empty_op",
+    );
   });
 
   it("adds evm_signatures when account_id and auth_descriptor_id placeholders exist in auth message template and there is ft auth operation", async () => {
@@ -553,7 +557,7 @@ describe("Transaction builder signing", () => {
     const { keyStore, authDescriptor } = createTestAuthDescriptor();
 
     const authDataService = createFakeAuthDataService({
-      empty_op: { flags: [], message: authMessageTemplate },
+      ["ft4.test.empty_op"]: { flags: [], message: authMessageTemplate },
     });
     const authenticator = createAuthenticator(
       accountId,
@@ -579,7 +583,7 @@ describe("Transaction builder signing", () => {
             ],
           ],
           ["ft4.ft_auth", [accountId, authDescriptor.id]],
-          ["empty_op", []],
+          ["ft4.test.empty_op", []],
         ],
         [keyStore.id],
       ],
@@ -607,7 +611,7 @@ describe("Transaction builder signing", () => {
     );
 
     const authDataService = createFakeAuthDataService({
-      empty_op: { flags: [], message: authMessageTemplate },
+      ["ft4.test.empty_op"]: { flags: [], message: authMessageTemplate },
     });
     const authenticator = createAuthenticator(
       accountId,
@@ -640,7 +644,7 @@ describe("Transaction builder signing", () => {
               [toRawSignature(await evmKeyStore1.signMessage(message))],
             ],
           ],
-          ["empty_op", []],
+          ["ft4.test.empty_op", []],
         ],
         [],
       ],
@@ -657,7 +661,7 @@ describe("Transaction builder signing", () => {
     const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
 
     const authDataService = createFakeAuthDataService({
-      empty_op: { flags: [], message: authMessageTemplate },
+      ["ft4.test.empty_op"]: { flags: [], message: authMessageTemplate },
     });
     const authenticator = createAuthenticator(accountId, [], authDataService);
 
@@ -681,7 +685,7 @@ describe("Transaction builder signing", () => {
               [toRawSignature(await evmKeyStore.signMessage(message))],
             ],
           ],
-          ["empty_op", []],
+          ["ft4.test.empty_op", []],
         ],
         [],
       ],
