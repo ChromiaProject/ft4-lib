@@ -8,6 +8,7 @@ import test: lib.ft4.test.core;
 import admin_crosschain: lib.ft4.admin.crosschain;
 import test_op: lib.ft4.test.operations;
 import ^^.operations.iccf_op.{ iccf_proof };
+import ^.mocks;
 
 function test_register_crosschain_asset_works() {
     val id = ("name", x"BBE58F50E00C733113F8E0647D53FD4BFAD1D85AB831B1719BAF20F1A3336C8F").hash();
@@ -71,7 +72,7 @@ function test_init_transfer_fails_when_amount_is_zero() {
             bob.account.id,
             asset_valid.id,
             0L,
-            [x"abcdef"],
+            [mocks.MOCK_BLOCKCHAIN_RID],
             10000000000000
         ))
         .sign(rell.test.keypairs.alice)
@@ -134,7 +135,7 @@ function test_init_transfer_succeeds_under_valid_conditions() {
             bob.account.id,
             asset_valid.id,
             5L,
-            [x"abcdef"],
+            [mocks.MOCK_BLOCKCHAIN_RID],
             10000000000000
         ))
         .sign(rell.test.keypairs.alice)
@@ -164,7 +165,7 @@ function test_init_transfer_succeeds_under_valid_conditions_with_evm_auth() {
         recipient_id = bob.account.id,
         asset_id = asset_valid.id,
         amount = 5L,
-        hops = [x"abcdef"],
+        hops = [mocks.MOCK_BLOCKCHAIN_RID],
         deadline = 10000000000000
     );
 
