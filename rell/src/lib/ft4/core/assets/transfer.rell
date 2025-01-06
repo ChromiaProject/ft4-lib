@@ -63,7 +63,7 @@ namespace Unsafe {
     *   `after_transfer`) aren't met
     * - the sender account's balance is lower than `amount`
     * 
-    * Throws `"INVALID RECIPIENT ID"` if the recipient's id length is not less or equal to 1024 bytes.
+    * Throws `"INVALID RECIPIENT ID"` if the recipient's id length is longer than 1024 bytes
     * 
     * Throws `"INVALID RECIPIENT"` if the recipient does not exist and
     * `is_create_on_internal_transfer_enabled` returns false.

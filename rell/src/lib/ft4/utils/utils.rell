@@ -103,7 +103,7 @@ function validate_blockchain_rid(blockchain_rid: byte_array, descriptor: text = 
 /**
  * Checks if the recipient id has the correct size
  * 
- * Throws `"INVALID RECIPIENT ID"` if the recipient's id length is not less or equal to 1024 bytes.
+ * Throws `"INVALID RECIPIENT ID"` if the recipient's id length is longer than 1024 bytes
  * 
  * Should be used inside other functions to validate the size of the recipient's id in transfers
  * 
