@@ -1,6 +1,9 @@
 /** The number of milliseconds in a day, mainly used for transfer time-to-live */
 val MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
+val RECIPIENT_ID_MAX_SIZE = 1024;
+
+/*
 /**
  * For complex validation we might not want to use simple "require()"
  * but an error message that is returned. 
@@ -95,6 +98,23 @@ function validate_blockchain_rid(blockchain_rid: byte_array, descriptor: text = 
         blockchain_rid.size() == 32, 
         "INVALID BRID: %s <%s> has invalid length. Expected <32> bytes, found <%d>.".format(descriptor, blockchain_rid, blockchain_rid.size())
     );
+}
+
+/**
+ * Checks if the recipient id has the correct size
+ * 
+ * Throws `"INVALID RECIPIENT ID"` if the recipient's id length is longer than 1024 bytes
+ * 
+ * Should be used inside other functions to validate the size of the recipient's id in transfers
+ * 
+ * Example: `validate_recipient_id(x"")`
+ * will throw this error: `"INVALID RECIPIENT ID: x"". Recipient id has invalid length. Expected 1024 bytes, but found <0>"`
+ * 
+ * @param recipient_id  The id to validate
+ */
+function validate_recipient_id(recipient_id: byte_array) {
+    require(recipient_id.size() <= RECIPIENT_ID_MAX_SIZE,
+        "INVALID RECIPIENT ID: %s. Recipient id has invalid length, Expected %d bytes, but found <%d>".format(recipient_id, RECIPIENT_ID_MAX_SIZE, recipient_id.size()));
 }
 
 /**

@@ -40,6 +40,8 @@ function () = auth.add_overridable_auth_handler(
  * The functionality provided by `init_transfer` can be modified by extending
  * `before_init_transfer` and `after_init_transfer`
  * 
+ * Throws `"INVALID RECIPIENT ID"` if the recipient's id length is longer than 1024 bytes
+ * 
  * Throws `"`TRANSFER EXPIRED"` if deadline is a past timestamp
  * 
  * Throws `"MISSING ASSET"` if the asset does not exist on this chain
@@ -94,6 +96,8 @@ operation init_transfer(
         deadline > op_context.last_block_time,
         "TRANSFER EXPIRED: Parameter 'deadline' cannot be a past timestamp. Value: %s".format(deadline)
     );
+
+    utils.validate_recipient_id(recipient_id);
 
     val account = auth.authenticate();
     val asset = require(
