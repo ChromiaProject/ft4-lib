@@ -44,6 +44,8 @@ function () = auth.add_overridable_auth_handler(
  * 
  * Throws `"MISSING ASSET"` if the asset does not exist on this chain
  * 
+ * Throws `"HOPS SIZE EXCEEDED"` if the hops list size is not less than 100
+ * 
  * Throws `"INVALID BRID"` if the hops RIDs length are not 32 bytes
  * 
  * Throws if additional conditions provided through extensions of `before_init_transfer` and
@@ -101,7 +103,7 @@ operation init_transfer(
 
     require(
         hops.size() <= crosschain.MAX_PATH_LENGTH,
-        "Too many hops <%d>, only <%d> allowed".format(hops.size(), crosschain.MAX_PATH_LENGTH)
+        "HOPS SIZE EXCEEDED: Found <%d> hops, but the maximum size is <%d>".format(hops.size(), crosschain.MAX_PATH_LENGTH)
     );
     for (hop in hops) {
         utils.validate_blockchain_rid(hop);
