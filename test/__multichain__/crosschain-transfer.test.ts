@@ -18,8 +18,7 @@ import {
 import { createConnection } from "@ft4/ft-session";
 import { registerAccount, registrationStrategy } from "@ft4/registration";
 import { transactionBuilder } from "@ft4/transaction-builder";
-import { BufferId } from "@ft4/utils";
-import { Operation, RawGtx, gtv } from "postchain-client";
+import { BufferId, Operation, RawGtx, gtv } from "postchain-client";
 
 describe("Crosschain transfer", () => {
   it("transfers successfully with one hop", async () => {

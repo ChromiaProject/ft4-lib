@@ -1,6 +1,6 @@
-import { formatter, Operation } from "postchain-client";
+import { BufferId, formatter, Operation } from "postchain-client";
 import { Amount } from "@ft4/asset";
-import { op, BufferId } from "@ft4/utils";
+import { op } from "@ft4/utils";
 import { gtv } from "./auth-descriptor";
 import { AnyAuthDescriptorRegistration } from "@ft4/accounts";
 

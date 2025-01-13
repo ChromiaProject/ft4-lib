@@ -1,4 +1,4 @@
-import { QueryObject, formatter } from "postchain-client";
+import { BufferId, QueryObject, formatter } from "postchain-client";
 import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import { Buffer } from "buffer";
 import {
@@ -6,7 +6,7 @@ import {
   BalanceResponse,
   CrosschainAssetRegistrationResponse,
 } from "./types";
-import { BufferId, PaginatedEntity } from "@ft4/utils";
+import { PaginatedEntity } from "@ft4/utils";
 
 export function assetById(
   assetId: BufferId,

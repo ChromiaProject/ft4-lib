@@ -3,12 +3,9 @@ import {
   AuthDescriptorValidationService,
   AuthDescriptorValidator,
 } from "./types";
-import {
-  getAuthDescriptorCounterIdForTxContext,
-  BufferId,
-  TxContext,
-} from "@ft4/utils";
+import { getAuthDescriptorCounterIdForTxContext, TxContext } from "@ft4/utils";
 import { AuthDataService } from "@ft4/authentication";
+import { BufferId } from "postchain-client";
 
 /**
  * Creates an `AuthDescriptorValidator` that can be used to validate auth descriptors

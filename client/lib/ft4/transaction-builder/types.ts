@@ -5,9 +5,9 @@ import {
   RawGtx,
   SignedTransaction,
   TransactionReceipt,
-  Web3PromiEvent,
+  BufferId,
 } from "postchain-client";
-import { BufferId, RequireTogether } from "@ft4/utils";
+import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 
 export type TransactionBuilder = {
   /**
@@ -45,7 +45,7 @@ export type TransactionBuilder = {
    *
    * @returns an object containing the signed transaction and its receipt
    */
-  buildAndSend: () => Web3PromiEvent<
+  buildAndSend: () => Web3CustomPromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;
@@ -65,7 +65,7 @@ export type TransactionBuilder = {
    *
    * @returns an object containing the signed transaction and its receipt
    */
-  buildAndSendWithAnchoring: () => Web3PromiEvent<
+  buildAndSendWithAnchoring: () => Web3CustomPromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;
@@ -86,21 +86,6 @@ export class AuthorizationError extends Error {
     this.name = "AuthorizationError";
   }
 }
-
-/**
- * Thrown when an operation was not anchored within the specified timeout period.
- */
-export class AnchoringTimeoutError extends Error {
-  constructor(msg?: string) {
-    super(msg);
-    this.name = "AnchoringTimeoutError";
-  }
-}
-
-export type TransactionBuilderConfig = RequireTogether<
-  ConfigOptions,
-  "retryCount" | "waitTimeMs"
->;
 
 /**
  * Callback function that can be passed to the transaction builder.
@@ -151,12 +136,8 @@ export type OnAnchoredHandlerData = {
   createProof: (blockchainRid: BufferId) => Promise<Operation>;
 };
 
-export type ConfigOptions = {
-  retryCount?: number;
-  waitTimeMs?: number;
-};
-
 export type TransactionWithReceipt = {
   tx: SignedTransaction;
   receipt: TransactionReceipt;
+  systemConfirmationProof?: (blockchainRid: BufferId) => Promise<Operation>;
 };

@@ -11,9 +11,11 @@ import {
   OnAnchoredHandlerData,
   transactionBuilder,
 } from "@ft4/transaction-builder";
-import { BufferId, getTransactionRid, nop } from "@ft4/utils";
+import { getTransactionRid, nop } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
+  AnchoringStatus,
+  BufferId,
   IClient,
   Operation,
   RawGtx,
@@ -93,30 +95,23 @@ export async function createOrchestrator(
     return transactionBuilder(authenticator, connection.client)
       .add(initTransfer(recipientId, assetId, amount, path, Date.now() + ttl), {
         targetBlockchainRid: path[0],
-        onAnchoredHandler: (
-          data: OnAnchoredHandlerData | null,
-          error: Error | null,
-        ) => {
-          if (error) {
-            throw new InitTransferError(
-              `Unable to fetch proof: ${error.message}`,
-              error,
-            );
-          } else {
-            state.tx = data?.tx;
-            state.initialOpIndex = data?.opIndex;
-            state.initialTx = data?.tx;
-            state.opIndex = data?.opIndex;
-          }
-        },
       })
       .add(nop())
       .buildAndSendWithAnchoring()
       .on("built", (tx) => {
         orchestrator.eventEmitter.emit("TransferSigned", tx);
       })
-      .then(({ receipt }) => {
+      .then(({ tx, receipt, systemConfirmationProof }) => {
         orchestrator.eventEmitter.emit("TransferInit", receipt);
+        if (receipt.status === AnchoringStatus.SystemAnchored) {
+          const orchestratorState = updatePartialOrchestratorState(
+            tx,
+            0,
+            systemConfirmationProof,
+          );
+
+          Object.assign(state, orchestratorState);
+        }
         return { tx: state.tx!, opIndex: state.opIndex! };
       })
       .catch((reason: Error) => {
@@ -136,7 +131,6 @@ export async function createOrchestrator(
    */
   async function transfer(): Promise<TransferRef> {
     const transferRef = await performInitTransfer();
-
     if (state.tx === undefined || state.opIndex === undefined) {
       throw new OrchestratorError(
         "Unable to perform transfer as tx was not applied properly",
@@ -539,7 +533,6 @@ async function createBaseOrchestrator(
         "Unable to apply transfer for non existing transaction",
       );
     }
-
     const iccfOp = await createIccfProofOperation(targetChainRid, hopIndex);
 
     const tb = await getTransactionBuilderForChain(
@@ -792,4 +785,19 @@ async function isAppliedOnBlockchainRid(
     targetChainRid,
   );
   return newConnection.query(isTransferApplied(txRid, opIndex));
+}
+
+export function updatePartialOrchestratorState(
+  currentHopIndex: number,
+  rawGtxTx: RawGtx,
+  opIndex: number,
+  systemConfirmationProof: (blockchainRid: Buffer) => Promise<Operation>,
+): Partial<OrchestratorState> {
+  return {
+    tx: rawGtxTx,
+    initialOpIndex: currentHopIndex,
+    initialTx: rawGtxTx,
+    opIndex: opIndex,
+    systemConfirmationProof: systemConfirmationProof,
+  };
 }

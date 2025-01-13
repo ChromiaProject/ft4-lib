@@ -5,11 +5,11 @@ import {
   IClient,
   formatter,
   Operation,
+  BufferId,
 } from "postchain-client";
 import { createConnection } from "@ft4/ft-session";
 import { Asset } from "@ft4/asset/types";
 import { registerAsset } from "@ft4/admin";
-import { BufferId } from "@ft4/utils";
 import { Blockchain } from "./types";
 import { adminUser } from "./util";
 

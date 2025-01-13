@@ -28,9 +28,10 @@ import {
   createKeyStoreInteractor,
   createSession,
 } from "@ft4/ft-session";
-import { BufferId, op } from "@ft4/utils";
+import { op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
+  BufferId,
   IClient,
   KeyPair,
   Operation,

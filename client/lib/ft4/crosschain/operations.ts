@@ -1,6 +1,6 @@
-import { Operation, RawGtx, formatter } from "postchain-client";
+import { BufferId, Operation, RawGtx, formatter } from "postchain-client";
 import { Amount } from "@ft4/asset";
-import { op, BufferId } from "@ft4/utils";
+import { op } from "@ft4/utils";
 import { GtvInitTransferArgs } from "./types";
 
 /**

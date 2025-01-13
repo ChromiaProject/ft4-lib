@@ -50,10 +50,7 @@ import {
   createInMemoryFtKeyStore,
   ftAuth,
 } from "@ft4/authentication";
-import {
-  AnchoringTimeoutError,
-  transactionBuilder,
-} from "@ft4/transaction-builder";
+import { transactionBuilder } from "@ft4/transaction-builder";
 import { nop } from "@ft4/utils";
 import {
   BlockAnchoringException,
@@ -143,10 +140,7 @@ describe("block anchored handling", () => {
     const callback: jest.Mock = jest.fn();
     let signedEvent: SignedTransaction | undefined = undefined;
     let confirmedEvent: TransactionReceipt | undefined = undefined;
-    const { tx, receipt } = await transactionBuilder(authenticator, client, {
-      retryCount: 10,
-      waitTimeMs: 10,
-    })
+    const { tx, receipt } = await transactionBuilder(authenticator, client)
       .add(mockOperation, { onAnchoredHandler: callback })
       .add(operation)
       .buildAndSendWithAnchoring()
@@ -182,10 +176,7 @@ describe("block anchored handling", () => {
     const operation = nop();
     const callback: jest.Mock = jest.fn();
     const callback2: jest.Mock = jest.fn();
-    await transactionBuilder(authenticator, client, {
-      retryCount: 10,
-      waitTimeMs: 10,
-    })
+    await transactionBuilder(authenticator, client)
       .add(mockOperation, { onAnchoredHandler: callback })
       .add(mockOperation, { onAnchoredHandler: callback2 })
       .add(operation)
@@ -229,10 +220,7 @@ describe("block anchored handling", () => {
 
     const operation = nop();
     const callback: jest.Mock = jest.fn();
-    await transactionBuilder(authenticator, client, {
-      retryCount: 10,
-      waitTimeMs: 10,
-    })
+    await transactionBuilder(authenticator, client)
       .add(mockOperation, { onAnchoredHandler: callback })
       .add(operation)
       .buildAndSendWithAnchoring();
@@ -261,10 +249,7 @@ describe("block anchored handling", () => {
 
     const operation = nop();
     const callback: jest.Mock = jest.fn();
-    await transactionBuilder(authenticator, client, {
-      retryCount: 10,
-      waitTimeMs: 10,
-    })
+    await transactionBuilder(authenticator, client)
       .add(mockOperation, { onAnchoredHandler: callback })
       .add(operation)
       .buildAndSendWithAnchoring();
@@ -283,53 +268,6 @@ describe("block anchored handling", () => {
     );
   }, 5000);
 
-  it("calls callback with an error and reject the promise if polling for cluster anchoring times out", async () => {
-    (getBlockAnchoringTransaction as jest.Mock)
-      .mockRejectedValue(new BlockAnchoringException())
-      .mockRejectedValue(new BlockAnchoringException());
-
-    const callback: jest.Mock = jest.fn();
-    const promise = transactionBuilder(authenticator, client, {
-      retryCount: 2,
-      waitTimeMs: 1,
-    })
-      .add(mockOperation, { onAnchoredHandler: callback })
-      .add(nop())
-      .buildAndSendWithAnchoring();
-
-    await expect(promise).rejects.toThrow(AnchoringTimeoutError);
-
-    expect(callback).toHaveBeenCalledWith(
-      null,
-      expect.any(AnchoringTimeoutError),
-    );
-  }, 5000);
-
-  it("calls callback with an error and reject the promise if polling for system anchoring times out", async () => {
-    (getBlockAnchoringTransaction as jest.Mock).mockResolvedValueOnce({
-      txRid: formatter.toBuffer("CA"),
-    });
-    (isBlockAnchored as jest.Mock)
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(null);
-
-    const callback: jest.Mock = jest.fn();
-    const promise = transactionBuilder(authenticator, client, {
-      retryCount: 2,
-      waitTimeMs: 1,
-    })
-      .add(mockOperation, { onAnchoredHandler: callback })
-      .add(nop())
-      .buildAndSendWithAnchoring();
-
-    await expect(promise).rejects.toThrow(AnchoringTimeoutError);
-
-    expect(callback).toHaveBeenCalledWith(
-      null,
-      expect.any(AnchoringTimeoutError),
-    );
-  }, 5000);
-
   it("calls registered handler when block is anchored target cluster", async () => {
     const targetBlockchainRid1 = formatter.toBuffer("1111");
     const targetBlockchainRid2 = formatter.toBuffer("2222");
@@ -345,10 +283,7 @@ describe("block anchored handling", () => {
     const callback1: jest.Mock = jest.fn();
     const callback2: jest.Mock = jest.fn();
     const callback3: jest.Mock = jest.fn();
-    await transactionBuilder(authenticator, client, {
-      retryCount: 10,
-      waitTimeMs: 10,
-    })
+    await transactionBuilder(authenticator, client)
       .add(mockOperation, {
         targetBlockchainRid: targetBlockchainRid1,
         onAnchoredHandler: callback1,

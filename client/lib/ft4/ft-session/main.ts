@@ -1,6 +1,5 @@
 import {
   TransactionWithReceipt,
-  TransactionBuilderConfig,
   signTransaction,
   transactionBuilder,
 } from "@ft4/transaction-builder";
@@ -18,10 +17,9 @@ import {
   TransactionReceipt,
   createClient,
   formatter,
-  Web3PromiEvent,
+  BufferId,
 } from "postchain-client";
 import {
-  BufferId,
   authHandlerForOperation,
   fetchExposedOperations,
   firstAllowedAuthDescriptor,
@@ -73,6 +71,7 @@ import {
   getConfigFromOptions,
 } from "@ft4/authentication/login";
 import { getApiVersion } from "@ft4/utils/main";
+import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 
 /**
  * Uses the provided connection to create a new connection to the specified blockchain rid.
@@ -197,9 +196,8 @@ export function createSession(
 ): Session {
   return Object.freeze({
     account: createAuthenticatedAccount(connection, authenticator),
-    transactionBuilder: (
-      config: TransactionBuilderConfig | undefined = undefined,
-    ) => transactionBuilder(authenticator, connection.client, config),
+    transactionBuilder: () =>
+      transactionBuilder(authenticator, connection.client),
     call: (...operations: Operation[]) =>
       call(connection, authenticator, ...operations),
     callWithoutNop: (...operations: Operation[]) =>
@@ -227,7 +225,7 @@ export function call(
   connection: Connection,
   authenticator: Authenticator,
   ...operations: Operation[]
-): Web3PromiEvent<
+): Web3CustomPromiEvent<
   TransactionWithReceipt,
   {
     built: SignedTransaction;
@@ -250,7 +248,7 @@ export function callWithoutNop(
   connection: Connection,
   authenticator: Authenticator,
   ...operations: Operation[]
-): Web3PromiEvent<
+): Web3CustomPromiEvent<
   TransactionWithReceipt,
   {
     built: SignedTransaction;

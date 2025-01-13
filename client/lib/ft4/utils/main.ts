@@ -1,6 +1,7 @@
 import { Connection } from "@ft4/ft-session";
 import { Buffer } from "buffer";
 import {
+  BufferId,
   GTX,
   IClient,
   Operation,
@@ -14,7 +15,7 @@ import {
   gtv,
   gtx,
 } from "postchain-client";
-import { BufferId, Config, ConfigResponse } from "./types";
+import { Config, ConfigResponse } from "./types";
 import { allAuthHandlers } from "./queries";
 import { AuthHandler, FtKeyStore } from "@ft4/authentication";
 

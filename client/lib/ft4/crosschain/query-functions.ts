@@ -2,8 +2,7 @@ import { Buffer } from "buffer";
 import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import * as Query from "./queries";
 import { PendingTransfer, PendingTransferResponse } from "./types";
-import { Queryable, RawGtx, gtv } from "postchain-client";
-import { BufferId } from "@ft4/utils";
+import { BufferId, Queryable, RawGtx, gtv } from "postchain-client";
 
 /**
  * Retrieves the brid of the origin chain for the specified asset

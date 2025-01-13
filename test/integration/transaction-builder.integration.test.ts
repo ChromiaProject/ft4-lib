@@ -16,7 +16,6 @@ import { nop, op } from "@ft4/utils";
 import {
   ResponseStatus,
   SignedTransaction,
-  SystemChainException,
   TransactionReceipt,
   TxRejectedError,
 } from "postchain-client";
@@ -133,6 +132,10 @@ describe("transaction builder", () => {
       .add(nop())
       .buildAndSendWithAnchoring();
 
-    await expect(promise).rejects.toThrow(SystemChainException);
+    await expect(promise).rejects.toThrow(TxRejectedError);
+    await expect(promise).rejects.toHaveProperty(
+      "message",
+      expect.stringContaining("Transaction was rejected, failedAnchoring"),
+    );
   }, 5000);
 });

@@ -6,15 +6,14 @@ import {
   createResumeOrchestrator,
 } from "@ft4/crosschain";
 import { Connection } from "@ft4/ft-session";
-import { BufferId } from "@ft4/utils";
-import { Buffer } from "buffer";
 import {
+  BufferId,
+  formatter,
   SignedTransaction,
   TransactionReceipt,
-  Web3PromiEvent,
-  formatter,
 } from "postchain-client";
 import { createRevertOrchestrator } from "@ft4/crosschain/orchestrator";
+import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 
 /**
  * Performs a cross chain transfer
@@ -37,7 +36,7 @@ export function crosschainTransfer(
   assetId: BufferId,
   amount: Amount,
   ttl: number = days(1),
-): Web3PromiEvent<
+): Web3CustomPromiEvent<
   TransferRef,
   {
     built: SignedTransaction;
@@ -45,7 +44,7 @@ export function crosschainTransfer(
     hop: Buffer;
   }
 > {
-  const promiEvent = new Web3PromiEvent<
+  const promiEvent = new Web3CustomPromiEvent<
     TransferRef,
     {
       built: SignedTransaction;
@@ -92,13 +91,13 @@ export function resumeCrosschainTransfer(
   connection: Connection,
   authenticator: Authenticator,
   pendingTransfer: TransferRef,
-): Web3PromiEvent<
+): Web3CustomPromiEvent<
   void,
   {
     hop: Buffer;
   }
 > {
-  const promiEvent = new Web3PromiEvent<
+  const promiEvent = new Web3CustomPromiEvent<
     void,
     {
       hop: Buffer;
@@ -131,13 +130,13 @@ export function revertCrosschainTransfer(
   connection: Connection,
   authenticator: Authenticator,
   pendingTransfer: TransferRef,
-): Web3PromiEvent<
+): Web3CustomPromiEvent<
   void,
   {
     hop: Buffer;
   }
 > {
-  const promiEvent = new Web3PromiEvent<
+  const promiEvent = new Web3CustomPromiEvent<
     void,
     {
       hop: Buffer;
@@ -170,13 +169,13 @@ export function recallUnclaimedCrosschainTransfer(
   connection: Connection,
   authenticator: Authenticator,
   pendingTransfer: TransferRef,
-): Web3PromiEvent<
+): Web3CustomPromiEvent<
   void,
   {
     hop: Buffer;
   }
 > {
-  const promiEvent = new Web3PromiEvent<
+  const promiEvent = new Web3CustomPromiEvent<
     void,
     {
       hop: Buffer;

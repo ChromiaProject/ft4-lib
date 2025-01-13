@@ -1,7 +1,7 @@
 import { EventEmitter, Listener } from "@ft4/events";
-import { BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
+  BufferId,
   Operation,
   RawGtx,
   SignedTransaction,
@@ -29,6 +29,8 @@ export type OrchestratorState = {
   opIndex?: number;
   initialTx?: RawGtx;
   initialOpIndex?: number;
+  // Must be resolved outside orchestrator or see if it can be done within
+  systemConfirmationProof?: Operation;
 };
 
 /**

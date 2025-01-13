@@ -1,6 +1,11 @@
-import { Operation, QueryObject, RawGtv, formatter } from "postchain-client";
+import {
+  BufferId,
+  Operation,
+  QueryObject,
+  RawGtv,
+  formatter,
+} from "postchain-client";
 import { Buffer } from "buffer";
-import { BufferId } from "@ft4/utils";
 
 /**
  * Creates a query object that can be used to call the `ft4.get_auth_descriptor_counter`- query

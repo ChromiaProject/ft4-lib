@@ -6,7 +6,6 @@ import {
 import { ftAuth } from "@ft4/authentication";
 import { Connection, createConnection } from "@ft4/ft-session";
 import { op } from "@ft4/utils";
-import { UnexpectedStatusError } from "postchain-client";
 
 jest.setTimeout(2000000);
 
@@ -21,7 +20,7 @@ describe("Transaction priority", () => {
   });
 
   describe("Transaction queue", () => {
-    it("rejects transactions with too many operations with 503 response", async () => {
+    it("rejects transactions with too many operations with specific error message", async () => {
       const user = TestUser();
 
       const account = await AccountBuilder.account(_connection)
@@ -59,8 +58,9 @@ describe("Transaction priority", () => {
           },
           user.signatureProvider,
         ),
-      ).rejects.toStrictEqual(
-        new UnexpectedStatusError(503, '{"error":"Transaction queue is full"}'),
+      ).rejects.toHaveProperty(
+        "message",
+        expect.stringContaining("Transaction queue is full"),
       );
     });
   });

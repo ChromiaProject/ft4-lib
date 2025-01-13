@@ -1,6 +1,6 @@
 import { getBalanceByAccountId, getBalancesByAccountId } from "@ft4/asset";
 import { Buffer } from "buffer";
-import { formatter, Queryable } from "postchain-client";
+import { BufferId, formatter, Queryable } from "postchain-client";
 import {
   PendingTransfer,
   PendingTransferResponse,
@@ -10,7 +10,6 @@ import {
 } from "@ft4/crosschain";
 import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import {
-  BufferId,
   PaginatedEntity,
   getConfig,
   retrievePaginatedEntity,
