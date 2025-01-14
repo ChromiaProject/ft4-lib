@@ -1,4 +1,4 @@
-import { GTX, RawGtx, RellOperation, gtv, gtx } from "postchain-client";
+import { GTX, RellOperation } from "postchain-client";
 import {
   PendingTransfer,
   GtvInitTransferArgs,
@@ -28,7 +28,7 @@ function createDummyPendingTransfer(
 
   return {
     opIndex,
-    tx: gtv.decode(gtx.serialize(tx)) as RawGtx,
+    tx,
     accountId,
   };
 }

@@ -40,8 +40,7 @@ import {
   createFakeAuthDataService,
   createTestAuthDescriptor,
 } from "@ft4-test/util";
-import { AnyAuthDescriptor, AuthFlag, transfer } from "@ft4/accounts";
-import { createAmount } from "@ft4/asset";
+import { AnyAuthDescriptor, AuthFlag } from "@ft4/accounts";
 import {
   AuthDataService,
   Authenticator,
@@ -58,8 +57,6 @@ import {
   KeyPair,
   NetworkSettings,
   Operation,
-  SignedTransaction,
-  TransactionReceipt,
   Web3PromiEvent,
   createStubClient,
   encryption,
@@ -113,133 +110,28 @@ describe("block anchored handling", () => {
     );
   });
 
-  it("does not allow build() when there are onAnchoredHandlers", async () => {
-    const promise = transactionBuilder(authenticator, client)
-      .add(transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)), {
-        onAnchoredHandler: (_data, _error) => null,
-      })
-      .build();
-    await expect(promise).rejects.toThrow(Error);
-  });
-
-  it("does not allow buildAndSend() when there are onAnchoredHandlers", async () => {
-    const promise = transactionBuilder(authenticator, client)
-      .add(transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)), {
-        onAnchoredHandler: (_data, _error) => null,
-      })
-      .buildAndSend();
-    await expect(promise).rejects.toThrow(Error);
-  });
-
-  it("calls registered handler when block is anchored in system anchoring chain", async () => {
-    (getBlockAnchoringTransaction as jest.Mock).mockResolvedValueOnce({
-      txRid: formatter.toBuffer("CA"),
-    });
-    (isBlockAnchored as jest.Mock).mockResolvedValueOnce(true);
-    const operation = nop();
-    const callback: jest.Mock = jest.fn();
-    let signedEvent: SignedTransaction | undefined = undefined;
-    let confirmedEvent: TransactionReceipt | undefined = undefined;
-    const { tx, receipt } = await transactionBuilder(authenticator, client)
-      .add(mockOperation, { onAnchoredHandler: callback })
-      .add(operation)
-      .buildAndSendWithAnchoring()
-      .on("built", (tx) => {
-        signedEvent = tx;
-      })
-      .on("confirmed", (receipt) => {
-        confirmedEvent = receipt;
-      });
-
-    expect(callback).toHaveBeenCalledWith(
-      anchoredHandlerCallbackParameters(
-        client,
-        [
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-          operation,
-        ],
-        1,
-      ),
-      null,
-    );
-
-    expect(signedEvent!.equals(tx));
-    expect(confirmedEvent!.transactionRid.equals(receipt.transactionRid));
-  }, 5000);
-
-  it("calls all registered handler when block is anchored in system anchoring chain", async () => {
-    (getBlockAnchoringTransaction as jest.Mock).mockResolvedValueOnce({
-      txRid: formatter.toBuffer("CA"),
-    });
-    (isBlockAnchored as jest.Mock).mockResolvedValueOnce(true);
-    const operation = nop();
-    const callback: jest.Mock = jest.fn();
-    const callback2: jest.Mock = jest.fn();
-    await transactionBuilder(authenticator, client)
-      .add(mockOperation, { onAnchoredHandler: callback })
-      .add(mockOperation, { onAnchoredHandler: callback2 })
-      .add(operation)
-      .buildAndSendWithAnchoring();
-
-    expect(callback).toHaveBeenCalledWith(
-      anchoredHandlerCallbackParameters(
-        client,
-        [
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-          operation,
-        ],
-        1,
-      ),
-      null,
-    );
-    expect(callback2).toHaveBeenCalledWith(
-      anchoredHandlerCallbackParameters(
-        client,
-        [
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-          operation,
-        ],
-        3,
-      ),
-      null,
-    );
-  }, 5000);
-
-  it("calls callbacks even if block is not cluster anchored immediately", async () => {
+  it("resolves even if block is not cluster anchored immediately", async () => {
     (getBlockAnchoringTransaction as jest.Mock)
       .mockRejectedValue(new BlockAnchoringException())
       .mockResolvedValueOnce({ txRid: formatter.toBuffer("CA") });
     (isBlockAnchored as jest.Mock).mockResolvedValueOnce(true);
 
     const operation = nop();
-    const callback: jest.Mock = jest.fn();
-    await transactionBuilder(authenticator, client)
-      .add(mockOperation, { onAnchoredHandler: callback })
+    const data = await transactionBuilder(authenticator, client)
+      .add(mockOperation)
       .add(operation)
       .buildAndSendWithAnchoring();
 
-    expect(callback).toHaveBeenCalledWith(
-      anchoredHandlerCallbackParameters(
-        client,
-        [
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-          operation,
-        ],
-        1,
-      ),
-      null,
+    expect(data).toMatchObject(
+      anchoredHandlerCallbackParameters(client, [
+        ftAuth(authenticator.accountId, authDescriptor.id),
+        mockOperation,
+        operation,
+      ]),
     );
   }, 5000);
 
-  it("calls callbacks even if block is not system anchored immediately", async () => {
+  it("resolves even if block is not system anchored immediately", async () => {
     (getBlockAnchoringTransaction as jest.Mock).mockResolvedValueOnce({
       txRid: formatter.toBuffer("CA"),
     });
@@ -248,120 +140,17 @@ describe("block anchored handling", () => {
       .mockResolvedValueOnce(true);
 
     const operation = nop();
-    const callback: jest.Mock = jest.fn();
-    await transactionBuilder(authenticator, client)
-      .add(mockOperation, { onAnchoredHandler: callback })
+    const data = await transactionBuilder(authenticator, client)
+      .add(mockOperation)
       .add(operation)
       .buildAndSendWithAnchoring();
 
-    expect(callback).toHaveBeenCalledWith(
-      anchoredHandlerCallbackParameters(
-        client,
-        [
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-          operation,
-        ],
-        1,
-      ),
-      null,
-    );
-  }, 5000);
-
-  it("calls registered handler when block is anchored target cluster", async () => {
-    const targetBlockchainRid1 = formatter.toBuffer("1111");
-    const targetBlockchainRid2 = formatter.toBuffer("2222");
-
-    (getBlockAnchoringTransaction as jest.Mock).mockResolvedValueOnce({
-      txRid: formatter.toBuffer("CA"),
-    });
-    (isBlockAnchored as jest.Mock)
-      .mockClear()
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(true);
-    const callback1: jest.Mock = jest.fn();
-    const callback2: jest.Mock = jest.fn();
-    const callback3: jest.Mock = jest.fn();
-    await transactionBuilder(authenticator, client)
-      .add(mockOperation, {
-        targetBlockchainRid: targetBlockchainRid1,
-        onAnchoredHandler: callback1,
-      })
-      .add(mockOperation, {
-        targetBlockchainRid: targetBlockchainRid2,
-        onAnchoredHandler: callback2,
-      })
-      .add(mockOperation, {
-        targetBlockchainRid: targetBlockchainRid2,
-        onAnchoredHandler: callback3,
-      })
-      .buildAndSendWithAnchoring();
-
-    expect(isBlockAnchored).toHaveBeenCalledTimes(3);
-    expect(isBlockAnchored).toHaveBeenNthCalledWith(
-      1,
-      clusterAnchoringClient,
-      undefined,
-      formatter.toBuffer("CA"),
-    );
-    expect(isBlockAnchored).toHaveBeenNthCalledWith(
-      2,
-      clusterAnchoringClient,
-      formatter.toString(targetBlockchainRid1),
-      formatter.toBuffer("CA"),
-    );
-    expect(isBlockAnchored).toHaveBeenNthCalledWith(
-      3,
-      clusterAnchoringClient,
-      formatter.toString(targetBlockchainRid2),
-      formatter.toBuffer("CA"),
-    );
-
-    expect(callback1).toHaveBeenCalledWith(
-      anchoredHandlerCallbackParameters(
-        client,
-        [
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-        ],
-        1,
-      ),
-      null,
-    );
-    expect(callback2).toHaveBeenCalledWith(
-      anchoredHandlerCallbackParameters(
-        client,
-        [
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-        ],
-        3,
-      ),
-      null,
-    );
-    expect(callback3).toHaveBeenCalledWith(
-      anchoredHandlerCallbackParameters(
-        client,
-        [
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-          ftAuth(authenticator.accountId, authDescriptor.id),
-          mockOperation,
-        ],
-        5,
-      ),
-      null,
+    expect(data).toMatchObject(
+      anchoredHandlerCallbackParameters(client, [
+        ftAuth(authenticator.accountId, authDescriptor.id),
+        mockOperation,
+        operation,
+      ]),
     );
   }, 5000);
 });

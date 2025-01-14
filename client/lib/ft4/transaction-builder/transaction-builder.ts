@@ -12,29 +12,26 @@ import {
   TxContext,
   compactArray,
   getAuthDescriptorCounterIdForTxContext,
-  getSystemAnchoringChain,
   getTransactionRid,
 } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
-  AnchoringStatus,
+  BufferId,
   ChainConfirmationLevel,
   GTX,
   IClient,
   Operation,
-  RawGtx,
   ResponseStatus,
   SignedTransaction,
   TransactionReceipt,
   convertToRellOperation,
   createIccfProofTx,
   formatter,
-  getAnchoringClient,
   getSystemClient,
-  gtv,
   gtx,
 } from "postchain-client";
 import {
+  AnchoringTransactionWithReceipt,
   AuthorizationError,
   OperationConfig,
   OperationContext,
@@ -65,9 +62,7 @@ export function transactionBuilder(
     _operations.push({
       operation,
       authenticator: config.authenticator ?? authenticator,
-      onAnchoredHandler: config.onAnchoredHandler,
       signers: config.signers,
-      targetBlockchainRid: config.targetBlockchainRid,
       skipFtSigning: config.skipFtSigning,
     });
     return me;
@@ -210,11 +205,6 @@ export function transactionBuilder(
   }
 
   async function build(): Promise<Buffer> {
-    if (_operations.find((op: OperationContext) => !!op.onAnchoredHandler))
-      throw new Error(
-        "Cannot build transaction with onAnchoredHandlers, use buildAndSendWithAnchoring() instead",
-      );
-
     return await _build();
   }
 
@@ -232,13 +222,6 @@ export function transactionBuilder(
         sent: Buffer;
       }
     >((resolve, reject) => {
-      if (_operations.find((op: OperationContext) => !!op.onAnchoredHandler))
-        reject(
-          Error(
-            "Cannot build transaction with onAnchoredHandlers, use buildAndSendWithAnchoring() instead",
-          ),
-        );
-
       _build()
         .then((tx) => {
           promiEvent.emit("built", tx);
@@ -250,7 +233,7 @@ export function transactionBuilder(
           ]);
         })
         .then(([tx, receipt]) => {
-          resolve({ tx, receipt });
+          resolve({ tx: gtx.deserialize(tx), receipt });
         })
         .catch((reason) => reject(reason));
     });
@@ -258,7 +241,7 @@ export function transactionBuilder(
   }
 
   function buildAndSendWithAnchoring(): Web3CustomPromiEvent<
-    TransactionWithReceipt,
+    AnchoringTransactionWithReceipt,
     {
       built: SignedTransaction;
       sent: Buffer;
@@ -266,7 +249,7 @@ export function transactionBuilder(
     }
   > {
     const promiEvent = new Web3CustomPromiEvent<
-      TransactionWithReceipt,
+      AnchoringTransactionWithReceipt,
       {
         built: SignedTransaction;
         sent: Buffer;
@@ -293,20 +276,12 @@ export function transactionBuilder(
               }
             })
             .then((receipt) => {
-              if (receipt.status === AnchoringStatus.SystemAnchored) {
-                // let rawSourceTx: RawGtx;
-                // if (Buffer.isBuffer(receipt.clusterAnchoredTx?.txData)) {
-                //    as RawGtx;
-                // }
-                // rawSourceTx = gtv.decode(
-                //   tx,
-                // );
-                const systemConfirmationProof = getSystemAnchoringIccfProofOp(
-                  client,
-                  gtv.decode(tx) as RawGtx,
-                );
-                resolve({ tx, receipt, systemConfirmationProof });
-              }
+              const decodedTx = gtx.deserialize(tx);
+              const systemConfirmationProof = getSystemAnchoringIccfProofOp(
+                client,
+                decodedTx,
+              );
+              resolve({ tx: decodedTx, receipt, systemConfirmationProof });
             });
         })
         .catch((reason) => reject(reason));
@@ -339,28 +314,21 @@ export function transactionBuilder(
 
 export function getSystemAnchoringIccfProofOp(
   client: IClient,
-  rawSourceTx: RawGtx,
-): () => Promise<Operation> {
-  return async (): Promise<Operation> => {
+  txToProve: GTX,
+): (targetChainRid: Buffer) => Promise<Operation> {
+  return async (targetChainRid: BufferId): Promise<Operation> => {
     const directoryClient = await getSystemClient(
       client.config.endpointPool.map((endpoint) => endpoint.url),
       client.config.directoryChainRid,
     );
-    const anchoringClient = await getAnchoringClient(
-      directoryClient,
-      client.config.blockchainRid,
-    );
-
-    const systemAnchoringChainRid =
-      await getSystemAnchoringChain(directoryClient);
 
     const proofTx = await createIccfProofTx(
       directoryClient,
-      getTransactionRid(rawSourceTx),
-      gtv.gtvHash(rawSourceTx),
-      rawSourceTx[0][2], // signers
-      anchoringClient.config.blockchainRid,
-      systemAnchoringChainRid.toString("hex"),
+      getTransactionRid(txToProve),
+      gtx.getDigest(txToProve),
+      txToProve.signers,
+      client.config.blockchainRid,
+      targetChainRid.toString("hex"),
       undefined,
       true,
     );

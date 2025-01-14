@@ -14,6 +14,7 @@ import { Session, createConnection } from "@ft4/ft-session";
 import { AuthorizationError } from "@ft4/transaction-builder";
 import { nop, op } from "@ft4/utils";
 import {
+  gtx,
   ResponseStatus,
   SignedTransaction,
   TransactionReceipt,
@@ -93,7 +94,7 @@ describe("transaction builder", () => {
         sentEvent = txRid;
       });
 
-    expect(builtEvent!.equals(tx));
+    expect(builtEvent!.equals(gtx.serialize(tx)));
     expect(sentEvent!.equals(receipt.transactionRid));
   }, 5000);
 

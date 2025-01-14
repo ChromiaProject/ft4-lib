@@ -18,7 +18,8 @@ import {
 import { createConnection } from "@ft4/ft-session";
 import { registerAccount, registrationStrategy } from "@ft4/registration";
 import { transactionBuilder } from "@ft4/transaction-builder";
-import { BufferId, Operation, RawGtx, gtv } from "postchain-client";
+import { AnchoringTransactionWithReceipt } from "@ft4/transaction-builder/types";
+import { gtv } from "postchain-client";
 
 describe("Crosschain transfer", () => {
   it("transfers successfully with one hop", async () => {
@@ -64,46 +65,30 @@ describe("Crosschain transfer", () => {
 
     let transferTransactionRid: Buffer | undefined = undefined;
     await new Promise<void>((resolve, reject) => {
-      const onAnchoredHandler = async (
-        data: {
-          operation: Operation;
-          opIndex: number;
-          tx: RawGtx;
-          createProof: (blockchainRid: BufferId) => Promise<Operation>;
-        } | null,
-        error: Error | null,
+      const transactionApplier = async (
+        value: AnchoringTransactionWithReceipt,
       ) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        if (!data) {
-          reject(new Error("No data provided"));
-          return;
-        }
-        const iccfProofOperation = await data.createProof(multichain01.rid);
+        const iccfProofOperation = await value.systemConfirmationProof(
+          multichain01.rid,
+        );
         try {
-          await transactionBuilder(account00.authenticator, connection01.client)
-            .add(iccfProofOperation, {
-              authenticator: noopAuthenticator,
-            })
-            .add(
-              applyTransfer(data.tx, data.opIndex, data.tx, data.opIndex, 0),
-              { authenticator: noopAuthenticator },
-            )
+          const tx = await transactionBuilder(
+            noopAuthenticator,
+            connection01.client,
+          )
+            .add(iccfProofOperation)
+            .add(applyTransfer(value.tx, 1, value.tx, 1, 0))
             .buildAndSend();
+          transferTransactionRid = tx.receipt.transactionRid;
+          resolve();
         } catch (error) {
           reject(error);
         }
-
-        resolve();
       };
 
-      tb.add(initOperation, { onAnchoredHandler })
+      tb.add(initOperation)
         .buildAndSendWithAnchoring()
-        .then((res) => {
-          transferTransactionRid = res.receipt.transactionRid;
-        });
+        .then(transactionApplier);
     });
 
     expect(

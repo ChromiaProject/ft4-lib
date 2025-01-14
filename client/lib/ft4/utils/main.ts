@@ -59,8 +59,10 @@ export async function getConfig(queryable: Queryable): Promise<Config> {
  * Computes the transaction rid of the provided `RawGtx`
  * @param tx - the tx to compute the rid for
  */
-export function getTransactionRid(tx: RawGtx): Buffer {
-  return gtv.gtvHash(tx[0]); //tx body
+export function getTransactionRid(tx: RawGtx | GTX): Buffer {
+  if (Array.isArray(tx)) {
+    return gtv.gtvHash(tx[0]); //tx body
+  } else return gtv.gtvHash(gtx.gtxToRawGtxBody(tx));
 }
 
 /**

@@ -92,15 +92,11 @@ export function createAuthenticatedAccount(
         ttl,
       ),
     resumeCrosschainTransfer: (pendingTransfer: TransferRef) =>
-      resumeCrosschainTransfer(connection, authenticator, pendingTransfer),
+      resumeCrosschainTransfer(connection, pendingTransfer),
     revertCrosschainTransfer: (pendingTransfer: TransferRef) =>
-      revertCrosschainTransfer(connection, authenticator, pendingTransfer),
+      revertCrosschainTransfer(connection, pendingTransfer),
     recallUnclaimedCrosschainTransfer: (pendingTransfer: TransferRef) =>
-      recallUnclaimedCrosschainTransfer(
-        connection,
-        authenticator,
-        pendingTransfer,
-      ),
+      recallUnclaimedCrosschainTransfer(connection, pendingTransfer),
     burn: (assetId: BufferId, amount: Amount) =>
       burn(connection, authenticator, assetId, amount),
     ...createAccountObject(connection, authenticator.accountId),

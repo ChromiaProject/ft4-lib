@@ -6,6 +6,8 @@ import {
   formatter,
   Operation,
   BufferId,
+  GTX,
+  convertToRellOperation,
 } from "postchain-client";
 import { createConnection } from "@ft4/ft-session";
 import { Asset } from "@ft4/asset/types";
@@ -108,19 +110,14 @@ export async function addNewAssetIfNeeded(
 export function anchoredHandlerCallbackParameters(
   client: IClient,
   operations: Operation[],
-  opIndex: number,
 ) {
   return expect.objectContaining({
-    operation: operations[opIndex],
-    opIndex,
-    tx: expect.arrayContaining([
-      [
-        Buffer.from(client.config.blockchainRid, "hex"),
-        operations.map((o) => [o.name, o.args]),
-        expect.any(Array),
-      ],
-      expect.any(Array),
-    ]),
+    tx: expect.objectContaining<GTX>({
+      blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
+      operations: convertToRellOperation(operations),
+      signers: expect.any(Array),
+      signatures: expect.any(Array),
+    }),
   });
 }
 

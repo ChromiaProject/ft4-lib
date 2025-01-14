@@ -2,10 +2,10 @@ import { Authenticator, FtKeyStore, Signer } from "@ft4/authentication";
 import {
   IClient,
   Operation,
-  RawGtx,
   SignedTransaction,
   TransactionReceipt,
   BufferId,
+  GTX,
 } from "postchain-client";
 import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 
@@ -66,7 +66,7 @@ export type TransactionBuilder = {
    * @returns an object containing the signed transaction and its receipt
    */
   buildAndSendWithAnchoring: () => Web3CustomPromiEvent<
-    TransactionWithReceipt,
+    AnchoringTransactionWithReceipt,
     {
       built: SignedTransaction;
       sent: Buffer;
@@ -88,28 +88,13 @@ export class AuthorizationError extends Error {
 }
 
 /**
- * Callback function that can be passed to the transaction builder.
- * When passed, transaction builder will invoke it with `OnAnchoredHandlerData`
- * once the transaction has been anchored on the anchoring chain.
- */
-export type OnAnchoredHandler = ((
-  data: OnAnchoredHandlerData,
-  error: null,
-) => void) &
-  ((data: null, error: Error) => void);
-
-/**
  * Configuration options for an operation.
  */
 export type OperationConfig = {
   /** An optional authenticator instance used for the operation. */
   authenticator?: Authenticator;
-  /** Callback function to be called when the transaction is anchored. If provided, `targetBlockchainRid` must also be provided. */
-  onAnchoredHandler?: OnAnchoredHandler;
   /** An optional array of FtKeyStore instances that will be used to sign this operation. */
   signers?: Signer[];
-  /** Buffer representing the rid where this operation should be anchored. If provided, `onAnchoredHandler` must also be provided. */
-  targetBlockchainRid?: Buffer;
   /** Determines wether operation should skip ft signing with the provided keys */
   skipFtSigning?: boolean;
 };
@@ -117,27 +102,21 @@ export type OperationConfig = {
 export type OperationContext = {
   operation: Operation;
   authenticator: Authenticator;
-  onAnchoredHandler?: OnAnchoredHandler;
-  targetBlockchainRid?: Buffer;
   opIndex?: number;
   signers?: Signer[];
   skipFtSigning?: boolean;
 };
 
-export type OnAnchoredHandlerData = {
-  operation: Operation;
-  opIndex: number;
-  tx: RawGtx;
+export type TransactionWithReceipt = {
+  tx: GTX;
+  receipt: TransactionReceipt;
+};
+
+export type AnchoringTransactionWithReceipt = TransactionWithReceipt & {
   /**
    * Used to create a proof that this operation happened on this blockchain
    * @param blockchainRid - the rid of the blockchain on which the produced proof will be validated
    * @returns a proof that this operation happened on the blockchain.
    */
-  createProof: (blockchainRid: BufferId) => Promise<Operation>;
-};
-
-export type TransactionWithReceipt = {
-  tx: SignedTransaction;
-  receipt: TransactionReceipt;
-  systemConfirmationProof?: (blockchainRid: BufferId) => Promise<Operation>;
+  systemConfirmationProof: (blockchainRid: BufferId) => Promise<Operation>;
 };

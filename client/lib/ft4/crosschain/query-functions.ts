@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import * as Query from "./queries";
 import { PendingTransfer, PendingTransferResponse } from "./types";
-import { BufferId, Queryable, RawGtx, gtv } from "postchain-client";
+import { BufferId, Queryable, gtx } from "postchain-client";
 
 /**
  * Retrieves the brid of the origin chain for the specified asset
@@ -88,7 +88,7 @@ export function mapPendingTransfer(
 ): PendingTransfer {
   return {
     opIndex: transfer.op_index,
-    tx: gtv.decode(transfer.tx_data) as RawGtx,
+    tx: gtx.deserialize(transfer.tx_data),
     accountId: transfer.account_id,
   };
 }

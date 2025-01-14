@@ -22,10 +22,7 @@ import {
 } from "@ft4/ft-session";
 import { Buffer } from "buffer";
 import { setupTestEnvironment } from "./common-setup";
-import {
-  OnAnchoredHandlerData,
-  transactionBuilder,
-} from "@ft4/transaction-builder";
+import { transactionBuilder } from "@ft4/transaction-builder";
 import { noopAuthenticator } from "@ft4/authentication/index";
 import { nop } from "@ft4/utils/index";
 
@@ -146,27 +143,21 @@ describe("Orchestrator", () => {
           path,
           Date.now() + 10000,
         ),
-        {
-          targetBlockchainRid: path[0],
-          onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
-            state.tx = data?.tx;
-            state.initialOpIndex = data?.opIndex;
-            state.initialTx = data?.tx;
-            state.opIndex = data?.opIndex;
-            state.proof = data?.createProof(path[0]);
-          },
-        },
       )
-      .buildAndSendWithAnchoring();
+      .buildAndSendWithAnchoring()
+      .then((data) => {
+        state.tx = data.tx;
+        state.initialOpIndex = 1;
+        state.initialTx = data.tx;
+        state.opIndex = 1;
+        state.proof = data.systemConfirmationProof(path[0]);
+      });
 
     state.proof = await state.proof;
 
     // Perform apply transfer on intermediary
-    await transactionBuilder(
-      testContext.account0.authenticator,
-      testContext.connection2.client,
-    )
-      .add(state.proof, { authenticator: noopAuthenticator })
+    await transactionBuilder(noopAuthenticator, testContext.connection2.client)
+      .add(state.proof)
       .add(
         applyTransfer(
           state.initialTx!,
@@ -175,11 +166,6 @@ describe("Orchestrator", () => {
           state.opIndex!,
           0,
         ),
-        {
-          authenticator: noopAuthenticator,
-          targetBlockchainRid: connection0.blockchainRid,
-          onAnchoredHandler: () => {},
-        },
       )
       .buildAndSendWithAnchoring();
 
