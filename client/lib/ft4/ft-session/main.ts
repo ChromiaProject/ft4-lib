@@ -187,17 +187,17 @@ export function createConnection(client: IClient): Connection {
     getAssetsFiltered: (
       assetFilter?: AssetFilter,
       limit?: number,
-      cursor: OptionalPageCursor = null,
+      cursor?: OptionalPageCursor,
     ) => getAssetsFiltered(connection, assetFilter, limit, cursor),
     getBalancesFiltered: (
       balanceFilter?: BalanceFilter,
       limit?: number,
-      cursor: OptionalPageCursor = null,
+      cursor?: OptionalPageCursor,
     ) => getBalancesFiltered(connection, balanceFilter, limit, cursor),
     getTransferHistoryEntriesFiltered: (
       transferHistoryEntryFilter?: TransferHistoryEntryFilter,
       limit?: number,
-      cursor: OptionalPageCursor = null,
+      cursor?: OptionalPageCursor,
     ) =>
       getTransferHistoryEntriesFiltered(
         connection,

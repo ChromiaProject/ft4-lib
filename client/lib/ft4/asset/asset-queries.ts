@@ -106,7 +106,7 @@ export function assetsFiltered(
 ): QueryObject<
   PaginatedEntity<AssetResponse>,
   {
-    asset_filter: AssetFilter | null;
+    asset_filter: AssetFilter[] | null;
     page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
@@ -114,7 +114,14 @@ export function assetsFiltered(
   return {
     name: "ft4.get_assets_filtered",
     args: {
-      asset_filter: assetFilter,
+      asset_filter: assetFilter
+        ? ([
+            assetFilter.ids ?? null,
+            assetFilter.name ?? null,
+            assetFilter.symbol ?? null,
+            assetFilter.type ?? null,
+          ] as AssetFilter[])
+        : null,
       page_size: limit,
       page_cursor: cursor,
     },
@@ -163,7 +170,7 @@ export function balancesFiltered(
 ): QueryObject<
   PaginatedEntity<BalanceResponse>,
   {
-    balance_filter: BalanceFilter | null;
+    balance_filter: BalanceFilter[] | null;
     page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
@@ -171,7 +178,12 @@ export function balancesFiltered(
   return {
     name: "ft4.get_balances_filtered",
     args: {
-      balance_filter: balanceFilter,
+      balance_filter: balanceFilter
+        ? ([
+            balanceFilter.accountIds ?? null,
+            balanceFilter.assetIds ?? null,
+          ] as BalanceFilter[])
+        : null,
       page_size: limit,
       page_cursor: cursor,
     },
@@ -196,7 +208,7 @@ export function transferHistoryEntriesFiltered(
 ): QueryObject<
   PaginatedEntity<TransferHistoryEntryResponse>,
   {
-    transfer_history_entry_filter: TransferHistoryEntryFilter | null;
+    transfer_history_entry_filter: TransferHistoryEntryFilter[] | null;
     page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
@@ -204,7 +216,14 @@ export function transferHistoryEntriesFiltered(
   return {
     name: "ft4.get_transfer_history_entries_filtered",
     args: {
-      transfer_history_entry_filter: transferHistoryEntryFilter,
+      transfer_history_entry_filter: transferHistoryEntryFilter
+        ? ([
+            transferHistoryEntryFilter.accountIds ?? null,
+            transferHistoryEntryFilter.accountIds ?? null,
+            transferHistoryEntryFilter.transactionRids ?? null,
+            transferHistoryEntryFilter.opIndex ?? null,
+          ] as TransferHistoryEntryFilter[])
+        : null,
       page_size: limit,
       page_cursor: cursor,
     },
@@ -218,7 +237,9 @@ export function crossChainTransferHistoryEntriesFiltered(
 ): QueryObject<
   PaginatedEntity<CrosschainTransferHistoryEntryResponse>,
   {
-    crosschain_transfer_history_entry_filter: CrosschainTransferHistoryEntryFilter | null;
+    crosschain_transfer_history_entry_filter:
+      | CrosschainTransferHistoryEntryFilter[]
+      | null;
     page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
@@ -227,7 +248,14 @@ export function crossChainTransferHistoryEntriesFiltered(
     name: "ft4.get_crosschain_transfer_history_entries_filtered",
     args: {
       crosschain_transfer_history_entry_filter:
-        crosschainTransferHistoryEntryFilter,
+        crosschainTransferHistoryEntryFilter
+          ? ([
+              crosschainTransferHistoryEntryFilter.accountIds ?? null,
+              crosschainTransferHistoryEntryFilter.assetIds ?? null,
+              crosschainTransferHistoryEntryFilter.transactionRids ?? null,
+              crosschainTransferHistoryEntryFilter.opIndex ?? null,
+            ] as CrosschainTransferHistoryEntryFilter[])
+          : null,
       page_size: limit,
       page_cursor: cursor,
     },
