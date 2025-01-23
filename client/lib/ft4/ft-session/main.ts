@@ -208,7 +208,7 @@ export function createConnection(client: IClient): Connection {
     getCrosschainTransferHistoryEntriesFiltered: (
       crosschainTransferHistoryEntryFilter?: CrosschainTransferHistoryEntryFilter,
       limit?: number,
-      cursor: OptionalPageCursor = null,
+      cursor?: OptionalPageCursor,
     ) =>
       getCrosschainTransferHistoryEntriesFiltered(
         connection,

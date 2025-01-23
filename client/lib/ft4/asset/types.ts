@@ -74,26 +74,26 @@ export type AssetFilter = {
   name?: string | null;
   symbol?: string | null;
   type?: string | null;
-};
+} | null;
 
 export type BalanceFilter = {
   accountIds?: Array<Buffer> | null;
   assetIds?: Array<Buffer> | null;
-};
+} | null;
 
 export type TransferHistoryEntryFilter = {
   accountIds?: Array<Buffer> | null;
   assetIds?: Array<Buffer> | null;
   transactionRids?: Array<Buffer> | null;
   opIndex?: number | null;
-};
+} | null;
 
 export type CrosschainTransferHistoryEntryFilter = {
   accountIds?: Array<Buffer> | null;
   assetIds?: Array<Buffer> | null;
   transactionRids?: Array<Buffer> | null;
   opIndex?: number | null;
-};
+} | null;
 
 /**
  * An amount consists of a value and number of decimals. It wraps a
