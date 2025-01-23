@@ -195,7 +195,7 @@ export async function getBalancesByAccountId(
  */
 export async function getAssetsFiltered(
   queryable: Queryable,
-  assetFilter?: AssetFilter | null,
+  assetFilter: AssetFilter | null = null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Asset>> {
@@ -217,7 +217,7 @@ export async function getAssetsFiltered(
  */
 export async function getBalancesFiltered(
   queryable: Queryable,
-  balanceFilter?: BalanceFilter | null,
+  balanceFilter: BalanceFilter | null = null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Balance>> {
@@ -240,7 +240,7 @@ export async function getBalancesFiltered(
  */
 export async function getTransferHistoryEntriesFiltered(
   queryable: Queryable,
-  transferHistoryEntryFilter?: TransferHistoryEntryFilter | null,
+  transferHistoryEntryFilter: TransferHistoryEntryFilter | null = null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<TransferHistoryEntry>> {
@@ -267,7 +267,7 @@ export async function getTransferHistoryEntriesFiltered(
  */
 export async function getCrosschainTransferHistoryEntriesFiltered(
   queryable: Queryable,
-  crosschainTransferHistoryEntryFilter?: CrosschainTransferHistoryEntryFilter | null,
+  crosschainTransferHistoryEntryFilter: CrosschainTransferHistoryEntryFilter | null = null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<CrosschainTransferHistoryEntry>> {

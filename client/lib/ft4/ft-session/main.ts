@@ -185,17 +185,17 @@ export function createConnection(client: IClient): Connection {
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
       getAllAssets(connection, limit, cursor),
     getAssetsFiltered: (
-      assetFilter: AssetFilter,
+      assetFilter?: AssetFilter,
       limit?: number,
       cursor: OptionalPageCursor = null,
     ) => getAssetsFiltered(connection, assetFilter, limit, cursor),
     getBalancesFiltered: (
-      balanceFilter: BalanceFilter,
+      balanceFilter?: BalanceFilter,
       limit?: number,
       cursor: OptionalPageCursor = null,
     ) => getBalancesFiltered(connection, balanceFilter, limit, cursor),
     getTransferHistoryEntriesFiltered: (
-      transferHistoryEntryFilter: TransferHistoryEntryFilter,
+      transferHistoryEntryFilter?: TransferHistoryEntryFilter,
       limit?: number,
       cursor: OptionalPageCursor = null,
     ) =>
@@ -206,7 +206,7 @@ export function createConnection(client: IClient): Connection {
         cursor,
       ),
     getCrosschainTransferHistoryEntriesFiltered: (
-      crosschainTransferHistoryEntryFilter: CrosschainTransferHistoryEntryFilter,
+      crosschainTransferHistoryEntryFilter?: CrosschainTransferHistoryEntryFilter,
       limit?: number,
       cursor: OptionalPageCursor = null,
     ) =>
