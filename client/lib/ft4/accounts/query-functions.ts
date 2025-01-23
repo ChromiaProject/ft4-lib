@@ -279,6 +279,11 @@ export async function getAccountMainAuthDescriptor(
   return gtv.authDescriptorFromGtv(authDescriptor);
 }
 
+/**
+ * Converts an AccountResponse
+ * @param account the account to map
+ * @returns The id and type of the account
+ */
 export function createAccountObjectFiltered(
   account: AccountResponse,
 ): AccountResponse {
