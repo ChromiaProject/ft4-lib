@@ -219,7 +219,7 @@ export function transferHistoryEntriesFiltered(
       transfer_history_entry_filter: transferHistoryEntryFilter
         ? ([
             transferHistoryEntryFilter.accountIds ?? null,
-            transferHistoryEntryFilter.accountIds ?? null,
+            transferHistoryEntryFilter.assetIds ?? null,
             transferHistoryEntryFilter.transactionRids ?? null,
             transferHistoryEntryFilter.opIndex ?? null,
           ] as TransferHistoryEntryFilter[])
