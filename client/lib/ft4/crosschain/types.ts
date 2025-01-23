@@ -142,18 +142,18 @@ export type PendingTransferResponse = {
 
 export type AssetOriginFilter = {
   assetIds?: Array<Buffer> | null;
-};
+} | null;
 
 export type TransferFilter = {
   initTxRids?: Array<Buffer> | null;
   initOpIndex?: number | null;
-};
+} | null;
 
 export type PendingTransferFilter = {
   transactionIds?: Array<Buffer> | null;
   initOpIndex?: number | null;
   senderAccountId?: Buffer | null;
-};
+} | null;
 
 export type AssetOriginResponse = {
   asset: AssetResponse;

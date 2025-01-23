@@ -192,7 +192,7 @@ export interface Connection extends Queryable {
    * @param cursor - where the page should start
    */
   getAssetOriginFiltered: (
-    assetOriginFilter?: AssetOriginFilter | null,
+    assetOriginFilter?: AssetOriginFilter,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<AssetOrigin>>;
@@ -204,7 +204,7 @@ export interface Connection extends Queryable {
    * @param cursor - where the page should start
    */
   getAppliedTransfersFiltered: (
-    appliedTransferFilter?: TransferFilter | null,
+    appliedTransferFilter?: TransferFilter,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<AppliedTransfer>>;
@@ -216,7 +216,7 @@ export interface Connection extends Queryable {
    * @param cursor - where the page should start
    */
   getCanceledTransfersFiltered: (
-    canceledTransferFilter?: TransferFilter | null,
+    canceledTransferFilter?: TransferFilter,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Transfer>>;
@@ -228,7 +228,7 @@ export interface Connection extends Queryable {
    * @param cursor - where the page should start
    */
   getUnappliedTransfersFiltered: (
-    unappliedTransferFilter?: TransferFilter | null,
+    unappliedTransferFilter?: TransferFilter,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Transfer>>;
@@ -240,7 +240,7 @@ export interface Connection extends Queryable {
    * @param cursor - where the page should start
    */
   getRecalledTransfersFiltered: (
-    recalledTransferFilter?: TransferFilter | null,
+    recalledTransferFilter?: TransferFilter,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Transfer>>;
@@ -252,7 +252,7 @@ export interface Connection extends Queryable {
    * @param cursor - where the page should start
    */
   getPendingTransfersFiltered: (
-    pendingTransferFilter?: PendingTransferFilter | null,
+    pendingTransferFilter?: PendingTransferFilter,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<PendingTransfer_>>;
@@ -264,7 +264,7 @@ export interface Connection extends Queryable {
    * @param cursor - where the page should start
    */
   getRevertedTransfersFiltered: (
-    revertedTransferFilter?: TransferFilter | null,
+    revertedTransferFilter?: TransferFilter,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Transfer>>;

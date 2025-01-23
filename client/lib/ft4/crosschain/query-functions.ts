@@ -136,7 +136,7 @@ export async function isTransferApplied(
  */
 export async function getAssetOriginFiltered(
   connection: Connection,
-  assetOriginFilter?: AssetOriginFilter | null,
+  assetOriginFilter: AssetOriginFilter | null = null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<AssetOrigin>> {
@@ -159,7 +159,7 @@ export async function getAssetOriginFiltered(
  */
 export async function getAppliedTransfersFiltered(
   connection: Connection,
-  appliedTransferFilter?: TransferFilter | null,
+  appliedTransferFilter: TransferFilter | null = null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<AppliedTransfer>> {
@@ -182,7 +182,7 @@ export async function getAppliedTransfersFiltered(
  */
 export async function getCanceledTransfersFiltered(
   connection: Connection,
-  canceledTransferFilter?: TransferFilter | null,
+  canceledTransferFilter: TransferFilter | null = null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Transfer>> {
@@ -205,7 +205,7 @@ export async function getCanceledTransfersFiltered(
  */
 export async function getUnappliedTransfersFiltered(
   connection: Connection,
-  unappliedTransferFilter?: TransferFilter | null,
+  unappliedTransferFilter: TransferFilter | null = null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Transfer>> {
@@ -228,7 +228,7 @@ export async function getUnappliedTransfersFiltered(
  */
 export async function getRecalledTransfersFiltered(
   connection: Connection,
-  recalledTransferFilter?: TransferFilter | null,
+  recalledTransferFilter: TransferFilter | null = null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Transfer>> {
@@ -251,7 +251,7 @@ export async function getRecalledTransfersFiltered(
  */
 export async function getPendingTransfersFiltered(
   connection: Connection,
-  pendingTransferFilter?: PendingTransferFilter | null,
+  pendingTransferFilter: PendingTransferFilter | null = null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<PendingTransfer_>> {
@@ -274,7 +274,7 @@ export async function getPendingTransfersFiltered(
  */
 export async function getRevertedTransfersFiltered(
   connection: Connection,
-  revertedTransferFilter?: TransferFilter | null,
+  revertedTransferFilter: TransferFilter | null = null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Transfer>> {
