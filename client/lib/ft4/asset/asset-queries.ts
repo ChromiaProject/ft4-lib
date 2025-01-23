@@ -12,7 +12,7 @@ import {
 } from "./types";
 import { BufferId, PaginatedEntity } from "@ft4/utils";
 import { TransferHistoryEntryResponse } from "@ft4/accounts";
-import { CrosschainTransferhistoryEntryResponse } from "@ft4/accounts/transfer-history";
+import { CrosschainTransferHistoryEntryResponse } from "@ft4/accounts/transfer-history";
 
 export function assetById(
   assetId: BufferId,
@@ -241,7 +241,7 @@ export function crossChainTransferHistoryEntriesFiltered(
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): QueryObject<
-  PaginatedEntity<CrosschainTransferhistoryEntryResponse>,
+  PaginatedEntity<CrosschainTransferHistoryEntryResponse>,
   {
     crosschain_transfer_history_entry_filter:
       | [

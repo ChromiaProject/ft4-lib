@@ -35,7 +35,7 @@ import {
 import {
   createTransferHistoryEntryFromResponse,
   CrosschainTransferHistoryEntry,
-  CrosschainTransferhistoryEntryResponse,
+  CrosschainTransferHistoryEntryResponse,
 } from "@ft4/accounts/transfer-history";
 
 /**
@@ -273,7 +273,7 @@ export async function getCrosschainTransferHistoryEntriesFiltered(
 ): Promise<PaginatedEntity<CrosschainTransferHistoryEntry>> {
   return retrievePaginatedEntity<
     CrosschainTransferHistoryEntry,
-    CrosschainTransferhistoryEntryResponse
+    CrosschainTransferHistoryEntryResponse
   >(
     queryable,
     crossChainTransferHistoryEntriesFiltered(
@@ -329,12 +329,12 @@ function createCrosschainAssetRegistrationObject(
 }
 
 /**
- * Converts a `CrosschainTransferhistoryEntryResponse` object, returned from the blockchain to a `CrosschainTransferHistoryEntry` object
+ * Converts a `CrosschainTransferHistoryEntryResponse` object, returned from the blockchain to a `CrosschainTransferHistoryEntry` object
  * which can be used in the dApp
  * @param crosschainTransferHistoryEntry - the object to convert
  */
 export function createCrosschainTransferHistoryEntryObject(
-  crosschainTransferHistoryEntry: CrosschainTransferhistoryEntryResponse,
+  crosschainTransferHistoryEntry: CrosschainTransferHistoryEntryResponse,
 ): CrosschainTransferHistoryEntry {
   return Object.freeze({
     rowid: crosschainTransferHistoryEntry.rowid,

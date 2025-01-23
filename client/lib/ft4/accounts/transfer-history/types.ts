@@ -46,7 +46,7 @@ export type TransferHistoryEntry = {
   isCrosschain: boolean;
 };
 
-export type CrosschainTransferhistoryEntryResponse = {
+export type CrosschainTransferHistoryEntryResponse = {
   rowid: number;
   blockchain_rid: Buffer;
   account_id: Buffer;

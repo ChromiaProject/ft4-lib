@@ -1,3 +1,6 @@
+/**
+ * Filter used for the query get_assets_filtered to fetch assets based on selected criteria
+ */
 struct asset_filter {
     ids: list<byte_array>?;
     name: text?;
@@ -5,11 +8,17 @@ struct asset_filter {
     type: text?;
 }
 
+/**
+ * Filter used for the query get_balances_filtered to fetch balances based on selected criteria
+ */
 struct balance_filter {
     account_ids: list<byte_array>?;
     asset_ids: list<byte_array>?;
 }
 
+/**
+ * Filter used for the query get_transfer_history_entries_filtered to fetch entries based on selected criteria
+ */
 struct transfer_history_entry_filter {
     account_ids: list<byte_array>?;
     asset_ids: list<byte_array>?;
@@ -17,6 +26,9 @@ struct transfer_history_entry_filter {
     op_index: integer?;
 }
 
+/**
+ * Filter used for the query get_crosschain_transfer_history_entries_filtered to fetch balances entries on selected criteria
+ */
 struct crosschain_transfer_history_entry_filter {
     account_ids: list<byte_array>?;
     asset_ids: list<byte_array>?;
