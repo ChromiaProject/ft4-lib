@@ -84,39 +84,39 @@ export async function createOrchestrator(
    * Initialize the transfer by creating the initial transaction.
    */
   async function performInitTransfer(): Promise<OrchestratorCore> {
-    return transactionBuilder(authenticator, connection.client)
-      .add(initTransfer(recipientId, assetId, amount, path, Date.now() + ttl))
-      .add(nop())
-      .buildAndSendWithAnchoring()
-      .on("built", (tx) => {
-        eventEmitter.emit("TransferSigned", tx);
-      })
-      .then(({ tx, receipt, systemConfirmationProof }) => {
-        eventEmitter.emit("TransferInit", receipt);
-
-        state = {
-          tx,
-          opIndex: 1,
-          systemConfirmationProof,
-          nextHopIndex: 0,
-        };
-
-        return createOrchestratorCore(eventEmitter, connection, {
-          initialOpIndex: 1,
-          initialTx: tx,
-          path,
+    try {
+      const data = await transactionBuilder(authenticator, connection.client)
+        .add(initTransfer(recipientId, assetId, amount, path, Date.now() + ttl))
+        .add(nop())
+        .buildAndSendWithAnchoring()
+        .on("built", (tx) => {
+          eventEmitter.emit("TransferSigned", tx);
         });
-      })
-      .catch((reason: Error) => {
-        if (reason instanceof SigningError) {
-          throw reason;
-        } else {
-          throw new InitTransferError(
-            `Failed to send transaction: ${reason.message}`,
-            reason,
-          );
-        }
+      const { tx, receipt, systemConfirmationProof } = data;
+      eventEmitter.emit("TransferInit", receipt);
+
+      state = {
+        tx,
+        opIndex: 1,
+        systemConfirmationProof,
+        nextHopIndex: 0,
+      };
+
+      return createOrchestratorCore(eventEmitter, connection, {
+        initialOpIndex: 1,
+        initialTx: tx,
+        path,
       });
+    } catch (reason) {
+      if (reason instanceof SigningError) {
+        throw reason;
+      } else {
+        throw new InitTransferError(
+          `Failed to send transaction: ${reason.message}`,
+          reason,
+        );
+      }
+    }
   }
 
   /**
@@ -313,34 +313,33 @@ export async function createRevertOrchestrator(
       targetBlockchainRid,
     );
 
-    await tb
-      .add(iccfOp)
-      .add(
-        cancelTransfer(
-          pendingTransfer.tx,
-          pendingTransfer.opIndex,
-          tx,
-          opIndex,
-          firstNotAppliedHopIndex,
-        ),
-      )
-      .buildAndSendWithAnchoring()
-      .catch((error) => {
-        throw new OrchestratorError(
-          `Unable to fetch proof: ${(error as any)?.message ?? error}`,
-          error as Error,
-        );
-      })
-      .then(({ tx, systemConfirmationProof }) => {
-        eventEmitter.emit("TransferHop", targetBlockchainRid);
-        state = {
-          tx,
-          nextHopIndex: firstNotAppliedHopIndex - 1,
-          systemConfirmationProof,
-          opIndex: 1,
-        };
-      });
+    try {
+      const { tx: transaction, systemConfirmationProof } = await tb
+        .add(iccfOp)
+        .add(
+          cancelTransfer(
+            pendingTransfer.tx,
+            pendingTransfer.opIndex,
+            tx,
+            opIndex,
+            firstNotAppliedHopIndex,
+          ),
+        )
+        .buildAndSendWithAnchoring();
 
+      eventEmitter.emit("TransferHop", targetBlockchainRid);
+      state = {
+        tx: transaction,
+        nextHopIndex: firstNotAppliedHopIndex - 1,
+        systemConfirmationProof,
+        opIndex: 1,
+      };
+    } catch (error) {
+      throw new OrchestratorError(
+        `Unable to fetch proof: ${(error as any)?.message ?? error}`,
+        error as Error,
+      );
+    }
     await performAllRevertTransfers(firstNotAppliedHopIndex);
   }
 
@@ -352,26 +351,29 @@ export async function createRevertOrchestrator(
       targetBlockchainRid,
     );
 
-    await tb
-      .add(
-        reclaimUnclaimedTransferOp(pendingTransfer.tx, pendingTransfer.opIndex),
-      )
-      .buildAndSendWithAnchoring()
-      .catch((error) => {
-        throw new OrchestratorError(
-          `Unable to fetch proof: ${(error as any)?.message ?? error}`,
-          error as Error,
-        );
-      })
-      .then(({ tx, systemConfirmationProof }) => {
-        eventEmitter.emit("TransferHop", targetBlockchainRid);
-        state = {
-          tx,
-          systemConfirmationProof,
-          opIndex: 1,
-          nextHopIndex: path.length - 2,
-        };
-      });
+    try {
+      const { tx, systemConfirmationProof } = await tb
+        .add(
+          reclaimUnclaimedTransferOp(
+            pendingTransfer.tx,
+            pendingTransfer.opIndex,
+          ),
+        )
+        .buildAndSendWithAnchoring();
+
+      eventEmitter.emit("TransferHop", targetBlockchainRid);
+      state = {
+        tx,
+        systemConfirmationProof,
+        opIndex: 1,
+        nextHopIndex: path.length - 2,
+      };
+    } catch (error) {
+      throw new OrchestratorError(
+        `Unable to fetch proof: ${(error as any)?.message ?? error}`,
+        error as Error,
+      );
+    }
 
     await performAllRevertTransfers(path.length - 1);
   }
@@ -389,33 +391,33 @@ export async function createRevertOrchestrator(
         targetBlockchainRid,
       );
 
-      await tb
-        .add(iccfOp)
-        .add(
-          unapplyTransfer(
-            pendingTransfer.tx,
-            pendingTransfer.opIndex,
-            state.tx,
-            state.opIndex,
-            hop,
-          ),
-        )
-        .buildAndSendWithAnchoring()
-        .catch((error) => {
-          throw new OrchestratorError(
-            `Unable to fetch proof: ${(error as any)?.message ?? error}`,
-            error as Error,
-          );
-        })
-        .then(({ tx, systemConfirmationProof }) => {
-          eventEmitter.emit("TransferHop", targetBlockchainRid);
-          state = {
-            tx,
-            systemConfirmationProof,
-            opIndex: 1,
-            nextHopIndex: path.length - 2,
-          };
-        });
+      try {
+        const { tx, systemConfirmationProof } = await tb
+          .add(iccfOp)
+          .add(
+            unapplyTransfer(
+              pendingTransfer.tx,
+              pendingTransfer.opIndex,
+              state.tx,
+              state.opIndex,
+              hop,
+            ),
+          )
+          .buildAndSendWithAnchoring();
+
+        eventEmitter.emit("TransferHop", targetBlockchainRid);
+        state = {
+          tx,
+          systemConfirmationProof,
+          opIndex: 1,
+          nextHopIndex: path.length - 2,
+        };
+      } catch (error) {
+        throw new OrchestratorError(
+          `Unable to fetch proof: ${(error as any)?.message ?? error}`,
+          error as Error,
+        );
+      }
     }
 
     const finalIccfOp = await state.systemConfirmationProof(
@@ -474,33 +476,33 @@ async function createOrchestratorCore(
       targetBlockchainRid,
     );
 
-    return tb
-      .add(iccfOp)
-      .add(
-        applyTransfer(
-          initialData.initialTx,
-          initialData.initialOpIndex,
-          state.tx!,
-          state.opIndex!,
-          hopIndex,
-        ),
-      )
-      .buildAndSendWithAnchoring()
-      .then(({ tx, systemConfirmationProof }) => {
-        emitter.emit("TransferHop", targetBlockchainRid);
-        return {
-          tx,
-          systemConfirmationProof,
-          nextHopIndex: hopIndex + 1,
-          opIndex: 1,
-        };
-      })
-      .catch((error) => {
-        throw new ApplyTransferError(
-          `Unable to apply transfer: ${(error as any)?.message ?? error}`,
-          error as Error,
-        );
-      });
+    try {
+      const { tx, systemConfirmationProof } = await tb
+        .add(iccfOp)
+        .add(
+          applyTransfer(
+            initialData.initialTx,
+            initialData.initialOpIndex,
+            state.tx!,
+            state.opIndex!,
+            hopIndex,
+          ),
+        )
+        .buildAndSendWithAnchoring();
+
+      emitter.emit("TransferHop", targetBlockchainRid);
+      return {
+        tx,
+        systemConfirmationProof,
+        nextHopIndex: hopIndex + 1,
+        opIndex: 1,
+      };
+    } catch (error) {
+      throw new ApplyTransferError(
+        `Unable to apply transfer: ${(error as any)?.message ?? error}`,
+        error as Error,
+      );
+    }
   }
 
   async function performAllApplyTransfers() {
