@@ -140,20 +140,20 @@ export type PendingTransferResponse = {
   account_id: Buffer;
 };
 
-export type AssetOriginFilter = {
+export type AssetOriginFilter = Partial<{
   assetIds?: Array<Buffer> | null;
-} | null;
+}> | null;
 
-export type TransferFilter = {
+export type TransferFilter = Partial<{
   initTxRids?: Array<Buffer> | null;
   initOpIndex?: number | null;
-} | null;
+}> | null;
 
-export type PendingTransferFilter = {
+export type PendingTransferFilter = Partial<{
   transactionIds?: Array<Buffer> | null;
   initOpIndex?: number | null;
   senderAccountId?: Buffer | null;
-} | null;
+}> | null;
 
 export type AssetOriginResponse = {
   asset: AssetResponse;
