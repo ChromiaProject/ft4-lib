@@ -69,31 +69,31 @@ export type SupportedNumber = string | number | Amount;
 
 export type AnyAssetAmount = RawAmount | Amount;
 
-export type AssetFilter = {
-  ids?: Array<Buffer> | null;
-  name?: string | null;
-  symbol?: string | null;
-  type?: string | null;
-} | null;
+export type AssetFilter = Partial<{
+  ids: Array<Buffer> | null;
+  name: string | null;
+  symbol: string | null;
+  type: string | null;
+}> | null;
 
-export type BalanceFilter = {
+export type BalanceFilter = Partial<{
   accountIds?: Array<Buffer> | null;
   assetIds?: Array<Buffer> | null;
-} | null;
+}> | null;
 
-export type TransferHistoryEntryFilter = {
-  accountIds?: Array<Buffer> | null;
-  assetIds?: Array<Buffer> | null;
-  transactionRids?: Array<Buffer> | null;
-  opIndex?: number | null;
-} | null;
-
-export type CrosschainTransferHistoryEntryFilter = {
+export type TransferHistoryEntryFilter = Partial<{
   accountIds?: Array<Buffer> | null;
   assetIds?: Array<Buffer> | null;
   transactionRids?: Array<Buffer> | null;
   opIndex?: number | null;
-} | null;
+}> | null;
+
+export type CrosschainTransferHistoryEntryFilter = Partial<{
+  accountIds?: Array<Buffer> | null;
+  assetIds?: Array<Buffer> | null;
+  transactionRids?: Array<Buffer> | null;
+  opIndex?: number | null;
+}> | null;
 
 /**
  * An amount consists of a value and number of decimals. It wraps a
