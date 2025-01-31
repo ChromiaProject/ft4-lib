@@ -61,8 +61,6 @@ describe("transaction builder", () => {
       anchoredHandlerCallbackParameters(connection00.client, [
         ftAuth(account00.id, authDescriptorId),
         emptyOp(),
-        ftAuth(account00.id, authDescriptorId),
-        emptyOp(),
         operation,
       ]),
     );
