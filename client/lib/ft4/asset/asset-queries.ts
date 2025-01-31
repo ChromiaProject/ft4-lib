@@ -123,10 +123,10 @@ export function assetsFiltered(
     args: {
       asset_filter: assetFilter
         ? [
-            assetFilter?.ids ?? null,
-            assetFilter?.name ?? null,
-            assetFilter?.symbol ?? null,
-            assetFilter?.type ?? null,
+            assetFilter.ids ?? null,
+            assetFilter.name ?? null,
+            assetFilter.symbol ?? null,
+            assetFilter.type ?? null,
           ]
         : null,
       page_size: limit,
@@ -188,7 +188,7 @@ export function balancesFiltered(
     name: "ft4.get_balances_filtered",
     args: {
       balance_filter: balanceFilter
-        ? [balanceFilter?.accountIds ?? null, balanceFilter?.assetIds ?? null]
+        ? [balanceFilter.accountIds ?? null, balanceFilter.assetIds ?? null]
         : null,
       page_size: limit,
       page_cursor: cursor,
