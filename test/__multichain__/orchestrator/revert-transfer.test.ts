@@ -141,7 +141,7 @@ describe("Orchestrator", () => {
           testContext.sampleAsset.id,
           transferAmount,
           path,
-          Date.now() + 10000,
+          Date.now() + 1000, // Potentially might need to update to 5000 or 10000 in order for the pipeline to work
         ),
       )
       .buildAndSendWithAnchoring()
@@ -178,6 +178,7 @@ describe("Orchestrator", () => {
 
     const pendingTransfers =
       await testContext.account0.getPendingCrosschainTransfers();
+
     await testContext.account0.revertCrosschainTransfer(
       pendingTransfers.data[0],
     );

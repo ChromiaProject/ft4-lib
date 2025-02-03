@@ -6,7 +6,11 @@ import {
   days,
 } from "@ft4/authentication";
 import { EventEmitter, Listener } from "@ft4/events";
-import { Connection, createConnectionToBlockchainRid } from "@ft4/ft-session";
+import {
+  Connection,
+  createClientToBlockchain,
+  createConnectionToBlockchainRid,
+} from "@ft4/ft-session";
 import {
   getSystemAnchoringIccfProofOp,
   transactionBuilder,
@@ -218,12 +222,17 @@ export async function createResumeOrchestrator(
       opIndex = res.op_index;
     }
 
+    const previousBlockchainClient = await createClientToBlockchain(
+      connection.client,
+      lastBlockchainRid,
+    );
+
     state = {
       tx: transactionToApply,
       opIndex: opIndex,
       nextHopIndex,
       systemConfirmationProof: getSystemAnchoringIccfProofOp(
-        connection.client,
+        previousBlockchainClient,
         transactionToApply,
       ),
     };
@@ -236,6 +245,7 @@ export async function createResumeOrchestrator(
     );
 
     await orchestrator.performAllApplyTransfers();
+
     await orchestrator.performCompleteTransfer(state.tx, state.opIndex);
   }
 
@@ -285,33 +295,38 @@ export async function createRevertOrchestrator(
       throw new OrchestratorError("Transfer is already applied, cannot revert");
     }
 
-    let sourceBlockchainRid: Buffer;
+    let lastBlockchainRid: Buffer;
     let tx: GTX;
     let opIndex: number;
 
-    if (firstNotAppliedHopIndex > 0) {
-      sourceBlockchainRid = path[firstNotAppliedHopIndex - 1];
+    if (firstNotAppliedHopIndex === 0) {
+      // use init_transfer
+      lastBlockchainRid = formatter.toBuffer(
+        connection.client.config.blockchainRid,
+      );
+      tx = pendingTransfer.tx;
+      opIndex = pendingTransfer.opIndex;
+    } else {
+      lastBlockchainRid = path[firstNotAppliedHopIndex - 1];
       const res = await getAppliedTx(
         connection,
-        sourceBlockchainRid,
+        lastBlockchainRid,
         getTransactionRid(pendingTransfer.tx),
         pendingTransfer.opIndex,
       );
       tx = formatter.rawGtxToGtx(res.tx);
       opIndex = res.op_index;
-    } else {
-      // use init_transfer
-      sourceBlockchainRid = formatter.toBuffer(
-        connection.client.config.blockchainRid,
-      );
-      tx = pendingTransfer.tx;
-      opIndex = pendingTransfer.opIndex;
     }
 
     const targetBlockchainRid = path[firstNotAppliedHopIndex];
 
-    const iccfOp = await getSystemAnchoringIccfProofOp(
+    const previousBlockchainClient = await createClientToBlockchain(
       connection.client,
+      lastBlockchainRid,
+    );
+
+    const iccfOp = await getSystemAnchoringIccfProofOp(
+      previousBlockchainClient,
       tx,
     )(targetBlockchainRid);
 
@@ -413,11 +428,12 @@ export async function createRevertOrchestrator(
           .buildAndSendWithAnchoring();
 
         eventEmitter.emit("TransferHop", targetBlockchainRid);
+
         state = {
           tx,
           systemConfirmationProof,
           opIndex: 1,
-          nextHopIndex: path.length - 2,
+          nextHopIndex: hop - 1,
         };
       } catch (error) {
         throw new OrchestratorError(
@@ -496,7 +512,6 @@ async function createOrchestratorCore(
           ),
         )
         .buildAndSendWithAnchoring();
-
       emitter.emit("TransferHop", targetBlockchainRid);
       return {
         tx,

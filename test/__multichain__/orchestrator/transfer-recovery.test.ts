@@ -159,6 +159,7 @@ describe("Orchestrator", () => {
     // Use Orchestrator to recover the transfer
     const pendingTransfers =
       await testContext.account0.getPendingCrosschainTransfers();
+
     await testContext.account0.resumeCrosschainTransfer(
       pendingTransfers.data[0],
     );

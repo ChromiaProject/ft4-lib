@@ -59,10 +59,10 @@ export async function setupTestEnvironment(
     "ORCHESTRATOR-test-" + testName + "-asset" + num,
   );
   await registerCrosschainAsset(
-    connection2.client,
+    connection2.client, // Leaf
     adminUser().signatureProvider,
     asset.id,
-    multichain00.rid,
+    multichain00.rid, // Branch
   );
 
   const account0 = await AccountBuilder.account(connection0)
