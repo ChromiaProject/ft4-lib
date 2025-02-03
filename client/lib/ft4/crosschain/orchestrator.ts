@@ -202,22 +202,29 @@ export async function createResumeOrchestrator(
       lastBlockchainRid = path.slice(-1)[0];
     }
 
-    const res = await getAppliedTx(
-      connection,
-      lastBlockchainRid,
-      getTransactionRid(initialData.initialTx),
-      initialData.initialOpIndex,
-    );
-
-    const tx = formatter.rawGtxToGtx(res.tx);
+    let transactionToApply: GTX;
+    let opIndex: number;
+    if (nextHopIndex === 0) {
+      transactionToApply = initialData.initialTx;
+      opIndex = initialData.initialOpIndex;
+    } else {
+      const res = await getAppliedTx(
+        connection,
+        lastBlockchainRid,
+        getTransactionRid(initialData.initialTx),
+        initialData.initialOpIndex,
+      );
+      transactionToApply = formatter.rawGtxToGtx(res.tx);
+      opIndex = res.op_index;
+    }
 
     state = {
-      tx,
-      opIndex: res.op_index,
+      tx: transactionToApply,
+      opIndex: opIndex,
       nextHopIndex,
       systemConfirmationProof: getSystemAnchoringIccfProofOp(
         connection.client,
-        tx,
+        transactionToApply,
       ),
     };
 
