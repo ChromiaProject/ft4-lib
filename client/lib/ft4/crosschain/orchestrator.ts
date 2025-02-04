@@ -387,7 +387,7 @@ export async function createRevertOrchestrator(
       state = {
         tx,
         systemConfirmationProof,
-        opIndex: 1,
+        opIndex: 0,
         nextHopIndex: path.length - 2,
       };
     } catch (error) {

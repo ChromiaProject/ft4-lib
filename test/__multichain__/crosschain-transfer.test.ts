@@ -19,7 +19,7 @@ import { createConnection } from "@ft4/ft-session";
 import { registerAccount, registrationStrategy } from "@ft4/registration";
 import { transactionBuilder } from "@ft4/transaction-builder";
 import { AnchoringTransactionWithReceipt } from "@ft4/transaction-builder/types";
-import { gtv } from "postchain-client";
+import { gtv, RawGtx } from "postchain-client";
 
 describe("Crosschain transfer", () => {
   it("transfers successfully with one hop", async () => {
@@ -66,20 +66,27 @@ describe("Crosschain transfer", () => {
     let transferTransactionRid: Buffer | undefined = undefined;
     await new Promise<void>((resolve, reject) => {
       const transactionApplier = async (
-        value: AnchoringTransactionWithReceipt,
+        initTransactionWithReceipt: AnchoringTransactionWithReceipt,
       ) => {
-        const iccfProofOperation = await value.systemConfirmationProof(
-          multichain01.rid,
-        );
+        const iccfProofOperation =
+          await initTransactionWithReceipt.systemConfirmationProof(
+            multichain01.rid,
+          );
         try {
-          const tx = await transactionBuilder(
-            noopAuthenticator,
-            connection01.client,
-          )
+          await transactionBuilder(noopAuthenticator, connection01.client)
             .add(iccfProofOperation)
-            .add(applyTransfer(value.tx, 1, value.tx, 1, 0))
+            .add(
+              applyTransfer(
+                initTransactionWithReceipt.tx,
+                1,
+                initTransactionWithReceipt.tx,
+                1,
+                0,
+              ),
+            )
             .buildAndSend();
-          transferTransactionRid = tx.receipt.transactionRid;
+          transferTransactionRid =
+            initTransactionWithReceipt.receipt.transactionRid;
           resolve();
         } catch (error) {
           reject(error);
@@ -104,7 +111,9 @@ describe("Crosschain transfer", () => {
     expect(entry.operationName).toEqual(initOperation.name);
     expect(entry.delta.value.toString()).toEqual("100");
     expect(entry.asset.id).toEqual(asset00.id);
-    expect(entry.transactionId).toEqual(transferTransactionRid);
+    expect(entry.transactionId.toString("hex")).toEqual(
+      transferTransactionRid!.toString("hex"),
+    );
     expect(entry.opIndex).toEqual(1);
     expect(entry.isCrosschain).toBeTruthy();
 
@@ -159,18 +168,42 @@ describe("Crosschain transfer", () => {
 
     await connection00.client.sendTransaction(tx);
 
-    const transfer = await account00.getLastPendingCrosschainTransfer(
+    const pendingTransfer = await account00.getLastPendingCrosschainTransfer(
       multichain01.rid,
       account00.id,
       asset00.id,
       createAmount(100, asset00.decimals).value,
     );
 
-    expect(transfer).toEqual({
+    const rawGtxTransaction = Buffer.isBuffer(tx)
+      ? (gtv.decode(tx) as RawGtx)
+      : tx;
+
+    const operations = rawGtxTransaction[0][1];
+
+    const expectedTransfer = {
       opIndex: 1,
-      tx: gtv.decode(tx),
+      tx: {
+        blockchainRid: rawGtxTransaction[0][0],
+        operations: [
+          {
+            opName: operations[0][0],
+            args: operations[0][1],
+          },
+          {
+            opName: operations[1][0],
+            args: operations[1][1],
+          },
+        ],
+        signers: rawGtxTransaction[0][2],
+        signatures: rawGtxTransaction[1],
+      },
       accountId: account00.id,
-    });
+    };
+
+    expect(JSON.stringify(pendingTransfer)).toStrictEqual(
+      JSON.stringify(expectedTransfer),
+    );
   });
 
   it("transfer fails if expired before init", async () => {
