@@ -300,7 +300,6 @@ export async function createRevertOrchestrator(
     let opIndex: number;
 
     if (firstNotAppliedHopIndex === 0) {
-      // use init_transfer
       lastBlockchainRid = formatter.toBuffer(
         connection.client.config.blockchainRid,
       );

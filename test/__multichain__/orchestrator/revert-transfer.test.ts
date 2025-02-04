@@ -141,7 +141,7 @@ describe("Orchestrator", () => {
           testContext.sampleAsset.id,
           transferAmount,
           path,
-          Date.now() + 5000, // Potentially might need to update to 5000 or 10000 in order for the pipeline to work
+          Date.now() + 5000,
         ),
       )
       .buildAndSendWithAnchoring()
