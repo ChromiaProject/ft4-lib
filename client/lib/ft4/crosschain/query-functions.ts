@@ -8,17 +8,14 @@ import {
   AssetOriginFilter,
   AssetOriginResponse,
   PendingTransfer,
-  PendingTransfer_,
   PendingTransferFilter,
   PendingTransferResponse,
-  PendingTransferResponse_,
   Transfer,
   TransferFilter,
   TransferResponse,
 } from "./types";
-import { Queryable, RawGtx, gtv } from "postchain-client";
+import { Queryable, gtx } from "postchain-client";
 import { BufferId, PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
-import { createAccountObjectFiltered } from "@ft4/accounts/query-functions";
 
 /**
  * Retrieves the brid of the origin chain for the specified asset
@@ -103,9 +100,9 @@ export function mapPendingTransfer(
   transfer: PendingTransferResponse,
 ): PendingTransfer {
   return {
+    tx: gtx.deserialize(transfer.tx_data),
     opIndex: transfer.op_index,
-    tx: gtv.decode(transfer.tx_data) as RawGtx,
-    accountId: transfer.account_id,
+    senderAccount: transfer.sender_account,
   };
 }
 
@@ -254,11 +251,11 @@ export async function getPendingTransfersFiltered(
   pendingTransferFilter: PendingTransferFilter | null = null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
-): Promise<PaginatedEntity<PendingTransfer_>> {
-  return retrievePaginatedEntity<PendingTransfer_, PendingTransferResponse_>(
+): Promise<PaginatedEntity<PendingTransfer>> {
+  return retrievePaginatedEntity<PendingTransfer, PendingTransferResponse>(
     connection,
     Query.pendingTransferFiltered(pendingTransferFilter, limit, cursor),
-    (pendingTransfers) => pendingTransfers.map(createPendingTransferObject),
+    (pendingTransfers) => pendingTransfers.map(mapPendingTransfer),
   );
 }
 
@@ -318,15 +315,5 @@ function createTransferObject(transfer: TransferResponse): Transfer {
   return Object.freeze({
     initTxRid: transfer.init_tx_rid,
     initOpIndex: transfer.init_op_index,
-  });
-}
-
-function createPendingTransferObject(
-  pendingTransfer: PendingTransferResponse_,
-): PendingTransfer_ {
-  return Object.freeze({
-    transactionId: pendingTransfer.transaction_rid,
-    opIndex: pendingTransfer.op_index,
-    senderAccount: createAccountObjectFiltered(pendingTransfer.sender_account),
   });
 }

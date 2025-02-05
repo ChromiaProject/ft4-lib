@@ -11,6 +11,8 @@ import {
 } from "./crosschain-query-setups";
 import { setupTestEnvironment } from "./common-setup";
 import { getAssetOriginById } from "@ft4/crosschain";
+import { gtxToRawGtx } from "@ft4/crosschain/utils";
+import { getTransactionRid } from "@ft4/utils";
 
 const mockBuffer: Buffer = Buffer.alloc(32);
 
@@ -430,10 +432,13 @@ describe("crosschain queries with filter", () => {
           "crosschain-pending-transfer-filter-6",
         );
 
+      const rawTx = gtxToRawGtx(pendingTransfer.tx);
+      const pendingTransferTxRid = getTransactionRid(rawTx);
+
       const { data } =
         await testContext.connection0.getPendingTransfersFiltered(
           setPendingTransferFilter(
-            [pendingTransfer.transactionId],
+            [pendingTransferTxRid],
             pendingTransfer.opIndex,
             pendingTransfer.senderAccount.id,
           ),

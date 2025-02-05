@@ -1,9 +1,10 @@
-import { GTX, RawGtx, RellOperation, gtv, gtx } from "postchain-client";
+import { GTX, RellOperation } from "postchain-client";
 import {
   PendingTransfer,
   GtvInitTransferArgs,
   hasCrosschainTransferExpired,
 } from "@ft4/crosschain";
+import { ACCOUNT_TYPE_USER } from "@ft4/accounts";
 
 function createDummyPendingTransfer(
   deadline: number,
@@ -28,8 +29,8 @@ function createDummyPendingTransfer(
 
   return {
     opIndex,
-    tx: gtv.decode(gtx.serialize(tx)) as RawGtx,
-    accountId,
+    tx: tx,
+    senderAccount: { id: accountId, type: ACCOUNT_TYPE_USER },
   };
 }
 

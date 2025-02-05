@@ -11,10 +11,11 @@ import {
 import {
   AppliedTransfer,
   AssetOriginFilter,
-  PendingTransfer_,
+  PendingTransfer,
   PendingTransferFilter,
   Transfer,
   TransferFilter,
+  TransferRef,
 } from "@ft4/crosschain/types";
 import {
   OnAnchoredHandlerData,
@@ -26,7 +27,6 @@ import { TestContext, setupTestEnvironment } from "./common-setup";
 import { createSession } from "@ft4/ft-session";
 import { adminUser, emptyOp, getNewAsset } from "@ft4-test/util";
 import { mint, registerCrosschainAsset } from "@ft4/admin";
-import { createAccountObjectFiltered } from "@ft4/accounts/query-functions";
 import {
   AuthFlag,
   createSingleSigAuthDescriptorRegistration,
@@ -37,6 +37,7 @@ import {
   registerAccount,
   registrationStrategy,
 } from "@ft4/registration";
+import { gtxToRawGtx } from "@ft4/crosschain/utils";
 
 export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   assetName: string = "asset-name",
@@ -374,9 +375,9 @@ export async function initCrosschainTransferAndGetPendingTransfer(
   assetName: string = "asset-name",
   filter: PendingTransferFilter | null = null,
 ): Promise<{
-  pendingTransfersFiltered: PaginatedEntity<PendingTransfer_>;
+  pendingTransfersFiltered: PaginatedEntity<PendingTransfer>;
   testContext: TestContext;
-  pendingTransfer: PendingTransfer_;
+  pendingTransfer: PendingTransfer;
 }> {
   const mintAmount = createAmount(100, 0);
   const testContext = await setupTestEnvironment(assetName, mintAmount);
@@ -401,12 +402,9 @@ export async function initCrosschainTransferAndGetPendingTransfer(
     pendingTransfersFiltered,
     testContext,
     pendingTransfer: {
-      transactionId: pendingTransfersFiltered.data[0].transactionId,
+      tx: pendingTransfersFiltered.data[0].tx,
       opIndex: pendingTransfersFiltered.data[0].opIndex,
-      senderAccount: createAccountObjectFiltered({
-        id: pendingTransfersFiltered.data[0].senderAccount.id,
-        type: pendingTransfersFiltered.data[0].senderAccount.type,
-      }),
+      senderAccount: pendingTransfersFiltered.data[0].senderAccount,
     },
   };
 }
@@ -448,7 +446,12 @@ export async function revertTransferAndGetRevertedTransfer(
   const pendingTransfers =
     await testContext.account0.getPendingCrosschainTransfers();
 
-  await testContext.account0.revertCrosschainTransfer(pendingTransfers.data[0]);
+  const transferRef: TransferRef = {
+    tx: gtxToRawGtx(pendingTransfers.data[0].tx),
+    opIndex: pendingTransfers.data[0].opIndex,
+  };
+
+  await testContext.account0.revertCrosschainTransfer(transferRef);
 
   const revertedTransfersFiltered =
     await testContext.connection0.getRevertedTransfersFiltered(filter, 1);

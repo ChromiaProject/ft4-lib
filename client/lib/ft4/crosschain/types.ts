@@ -4,6 +4,7 @@ import { EventEmitter, Listener } from "@ft4/events";
 import { BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
+  GTX,
   Operation,
   RawGtx,
   SignedTransaction,
@@ -129,15 +130,15 @@ export type TransferRef = {
 };
 
 export type PendingTransfer = {
-  tx: RawGtx;
+  tx: GTX;
   opIndex: number;
-  accountId: Buffer;
+  senderAccount: AccountResponse;
 };
 
 export type PendingTransferResponse = {
   tx_data: Buffer;
   op_index: number;
-  account_id: Buffer;
+  sender_account: AccountResponse;
 };
 
 export type AssetOriginFilter = Partial<{
@@ -187,21 +188,4 @@ export type TransferResponse = {
 export type Transfer = {
   initTxRid: Buffer;
   initOpIndex: number;
-};
-
-// Similar as below, but it would be needed to decide if we return from rell the whole transaction or the txrid
-// which would be also the case for the type PendingTransferResponse, in order to unify them
-export type PendingTransferResponse_ = {
-  transaction_rid: Buffer;
-  op_index: number;
-  sender_account: AccountResponse;
-};
-
-// Similar type as PendingTransfer, the difference is that PendingTransfer transaction RawGtx is used in existing functions
-// and a unification of the types would make no sense. Possibly the transactionId and transaction (tx) could be unified
-// receiving a proper type of Transaction from Postchain client with a refactor in the uses of PendingTransfer
-export type PendingTransfer_ = {
-  transactionId: Buffer;
-  opIndex: number;
-  senderAccount: AccountResponse;
 };

@@ -44,6 +44,8 @@ export type AccountResponse = {
   type: string;
 };
 
+export const ACCOUNT_TYPE_USER = "FT4_USER";
+
 /**
  * Represents a blockchain account which is read only.
  * That is, using this object you can get information about

@@ -27,7 +27,7 @@ import {
   AppliedTransfer,
   AssetOrigin,
   AssetOriginFilter,
-  PendingTransfer_,
+  PendingTransfer,
   PendingTransferFilter,
   Transfer,
   TransferFilter,
@@ -255,7 +255,7 @@ export interface Connection extends Queryable {
     pendingTransferFilter?: PendingTransferFilter,
     limit?: number,
     cursor?: OptionalPageCursor,
-  ) => Promise<PaginatedEntity<PendingTransfer_>>;
+  ) => Promise<PaginatedEntity<PendingTransfer>>;
   /**
    * {@inheritDoc crosschain.getRevertedTransfersFiltered}
    * @param pendingTransferFilter - The pending transfer filter (array of initTxRids and initOpIndex)

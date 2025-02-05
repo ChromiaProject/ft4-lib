@@ -13,6 +13,7 @@ import {
   applyTransfer,
   findPathToChainForAsset,
   initTransfer,
+  TransferRef,
 } from "@ft4/crosschain";
 import {
   Connection,
@@ -28,6 +29,7 @@ import {
 } from "@ft4/transaction-builder";
 import { noopAuthenticator } from "@ft4/authentication/index";
 import { nop } from "@ft4/utils/index";
+import { gtxToRawGtx } from "@ft4/crosschain/utils";
 
 describe("Orchestrator", () => {
   let connection0: Connection, connection2: Connection;
@@ -102,7 +104,11 @@ describe("Orchestrator", () => {
       .buildAndSend();
 
     const pendingTransfers = await account0.getPendingCrosschainTransfers();
-    await account0.revertCrosschainTransfer(pendingTransfers.data[0]);
+    const transferRef: TransferRef = {
+      tx: gtxToRawGtx(pendingTransfers.data[0].tx),
+      opIndex: pendingTransfers.data[0].opIndex,
+    };
+    await account0.revertCrosschainTransfer(transferRef);
 
     const balance0 = await account0.getBalanceByAssetId(asset.id);
     expect(balance0!.amount.value).toStrictEqual(mintAmount.value);
@@ -192,9 +198,11 @@ describe("Orchestrator", () => {
 
     const pendingTransfers =
       await testContext.account0.getPendingCrosschainTransfers();
-    await testContext.account0.revertCrosschainTransfer(
-      pendingTransfers.data[0],
-    );
+    const transferRef: TransferRef = {
+      tx: gtxToRawGtx(pendingTransfers.data[0].tx),
+      opIndex: pendingTransfers.data[0].opIndex,
+    };
+    await testContext.account0.revertCrosschainTransfer(transferRef);
 
     const balance0 = await account0.getBalanceByAssetId(asset.id);
     expect(balance0!.amount.value).toEqual(mintAmount.value);

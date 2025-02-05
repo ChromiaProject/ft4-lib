@@ -1,12 +1,11 @@
-import { formatter } from "postchain-client";
+import { GTX, gtx, RawGtx } from "postchain-client";
 import { PendingTransfer } from "./types";
 
 function extractExpirationTimeFromCrosschainTransfer(
   transfer: PendingTransfer,
 ): number {
-  const tx = formatter.rawGtxToGtx(transfer.tx);
   // deadline is the fifth argument of initTransfer
-  return tx.operations[transfer.opIndex].args[4] as number;
+  return transfer.tx.operations[transfer.opIndex].args[4] as number;
 }
 
 /**
@@ -26,4 +25,8 @@ export function hasCrosschainTransferExpired(
   transfer: PendingTransfer,
 ): boolean {
   return extractExpirationTimeFromCrosschainTransfer(transfer) < Date.now();
+}
+
+export function gtxToRawGtx(tx: GTX): RawGtx {
+  return [gtx.gtxToRawGtxBody(tx), tx.signatures ?? []];
 }

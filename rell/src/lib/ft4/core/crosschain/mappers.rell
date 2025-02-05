@@ -44,7 +44,7 @@ function map_transfer(init_tx_rid: byte_array, init_op_index: integer) {
  */
 function map_pending_transfer(pending_transfer) {
     return (
-        transaction_rid = pending_transfer.transaction.tx_rid,
+        tx_data = pending_transfer.transaction.tx_data,
         op_index = pending_transfer.op_index,
         sender_account = pending_transfer.sender.to_struct()
     );

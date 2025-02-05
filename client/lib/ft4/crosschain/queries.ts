@@ -7,7 +7,6 @@ import {
   AssetOriginResponse,
   PendingTransferFilter,
   PendingTransferResponse,
-  PendingTransferResponse_,
   TransferFilter,
   TransferResponse,
 } from "./types";
@@ -254,7 +253,7 @@ export function pendingTransferFiltered(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<PendingTransferResponse_>,
+  PaginatedEntity<PendingTransferResponse>,
   {
     pending_transfer_filter:
       | [
@@ -288,7 +287,7 @@ export function revertedTransferFiltered(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<PendingTransferResponse_>,
+  PaginatedEntity<PendingTransferResponse>,
   {
     reverted_transfer_filter:
       | [initTxRids: Array<Buffer> | null, initOpIndex: number | null]
