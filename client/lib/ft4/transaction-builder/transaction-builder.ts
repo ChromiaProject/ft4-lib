@@ -312,6 +312,14 @@ export function transactionBuilder(
   return me;
 }
 
+/**
+ * The function `getSystemAnchoringIccfProofOp` should be utilized to retrieve a system anchoring proof operation
+ * for a given transaction. The `txToProve` must be a cluster anchored transaction
+ *
+ * @param client - the client to use to get the system anchoring proof
+ * @param txToProve - the transaction to prove
+ * @returns a function that returns a promise of an operation
+ */
 export function getSystemAnchoringIccfProofOp(
   client: IClient,
   txToProve: GTX,

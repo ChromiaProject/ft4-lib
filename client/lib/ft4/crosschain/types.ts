@@ -27,6 +27,11 @@ export type OrchestratorState = {
   nextHopIndex: number;
   tx: GTX;
   opIndex: number;
+  /**
+   * A function that returns a promise of an operation
+   * @param brid - the brid of the chain to get the proof for
+   * @returns a promise of an operation that is a system confirmation proof
+   */
   systemConfirmationProof: (brid: Buffer) => Promise<Operation>;
 };
 
