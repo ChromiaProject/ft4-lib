@@ -65,11 +65,7 @@ function test_get_pending_transfers_for_account_is_paginated() {
   val page2 = xc.external.get_pending_transfers_for_account(alice.account.id, 1, page1.next_cursor);
 
   val pending_transfers = xc.pending_transfer @* {} (
-    (
-      tx_data = .transaction.tx_data,
-      op_index = .op_index,
-      account_id = .sender.id
-    ).to_gtv_pretty()
+    xc.map_pending_transfer($).to_gtv_pretty()
   );
 
   assert_equals(page1.data.size(), 1);
