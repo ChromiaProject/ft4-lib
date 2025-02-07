@@ -16,7 +16,7 @@ function test_can_complete_transfer() {
 
     test.mint(alice.account, asset_valid, 10L);
 
-    val target_blockchain_rid = mocks.MOCK_BLOCKCHAIN_RID;
+    val target_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -62,7 +62,7 @@ function test_can_not_complete_transfer_without_proof() {
 
     test.mint(alice.account, asset_valid, 10L);
 
-    val target_blockchain_rid = mocks.MOCK_BLOCKCHAIN_RID;
+    val target_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))

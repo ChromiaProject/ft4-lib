@@ -14,7 +14,7 @@ function test_it_registers_a_pending_transaction_in_init_transfer() {
 
   rell.test.tx()
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc.external.init_transfer(bob.account.id, asset.id, 1, [mocks.MOCK_BLOCKCHAIN_RID], 10000000000000))
+    .op(xc.external.init_transfer(bob.account.id, asset.id, 1, [mocks.BLOCKCHAIN_RID_ONE], 10000000000000))
     .sign(alice.keypair)
     .run();
 
@@ -31,7 +31,7 @@ function test_it_fetches_pending_transactions_for_the_specified_account() {
   test.mint(alice.account, asset, 1);
   test.mint(bob.account, asset, 1);
 
-  val target_blockchain_rid = mocks.MOCK_BLOCKCHAIN_RID;
+  val target_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
 
   rell.test.tx()
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -51,7 +51,7 @@ function test_get_pending_transfers_for_account_is_paginated() {
 
   test.mint(alice.account, asset_valid, 10);
 
-  val target_blockchain_rid = mocks.MOCK_BLOCKCHAIN_RID;
+  val target_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
 
   rell.test.tx()
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -65,11 +65,7 @@ function test_get_pending_transfers_for_account_is_paginated() {
   val page2 = xc.external.get_pending_transfers_for_account(alice.account.id, 1, page1.next_cursor);
 
   val pending_transfers = xc.pending_transfer @* {} (
-    (
-      tx_data = .transaction.tx_data,
-      op_index = .op_index,
-      account_id = .sender.id
-    ).to_gtv_pretty()
+    xc.map_pending_transfer($).to_gtv_pretty()
   );
 
   assert_equals(page1.data.size(), 1);

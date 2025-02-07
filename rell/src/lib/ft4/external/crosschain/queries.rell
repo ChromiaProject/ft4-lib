@@ -88,3 +88,102 @@ query get_apply_transfer_tx(init_tx_rid: byte_array, init_op_index: integer) =
         tx = gtx_transaction.from_bytes($.transaction.tx_data).to_gtv(),
         op_index = $.op_index
     );
+
+/**
+ * Returns paginated and filtered asset(s) origin based on the selected filtering
+ * 
+ * @param asset_origin_filter  a struct that expects a list of asset ids for the asset(s) origin to fetch
+ * @param page_size            the size of the pages to retrieve
+ * @param page_cursor          a pointer to where the page should start
+ */
+query get_asset_origin_filtered(asset_origin_filter: crosschain.asset_origin_filter?, page_size: integer?, page_cursor: text?) {
+    return utils.make_page(
+        crosschain.get_asset_origin_filtered(asset_origin_filter, page_size, page_cursor),
+        page_size
+    );
+}
+
+/**
+ * Returns paginated and filtered applied transfer based on the selected filtering
+ * 
+ * @param applied_transfers_filter  a struct that expects a list of init_tx_rids and a single init_op_index for the applied transfers to fetch
+ * 
+ * @param page_size                 the size of the pages to retrieve
+ * @param page_cursor               a pointer to where the page should start
+ */
+query get_applied_transfers_filtered(applied_transfers_filter: crosschain.transfers_filter?, page_size: integer?, page_cursor: text?) {
+    return utils.make_page(
+        crosschain.get_applied_transfers_filtered(applied_transfers_filter, page_size, page_cursor),
+        page_size
+    );
+}
+
+/**
+ * Returns paginated and filtered canceled transfer based on the selected filtering
+ * 
+ * @param canceled_transfers_filter  a struct that expects a list of init_tx_rids and a single init_op_index for the canceled transfers to fetch
+ * @param page_size                  the size of the pages to retrieve
+ * @param page_cursor                a pointer to where the page should start
+ */
+query get_canceled_transfers_filtered(canceled_transfers_filter: crosschain.transfers_filter?, page_size: integer?, page_cursor: text?) {
+    return utils.make_page(
+        crosschain.get_canceled_transfers_filtered(canceled_transfers_filter, page_size, page_cursor),
+        page_size
+    );
+}
+
+/**
+ * Returns paginated and filtered unapplied transfer based on the selected filtering
+ * 
+ * @param unapplied_transfers_filter  a struct that expects a list of init_tx_rids and a single init_op_index for the unapplied transfers to fetch
+ * @param page_size                   the size of the pages to retrieve
+ * @param page_cursor                 a pointer to where the page should start
+ */
+query get_unapplied_transfers_filtered(unapplied_transfers_filter: crosschain.transfers_filter?, page_size: integer?, page_cursor: text?) {
+    return utils.make_page(
+        crosschain.get_unapplied_transfers_filtered(unapplied_transfers_filter, page_size, page_cursor),
+        page_size
+    );
+}
+
+/**
+ * Returns paginated and filtered recalled transfer based on the selected filtering
+ * 
+ * @param recalled_transfers_filter  a struct that expects a list of init_tx_rids and a single init_op_index for the recalled transfers to fetch
+ * @param page_size                  the size of the pages to retrieve
+ * @param page_cursor                a pointer to where the page should start
+ */
+query get_recalled_transfers_filtered(recalled_transfers_filter: crosschain.transfers_filter?, page_size: integer?, page_cursor: text?) {
+    return utils.make_page(
+        crosschain.get_recalled_transfers_filtered(recalled_transfers_filter, page_size, page_cursor),
+        page_size
+    );
+}
+
+/**
+ * Returns paginated and filtered pending transfer based on the selected filtering
+ * 
+ * @param pending_transfer_filter  a struct containing the keys and indexes of the pending transfer entity to enable filtering for the pending transfers to fetch
+ * @param page_size                the size of the pages to retrieve
+ * @param page_cursor              a pointer to where the page should start
+ */
+query get_pending_transfers_filtered(pending_transfer_filter: crosschain.pending_transfer_filter?, page_size: integer?, page_cursor: text?) {
+    return utils.make_page(
+        crosschain.get_pending_transfers_filtered(pending_transfer_filter, page_size, page_cursor),
+        page_size
+    );
+}
+
+/**
+ * Returns paginated and filtered reverted transfer based on the selected filtering
+ * 
+ * @param reverted_transfer_filter  a struct that expects a list of init_tx_rids and a single init_op_index for the reverted transfers to fetch
+ * @param page_size                 the size of the pages to retrieve
+ * @param page_cursor               a pointer to where the page should start
+ */
+query get_reverted_transfers_filtered(reverted_transfer_filter: crosschain.transfers_filter?, page_size: integer?, page_cursor: text?) {
+    return utils.make_page(
+        crosschain.get_reverted_transfers_filtered(reverted_transfer_filter, page_size, page_cursor),
+        page_size
+    );
+}

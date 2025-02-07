@@ -23,7 +23,7 @@
       ],
       "@ft4-test/*": [
         "./test/*"
-      ]
+      ],
     }
   },
   "include": ["./client/lib/ft4/**/*", "./test/**/*"],

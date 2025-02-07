@@ -6,7 +6,10 @@ import {
 } from "@ft4-test/util";
 import { ASSET_TYPE_FT4, Amount, Asset, createAmount } from "@ft4/asset";
 import { Buffer } from "buffer";
-import { TestContext, setupTestEnvironment } from "./common-setup";
+import {
+  TestContext,
+  setupTestEnvironment,
+} from "@ft4-test/__multichain__/common-setup";
 import { FactoryError, PathfinderError } from "@ft4/crosschain";
 import { formatter } from "postchain-client";
 
