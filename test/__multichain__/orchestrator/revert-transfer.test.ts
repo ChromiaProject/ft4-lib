@@ -11,6 +11,7 @@ import { mint, registerCrosschainAsset } from "@ft4/admin";
 import { Asset, createAmount } from "@ft4/asset";
 import {
   applyTransfer,
+  cancelTransfer,
   findPathToChainForAsset,
   initTransfer,
 } from "@ft4/crosschain";
@@ -194,5 +195,50 @@ describe("Orchestrator", () => {
     expect(
       (await testContext.account0.getPendingCrosschainTransfers()).data,
     ).toHaveLength(0);
+  });
+
+  it("cancels and reverts a transfer that has been initiated", async () => {
+    let iccfProof = {} as any;
+    const path = await findPathToChainForAsset(session0, asset, multichain2Rid);
+
+    await session0
+      .transactionBuilder()
+      .add(
+        initTransfer(account2.id, asset.id, transferAmount, path, Date.now()),
+      )
+      .buildAndSendWithAnchoring()
+      .then((data) => {
+        iccfProof = data.systemConfirmationProof(path[0]);
+      });
+
+    iccfProof = await iccfProof;
+
+    const session2 = createSession(connection2, account2.authenticator);
+
+    // Force block building to get past deadline
+    await session2
+      .transactionBuilder()
+      .add(emptyOp(), { authenticator: noopAuthenticator })
+      .add(nop(), { authenticator: noopAuthenticator })
+      .buildAndSend();
+
+    const pendingTransfers = await account0.getPendingCrosschainTransfers();
+    const foundPendingTransfer = pendingTransfers.data[0];
+
+    await session2
+      .transactionBuilder()
+      .add(iccfProof, { authenticator: noopAuthenticator })
+      .add(
+        cancelTransfer(
+          foundPendingTransfer.tx,
+          foundPendingTransfer.opIndex,
+          foundPendingTransfer.tx,
+          foundPendingTransfer.opIndex,
+          0,
+        ),
+      )
+      .buildAndSendWithAnchoring();
+
+    await account0.revertCrosschainTransfer(foundPendingTransfer);
   });
 });

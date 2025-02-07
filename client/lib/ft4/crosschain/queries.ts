@@ -98,3 +98,6 @@ export function applyTransferTx(
     },
   };
 }
+
+// TODO
+export function isUnappliedTransfer() {}

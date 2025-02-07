@@ -259,7 +259,6 @@ export async function createResumeOrchestrator(
  * Creates an orchestrator instance to handle reverting a transfer that was started
  * but did not reach its target chain withing the specified timeout.
  * @param connection - a connection to the source chain
- * @param authenticator - the authenticator to use when reverting the transfer
  * @param pendingTransfer - the pending transfer to revert
  * @returns The orchestrator instance which will be able to revert the transfer
  */
@@ -276,6 +275,7 @@ export async function createRevertOrchestrator(
   const eventEmitter = new EventEmitter<OrchestratorEvents>();
 
   async function revertTransfer(): Promise<void> {
+    let shouldSkipCancelOp = false;
     let firstNotAppliedHopIndex: number | undefined = undefined;
     for (let i = 0; i < path.length; i++) {
       if (
@@ -287,6 +287,13 @@ export async function createRevertOrchestrator(
         ))
       ) {
         firstNotAppliedHopIndex = i;
+        break;
+      }
+
+      // use rell query to check if transfer is unapplied
+      if (isUnappliedTransfer()) {
+        firstNotAppliedHopIndex = i;
+        shouldSkipCancelOp = true;
         break;
       }
     }
@@ -334,33 +341,36 @@ export async function createRevertOrchestrator(
       targetBlockchainRid,
     );
 
-    try {
-      const { tx: transaction, systemConfirmationProof } = await tb
-        .add(iccfOp)
-        .add(
-          cancelTransfer(
-            pendingTransfer.tx,
-            pendingTransfer.opIndex,
-            tx,
-            opIndex,
-            firstNotAppliedHopIndex,
-          ),
-        )
-        .buildAndSendWithAnchoring();
+    if (!shouldSkipCancelOp) {
+      try {
+        const { tx: transaction, systemConfirmationProof } = await tb
+          .add(iccfOp)
+          .add(
+            cancelTransfer(
+              pendingTransfer.tx,
+              pendingTransfer.opIndex,
+              tx,
+              opIndex,
+              firstNotAppliedHopIndex,
+            ),
+          )
+          .buildAndSendWithAnchoring();
 
-      eventEmitter.emit("TransferHop", targetBlockchainRid);
-      state = {
-        tx: transaction,
-        nextHopIndex: firstNotAppliedHopIndex - 1,
-        systemConfirmationProof,
-        opIndex: 1,
-      };
-    } catch (error) {
-      throw new OrchestratorError(
-        `Unable to fetch proof: ${(error as any)?.message ?? error}`,
-        error as Error,
-      );
+        eventEmitter.emit("TransferHop", targetBlockchainRid);
+        state = {
+          tx: transaction,
+          nextHopIndex: firstNotAppliedHopIndex - 1,
+          systemConfirmationProof,
+          opIndex: 1,
+        };
+      } catch (error) {
+        throw new OrchestratorError(
+          `Unable to fetch proof: ${(error as any)?.message ?? error}`,
+          error as Error,
+        );
+      }
     }
+
     await performAllRevertTransfers(firstNotAppliedHopIndex);
   }
 
@@ -485,7 +495,6 @@ async function createOrchestratorCore(
   /**
    * Apply the transfer operation targeting a specific blockchain.
    * @param hopIndex hop index
-   * @param targetChainRid - The ID of the target blockchain.
    */
   async function performSingleApplyTransfer(
     hopIndex: number,
