@@ -44,8 +44,6 @@ export async function isUnappliedTransfer(
     1,
   );
 
-  console.log("==========unappliedTransfers ======", unappliedTransfers);
-
   if (unappliedTransfers.data.length > 0) {
     return true;
   }

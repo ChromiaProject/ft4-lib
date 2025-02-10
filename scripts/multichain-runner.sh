@@ -27,6 +27,7 @@ DOCKER=docker
 DOCKER_POSTGRES_NAME='ft4-multichain-test-postgres'
 DOCKER_NODE_NAME='ft4-multichain-test-node'
 
+
 log() {
     printf "\033[32m[INFO]\033[0m %s\n" "$1"  # Green
 }
@@ -232,13 +233,19 @@ run_main_logic() {
 
     log "Running node container..."
     mkdir logs
+
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        JAVA_OPTS="-Xmx16g -XX:UseSVE=0"
+    else
+        JAVA_OPTS="-Xmx16g"
+    fi
     # $DOCKER -H $DOCKER_HOST network create -d bridge localnet
     $DOCKER run \
         --name $DOCKER_NODE_NAME \
         --restart unless-stopped \
         -v "$(pwd)/$BASE_CONFIG_DIR:/config" \
         -v "$(pwd)/$DEPENDENCIES_PATH/directory-chain/build:/build" \
-        -e JAVA_TOOL_OPTIONS="-Xmx16g" \
+        -e JAVA_TOOL_OPTIONS="$JAVA_OPTS" \
         -e POSTCHAIN_DEBUG=true \
         -e POSTCHAIN_CONFIG=/config/config.0.properties \
         -e POSTCHAIN_BLOCKCHAIN_CONFIG=/build/manager.xml \

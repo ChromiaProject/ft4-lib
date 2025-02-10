@@ -278,9 +278,8 @@ export async function createRevertOrchestrator(
   async function revertTransfer(): Promise<void> {
     let shouldSkipCancelOp = false;
     let firstNotAppliedHopIndex: number | undefined = undefined;
-    console.log("==========here========0");
+
     for (let i = 0; i < path.length; i++) {
-      console.log("==========here========1");
       const pendingTransferTransactionRid = getTransactionRid(
         pendingTransfer.tx,
       );
@@ -298,13 +297,12 @@ export async function createRevertOrchestrator(
       }
 
       if (
-        await isUnappliedTransfer(
+        !(await isUnappliedTransfer(
           connection,
           pendingTransferTransactionRid,
           pendingTransfer.opIndex,
-        )
+        ))
       ) {
-        console.log("==========here========2");
         shouldSkipCancelOp = true;
         firstNotAppliedHopIndex = i;
 
