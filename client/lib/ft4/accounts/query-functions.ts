@@ -32,7 +32,7 @@ import {
   TransferHistoryFilter,
   createTransferHistoryEntryFromResponse,
 } from "./transfer-history";
-import { Account, RateLimit } from "./types";
+import { Account, AccountResponse, RateLimit } from "./types";
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
@@ -150,9 +150,9 @@ export async function getById(
   connection: Connection,
   id: BufferId,
 ): Promise<Account | null> {
-  const accountId = await connection.query(accountById(id));
+  const account = await connection.query(accountById(id));
 
-  return accountId && createAccountObject(connection, accountId);
+  return account && createAccountObject(connection, account.id);
 }
 
 /**
@@ -276,4 +276,18 @@ export async function getAccountMainAuthDescriptor(
   );
 
   return gtv.authDescriptorFromGtv(authDescriptor);
+}
+
+/**
+ * Converts an AccountResponse
+ * @param account the account to map
+ * @returns The id and type of the account
+ */
+export function createAccountObjectFiltered(
+  account: AccountResponse,
+): AccountResponse {
+  return Object.freeze({
+    id: account.id,
+    type: account.type,
+  });
 }

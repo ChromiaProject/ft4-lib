@@ -72,7 +72,7 @@ function test_init_transfer_fails_when_amount_is_zero() {
             bob.account.id,
             asset_valid.id,
             0L,
-            [mocks.MOCK_BLOCKCHAIN_RID],
+            [mocks.BLOCKCHAIN_RID_ONE],
             10000000000000
         ))
         .sign(rell.test.keypairs.alice)
@@ -135,7 +135,7 @@ function test_init_transfer_succeeds_under_valid_conditions() {
             bob.account.id,
             asset_valid.id,
             5L,
-            [mocks.MOCK_BLOCKCHAIN_RID],
+            [mocks.BLOCKCHAIN_RID_ONE],
             10000000000000
         ))
         .sign(rell.test.keypairs.alice)
@@ -165,7 +165,7 @@ function test_init_transfer_succeeds_under_valid_conditions_with_evm_auth() {
         recipient_id = bob.account.id,
         asset_id = asset_valid.id,
         amount = 5L,
-        hops = [mocks.MOCK_BLOCKCHAIN_RID],
+        hops = [mocks.BLOCKCHAIN_RID_ONE],
         deadline = 10000000000000
     );
 

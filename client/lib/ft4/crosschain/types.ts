@@ -1,3 +1,5 @@
+import { AccountResponse } from "@ft4/accounts";
+import { Asset, AssetResponse } from "@ft4/asset";
 import { EventEmitter, Listener } from "@ft4/events";
 import { Buffer } from "buffer";
 import {
@@ -128,11 +130,60 @@ export type TransferRef = {
 export type PendingTransfer = {
   tx: GTX;
   opIndex: number;
-  accountId: Buffer;
+  senderAccount: AccountResponse;
 };
 
 export type PendingTransferResponse = {
   tx_data: Buffer;
   op_index: number;
-  account_id: Buffer;
+  sender_account: AccountResponse;
+};
+
+export type AssetOriginFilter = Partial<{
+  assetIds?: Array<Buffer> | null;
+}> | null;
+
+export type TransferFilter = Partial<{
+  initTxRids?: Array<Buffer> | null;
+  initOpIndex?: number | null;
+}> | null;
+
+export type PendingTransferFilter = Partial<{
+  transactionIds?: Array<Buffer> | null;
+  initOpIndex?: number | null;
+  senderAccountId?: Buffer | null;
+}> | null;
+
+export type AssetOriginResponse = {
+  asset: AssetResponse;
+  origin_blockchain_rid: Buffer;
+};
+
+export type AssetOrigin = {
+  asset: Asset;
+  originBlockchainRid: Buffer;
+};
+
+export type AppliedTransferResponse = {
+  init_tx_rid: Buffer;
+  init_op_index: number;
+  transaction_rid: Buffer;
+  op_index: number;
+};
+
+export type AppliedTransfer = {
+  initTxRid: Buffer;
+  initOpIndex: number;
+  transactionId: Buffer;
+  opIndex: number;
+};
+
+export type TransferResponse = {
+  init_tx_rid: Buffer;
+  init_op_index: number;
+};
+
+export type Transfer = {
+  initTxRid: Buffer;
+  initOpIndex: number;
 };

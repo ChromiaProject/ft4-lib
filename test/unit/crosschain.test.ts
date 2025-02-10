@@ -4,6 +4,7 @@ import {
   GtvInitTransferArgs,
   hasCrosschainTransferExpired,
 } from "@ft4/crosschain";
+import { ACCOUNT_TYPE_USER } from "@ft4/accounts";
 
 function createDummyPendingTransfer(
   deadline: number,
@@ -28,8 +29,8 @@ function createDummyPendingTransfer(
 
   return {
     opIndex,
-    tx,
-    accountId,
+    tx: tx,
+    senderAccount: { id: accountId, type: ACCOUNT_TYPE_USER },
   };
 }
 

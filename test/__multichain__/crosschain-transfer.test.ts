@@ -6,7 +6,11 @@ import {
   fetchBlockchains,
   getNewAsset,
 } from "@ft4-test/util";
-import { AuthFlag, getTransferDetailsByAsset } from "@ft4/accounts";
+import {
+  ACCOUNT_TYPE_USER,
+  AuthFlag,
+  getTransferDetailsByAsset,
+} from "@ft4/accounts";
 import { registerCrosschainAsset } from "@ft4/admin";
 import { createAmount } from "@ft4/asset";
 import { noopAuthenticator, days, FtKeyStore } from "@ft4/authentication";
@@ -182,7 +186,6 @@ describe("Crosschain transfer", () => {
     const operations = rawGtxTransaction[0][1];
 
     const expectedTransfer = {
-      opIndex: 1,
       tx: {
         blockchainRid: rawGtxTransaction[0][0],
         operations: [
@@ -198,7 +201,8 @@ describe("Crosschain transfer", () => {
         signers: rawGtxTransaction[0][2],
         signatures: rawGtxTransaction[1],
       },
-      accountId: account00.id,
+      opIndex: 1,
+      senderAccount: { id: account00.id, type: ACCOUNT_TYPE_USER },
     };
 
     expect(JSON.stringify(pendingTransfer)).toStrictEqual(

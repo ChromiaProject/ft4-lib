@@ -53,6 +53,7 @@ import {
   OrchestratorData,
   OrchestratorEventHandler,
 } from "./types";
+import { isUnappliedTransfer } from "./utils";
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
  * @param connection - The connection.
@@ -277,23 +278,36 @@ export async function createRevertOrchestrator(
   async function revertTransfer(): Promise<void> {
     let shouldSkipCancelOp = false;
     let firstNotAppliedHopIndex: number | undefined = undefined;
+    console.log("==========here========0");
     for (let i = 0; i < path.length; i++) {
+      console.log("==========here========1");
+      const pendingTransferTransactionRid = getTransactionRid(
+        pendingTransfer.tx,
+      );
       if (
         !(await isAppliedOnBlockchainRid(
           connection,
           formatter.ensureBuffer(path[i]),
-          getTransactionRid(pendingTransfer.tx),
+          pendingTransferTransactionRid,
           pendingTransfer.opIndex,
         ))
       ) {
         firstNotAppliedHopIndex = i;
+
         break;
       }
 
-      // use rell query to check if transfer is unapplied
-      if (isUnappliedTransfer()) {
-        firstNotAppliedHopIndex = i;
+      if (
+        await isUnappliedTransfer(
+          connection,
+          pendingTransferTransactionRid,
+          pendingTransfer.opIndex,
+        )
+      ) {
+        console.log("==========here========2");
         shouldSkipCancelOp = true;
+        firstNotAppliedHopIndex = i;
+
         break;
       }
     }

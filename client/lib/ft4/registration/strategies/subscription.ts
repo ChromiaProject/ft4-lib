@@ -17,6 +17,7 @@ import { LoginDetails } from "./types";
 import { authDescriptorRegistrationToGtv } from "@ft4/accounts/auth-descriptor/gtv";
 import { getTransferStrategyRulesGroupedByStrategy } from "./transfer-rules";
 import { BufferId, formatter } from "postchain-client";
+import { TransferRef } from "@ft4/crosschain";
 
 export function subscription(
   senderBlockchainRid: BufferId,
@@ -107,7 +108,11 @@ export function subscription(
       // If there is a pending cross-chain transfer for account registration, resume it,
       // otherwise start new cross-chain transfer.
       if (pendingTransfer) {
-        await senderSession.account.resumeCrosschainTransfer(pendingTransfer);
+        const transferRef: TransferRef = {
+          tx: pendingTransfer.tx,
+          opIndex: pendingTransfer.opIndex,
+        };
+        await senderSession.account.resumeCrosschainTransfer(transferRef);
       } else {
         await senderSession.account.crosschainTransfer(
           targetConnection.blockchainRid,

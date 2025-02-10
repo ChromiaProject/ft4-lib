@@ -205,6 +205,9 @@ run_main_logic() {
     if $GITLAB; then
         log "Editing Directory Chain for GitLab..."
         sed -i -e 's/localhost/docker/g' $DEPENDENCIES_PATH/directory-chain/chromia.yml
+    else
+        log "Editing Directory Chain for Local..."
+        sed -i -e 's/docker/localhost/g' $DEPENDENCIES_PATH/directory-chain/chromia.yml
     fi 
 
     log "Installing Directory Chain dependencies..."

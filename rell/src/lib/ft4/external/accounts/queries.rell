@@ -124,7 +124,7 @@ query get_account_main_auth_descriptor(account_id: byte_array) {
  * @param id    id of the account to retrieve
  */
 query get_account_by_id(id: byte_array) {
-    return accounts.account @? { id } ( .id );
+    return accounts.account @? { id } ( $.to_struct() );
 }
 
 /**

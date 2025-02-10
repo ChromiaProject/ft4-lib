@@ -10,6 +10,7 @@ import { mint, registerCrosschainAsset } from "@ft4/admin";
 import { Asset, createAmount } from "@ft4/asset";
 import {
   PendingTransfer,
+  TransferRef,
   applyTransfer,
   createOrchestrator,
   findPathToChainForAsset,
@@ -23,9 +24,9 @@ import {
 } from "@ft4/ft-session";
 import { PaginatedEntity } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { setupTestEnvironment } from "./common-setup";
 import { transactionBuilder } from "@ft4/transaction-builder";
 import { noopAuthenticator } from "@ft4/authentication";
+import { setupTestEnvironment } from "@ft4-test/__multichain__/common-setup";
 
 describe("Orchestrator", () => {
   let connection0: Connection, connection2: Connection;
@@ -90,7 +91,11 @@ describe("Orchestrator", () => {
       .buildAndSendWithAnchoring();
 
     const pendingTransfers = await account0.getPendingCrosschainTransfers();
-    await account0.resumeCrosschainTransfer(pendingTransfers.data[0]);
+    const transferRef: TransferRef = {
+      tx: pendingTransfers.data[0].tx,
+      opIndex: pendingTransfers.data[0].opIndex,
+    };
+    await account0.resumeCrosschainTransfer(transferRef);
 
     const balance = await account2.getBalanceByAssetId(asset.id);
     expect(JSON.stringify(balance)).toStrictEqual(
@@ -159,10 +164,11 @@ describe("Orchestrator", () => {
     // Use Orchestrator to recover the transfer
     const pendingTransfers =
       await testContext.account0.getPendingCrosschainTransfers();
-
-    await testContext.account0.resumeCrosschainTransfer(
-      pendingTransfers.data[0],
-    );
+    const transferRef: TransferRef = {
+      tx: pendingTransfers.data[0].tx,
+      opIndex: pendingTransfers.data[0].opIndex,
+    };
+    await testContext.account0.resumeCrosschainTransfer(transferRef);
 
     // Assert that transfer were completed
     const balance = await testContext.account1.getBalanceByAssetId(

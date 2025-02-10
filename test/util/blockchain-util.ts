@@ -49,14 +49,20 @@ export async function getNewAsset(
   iconUrl = "",
 ): Promise<Asset> {
   const adminSignatureProvider = adminUser().signatureProvider;
-  await registerAsset(
-    client,
-    adminSignatureProvider,
-    name,
-    symbol,
-    decimals,
-    iconUrl,
-  );
+
+  try {
+    await registerAsset(
+      client,
+      adminSignatureProvider,
+      name,
+      symbol,
+      decimals,
+      iconUrl,
+    );
+  } catch (error) {
+    console.error(`Asset already exists ${error}`);
+  }
+
   const id = gtv.gtvHash([
     name,
     formatter.ensureBuffer(client.config.blockchainRid),
