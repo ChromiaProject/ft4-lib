@@ -53,7 +53,7 @@ import {
   OrchestratorData,
   OrchestratorEventHandler,
 } from "./types";
-import { isUnappliedTransfer } from "./utils";
+import { isCanceledTransfer } from "./utils";
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
  * @param connection - The connection.
@@ -275,35 +275,19 @@ export async function createRevertOrchestrator(
 
   const eventEmitter = new EventEmitter<OrchestratorEvents>();
 
-  async function revertTransfer(): Promise<void> {
+  async function revertTransfer(canceledTx?: GTX): Promise<void> {
     let shouldSkipCancelOp = false;
     let firstNotAppliedHopIndex: number | undefined = undefined;
 
     for (let i = 0; i < path.length; i++) {
-      const pendingTransferTransactionRid = getTransactionRid(
-        pendingTransfer.tx,
-      );
       if (
         !(await isAppliedOnBlockchainRid(
           connection,
           formatter.ensureBuffer(path[i]),
-          pendingTransferTransactionRid,
+          getTransactionRid(pendingTransfer.tx),
           pendingTransfer.opIndex,
         ))
       ) {
-        firstNotAppliedHopIndex = i;
-
-        break;
-      }
-
-      if (
-        !(await isUnappliedTransfer(
-          connection,
-          pendingTransferTransactionRid,
-          pendingTransfer.opIndex,
-        ))
-      ) {
-        shouldSkipCancelOp = true;
         firstNotAppliedHopIndex = i;
 
         break;
@@ -337,6 +321,30 @@ export async function createRevertOrchestrator(
     }
 
     const targetBlockchainRid = path[firstNotAppliedHopIndex];
+    const targetConnection = await createConnectionToBlockchainRid(
+      connection,
+      targetBlockchainRid,
+    );
+    if (
+      await isCanceledTransfer(
+        targetConnection,
+        getTransactionRid(pendingTransfer.tx),
+        pendingTransfer.opIndex,
+      )
+    ) {
+      shouldSkipCancelOp = true;
+      if (canceledTx) {
+        state = {
+          tx: canceledTx,
+          nextHopIndex: firstNotAppliedHopIndex - 1,
+          systemConfirmationProof: getSystemAnchoringIccfProofOp(
+            targetConnection.client,
+            canceledTx,
+          ),
+          opIndex: 1,
+        };
+      }
+    }
 
     const previousBlockchainClient = await createClientToBlockchain(
       connection.client,

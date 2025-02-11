@@ -1,6 +1,6 @@
 import { GTX, gtx, RawGtx } from "postchain-client";
 import { PendingTransfer } from "./types";
-import { getUnappliedTransfersFiltered } from "./query-functions";
+import { getCanceledTransfersFiltered } from "./query-functions";
 import { Connection } from "@ft4/ft-session";
 
 function extractExpirationTimeFromCrosschainTransfer(
@@ -33,18 +33,18 @@ export function gtxToRawGtx(tx: GTX): RawGtx {
   return [gtx.gtxToRawGtxBody(tx), tx.signatures ?? []];
 }
 
-export async function isUnappliedTransfer(
+export async function isCanceledTransfer(
   connection: Connection,
   initTxRid: Buffer,
   initOpIndex: number,
 ): Promise<boolean> {
-  const unappliedTransfers = await getUnappliedTransfersFiltered(
+  const canceledTransfers = await getCanceledTransfersFiltered(
     connection,
     { initTxRids: [initTxRid], initOpIndex },
     1,
   );
 
-  if (unappliedTransfers.data.length > 0) {
+  if (canceledTransfers.data.length > 0) {
     return true;
   }
 

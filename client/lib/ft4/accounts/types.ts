@@ -15,6 +15,7 @@ import {
 import { PendingTransfer, TransferRef } from "@ft4/crosschain";
 import {
   BufferId,
+  GTX,
   SignedTransaction,
   TransactionReceipt,
 } from "postchain-client";
@@ -331,6 +332,7 @@ export interface AuthenticatedAccount extends Account {
    */
   revertCrosschainTransfer: (
     pendingTransfer: TransferRef,
+    canceledTx?: GTX,
   ) => Web3CustomPromiEvent<
     void,
     {

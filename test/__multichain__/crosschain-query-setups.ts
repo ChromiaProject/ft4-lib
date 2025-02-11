@@ -159,6 +159,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
   );
 
   const initState = {} as any;
+
   await testContext.session0
     .transactionBuilder()
     .add(
@@ -188,10 +189,10 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     .add(initState.proof)
     .add(
       applyTransfer(
-        initState.tx!,
-        initState.opIndex!,
-        initState.tx!,
-        initState.opIndex!,
+        initState.tx,
+        initState.opIndex,
+        initState.tx,
+        initState.opIndex,
         0,
       ),
     )
@@ -225,7 +226,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     applyState.opIndex,
     1,
   );
-
+  // error after here
   const cancelState = {} as any;
   await testContext.session1
     .transactionBuilder()

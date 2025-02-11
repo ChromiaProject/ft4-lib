@@ -114,7 +114,7 @@ export type RevertOrchestrator = OrchestratorEventHandler & {
   /**
    * Reverts a transfer that was initiated but which did not reach its destination within the timeout period
    */
-  revertTransfer: () => Promise<void>;
+  revertTransfer: (canceledTx?: GTX) => Promise<void>;
 
   /**
    * Recall a transfer which reached the target chain, but which was not claimed by the recipient within the timeout period

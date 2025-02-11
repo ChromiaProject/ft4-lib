@@ -9,6 +9,7 @@ import { Connection } from "@ft4/ft-session";
 import {
   BufferId,
   formatter,
+  GTX,
   SignedTransaction,
   TransactionReceipt,
 } from "postchain-client";
@@ -126,6 +127,7 @@ export function resumeCrosschainTransfer(
 export function revertCrosschainTransfer(
   connection: Connection,
   pendingTransfer: TransferRef,
+  canceledTx?: GTX,
 ): Web3CustomPromiEvent<
   void,
   {
@@ -143,7 +145,7 @@ export function revertCrosschainTransfer(
         orchestrator.onTransferHop((blockchainRid) => {
           promiEvent.emit("hop", formatter.ensureBuffer(blockchainRid));
         });
-        return orchestrator.revertTransfer();
+        return orchestrator.revertTransfer(canceledTx);
       })
       .then(() => resolve())
       .catch((reason) => reject(reason));

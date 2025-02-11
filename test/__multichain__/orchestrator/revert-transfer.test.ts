@@ -231,6 +231,7 @@ describe("Orchestrator", () => {
     const pendingTransfers = await account0.getPendingCrosschainTransfers();
     const foundPendingTransfer = pendingTransfers.data[0];
 
+    const cancelState = {} as any;
     await session2
       .transactionBuilder()
       .add(iccfProof, { authenticator: noopAuthenticator })
@@ -243,8 +244,20 @@ describe("Orchestrator", () => {
           0,
         ),
       )
-      .buildAndSendWithAnchoring();
+      .buildAndSendWithAnchoring()
+      .then((data) => {
+        cancelState.tx = data.tx;
+        cancelState.initialOpIndex = 1;
+        cancelState.initialTx = data.tx;
+        cancelState.opIndex = 1;
+        cancelState.proof = data.systemConfirmationProof(path[0]);
+      });
 
-    await account0.revertCrosschainTransfer(foundPendingTransfer);
+    cancelState.proof = await cancelState.proof;
+
+    await account0.revertCrosschainTransfer(
+      foundPendingTransfer,
+      cancelState.tx,
+    );
   });
 });

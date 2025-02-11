@@ -6,7 +6,7 @@ import {
   days,
 } from "@ft4/authentication";
 import { TransactionSessionCompletion } from "@ft4/utils";
-import { BufferId, formatter, SignedTransaction } from "postchain-client";
+import { BufferId, formatter, GTX, SignedTransaction } from "postchain-client";
 import {
   TransactionWithReceipt,
   transactionBuilder,
@@ -93,8 +93,10 @@ export function createAuthenticatedAccount(
       ),
     resumeCrosschainTransfer: (pendingTransfer: TransferRef) =>
       resumeCrosschainTransfer(connection, pendingTransfer),
-    revertCrosschainTransfer: (pendingTransfer: TransferRef) =>
-      revertCrosschainTransfer(connection, pendingTransfer),
+    revertCrosschainTransfer: (
+      pendingTransfer: TransferRef,
+      canceledTx?: GTX,
+    ) => revertCrosschainTransfer(connection, pendingTransfer, canceledTx),
     recallUnclaimedCrosschainTransfer: (pendingTransfer: TransferRef) =>
       recallUnclaimedCrosschainTransfer(connection, pendingTransfer),
     burn: (assetId: BufferId, amount: Amount) =>
