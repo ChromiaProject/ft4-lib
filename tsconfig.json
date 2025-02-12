@@ -21,9 +21,9 @@
       "@ft4/*": [
         "./client/lib/ft4/*"
       ],
-      "@ft4/registration/*": [
-        "./client/lib/ft4/registration/*"
-      ],
+      // "@ft4/registration/*": [
+      //   "./client/lib/ft4/registration/*"
+      // ],
       "@ft4-test/*": [
         "./test/*"
       ],
