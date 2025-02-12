@@ -127,16 +127,18 @@ export function isValidParticipantRule(
   ruleParticipant: TransferParticipants,
   accountId: BufferId,
 ): boolean {
-  if (ruleParticipant !== "all" && ruleParticipant !== "current") {
-    if (Buffer.isBuffer(ruleParticipant)) {
-      if (ensureString(ruleParticipant) !== ensureString(accountId)) {
-        return false;
+  if (ruleParticipant !== "all") {
+    if (ruleParticipant !== "current") {
+      if (Buffer.isBuffer(ruleParticipant)) {
+        if (ensureString(ruleParticipant) !== ensureString(accountId)) {
+          return false;
+        }
       }
-    }
 
-    if (Array.isArray(ruleParticipant)) {
-      if (!ruleParticipant.includes(ensureBuffer(accountId))) {
-        return false;
+      if (Array.isArray(ruleParticipant)) {
+        if (!ruleParticipant.includes(ensureBuffer(accountId))) {
+          return false;
+        }
       }
     }
   }
@@ -147,29 +149,37 @@ export function isValidParticipantRule(
 /**
  * Validates the sender blockchains for the provided rules
  *
- * @param senderBlockchains - The sender blockchain rules to validate.
- * @param senderBlockchainRid - The sender blockchain rid to compare againsts the rules
+ * @param ruleSenderBlockchains - The sender blockchain rules to validate.
+ * @param senderBlockchainRid - The sender blockchain rid to compare againsts the rules.
  *
  * @returns A boolean value indicating if the sender blockchain rule is valid.
  */
 export function isValidSenderBlockchainRule(
-  senderBlockchains: TransferSenderBlockchains,
+  ruleSenderBlockchains: TransferSenderBlockchains,
   senderBlockchainRid: BufferId,
 ): boolean {
-  if (senderBlockchains !== "all") {
+  if (ruleSenderBlockchains !== "all") {
     if (
-      Buffer.isBuffer(senderBlockchains) ||
-      typeof senderBlockchains === "string"
+      Buffer.isBuffer(ruleSenderBlockchains) ||
+      typeof ruleSenderBlockchains === "string"
     ) {
       if (
-        ensureString(senderBlockchains) !== ensureString(senderBlockchainRid)
+        Buffer.compare(
+          ruleSenderBlockchains,
+          ensureBuffer(senderBlockchainRid),
+        ) !== 0
       ) {
         return false;
       }
     }
 
-    if (Array.isArray(senderBlockchains)) {
-      if (!senderBlockchains.includes(ensureBuffer(senderBlockchainRid))) {
+    if (Array.isArray(ruleSenderBlockchains)) {
+      if (
+        !ruleSenderBlockchains.some(
+          (rule) =>
+            Buffer.compare(rule, ensureBuffer(senderBlockchainRid)) === 0,
+        )
+      ) {
         return false;
       }
     }

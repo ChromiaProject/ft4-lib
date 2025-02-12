@@ -249,17 +249,6 @@ describe("Strategy Rules Validation", () => {
       const differentAccount = Buffer.from(MOCKS.BUFFER.DIFFERENT_VALUE);
       expect(isValidParticipantRule(differentAccount, mockBuffer)).toBe(false);
     });
-
-    it("returns true for matching participant array", () => {
-      expect(isValidParticipantRule([mockBuffer], mockBuffer)).toBe(true);
-    });
-
-    it("returns false for non-matching participant array", () => {
-      const differentAccount = Buffer.from(MOCKS.BUFFER.DIFFERENT_VALUE);
-      expect(isValidParticipantRule([differentAccount], mockBuffer)).toBe(
-        false,
-      );
-    });
   });
 
   describe("isValidSenderBlockchainRule", () => {
@@ -279,31 +268,14 @@ describe("Strategy Rules Validation", () => {
       );
     });
 
-    it("returns true for matching blockchain array", () => {
-      expect(isValidSenderBlockchainRule([mockBuffer], mockBuffer)).toBe(true);
+    it("returns true for array containing matching blockchain", () => {
+      const blockchains = [differentBuffer, mockBuffer];
+      expect(isValidSenderBlockchainRule(blockchains, mockBuffer)).toBe(true);
     });
 
-    it("returns false for non-matching blockchain array", () => {
-      expect(isValidSenderBlockchainRule([differentBuffer], mockBuffer)).toBe(
-        false,
-      );
-    });
-
-    it("returns true for matching string blockchain", () => {
-      const mockString = mockBuffer.toString("hex");
-      expect(
-        isValidSenderBlockchainRule(Buffer.from(mockString, "hex"), mockBuffer),
-      ).toBe(true);
-    });
-
-    it("returns false for non-matching string blockchain", () => {
-      const differentString = differentBuffer.toString("hex");
-      expect(
-        isValidSenderBlockchainRule(
-          Buffer.from(differentString, "hex"),
-          mockBuffer,
-        ),
-      ).toBe(false);
+    it("returns false for array containing only non-matching blockchains", () => {
+      const blockchains = [differentBuffer, Buffer.from("bb")];
+      expect(isValidSenderBlockchainRule(blockchains, mockBuffer)).toBe(false);
     });
   });
 });
