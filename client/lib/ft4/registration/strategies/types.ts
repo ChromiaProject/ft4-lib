@@ -32,36 +32,6 @@ export type TransferStrategyRuleRaw = {
   timeout_days: number;
 };
 
-export type TransferSenderBlockchains = "all" | Buffer | Buffer[];
-
-export type TransferParticipantSingle = "current" | Buffer;
-
-export type TransferParticipants =
-  | "all"
-  | TransferParticipantSingle
-  | TransferParticipantSingle[];
-
-export type TransferStrategyRulePartial = {
-  senderBlockchains: TransferSenderBlockchains;
-  senders: TransferParticipants;
-  recipients: TransferParticipants;
-  timeoutDays: number;
-};
-
-export type AssetLimit = {
-  id: Buffer;
-  minAmount: bigint;
-};
-
-export type TransferStrategyRule = TransferStrategyRulePartial & {
-  strategies: string[];
-  assets: "all" | AssetLimit[];
-};
-
-export type TransferStrategyRuleAmount = TransferStrategyRulePartial & {
-  minAmount: bigint;
-};
-
 export enum PendingTransferExpirationState {
   Expired,
   Valid,

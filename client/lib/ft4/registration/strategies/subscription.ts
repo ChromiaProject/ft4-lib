@@ -20,6 +20,7 @@ import { getTransferStrategyRulesGroupedByStrategy } from "./transfer-rules";
 import { formatter } from "postchain-client";
 import { TransferRef } from "@ft4/crosschain";
 import { gtxToRawGtx } from "@ft4/crosschain/utils";
+import { findValidStrategyRulesAndGetLowestAmountOrZero } from "@ft4/registration/utils";
 
 export function subscription(
   senderBlockchainRid: BufferId,
@@ -54,11 +55,13 @@ export function subscription(
       const subscriptionAssetTransferRules = transferRules
         .get("subscription")
         ?.get(formatter.toString(subscriptionAsset.id));
-      const amount = subscriptionAssetTransferRules?.reduce(
-        (prev, curr) => (prev > curr.minAmount ? curr.minAmount : prev),
-        subscriptionAssetTransferRules.length > 0
-          ? subscriptionAssetTransferRules[0].minAmount
-          : 0n,
+
+      const amount = await findValidStrategyRulesAndGetLowestAmountOrZero(
+        subscriptionAssetTransferRules,
+        senderBlockchainRid,
+        accountId,
+        senderConnection,
+        subscriptionAsset,
       );
 
       if (amount === undefined) {

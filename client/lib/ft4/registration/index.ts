@@ -17,22 +17,24 @@ import {
   enabledRegistrationStrategies,
   getTransferStrategyRules,
   getTransferStrategyRulesGroupedByStrategy,
-  TransferStrategyRule,
   TransferStrategyRuleRaw,
-  TransferStrategyRuleAmount,
   fetchLoginDetails,
   getLoginDetails,
   LoginDetails,
   getEnabledRegistrationStrategies,
   AllowListRaw,
   AssetLimitRaw,
+  PendingTransferExpirationState,
+} from "./strategies";
+import {
+  TransferStrategyRuleAmount,
   TransferStrategyRulePartial,
   AssetLimit,
   TransferSenderBlockchains,
   TransferParticipants,
   TransferParticipantSingle,
-  PendingTransferExpirationState,
-} from "./strategies";
+  TransferStrategyRule,
+ Strategy } from "./types";
 
 /**
  * Functions that can be used to register an account
@@ -130,7 +132,6 @@ const registrationStrategy: RegistrationStrategy = {
 import { registerAccountMessage } from "./queries";
 
 import { registerAccount as registerAccountOp } from "./operations";
-import { Strategy } from "./types";
 import { AnyAuthDescriptorRegistration } from "@ft4/accounts";
 import { LoginConfigOptions } from "@ft4/authentication";
 import { Asset } from "@ft4/asset";

@@ -20,6 +20,7 @@ import { getTransferStrategyRulesGroupedByStrategy } from "./transfer-rules";
 import { formatter } from "postchain-client";
 import { TransferRef } from "@ft4/crosschain";
 import { gtxToRawGtx } from "@ft4/crosschain/utils";
+import { findValidStrategyRulesAndGetLowestAmountOrZero } from "@ft4/registration/utils";
 
 export function fee(
   senderBlockchainRid: BufferId,
@@ -54,11 +55,13 @@ export function fee(
       const feeAssetTransferRules = transferRules
         .get("fee")
         ?.get(formatter.toString(feeAsset.id));
-      const amount = feeAssetTransferRules?.reduce(
-        (prev, curr) => (prev > curr.minAmount ? curr.minAmount : prev),
-        feeAssetTransferRules.length > 0
-          ? feeAssetTransferRules[0].minAmount
-          : 0n,
+
+      const amount = await findValidStrategyRulesAndGetLowestAmountOrZero(
+        feeAssetTransferRules,
+        senderBlockchainRid,
+        accountId,
+        senderConnection,
+        feeAsset,
       );
 
       if (amount === undefined) {

@@ -1,13 +1,12 @@
 import { Queryable, formatter } from "postchain-client";
-import {
-  AssetLimit,
-  AssetLimitRaw,
-  TransferStrategyRuleAmount,
-  TransferStrategyRule,
-  TransferStrategyRulePartial,
-  TransferStrategyRuleRaw,
-} from "./types";
+import { AssetLimitRaw, TransferStrategyRuleRaw } from "./types";
 import { transferRules } from "./queries";
+import {
+  TransferStrategyRule,
+  AssetLimit,
+  TransferStrategyRuleAmount,
+  TransferStrategyRulePartial,
+} from "@ft4/registration/types";
 
 /**
  * Fetches all transfer strategy rules configured on the chain

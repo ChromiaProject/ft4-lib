@@ -57,6 +57,7 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
   });
 }
 
-function ensureString(bufferId: BufferId): string {
+// Todo remove once it is exported from postchain-client
+export function ensureString(bufferId: BufferId): string {
   return typeof bufferId === "string" ? bufferId : bufferId.toString("hex");
 }

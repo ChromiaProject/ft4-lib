@@ -33,3 +33,33 @@ export class StrategyError extends Error {
     this.name = "StrategyError";
   }
 }
+
+export type TransferStrategyRuleAmount = TransferStrategyRulePartial & {
+  minAmount: bigint;
+};
+
+export type TransferSenderBlockchains = "all" | Buffer | Buffer[];
+
+export type TransferParticipants =
+  | "all"
+  | TransferParticipantSingle
+  | TransferParticipantSingle[];
+
+export type TransferStrategyRulePartial = {
+  senderBlockchains: TransferSenderBlockchains;
+  senders: TransferParticipants;
+  recipients: TransferParticipants;
+  timeoutDays: number;
+};
+
+export type TransferParticipantSingle = "current" | Buffer;
+
+export type TransferStrategyRule = TransferStrategyRulePartial & {
+  strategies: string[];
+  assets: "all" | AssetLimit[];
+};
+
+export type AssetLimit = {
+  id: Buffer;
+  minAmount: bigint;
+};
