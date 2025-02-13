@@ -1,5 +1,5 @@
 import { Queryable, formatter } from "postchain-client";
-import { AssetLimitRaw, TransferStrategyRuleRaw } from "./types";
+import { AllowedAssets, TransferStrategyRuleRaw } from "./types";
 import { transferRules } from "./queries";
 import {
   TransferStrategyRule,
@@ -41,12 +41,12 @@ export async function getTransferStrategyRulesGroupedByStrategy(
   const rules = await queryable.query(transferRules());
   const rulesMap = new Map<string, Map<string, TransferStrategyRuleAmount[]>>();
   for (const rule of rules) {
-    const assets = rule.allow_all_assets
+    const assets = rule.assets?.allow_all
       ? [{ id: "all", amount: 0n }]
-      : rule.asset_limits.map(({ id, min_amount }) => ({
+      : rule.assets?.allowed_values.map(({ id, min_amount }) => ({
           id: formatter.toString(id),
           amount: min_amount,
-        }));
+        })) || [];
     for (const strategy of rule.strategies) {
       for (const asset of assets) {
         if (!rulesMap.has(strategy)) {
@@ -95,6 +95,10 @@ export function mapTransferStrategyRulePartial(
         ? "all"
         : rule.recipients.allowed_values,
     timeoutDays: rule.timeout_days,
+    assets:
+      rule.assets?.allow_all ?? true
+        ? "all"
+        : rule.assets?.allowed_values.map(mapAssetLimit) ?? [],
   };
 }
 
@@ -109,9 +113,6 @@ export function mapTransferStrategyRule(
   return {
     ...mapTransferStrategyRulePartial(rule),
     strategies: rule.strategies,
-    assets: rule.allow_all_assets
-      ? "all"
-      : rule.asset_limits.map(mapAssetLimit),
   };
 }
 
@@ -136,9 +137,11 @@ export function mapTransferStrategyRuleAmount(
  * @param assetLimit - raw asset limit
  * @returns AssetLimit object
  */
-export function mapAssetLimit(assetLimit: AssetLimitRaw): AssetLimit {
+export function mapAssetLimit(assetLimit: AllowedAssets): AssetLimit {
   return {
     id: assetLimit.id,
+    name: assetLimit.name,
+    issuingBlockchainRid: assetLimit.issuing_blockchain_rid,
     minAmount: assetLimit.min_amount,
   };
 }

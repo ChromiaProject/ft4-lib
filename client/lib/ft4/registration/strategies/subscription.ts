@@ -56,11 +56,18 @@ export function subscription(
         .get("subscription")
         ?.get(formatter.toString(subscriptionAsset.id));
 
+      const senderAccountInCurrentChain =
+        await senderConnection.getAccountById(accountId);
+
+      if (!senderAccountInCurrentChain) {
+        throw new StrategyError(
+          `Sender account <${accountId.toString("hex")}> not found on blockchain <${senderConnection.blockchainRid.toString("hex")}>`,
+        );
+      }
+
       const amount = await findValidStrategyRulesAndGetLowestAmountOrZero(
         subscriptionAssetTransferRules,
-        senderBlockchainRid,
-        accountId,
-        senderConnection,
+        senderAccountInCurrentChain,
         subscriptionAsset,
       );
 

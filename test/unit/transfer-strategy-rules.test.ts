@@ -6,6 +6,7 @@ import {
   TransferStrategyRuleAmount,
   TransferStrategyRuleRaw,
 } from "@ft4/registration";
+import { AllowedAssets } from "@ft4/registration/strategies/types";
 import { createStubClient, encryption, formatter } from "postchain-client";
 
 describe("Transfer strategy rules", () => {
@@ -27,6 +28,16 @@ describe("Transfer strategy rules", () => {
     };
   });
 
+  const createAllowedAssets = (
+    id: Buffer,
+    minAmount: bigint,
+  ): AllowedAssets => ({
+    id,
+    name: "TestAsset",
+    issuing_blockchain_rid: Buffer.alloc(32),
+    min_amount: minAmount,
+  });
+
   it("correctly maps response when properties have 'all' values", async () => {
     const response: TransferStrategyRuleRaw[] = [
       {
@@ -44,8 +55,10 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: false,
-        allow_all_assets: true,
-        asset_limits: [],
+        assets: {
+          allow_all: true,
+          allowed_values: [],
+        },
         timeout_days: 1,
       },
     ];
@@ -85,13 +98,10 @@ describe("Transfer strategy rules", () => {
           allowed_values: [recipient1],
         },
         require_same_address: false,
-        allow_all_assets: false,
-        asset_limits: [
-          {
-            id: asset1,
-            min_amount: 10n,
-          },
-        ],
+        assets: {
+          allow_all: false,
+          allowed_values: [createAllowedAssets(asset1, 10n)],
+        },
         timeout_days: 1,
       },
     ];
@@ -109,6 +119,8 @@ describe("Transfer strategy rules", () => {
         assets: [
           {
             id: asset1,
+            name: "TestAsset",
+            issuingBlockchainRid: Buffer.alloc(32),
             minAmount: 10n,
           },
         ],
@@ -136,13 +148,10 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: true,
-        allow_all_assets: false,
-        asset_limits: [
-          {
-            id: asset1,
-            min_amount: 11n,
-          },
-        ],
+        assets: {
+          allow_all: false,
+          allowed_values: [createAllowedAssets(asset1, 11n)],
+        },
         timeout_days: 10,
       },
     ];
@@ -160,6 +169,8 @@ describe("Transfer strategy rules", () => {
         assets: [
           {
             id: asset1,
+            name: "TestAsset",
+            issuingBlockchainRid: Buffer.alloc(32),
             minAmount: 11n,
           },
         ],
@@ -187,17 +198,13 @@ describe("Transfer strategy rules", () => {
           allowed_values: [recipient1, recipient2],
         },
         require_same_address: false,
-        allow_all_assets: false,
-        asset_limits: [
-          {
-            id: asset1,
-            min_amount: 100n,
-          },
-          {
-            id: asset2,
-            min_amount: 200n,
-          },
-        ],
+        assets: {
+          allow_all: false,
+          allowed_values: [
+            createAllowedAssets(asset1, 100n),
+            createAllowedAssets(asset2, 200n),
+          ],
+        },
         timeout_days: 1,
       },
     ];
@@ -215,10 +222,14 @@ describe("Transfer strategy rules", () => {
         assets: [
           {
             id: asset1,
+            name: "TestAsset",
+            issuingBlockchainRid: Buffer.alloc(32),
             minAmount: 100n,
           },
           {
             id: asset2,
+            name: "TestAsset",
+            issuingBlockchainRid: Buffer.alloc(32),
             minAmount: 200n,
           },
         ],
@@ -246,13 +257,17 @@ describe("Transfer strategy rules", () => {
           allowed_values: [recipient1],
         },
         require_same_address: false,
-        allow_all_assets: false,
-        asset_limits: [
-          {
-            id: asset1,
-            min_amount: 15n,
-          },
-        ],
+        assets: {
+          allow_all: false,
+          allowed_values: [
+            {
+              id: asset1,
+              min_amount: 15n,
+              name: "TestAsset",
+              issuing_blockchain_rid: Buffer.alloc(32),
+            },
+          ],
+        },
         timeout_days: 1,
       },
       {
@@ -270,13 +285,17 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: false,
-        allow_all_assets: false,
-        asset_limits: [
-          {
-            id: asset2,
-            min_amount: 20n,
-          },
-        ],
+        assets: {
+          allow_all: false,
+          allowed_values: [
+            {
+              id: asset2,
+              min_amount: 20n,
+              name: "TestAsset",
+              issuing_blockchain_rid: Buffer.alloc(32),
+            },
+          ],
+        },
         timeout_days: 1,
       },
     ];
@@ -294,6 +313,8 @@ describe("Transfer strategy rules", () => {
         assets: [
           {
             id: asset1,
+            name: "TestAsset",
+            issuingBlockchainRid: Buffer.alloc(32),
             minAmount: 15n,
           },
         ],
@@ -307,6 +328,8 @@ describe("Transfer strategy rules", () => {
         assets: [
           {
             id: asset2,
+            name: "TestAsset",
+            issuingBlockchainRid: Buffer.alloc(32),
             minAmount: 20n,
           },
         ],
@@ -333,14 +356,11 @@ describe("Transfer strategy rules", () => {
           allow_all: true,
           allowed_values: [],
         },
+        assets: {
+          allow_all: true,
+          allowed_values: [],
+        },
         require_same_address: false,
-        allow_all_assets: false,
-        asset_limits: [
-          {
-            id: asset1,
-            min_amount: 10n,
-          },
-        ],
         timeout_days: 1,
       },
     ];
@@ -355,14 +375,15 @@ describe("Transfer strategy rules", () => {
           "fee",
           new Map<string, TransferStrategyRuleAmount[]>([
             [
-              formatter.toString(asset1),
+              "all",
               [
                 {
                   senderBlockchains: "all",
                   senders: "all",
                   recipients: "all",
                   timeoutDays: 1,
-                  minAmount: 10n,
+                  minAmount: 0n,
+                  assets: "all",
                 },
               ],
             ],
@@ -387,11 +408,13 @@ describe("Transfer strategy rules", () => {
           allow_all: false,
           allowed_values: [recipient1, recipient2],
         },
-        allow_all_assets: true,
+        assets: {
+          allow_all: true,
+          allowed_values: [],
+        },
         strategies: ["open"],
         timeout_days: 15,
         require_same_address: false,
-        asset_limits: [],
       },
     ];
 
@@ -413,6 +436,7 @@ describe("Transfer strategy rules", () => {
                   recipients: [recipient1, recipient2],
                   timeoutDays: 15,
                   minAmount: 0n,
+                  assets: "all",
                 },
               ],
             ],
@@ -439,13 +463,10 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: false,
-        allow_all_assets: false,
-        asset_limits: [
-          {
-            id: asset1,
-            min_amount: 100n,
-          },
-        ],
+        assets: {
+          allow_all: false,
+          allowed_values: [createAllowedAssets(asset1, 100n)],
+        },
         timeout_days: 30,
       },
       {
@@ -463,13 +484,10 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: false,
-        allow_all_assets: false,
-        asset_limits: [
-          {
-            id: asset2,
-            min_amount: 50n,
-          },
-        ],
+        assets: {
+          allow_all: false,
+          allowed_values: [createAllowedAssets(asset2, 50n)],
+        },
         timeout_days: 15,
       },
     ];
@@ -492,6 +510,14 @@ describe("Transfer strategy rules", () => {
                   recipients: "all",
                   timeoutDays: 30,
                   minAmount: 100n,
+                  assets: [
+                    {
+                      id: asset1,
+                      name: "TestAsset",
+                      issuingBlockchainRid: Buffer.alloc(32),
+                      minAmount: 100n,
+                    },
+                  ],
                 },
               ],
             ],
@@ -504,6 +530,14 @@ describe("Transfer strategy rules", () => {
                   recipients: "all",
                   timeoutDays: 15,
                   minAmount: 50n,
+                  assets: [
+                    {
+                      id: asset2,
+                      name: "TestAsset",
+                      issuingBlockchainRid: Buffer.alloc(32),
+                      minAmount: 50n,
+                    },
+                  ],
                 },
               ],
             ],
@@ -530,13 +564,10 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: true,
-        allow_all_assets: false,
-        asset_limits: [
-          {
-            id: asset1,
-            min_amount: 10n,
-          },
-        ],
+        assets: {
+          allow_all: false,
+          allowed_values: [createAllowedAssets(asset1, 10n)],
+        },
         timeout_days: 30,
       },
       {
@@ -554,13 +585,10 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: false,
-        allow_all_assets: false,
-        asset_limits: [
-          {
-            id: asset1,
-            min_amount: 10n,
-          },
-        ],
+        assets: {
+          allow_all: false,
+          allowed_values: [createAllowedAssets(asset1, 10n)],
+        },
         timeout_days: 15,
       },
     ];
@@ -583,6 +611,14 @@ describe("Transfer strategy rules", () => {
                   recipients: "current",
                   timeoutDays: 30,
                   minAmount: 10n,
+                  assets: [
+                    {
+                      id: asset1,
+                      name: "TestAsset",
+                      issuingBlockchainRid: Buffer.alloc(32),
+                      minAmount: 10n,
+                    },
+                  ],
                 },
                 {
                   senderBlockchains: [blockchain1],
@@ -590,6 +626,14 @@ describe("Transfer strategy rules", () => {
                   recipients: "all",
                   timeoutDays: 15,
                   minAmount: 10n,
+                  assets: [
+                    {
+                      id: asset1,
+                      name: "TestAsset",
+                      issuingBlockchainRid: Buffer.alloc(32),
+                      minAmount: 10n,
+                    },
+                  ],
                 },
               ],
             ],
@@ -616,13 +660,10 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: true,
-        allow_all_assets: false,
-        asset_limits: [
-          {
-            id: asset1,
-            min_amount: 10n,
-          },
-        ],
+        assets: {
+          allow_all: false,
+          allowed_values: [createAllowedAssets(asset1, 10n)],
+        },
         timeout_days: 30,
       },
       {
@@ -640,13 +681,10 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: false,
-        allow_all_assets: false,
-        asset_limits: [
-          {
-            id: asset1,
-            min_amount: 10n,
-          },
-        ],
+        assets: {
+          allow_all: false,
+          allowed_values: [createAllowedAssets(asset1, 10n)],
+        },
         timeout_days: 15,
       },
       {
@@ -664,13 +702,10 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: false,
-        allow_all_assets: false,
-        asset_limits: [
-          {
-            id: asset1,
-            min_amount: 2n,
-          },
-        ],
+        assets: {
+          allow_all: false,
+          allowed_values: [createAllowedAssets(asset1, 2n)],
+        },
         timeout_days: 15,
       },
     ];
@@ -693,6 +728,14 @@ describe("Transfer strategy rules", () => {
                   recipients: "current",
                   timeoutDays: 30,
                   minAmount: 10n,
+                  assets: [
+                    {
+                      id: asset1,
+                      name: "TestAsset",
+                      issuingBlockchainRid: Buffer.alloc(32),
+                      minAmount: 10n,
+                    },
+                  ],
                 },
                 {
                   senderBlockchains: [blockchain1],
@@ -700,6 +743,14 @@ describe("Transfer strategy rules", () => {
                   recipients: "all",
                   timeoutDays: 15,
                   minAmount: 10n,
+                  assets: [
+                    {
+                      id: asset1,
+                      name: "TestAsset",
+                      issuingBlockchainRid: Buffer.alloc(32),
+                      minAmount: 10n,
+                    },
+                  ],
                 },
               ],
             ],
@@ -717,6 +768,14 @@ describe("Transfer strategy rules", () => {
                   recipients: "all",
                   timeoutDays: 15,
                   minAmount: 2n,
+                  assets: [
+                    {
+                      id: asset1,
+                      name: "TestAsset",
+                      issuingBlockchainRid: Buffer.alloc(32),
+                      minAmount: 2n,
+                    },
+                  ],
                 },
               ],
             ],

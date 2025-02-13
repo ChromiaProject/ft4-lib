@@ -1,12 +1,14 @@
 import { BufferId } from "@ft4/utils";
 import { ensureString } from "@ft4/authentication/login/stores/browser-login-keystore";
-import { Asset } from "@ft4/asset";
-import { Connection } from "@ft4/ft-session";
+import { Asset, Balance } from "@ft4/asset";
 import {
+  AssetLimit,
+  TransferAssets,
   TransferParticipants,
   TransferSenderBlockchains,
   TransferStrategyRuleAmount,
 } from "@ft4/registration/types";
+import { Account } from "@ft4/accounts";
 
 // Todo remove once it is properly exported from postchain-client
 // currently only exported from /built/
@@ -28,40 +30,33 @@ export function ensureBuffer(value: BufferId): Buffer {
  * Finds the valid strategy rules and returns the one with the lowest amount or 0 if no valid rules are found.
  *
  * @param rules - The rules to find the valid rules from.
- * @param senderBlockchainRid - The sender blockchain rid.
- * @param senderAndRecipientAccountId - The sender and recipient account id.
- * @param senderConnection - The senders connection to the blockchain.
+ * @param senderAccount - The senders Account.
  * @param asset - The asset to be checked for balance of the sender
  *
  * @returns The lowest amount or 0 if no valid rules are found.
  */
 export async function findValidStrategyRulesAndGetLowestAmountOrZero(
   rules: TransferStrategyRuleAmount[] | undefined,
-  senderBlockchainRid: BufferId,
-  senderAndRecipientAccountId: BufferId,
-  senderConnection: Connection,
+  senderAccount: Account,
   asset: Asset,
 ): Promise<bigint | undefined> {
   if (!rules || rules.length === 0) {
     return undefined;
   }
 
-  const accountInCurrentchain = await senderConnection.getAccountById(
-    senderAndRecipientAccountId,
+  const accountInCurrentchain = await senderAccount.connection.getAccountById(
+    senderAccount.id,
   );
 
   const senderBalance = await accountInCurrentchain?.getBalanceByAssetId(
     asset.id,
   );
 
-  const senderBalanceAmount = senderBalance?.amount?.value ?? BigInt(0);
+  if (!senderBalance) {
+    throw new Error("Insufficient balance. Registration failed.");
+  }
 
-  const validRules = getValidRules(
-    rules,
-    senderBlockchainRid,
-    senderAndRecipientAccountId,
-    senderBalanceAmount,
-  );
+  const validRules = getValidRules(rules, senderAccount, senderBalance);
 
   if (validRules.length === 0) {
     return BigInt(0);
@@ -79,37 +74,39 @@ export async function findValidStrategyRulesAndGetLowestAmountOrZero(
  * while it ensures if the sender balance is enough to cover the min amount of the rule.
  *
  * @param rules - The rules to get the valid rules from.
- * @param senderBlockchainRid - The sender blockchain rid.
- * @param senderAndRecipientAccountId - The sender and recipient account id.
- * @param senderBalanceAmount - The sender balance amount.
+ * @param senderAccount - The sender account.
+ * @param senderBalance - The sender Balance.
  *
  * @returns The valid rules, which can be none, one or multiple.
  */
 export function getValidRules(
   rules: TransferStrategyRuleAmount[],
-  senderBlockchainRid: BufferId,
-  senderAndRecipientAccountId: BufferId,
-  senderBalanceAmount: bigint,
+  senderAccount: Account,
+  senderBalance: Balance,
 ): TransferStrategyRuleAmount[] {
   return rules.filter((rule) => {
     const isValiderBlockchain = isValidSenderBlockchainRule(
       rule.senderBlockchains,
-      senderBlockchainRid,
+      senderAccount.blockchainRid,
     );
     const isValidSender = isValidParticipantRule(
       rule.senders,
-      senderAndRecipientAccountId,
+      senderAccount.id,
     );
     const isValidRecipient = isValidParticipantRule(
       rule.recipients,
-      senderAndRecipientAccountId,
+      senderAccount.id,
     );
+
+    const isValidAsset = isValidAssetRule(rule.assets, senderBalance.asset);
+    const senderBalanceAmount = senderBalance.amount.value ?? BigInt(0);
     const isSenderBalanceEnough = senderBalanceAmount >= rule.minAmount;
 
     return (
       isValiderBlockchain &&
       isValidSender &&
       isValidRecipient &&
+      isValidAsset &&
       isSenderBalanceEnough
     );
   });
@@ -183,6 +180,62 @@ export function isValidSenderBlockchainRule(
         return false;
       }
     }
+  }
+
+  return true;
+}
+
+/**
+ * Validates the asset for the provided rules
+ *
+ * @param ruleAssets - The asset rules to validate.
+ * @param asset - The asset to validate against against the rule assets
+ *
+ * @returns A boolean value indicating if the asset is valid.
+ */
+export function isValidAssetRule(
+  ruleAssets: TransferAssets,
+  asset: Asset,
+): boolean {
+  if (ruleAssets !== "all") {
+    if (!Array.isArray(ruleAssets)) {
+      return validateAssetLimitRule(ruleAssets, asset);
+    }
+
+    if (Array.isArray(ruleAssets)) {
+      return ruleAssets.some((rule) => validateAssetLimitRule(rule, asset));
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Validates the asset limit for the provided rules
+ *
+ * @param assetLimit - The asset limit to validate.
+ * @param asset - The asset to validate against the rule assets
+ *
+ * @returns A boolean value indicating if the asset is valid.
+ */
+function validateAssetLimitRule(assetLimit: AssetLimit, asset: Asset): boolean {
+  if ("id" in assetLimit && assetLimit.id !== undefined) {
+    if (Buffer.compare(assetLimit.id, asset.id) !== 0) return false;
+  }
+
+  if ("name" in assetLimit && assetLimit.name !== undefined) {
+    if (assetLimit.name.toUpperCase() === asset.name.toUpperCase())
+      return false;
+  }
+
+  if (
+    "issuingBlockchainRid" in assetLimit &&
+    assetLimit.issuingBlockchainRid !== undefined
+  ) {
+    if (
+      Buffer.compare(assetLimit.issuingBlockchainRid, asset.blockchainRid) !== 0
+    )
+      return false;
   }
 
   return true;

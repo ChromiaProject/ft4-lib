@@ -56,11 +56,18 @@ export function fee(
         .get("fee")
         ?.get(formatter.toString(feeAsset.id));
 
+      const senderAccountInCurrentChain =
+        await senderConnection.getAccountById(accountId);
+
+      if (!senderAccountInCurrentChain) {
+        throw new StrategyError(
+          `Sender account <${accountId.toString("hex")}> not found on blockchain <${senderConnection.blockchainRid.toString("hex")}>`,
+        );
+      }
+
       const amount = await findValidStrategyRulesAndGetLowestAmountOrZero(
         feeAssetTransferRules,
-        senderBlockchainRid,
-        accountId,
-        senderConnection,
+        senderAccountInCurrentChain,
         feeAsset,
       );
 

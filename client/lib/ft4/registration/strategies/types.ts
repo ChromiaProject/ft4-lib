@@ -1,6 +1,5 @@
 import { AuthDescriptorRegistration, SingleSig } from "@ft4/accounts";
 import { FtKeyStore, LoginKeyStore } from "@ft4/authentication";
-import { Buffer } from "buffer";
 
 export type LoginDetails = {
   authDescriptor: AuthDescriptorRegistration<SingleSig>;
@@ -14,7 +13,14 @@ export type AllowListRaw = {
 };
 
 export type AssetLimitRaw = {
+  allow_all: boolean;
+  allowed_values: AllowedAssets[];
+};
+
+export type AllowedAssets = {
   id: Buffer;
+  name: string;
+  issuing_blockchain_rid: Buffer;
   min_amount: bigint;
 };
 
@@ -27,8 +33,7 @@ export type TransferStrategyRuleRaw = {
   senders: AllowListRaw;
   recipients: AllowListRaw;
   require_same_address: boolean;
-  allow_all_assets: boolean;
-  asset_limits: AssetLimitRaw[];
+  assets?: AssetLimitRaw;
   timeout_days: number;
 };
 

@@ -45,10 +45,13 @@ export type TransferParticipants =
   | TransferParticipantSingle
   | TransferParticipantSingle[];
 
+export type TransferAssets = "all" | AssetLimit | AssetLimit[];
+
 export type TransferStrategyRulePartial = {
   senderBlockchains: TransferSenderBlockchains;
   senders: TransferParticipants;
   recipients: TransferParticipants;
+  assets: TransferAssets;
   timeoutDays: number;
 };
 
@@ -56,10 +59,11 @@ export type TransferParticipantSingle = "current" | Buffer;
 
 export type TransferStrategyRule = TransferStrategyRulePartial & {
   strategies: string[];
-  assets: "all" | AssetLimit[];
 };
 
 export type AssetLimit = {
-  id: Buffer;
+  id?: Buffer;
+  name?: string;
+  issuingBlockchainRid?: Buffer;
   minAmount: bigint;
 };
