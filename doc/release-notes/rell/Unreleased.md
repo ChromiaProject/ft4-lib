@@ -4,7 +4,6 @@
 
 ### Changed 🪙
 - Allow multiple smaller transfers to a non-existing account for the same asset type. 
-
 - The logic takes multiple senders for one recipient into consideration
 - Updated the response of the query `get_account_by_id` to also return type along with id
 
