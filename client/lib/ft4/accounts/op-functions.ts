@@ -146,6 +146,7 @@ function addAuthDescriptor(
           authenticator.accountId,
           authenticator.keyHandlers.concat(keyStore.createKeyHandler(ad)),
           authenticator.authDataService,
+          connection,
         );
         resolve({
           receipt,
@@ -212,6 +213,7 @@ function updateMainAuthDescriptor(
           authenticator.accountId,
           keyHandlers,
           authenticator.authDataService,
+          connection,
         );
 
         resolve({
@@ -252,6 +254,7 @@ function deleteAuthDescriptor(
           ),
       ),
       authenticator.authDataService,
+      connection,
     );
     call(connection, authenticator, deleteAuthDescriptorOp(authDescriptorId))
       .on("built", (tx) => promiEvent.emit("built", tx))
@@ -292,6 +295,7 @@ function deleteAllAuthDescriptorsExceptMain(
             authDescriptor.id.equals(mainAuthDescriptor.id),
           ),
           authenticator.authDataService,
+          connection,
         );
 
         call(connection, authenticator, deleteAllAuthDescriptorsExceptMainOp())

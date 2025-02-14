@@ -84,6 +84,7 @@ describe("Transaction Signing", () => {
         getAccountIdFromAuthDescriptor(ad),
         [createFtKeyHandler(testAdFromRegistration(ad), keyStore)],
         authDataService,
+        connection,
       );
 
       const tx = await transactionBuilder(authenticator, client)
@@ -128,12 +129,14 @@ describe("Transaction Signing", () => {
         accountId1,
         [createEvmKeyHandler(testAdFromRegistration(ad1), evmKeyStore)],
         authDataService,
+        connection,
       );
 
       const ftAuthenticator = createAuthenticator(
         accountId2,
         [createFtKeyHandler(testAdFromRegistration(ad2), ftKeyStore)],
         authDataService,
+        connection,
       );
 
       const tx = await transactionBuilder(evmAuthenticator, client)
@@ -180,6 +183,7 @@ describe("Transaction Signing", () => {
         accountId,
         [createEvmKeyHandler(testAdFromRegistration(originalAd), evmKeyStore1)],
         authDataService,
+        connection,
       );
 
       const authenticator2 = createAuthenticator(
@@ -189,6 +193,7 @@ describe("Transaction Signing", () => {
           createFtKeyHandler(testAdFromRegistration(adToAdd), ftKeyStore),
         ],
         authDataService,
+        connection,
       );
 
       const partiallySignedTx = await transactionBuilder(authenticator1, client)
@@ -230,11 +235,13 @@ describe("Transaction Signing", () => {
         accountId,
         [createEvmKeyHandler(testAdFromRegistration(originalAd), evmKeyStore1)],
         authDataService,
+        connection,
       );
       const ftAuthenticator = createAuthenticator(
         accountId,
         [createFtKeyHandler(testAdFromRegistration(originalAd), ftKeyStore)],
         authDataService,
+        connection,
       );
       const partiallySignedTx = await transactionBuilder(
         evmAuthenticator,
@@ -281,16 +288,19 @@ describe("Transaction Signing", () => {
         accountId,
         [createEvmKeyHandler(testAdFromRegistration(originalAd), evmKeyStore1)],
         authDataService,
+        connection,
       );
       const evmAuthenticator2 = createAuthenticator(
         accountId,
         [createEvmKeyHandler(testAdFromRegistration(originalAd), evmKeyStore2)],
         authDataService,
+        connection,
       );
       const ftAuthenticator = createAuthenticator(
         accountId,
         [createFtKeyHandler(testAdFromRegistration(adToAdd), ftKeyStore)],
         authDataService,
+        connection,
       );
       const partiallySignedTx = await transactionBuilder(
         evmAuthenticator1,
@@ -335,11 +345,13 @@ describe("Transaction Signing", () => {
         accountId,
         [createEvmKeyHandler(testAdFromRegistration(originalAd), evmKeyStore1)],
         authDataService,
+        connection,
       );
       const authenticator2 = createAuthenticator(
         accountId,
         [createEvmKeyHandler(testAdFromRegistration(adToAdd), evmKeyStore2)],
         authDataService,
+        connection,
       );
 
       const unsignedTx = await transactionBuilder(authenticator1, client)
@@ -377,11 +389,13 @@ describe("Transaction Signing", () => {
         accountId,
         [createFtKeyHandler(testAdFromRegistration(originalAd), ftKeyStore)],
         authDataService,
+        connection,
       );
       const authenticator2 = createAuthenticator(
         accountId,
         [createEvmKeyHandler(testAdFromRegistration(adToAdd), evmKeyStore1)],
         authDataService,
+        connection,
       );
 
       const unsignedTx = await transactionBuilder(authenticator1, client)
@@ -413,6 +427,7 @@ describe("Transaction Signing", () => {
         getAccountIdFromAuthDescriptor(ad),
         [createFtKeyHandler(testAdFromRegistration(ad), keyStore)],
         authDataService,
+        connection,
       );
 
       const tx = await transactionBuilder(authenticator, client)
@@ -459,12 +474,14 @@ describe("Transaction Signing", () => {
         accountId1,
         [createEvmKeyHandler(testAdFromRegistration(ad1), evmKeyStore)],
         authDataService,
+        connection,
       );
 
       const ftAuthenticator = createAuthenticator(
         accountId2,
         [createFtKeyHandler(testAdFromRegistration(ad2), ftKeyStore)],
         authDataService,
+        connection,
       );
 
       const tx = await transactionBuilder(evmAuthenticator, client)
@@ -511,6 +528,7 @@ describe("Transaction Signing", () => {
         accountId,
         [createEvmKeyHandler(testAdFromRegistration(originalAd), evmKeyStore1)],
         authDataService,
+        connection,
       );
       const partiallySignedTx = await transactionBuilder(
         evmAuthenticator,
@@ -556,6 +574,7 @@ describe("Transaction Signing", () => {
         accountId,
         [createEvmKeyHandler(testAdFromRegistration(originalAd), evmKeyStore1)],
         authDataService,
+        connection,
       );
       const unsignedTx = await transactionBuilder(authenticator1, client)
         .add(addAuthDescriptor(adToAdd), {
@@ -596,6 +615,7 @@ describe("Transaction Signing", () => {
         accountId,
         [createFtKeyHandler(testAdFromRegistration(originalAd), ftKeyStore)],
         authDataService,
+        connection,
       );
 
       const unsignedTx = await transactionBuilder(authenticator1, client)

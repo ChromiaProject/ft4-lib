@@ -9,6 +9,7 @@ import {
   TxContext,
 } from "@ft4/utils";
 import { AuthDataService } from "@ft4/authentication";
+import { Connection } from "@ft4/ft-session";
 
 /**
  * Creates an `AuthDescriptorValidator` that can be used to validate auth descriptors
@@ -19,11 +20,12 @@ import { AuthDataService } from "@ft4/authentication";
 export function createAuthDescriptorValidator(
   authDataService: AuthDataService,
   useCache: boolean,
+  connection: Connection,
 ): AuthDescriptorValidator {
   const service = useCache
     ? authDescriptorValidationServiceWithCache(authDataService)
     : authDescriptorValidationService(authDataService);
-  return createBaseAuthDescriptorValidator(service);
+  return createBaseAuthDescriptorValidator(service, connection);
 }
 
 /**
@@ -35,18 +37,18 @@ export function createAuthDescriptorValidator(
 export function createAuthDescriptorValidatorWithTxContext(
   authDataService: AuthDataService,
   txContext: TxContext,
+  connection: Connection,
 ): AuthDescriptorValidator {
   const service = authDescriptorValidationServiceWithCacheAndTxContext(
     authDataService,
     txContext,
   );
-  return createBaseAuthDescriptorValidator(service);
+  return createBaseAuthDescriptorValidator(service, connection);
 }
 
 function authDescriptorValidationServiceWithCache(
   authDataService: AuthDataService,
 ): AuthDescriptorValidationService {
-  let height: number;
   const counters: {
     [accountId: string]: { [authDescriptorId: string]: number | null };
   } = {};
@@ -67,11 +69,6 @@ function authDescriptorValidationServiceWithCache(
       counters[accId][adId] = counter;
       return counter;
     },
-    getBlockHeight: async () => {
-      if (height !== undefined) return height;
-      height = await authDataService.connection.getBlockHeight();
-      return height;
-    },
   });
 }
 
@@ -79,7 +76,6 @@ function authDescriptorValidationServiceWithCacheAndTxContext(
   authDataService: AuthDataService,
   txContext: TxContext,
 ): AuthDescriptorValidationService {
-  let height: number;
   return Object.freeze({
     getAuthDescriptorCounter: async (
       accountId: BufferId,
@@ -99,11 +95,6 @@ function authDescriptorValidationServiceWithCacheAndTxContext(
       }
       return counter;
     },
-    getBlockHeight: async () => {
-      if (height !== undefined) return height;
-      height = await authDataService.connection.getBlockHeight();
-      return height;
-    },
   });
 }
 
@@ -112,6 +103,5 @@ function authDescriptorValidationService(
 ): AuthDescriptorValidationService {
   return Object.freeze({
     getAuthDescriptorCounter: authDataService.getAuthDescriptorCounter,
-    getBlockHeight: authDataService.connection.getBlockHeight,
   });
 }

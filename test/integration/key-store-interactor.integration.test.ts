@@ -262,6 +262,7 @@ describe("Key store interactor", () => {
       account.id,
       [kh1, kh2],
       createAuthDataService(connection),
+      connection,
     );
     const selectedKeyHandler = await authenticator.getKeyHandlerForOperation(
       deleteAuthDescriptor(ad2.id),

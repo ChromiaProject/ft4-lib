@@ -95,6 +95,7 @@ describe("Transfer", () => {
       account1.id,
       [keyStore.createKeyHandler(authDescriptor)],
       account1.authenticator.authDataService,
+      connection,
     );
     // Initialize account object to use only auth descriptor without T flag
     const accountSessionWithoutTFlag = createAuthenticatedAccount(

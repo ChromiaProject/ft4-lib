@@ -65,7 +65,11 @@ export async function login(
 
   const authDataService = createAuthDataService(connection);
   // Get list of flags that will be added to new auth descriptor
-  const config = await getConfigFromOptions(authDataService, loginOptions);
+  const config = await getConfigFromOptions(
+    authDataService,
+    loginOptions,
+    connection,
+  );
 
   const usedLoginKeyStore =
     loginOptions.loginKeyStore || createInMemoryLoginKeyStore();
@@ -107,6 +111,7 @@ export async function login(
     loginOptions.accountId,
     [...disposableKeyHandlers, ...masterKeyHandlers],
     authDataService,
+    connection,
   );
 
   const session = createSession(connection, authenticator);
@@ -133,6 +138,7 @@ export async function login(
 export async function getConfigFromOptions(
   authDataService: AuthDataService,
   options: LoginConfigOptions,
+  connection: Connection,
 ): Promise<{ flags: string[]; rules: AuthDescriptorRules | null }> {
   let flags: string[];
   let rules: AuthDescriptorRules | null;
@@ -140,7 +146,7 @@ export async function getConfigFromOptions(
   let currentHeight: number;
   const getBlockHeight = async () => {
     if (currentHeight === undefined) {
-      currentHeight = await authDataService.connection.getBlockHeight();
+      currentHeight = await connection.getBlockHeight();
     }
     return currentHeight;
   };
@@ -186,6 +192,7 @@ async function addDisposableAuthDescriptor(
     accountId,
     [adminAuthHandler],
     createAuthDataService(connection),
+    connection,
   );
 
   const session = createSession(connection, authenticator);

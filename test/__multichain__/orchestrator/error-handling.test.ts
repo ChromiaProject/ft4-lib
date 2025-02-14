@@ -48,6 +48,7 @@ describe("Error Handling and Recovery", () => {
           ),
         ],
         testContext.account2.authenticator.authDataService,
+        testContext.connection2,
       ),
     );
 
@@ -82,6 +83,7 @@ describe("Error Handling and Recovery", () => {
           ),
         ],
         testContext.account2.authenticator.authDataService,
+        testContext.connection2,
       ),
     );
 
@@ -119,6 +121,7 @@ describe("Error Handling and Recovery", () => {
           ),
         ],
         testContext.account2.authenticator.authDataService,
+        testContext.connection2,
       ),
     );
 
@@ -151,6 +154,7 @@ describe("Error Handling and Recovery", () => {
           ),
         ],
         testContext.account2.authenticator.authDataService,
+        mockConnection,
       ),
     );
 

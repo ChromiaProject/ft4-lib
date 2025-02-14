@@ -114,6 +114,7 @@ describe("Authenticator", () => {
       accountId,
       [authHandler1, authHandler2],
       authDataService,
+      connection,
     );
 
     const authHandler = await authenticator.getKeyHandlerForOperation(
@@ -136,6 +137,7 @@ describe("Authenticator", () => {
         Buffer.alloc(0),
         [ftKeyHandler1, ftKeyHandler2],
         authDataService,
+        connection,
       );
 
       authenticator.getKeyHandlerForOperation(op("foo"), {});
@@ -151,6 +153,7 @@ describe("Authenticator", () => {
         Buffer.alloc(0),
         [ftKeyHandler1, ftKeyHandler2],
         authDataService,
+        connection,
       );
       const selectedHandler = await authenticator.getKeyHandlerForOperation(
         op("does not exist"),
@@ -170,6 +173,7 @@ describe("Authenticator", () => {
         Buffer.alloc(0),
         [ftKeyHandler1, ftKeyHandler2],
         authDataService,
+        connection,
       );
       const selectedHandler = await authenticator.getKeyHandlerForOperation(
         op("foo"),
@@ -189,6 +193,7 @@ describe("Authenticator", () => {
         Buffer.alloc(0),
         [ftKeyHandler1, ftKeyHandler2],
         authDataService,
+        connection,
       );
       await authenticator.getKeyHandlerForOperation(op("foo"), {});
       expect(
@@ -207,6 +212,7 @@ describe("Authenticator", () => {
         Buffer.alloc(0),
         [ftKeyHandler1],
         authDataService,
+        connection,
       );
       await authenticator.getKeyHandlerForOperation(op("foo"), {});
       expect(connection.query).toHaveBeenCalledTimes(1);
@@ -232,6 +238,7 @@ describe("Authenticator", () => {
         Buffer.alloc(0),
         keyHandlers,
         authDataService,
+        connection,
       );
       const selectedKeyHandler = await authenticator.getKeyHandlerForOperation(
         op("foo"),
@@ -263,6 +270,7 @@ describe("Authenticator", () => {
         Buffer.alloc(0),
         keyHandlers,
         authDataService,
+        connection,
       );
       await authenticator.getKeyHandlerForOperation(op("foo2"), {});
       expect(

@@ -44,6 +44,7 @@ import {
   formatter,
   gtx,
 } from "postchain-client";
+import { Connection, createConnection } from "@ft4/ft-session";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
@@ -52,7 +53,7 @@ describe("Transaction Builder", () => {
   let authDescriptor: AnyAuthDescriptor;
   let keyHandler: KeyHandler;
   let authDataService: AuthDataService;
-
+  let connection: Connection;
   const mockOperation: Operation = {
     name: "testOperation",
     args: [],
@@ -82,17 +83,18 @@ describe("Transaction Builder", () => {
       },
       exposureLogicFn,
     );
-
-    authenticator = createAuthenticator(
-      accountId,
-      [keyHandler],
-      authDataService,
-    );
   }
 
   beforeEach(async () => {
     setupTestEnvironment();
     client = await createStubClient();
+    connection = createConnection(client!);
+    authenticator = createAuthenticator(
+      accountId,
+      [keyHandler],
+      authDataService,
+      connection,
+    );
     client.sendTransaction = jest.fn().mockReturnValue(
       new Web3PromiEvent((resolve, _reject) =>
         resolve({
@@ -298,6 +300,7 @@ describe("Transaction Builder", () => {
       accountId,
       [createFtKeyHandler(testAdFromRegistration(ad), keyStore)],
       authService,
+      connection,
     );
 
     await expect(
@@ -333,6 +336,7 @@ describe("Transaction Builder", () => {
       accountId,
       [createEvmKeyHandler(testAdFromRegistration(ad), keyStore)],
       authService,
+      connection,
     );
 
     await expect(

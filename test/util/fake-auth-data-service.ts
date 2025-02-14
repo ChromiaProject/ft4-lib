@@ -1,5 +1,4 @@
 import { AuthDataService, LoginConfig } from "@ft4/authentication";
-import { Connection } from "@ft4/ft-session";
 import { BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { Operation } from "postchain-client";
@@ -11,11 +10,6 @@ export function createFakeAuthDataService(
 ): AuthDataService {
   const generator = asyncNumberGenerator();
   return {
-    connection: {
-      client: {
-        getBlocksInfo: (_limit: number) => generator.next().value,
-      },
-    } as unknown as Connection,
     isOperationExposed: isOperationExposedFn ?? (() => Promise.resolve(true)),
     getAuthMessageTemplate: (operation: Operation) =>
       Promise.resolve(data[operation.name].message),

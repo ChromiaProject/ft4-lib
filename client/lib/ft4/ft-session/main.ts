@@ -152,6 +152,7 @@ export function createConnection(client: IClient): Connection {
       createAuthDescriptorValidator(
         createAuthDataService(connection),
         useCache,
+        connection,
       ),
     getEnabledRegistrationStrategies: () =>
       getEnabledRegistrationStrategies(connection),
@@ -280,7 +281,6 @@ export function createAuthDataService(connection: Connection): AuthDataService {
   let authHandlers: { [key: string]: AuthHandler } | null = null;
 
   return Object.freeze({
-    connection,
     isOperationExposed: async (operationName: string): Promise<boolean> => {
       if (!exposedOperations) {
         exposedOperations = await fetchExposedOperations(connection);
@@ -365,6 +365,7 @@ export function createKeyStoreInteractor(
         accountId,
         keyHandlers,
         createAuthDataService(connection),
+        connection,
       );
 
       return createSession(connection, authenticator);
@@ -384,7 +385,11 @@ export function createKeyStoreInteractor(
 
       // Get list of flags that will be added to new auth descriptor
       const authDataService = createAuthDataService(connection);
-      const config = await getConfigFromOptions(authDataService, loginOptions);
+      const config = await getConfigFromOptions(
+        authDataService,
+        loginOptions,
+        connection,
+      );
 
       const account = createAccountObject(connection, loginOptions.accountId);
 

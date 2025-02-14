@@ -139,6 +139,7 @@ export function registerAccount(
           accountId,
           keyHandlers,
           createAuthDataService(connection),
+          connection,
         );
 
         const session = createSession(connection, authenticator);

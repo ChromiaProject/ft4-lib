@@ -50,6 +50,7 @@ import {
   createInMemoryFtKeyStore,
   ftAuth,
 } from "@ft4/authentication";
+import { Connection, createConnection } from "@ft4/ft-session";
 import {
   AnchoringTimeoutError,
   transactionBuilder,
@@ -74,6 +75,7 @@ import {
 describe("block anchored handling", () => {
   let authenticator: Authenticator;
   let client: IClient;
+  let connection: Connection;
   let keyPair: KeyPair;
   let authDescriptor: AnyAuthDescriptor;
   let keyHandler: KeyHandler;
@@ -81,6 +83,7 @@ describe("block anchored handling", () => {
 
   beforeEach(async () => {
     client = await createStubClient();
+    connection = createConnection(client);
     client.sendTransaction = jest.fn().mockReturnValue(
       new Web3PromiEvent((resolve, _reject) =>
         resolve({
@@ -113,6 +116,7 @@ describe("block anchored handling", () => {
       encryption.randomBytes(32),
       [keyHandler],
       authDataService,
+      connection,
     );
   });
 

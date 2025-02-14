@@ -14,6 +14,7 @@ import {
   createInMemoryEvmKeyStore,
   evmAuth,
 } from "@ft4/authentication";
+import { Connection, createConnection } from "@ft4/ft-session";
 import { transactionBuilder } from "@ft4/transaction-builder";
 import { deriveNonce, op } from "@ft4/utils";
 import { Buffer } from "buffer";
@@ -22,9 +23,10 @@ import { IClient, createStubClient, encryption, gtx } from "postchain-client";
 
 describe("EVM key handler", () => {
   let client: IClient;
-
+  let connection: Connection;
   beforeAll(async () => {
     client = await createStubClient();
+    connection = createConnection(client);
   });
 
   const keyPair = encryption.makeKeyPair(
@@ -42,7 +44,6 @@ describe("EVM key handler", () => {
   const authService = createFakeAuthDataService({
     foo: { flags: [AuthFlag.Transfer], message },
   });
-
   it("signs a message", async () => {
     const message = "Message to sign";
     const rawSignature = Buffer.from(
@@ -90,6 +91,7 @@ describe("EVM key handler", () => {
       accountId,
       [keyStore.createKeyHandler(testAdFromRegistration(ad))],
       authService,
+      connection,
     );
 
     const signature1 = await keyStore.signMessage(
@@ -138,6 +140,7 @@ describe("EVM key handler", () => {
       accountId,
       [keyStore.createKeyHandler(testAdFromRegistration(ad))],
       authService,
+      connection,
     );
 
     const signature1 = await keyStore.signMessage(
@@ -196,6 +199,7 @@ describe("EVM key handler", () => {
       accountId,
       [createEvmKeyHandler(testAdFromRegistration(ad), mockKeyStore)],
       authService,
+      connection,
     );
 
     await expect(

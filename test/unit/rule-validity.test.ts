@@ -1,4 +1,7 @@
-import { createFakeAuthDescriptorValidationService } from "@ft4-test/util";
+import {
+  asyncNumberGenerator,
+  createFakeAuthDescriptorValidationService,
+} from "@ft4-test/util";
 import {
   AnyAuthDescriptor,
   blockHeight,
@@ -11,16 +14,24 @@ import {
   lessThan,
   opCount,
 } from "@ft4/accounts";
+import { Connection } from "@ft4/ft-session";
 
 describe("Rules", () => {
   const CURR_OP_COUNT = 3;
   const CURR_HEIGHT = 7;
   const CURR_TIME = Date.now();
+  const generator = asyncNumberGenerator();
   const validator = createBaseAuthDescriptorValidator(
     createFakeAuthDescriptorValidationService({
       blockHeight: CURR_HEIGHT,
       authDescriptorCounter: CURR_OP_COUNT,
     }),
+    {
+      client: {
+        getBlocksInfo: (_limit: number) => generator.next().value,
+      },
+      getBlockHeight: () => Promise.resolve(CURR_HEIGHT || 0),
+    } as unknown as Connection,
   );
 
   const activeRules = [

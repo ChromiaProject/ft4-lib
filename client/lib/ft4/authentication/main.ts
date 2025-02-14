@@ -36,6 +36,7 @@ export function createAuthenticator(
   accountBufferId: BufferId,
   keyHandlers: KeyHandler[],
   authDataService: AuthDataService,
+  connection: Connection,
 ): Authenticator {
   const accountId = formatter.ensureBuffer(accountBufferId);
   return Object.freeze({
@@ -49,6 +50,7 @@ export function createAuthenticator(
         keyHandlers,
         operation,
         txContext,
+        connection,
       ),
     getAuthDescriptorCounter: (authDescriptorId: BufferId) =>
       authDataService.getAuthDescriptorCounter(accountId, authDescriptorId),
@@ -61,6 +63,7 @@ async function getKeyHandlerForOperation(
   keyHandlers: KeyHandler[],
   operation: Operation,
   txContext: TxContext,
+  connection: Connection,
 ): Promise<KeyHandler | null> {
   const authHandler = await authDataService.getAuthHandlerForOperation(
     operation.name,
@@ -77,6 +80,7 @@ async function getKeyHandlerForOperation(
     authDataService,
     allowedKeyHandlers,
     txContext,
+    connection,
   );
 
   const prioritizedKeyHandlers = validHandlers.toSorted(
@@ -102,10 +106,12 @@ async function filterOutInvalidAndExpiredHandlers(
   authDataService: AuthDataService,
   handlers: KeyHandler[],
   txContext: TxContext,
+  connection: Connection,
 ): Promise<KeyHandler[]> {
   const validator = createAuthDescriptorValidatorWithTxContext(
     authDataService,
     txContext,
+    connection,
   );
 
   const validHandlers = await Promise.all(

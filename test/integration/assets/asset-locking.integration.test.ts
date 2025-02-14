@@ -5,7 +5,7 @@ import {
   comparableObjectWithAssetAndAmount,
   comparableObjectWithAmount,
   getNewAsset,
-  getSessionForAuthenticatedAccount,
+  // getSessionForAuthenticatedAccount,
   useChromiaNode,
   lockAccountId,
 } from "@ft4-test/util";
@@ -20,7 +20,12 @@ import {
   getLockAccounts,
   getLockAccountsWithNonZeroBalances,
 } from "@ft4/asset/";
-import { Connection, Session, createConnection } from "@ft4/ft-session";
+import {
+  Connection,
+  Session,
+  createConnection,
+  createSession,
+} from "@ft4/ft-session";
 import { op } from "@ft4/utils";
 import { IClient } from "postchain-client";
 
@@ -47,7 +52,8 @@ describe("Asset locking", () => {
       .withPoints(5)
       .build();
 
-    session = getSessionForAuthenticatedAccount(account);
+    // session = getSessionForAuthenticatedAccount(account);
+    session = createSession(connection, account.authenticator);
   });
 
   async function lockAmounts(

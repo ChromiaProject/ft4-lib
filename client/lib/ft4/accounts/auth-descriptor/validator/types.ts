@@ -28,12 +28,6 @@ export type AuthDescriptorValidator = {
  */
 export interface AuthDescriptorValidationService {
   /**
-   * Gets block height
-   * @returns block height
-   */
-  getBlockHeight: () => Promise<number>;
-
-  /**
    * Gets auth descriptor counter for provided account and auth descriptor
    * @param accountId - The account id to get counter for
    * @param authDescriptorId - The id of the auth descriptor to get counter for

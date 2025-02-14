@@ -8,6 +8,7 @@ import {
   AuthDescriptorValidationService,
   AuthDescriptorValidator,
 } from "./types";
+import { Connection } from "@ft4/ft-session";
 
 /**
  * Creates a general `AuthDescriptorValidator` instance from a more specialized variant
@@ -16,12 +17,13 @@ import {
  */
 export function createBaseAuthDescriptorValidator(
   service: AuthDescriptorValidationService,
+  connection: Connection,
 ): AuthDescriptorValidator {
   return Object.freeze({
     isActive: (authDescriptor: AnyAuthDescriptor) =>
-      isActive(authDescriptor, service),
+      isActive(authDescriptor, connection),
     hasExpired: (authDescriptor: AnyAuthDescriptor) =>
-      hasExpired(authDescriptor, service),
+      hasExpired(authDescriptor, connection, service),
   });
 }
 
@@ -36,7 +38,7 @@ export function createBaseAuthDescriptorValidator(
  */
 async function isActive(
   authDescriptor: AnyAuthDescriptor,
-  service: AuthDescriptorValidationService,
+  connection: Connection,
 ): Promise<boolean> {
   if (authDescriptor.rules === null) return true;
 
@@ -52,7 +54,7 @@ async function isActive(
 
     let variable: number;
     if (rule.variable === AuthDescriptorRuleVariable.BlockHeight) {
-      variable = await service.getBlockHeight();
+      variable = await connection.getBlockHeight();
     } else {
       variable = Date.now();
     }
@@ -85,6 +87,7 @@ async function isActive(
  */
 async function hasExpired(
   authDescriptor: AnyAuthDescriptor,
+  connection: Connection,
   service: AuthDescriptorValidationService,
 ): Promise<boolean> {
   if (authDescriptor.rules === null) return false;
@@ -100,7 +103,7 @@ async function hasExpired(
 
     let variable: number;
     if (rule.variable === AuthDescriptorRuleVariable.BlockHeight) {
-      variable = await service.getBlockHeight();
+      variable = await connection.getBlockHeight();
     } else if (rule.variable === AuthDescriptorRuleVariable.BlockTime) {
       variable = Date.now();
     } else {

@@ -1,5 +1,4 @@
 import { AnyAuthDescriptor } from "@ft4/accounts";
-import { Connection } from "@ft4/ft-session";
 import { BufferId, TxContext } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { GTX, Operation, RellOperation } from "postchain-client";
@@ -142,7 +141,7 @@ export interface KeyStore {
  * correct auth descriptor for authorizing an operation.
  */
 export interface AuthDataService {
-  connection: Connection;
+  // connection: Connection;
   /**
    * Checks if an operation with the specified name exists on the blockchain.
    * @param operationName - the operation name to check

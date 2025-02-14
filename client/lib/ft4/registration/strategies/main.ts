@@ -64,7 +64,11 @@ export async function getLoginDetails(
   loginConfig: LoginConfigOptions,
 ): Promise<LoginDetails> {
   const authDataService = createAuthDataService(connection);
-  const config = await getConfigFromOptions(authDataService, loginConfig);
+  const config = await getConfigFromOptions(
+    authDataService,
+    loginConfig,
+    connection,
+  );
   const loginKeyStore =
     loginConfig.loginKeyStore || createInMemoryLoginKeyStore();
   const disposableKeyStore = await loginKeyStore.generateKey(accountId);

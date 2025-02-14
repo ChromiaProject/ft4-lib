@@ -132,6 +132,7 @@ export class AccountBuilder {
       accountManager.id,
       [keyHandler],
       createAuthDataService(this.connection),
+      this.connection,
     );
     return createAuthenticatedAccount(this.connection, authenticator);
   }
@@ -157,6 +158,7 @@ export class AccountBuilder {
       account!.id,
       [keyHandler],
       createAuthDataService(createConnection(this.connection.client)),
+      this.connection,
     );
 
     const acc = createAuthenticatedAccount(this.connection, authenticator);

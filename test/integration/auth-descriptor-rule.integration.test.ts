@@ -64,6 +64,7 @@ async function getAuthedAccountsFromAuthDescriptorRule(
     accountAdmin.id,
     [keyHandler],
     createAuthDataService(_connection),
+    _connection,
   );
   const limitedAccount = createAuthenticatedAccount(_connection, authenticator);
 
@@ -134,7 +135,12 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(accountId, [keyHandler], authDataService),
+      createAuthenticator(
+        accountId,
+        [keyHandler],
+        authDataService,
+        _connection,
+      ),
     );
 
     expect((await session.account.getAuthDescriptors()).length).toEqual(3);
@@ -166,7 +172,7 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(ad1.id, [keyHandler], authDataService),
+      createAuthenticator(ad1.id, [keyHandler], authDataService, _connection),
     );
 
     const promise = session.account.deleteAuthDescriptor(ad2.id);
@@ -201,7 +207,12 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(accountId, [keyHandler], authDataService),
+      createAuthenticator(
+        accountId,
+        [keyHandler],
+        authDataService,
+        _connection,
+      ),
     );
     await session.account.deleteAuthDescriptor(ad2.id);
 

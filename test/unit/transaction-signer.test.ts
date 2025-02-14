@@ -1,4 +1,5 @@
 import {
+  asyncNumberGenerator,
   createFakeAuthDataService,
   emptyOp,
   testAdFromRegistration,
@@ -22,6 +23,7 @@ import {
   toRawSignature,
 } from "@ft4/authentication";
 import { noopAuthDataService } from "@ft4/authentication/noop";
+import { Connection } from "@ft4/ft-session";
 import {
   EMPTY_SIGNATURE,
   signTransaction,
@@ -41,7 +43,9 @@ describe("Transaction Signer", () => {
   let ftAuthenticator: Authenticator;
   let evmAuthenticator: Authenticator;
   let authDataService: AuthDataService;
+  let connection: Connection;
   let gtxTx: GTX;
+  const generator = asyncNumberGenerator();
 
   beforeEach(async () => {
     accountId = encryption.randomBytes(32);
@@ -63,16 +67,7 @@ describe("Transaction Signer", () => {
         null,
       ),
     );
-    ftAuthenticator = createAuthenticator(
-      accountId,
-      [createFtKeyHandler(ftAd, ftKeyStore)],
-      authDataService,
-    );
-    evmAuthenticator = createAuthenticator(
-      accountId,
-      [createEvmKeyHandler(ftAd, evmKeyStore)],
-      authDataService,
-    );
+
     ftKeyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(ftAd);
     evmKeyHandler = createInMemoryEvmKeyStore(keyPair).createKeyHandler(evmAd);
 
@@ -84,6 +79,25 @@ describe("Transaction Signer", () => {
       },
       ["testOperation"]: { flags: [], message: "" },
     });
+
+    connection = {
+      client: {
+        getBlocksInfo: (_limit: number) => generator.next().value,
+      },
+    } as unknown as Connection;
+
+    ftAuthenticator = createAuthenticator(
+      accountId,
+      [createFtKeyHandler(ftAd, ftKeyStore)],
+      authDataService,
+      connection,
+    );
+    evmAuthenticator = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(ftAd, evmKeyStore)],
+      authDataService,
+      connection,
+    );
 
     gtxTx = gtx.emptyGtx(blockchainRid);
     gtxTx.signatures = [];
@@ -183,6 +197,7 @@ describe("Transaction Signer", () => {
         accountId,
         [createEvmKeyHandler(testAdFromRegistration(ad), mockKeyStore)],
         mockAuthDataService,
+        connection,
       );
       const evmSignaturesOp = evmSignatures([mockKeyStore.address], []);
       evmSignaturesOp.args![1] = [null];
@@ -216,6 +231,7 @@ describe("Transaction Signer", () => {
         accountId,
         [createEvmKeyHandler(testAdFromRegistration(ad), mockKeyStore)],
         mockAuthDataService,
+        connection,
       );
       const evmAuthOp = evmAuth(accountId, deriveAuthDescriptorId(ad), []);
       evmAuthOp.args![2] = [null];
@@ -259,6 +275,7 @@ describe("Transaction Signer", () => {
         accountId,
         [createEvmKeyHandler(testAdFromRegistration(ad), mockKeyStore)],
         mockAuthDataService,
+        connection,
       );
       const evmAuthOp = evmAuth(accountId, deriveAuthDescriptorId(ad), []);
       evmAuthOp.args![2] = [
@@ -291,6 +308,7 @@ describe("Transaction Signer", () => {
         accountId,
         [createEvmKeyHandler(testAdFromRegistration(ad), keyStore)],
         noopAuthDataService,
+        connection,
       );
 
       const evmAuthOp = evmAuth(accountId, deriveAuthDescriptorId(ad), []);

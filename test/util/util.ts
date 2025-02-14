@@ -5,7 +5,6 @@ import {
   AuthDescriptorRegistration,
   AuthDescriptorRules,
   AuthFlag,
-  AuthenticatedAccount,
   MultiSig,
   SingleSig,
   addAuthDescriptor,
@@ -22,11 +21,9 @@ import {
 } from "@ft4/authentication";
 import {
   Connection,
-  Session,
   createAuthDataService,
   createConnection,
   createKeyStoreInteractor,
-  createSession,
 } from "@ft4/ft-session";
 import { BufferId, op } from "@ft4/utils";
 import { Buffer } from "buffer";
@@ -205,6 +202,7 @@ export async function addAuthDescriptorTo(
     accountId,
     [keyHandlerUser1],
     authDataService,
+    createConnection(client),
   );
 
   const tx = await transactionBuilder(authenticator, client)
@@ -242,14 +240,14 @@ export async function getSessionForAccount(
   return await getSession(accountId);
 }
 
-export function getSessionForAuthenticatedAccount(
-  account: AuthenticatedAccount,
-): Session {
-  return createSession(
-    account.authenticator.authDataService.connection,
-    account.authenticator,
-  );
-}
+// export function getSessionForAuthenticatedAccount(
+//   account: AuthenticatedAccount,
+// ): Session {
+//   return createSession(
+//     account.authenticator.authDataService.connection,
+//     account.authenticator,
+//   );
+// }
 
 /**
  * Converts amount bigint to string so it can be used to compare Amount with jest
