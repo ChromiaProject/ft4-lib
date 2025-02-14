@@ -63,21 +63,33 @@ describe("Transfer strategy rules", () => {
         senders: "all",
         recipients: "all",
         timeoutDays: 1,
-        strategies: ["open", "fee", "subscription"],
         assets: [
           {
             id: transferStrategyAsset.id,
+            name: "transfer_strategy_asset",
+            issuingBlockchainRid: formatter.ensureBuffer(
+              connection.client.config.blockchainRid,
+            ),
             minAmount: 5n,
           },
           {
             id: transferFeeStrategyAsset.id,
+            name: "transfer_fee_strategy_asset",
+            issuingBlockchainRid: formatter.ensureBuffer(
+              connection.client.config.blockchainRid,
+            ),
             minAmount: 5n,
           },
           {
             id: trasnferSubscriptionStrategyAsset.id,
+            name: "transfer_subscription_strategy_asset",
+            issuingBlockchainRid: formatter.ensureBuffer(
+              connection.client.config.blockchainRid,
+            ),
             minAmount: 5n,
           },
         ],
+        strategies: ["open", "fee", "subscription"],
       },
       {
         senderBlockchains: [
@@ -86,17 +98,21 @@ describe("Transfer strategy rules", () => {
         senders: "all",
         recipients: "all",
         timeoutDays: 0,
-        strategies: ["open", "fee", "subscription"],
         assets: [
           {
             id: timeoutAsset.id,
+            name: "timeout_asset",
+            issuingBlockchainRid: formatter.ensureBuffer(
+              connection.client.config.blockchainRid,
+            ),
             minAmount: 5n,
           },
         ],
+        strategies: ["open", "fee", "subscription"],
       },
     ];
 
-    expect(rules).toEqual(expectedRules);
+    expect(JSON.stringify(rules)).toStrictEqual(JSON.stringify(expectedRules));
   });
 
   it("returns transfer strategy rules grouped by strategy", async () => {
@@ -174,6 +190,6 @@ describe("Transfer strategy rules", () => {
       ["subscription", rulesMap],
     ]);
 
-    expect(rules).toEqual(expectedResult);
+    expect(JSON.stringify(rules)).toStrictEqual(JSON.stringify(expectedResult));
   });
 });

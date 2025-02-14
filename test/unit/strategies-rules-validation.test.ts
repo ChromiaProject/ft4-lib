@@ -14,11 +14,14 @@ import { mapTransferStrategyRule } from "@ft4/registration/strategies";
 const MOCKS = {
   ASSET: {
     NAME: "Test Token",
+    TEST_ASSET_NAME: "TestAsset",
+    DIFFERENT_ASSET_NAME: "DifferentAsset",
     SYMBOL: "TEST",
     DECIMALS: 8,
     ICON_URL: "https://example.com/icon.png",
     SUPPLY: "1000000000000",
     INITIAL_BALANCE: "100",
+    TEST_SUPPLY: "10000",
   },
   AMOUNTS: {
     HIGH_AMOUNT: "10000000000",
@@ -26,6 +29,9 @@ const MOCKS = {
     SMALL_AMOUNT: "100",
     MEDIUM_AMOUNT: "200",
     TINY_AMOUNT: "50",
+    MIN_AMOUNT_1: "100",
+    MIN_AMOUNT_2: "5000",
+    HIGH_MIN_AMOUNT: "20000",
   },
   BUFFER: {
     SIZE: 32,
@@ -36,12 +42,19 @@ const MOCKS = {
     ALL: "all",
     CURRENT: "current",
   },
-  TIMEOUT_DAYS: 10,
+  TIMEOUT_DAYS: {
+    DEFAULT: 10,
+    TEST_TIMEOUT: 7,
+  },
+  BALANCE: {
+    TEST_AMOUNT: "1000",
+  },
   ERROR_MESSAGES: {
     NO_VALID_RULES:
       "No valid rules found for the account registration strategy",
     SENDER_NOT_ALLOWED: "Sender account not allowed",
     RECIPIENT_NOT_ALLOWED: "Recipient account not allowed",
+    INSUFFICIENT_BALANCE: "Insufficient balance. Registration failed.",
   },
 } as const;
 
@@ -61,7 +74,7 @@ describe("Strategy Rules Validation", () => {
     blockchainRid: mockBuffer,
     iconUrl: MOCKS.ASSET.ICON_URL,
     type: ASSET_TYPE_FT4,
-    supply: BigInt(MOCKS.ASSET.SUPPLY),
+    supply: BigInt(MOCKS.ASSET.TEST_SUPPLY),
   };
 
   const mockBalance: Balance = {
@@ -95,7 +108,7 @@ describe("Strategy Rules Validation", () => {
     recipients: MOCKS.PARTICIPANTS.ALL,
     assets: MOCKS.PARTICIPANTS.ALL, // todo fix later
     minAmount: BigInt(MOCKS.AMOUNTS.SMALL_AMOUNT),
-    timeoutDays: MOCKS.TIMEOUT_DAYS,
+    timeoutDays: MOCKS.TIMEOUT_DAYS.DEFAULT,
     ...overrides,
   });
 
@@ -127,7 +140,7 @@ describe("Strategy Rules Validation", () => {
         mockAsset,
       );
       await expect(promise).rejects.toThrow(
-        "Insufficient balance. Registration failed.",
+        MOCKS.ERROR_MESSAGES.INSUFFICIENT_BALANCE,
       );
     });
 
@@ -147,30 +160,31 @@ describe("Strategy Rules Validation", () => {
           allowed_values: [mockBuffer],
         },
         require_same_address: false,
-        timeout_days: 7,
+        timeout_days: MOCKS.TIMEOUT_DAYS.TEST_TIMEOUT,
         assets: {
           allow_all: false,
           allowed_values: [
             {
               id: mockBuffer,
-              name: "Test Asset",
+              name: MOCKS.ASSET.NAME,
               issuing_blockchain_rid: mockBuffer,
-              min_amount: BigInt(100),
+              min_amount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1),
             },
           ],
         },
       };
 
       const mockSpecificBalance: Balance = {
-        amount: createAmount("1000", MOCKS.ASSET.DECIMALS),
+        amount: createAmount(MOCKS.BALANCE.TEST_AMOUNT, MOCKS.ASSET.DECIMALS),
         asset: {
           ...mockAsset,
           id: mockBuffer,
+          name: MOCKS.ASSET.NAME,
           blockchainRid: mockBuffer,
+          supply: BigInt(MOCKS.ASSET.TEST_SUPPLY),
         },
       };
 
-      // Mock both connection.getAccountById and account.getBalanceByAssetId
       mockConnection.getAccountById.mockResolvedValueOnce(mockAccount);
       (mockAccount.getBalanceByAssetId as jest.Mock).mockResolvedValueOnce(
         mockSpecificBalance,
@@ -187,7 +201,9 @@ describe("Strategy Rules Validation", () => {
         mockSpecificBalance.asset,
       );
 
-      expect(result).toBe(BigInt(100));
+      expect(JSON.stringify(result)).toStrictEqual(
+        JSON.stringify(BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1)),
+      );
     });
 
     it("returns lowest amount from multiple valid rules", async () => {
@@ -212,7 +228,9 @@ describe("Strategy Rules Validation", () => {
         mockAccount,
         mockHighBalance.asset,
       );
-      expect(result).toBe(BigInt(MOCKS.AMOUNTS.SMALL_AMOUNT));
+      expect(JSON.stringify(result)).toStrictEqual(
+        JSON.stringify(BigInt(MOCKS.AMOUNTS.SMALL_AMOUNT)),
+      );
     });
   });
 
@@ -238,7 +256,7 @@ describe("Strategy Rules Validation", () => {
           assets: [
             {
               id: differentAsset.id,
-              name: "DifferentAsset",
+              name: MOCKS.ASSET.DIFFERENT_ASSET_NAME,
               issuingBlockchainRid: differentAsset.blockchainRid,
               minAmount: BigInt(MOCKS.AMOUNTS.MEDIUM_AMOUNT),
             },
@@ -257,7 +275,7 @@ describe("Strategy Rules Validation", () => {
       ];
 
       const result = getValidRules(validRules, mockAccount, mockBalance);
-      expect(result).toEqual(validRules);
+      expect(JSON.stringify(result)).toStrictEqual(JSON.stringify(validRules));
     });
 
     it("filters mixed valid and invalid rules", () => {
@@ -270,8 +288,9 @@ describe("Strategy Rules Validation", () => {
 
       const result = getValidRules(rules, mockAccount, mockBalance);
       expect(result).toHaveLength(2);
-      expect(result).toContainEqual(rules[1]);
-      expect(result).toContainEqual(rules[3]);
+      expect(JSON.stringify(result)).toStrictEqual(
+        JSON.stringify([rules[1], rules[3]]),
+      );
     });
 
     it("filters rules with valid blockchain but invalid participants", () => {
@@ -338,12 +357,14 @@ describe("Strategy Rules Validation", () => {
   describe("isValidAssetRule", () => {
     const mockAsset: Asset = {
       id: Buffer.alloc(MOCKS.BUFFER.SIZE, MOCKS.BUFFER.FILL_VALUE),
-      name: "TestAsset",
+      name: MOCKS.ASSET.TEST_ASSET_NAME,
       blockchainRid: Buffer.alloc(MOCKS.BUFFER.SIZE, MOCKS.BUFFER.FILL_VALUE),
       type: ASSET_TYPE_FT4,
       decimals: 8,
-      supply: BigInt(1000),
-    } as Asset;
+      supply: BigInt(MOCKS.ASSET.TEST_SUPPLY),
+      symbol: MOCKS.ASSET.SYMBOL,
+      iconUrl: MOCKS.ASSET.ICON_URL,
+    };
 
     it("returns true when assets rule is 'all'", () => {
       expect(isValidAssetRule("all", mockAsset)).toBe(true);
@@ -352,10 +373,11 @@ describe("Strategy Rules Validation", () => {
     it("returns true when asset ID matches", () => {
       const assetRule = {
         id: mockAsset.id,
-        name: "SomeOtherName", // Name doesn't matter if ID matches
+        name: mockAsset.name,
         issuingBlockchainRid: mockAsset.blockchainRid,
-        minAmount: BigInt(100),
+        minAmount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1),
       };
+
       expect(isValidAssetRule([assetRule], mockAsset)).toBe(true);
     });
 
@@ -365,7 +387,7 @@ describe("Strategy Rules Validation", () => {
         id: differentId,
         name: mockAsset.name,
         issuingBlockchainRid: mockAsset.blockchainRid,
-        minAmount: BigInt(100),
+        minAmount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1),
       };
       expect(isValidAssetRule([assetRule], mockAsset)).toBe(false);
     });
@@ -376,7 +398,7 @@ describe("Strategy Rules Validation", () => {
         id: mockAsset.id,
         name: mockAsset.name,
         issuingBlockchainRid: differentBlockchainRid,
-        minAmount: BigInt(100),
+        minAmount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1),
       };
       expect(isValidAssetRule([assetRule], mockAsset)).toBe(false);
     });
@@ -386,7 +408,7 @@ describe("Strategy Rules Validation", () => {
         id: mockAsset.id,
         name: "DifferentName",
         issuingBlockchainRid: Buffer.from(MOCKS.BUFFER.DIFFERENT_VALUE),
-        minAmount: BigInt(100),
+        minAmount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1),
       };
       expect(isValidAssetRule([assetRule], mockAsset)).toBe(false);
     });
@@ -399,18 +421,42 @@ describe("Strategy Rules Validation", () => {
       const assetRules = [
         {
           id: Buffer.from(MOCKS.BUFFER.DIFFERENT_VALUE),
-          name: "DifferentName",
+          name: MOCKS.ASSET.DIFFERENT_ASSET_NAME,
           issuingBlockchainRid: Buffer.from(MOCKS.BUFFER.DIFFERENT_VALUE),
-          minAmount: BigInt(100),
+          minAmount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1),
         },
         {
           id: mockAsset.id,
-          name: "SomeOtherName",
+          name: mockAsset.name,
           issuingBlockchainRid: mockAsset.blockchainRid,
-          minAmount: BigInt(100),
+          minAmount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1),
         },
       ];
       expect(isValidAssetRule(assetRules, mockAsset)).toBe(true);
+    });
+
+    it("returns false when asset names do not match", () => {
+      const assetRule = {
+        name: "DifferentAsset",
+        minAmount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1),
+      };
+      expect(isValidAssetRule([assetRule], mockAsset)).toBe(false);
+    });
+
+    it("returns false when minAmount is greater than asset supply", () => {
+      const assetRule = {
+        name: mockAsset.name,
+        minAmount: BigInt(MOCKS.AMOUNTS.HIGH_MIN_AMOUNT), // 20000 > 10000 (supply)
+      };
+      expect(isValidAssetRule([assetRule], mockAsset)).toBe(false);
+    });
+
+    it("returns true when minAmount is less than asset supply", () => {
+      const assetRule = {
+        name: mockAsset.name,
+        minAmount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1), // 100 < 10000 (supply)
+      };
+      expect(isValidAssetRule([assetRule], mockAsset)).toBe(true);
     });
   });
 });

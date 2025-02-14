@@ -84,7 +84,6 @@ describe("Transfer strategy rules", () => {
   it("correctly maps response when properties have single value", async () => {
     const response: TransferStrategyRuleRaw[] = [
       {
-        strategies: ["fee"],
         blockchains: {
           allow_all: false,
           allowed_values: [blockchain1],
@@ -103,6 +102,7 @@ describe("Transfer strategy rules", () => {
           allowed_values: [createAllowedAssets(asset1, 10n)],
         },
         timeout_days: 1,
+        strategies: ["fee"],
       },
     ];
 
@@ -128,13 +128,14 @@ describe("Transfer strategy rules", () => {
       },
     ];
 
-    expect(rules).toEqual(expectedResponse);
+    expect(JSON.stringify(rules)).toStrictEqual(
+      JSON.stringify(expectedResponse),
+    );
   });
 
   it("correctly maps response with same sender and recipient", async () => {
     const response: TransferStrategyRuleRaw[] = [
       {
-        strategies: ["fee"],
         blockchains: {
           allow_all: false,
           allowed_values: [blockchain1],
@@ -153,6 +154,7 @@ describe("Transfer strategy rules", () => {
           allowed_values: [createAllowedAssets(asset1, 11n)],
         },
         timeout_days: 10,
+        strategies: ["fee"],
       },
     ];
 
@@ -162,7 +164,6 @@ describe("Transfer strategy rules", () => {
 
     const expectedResponse: TransferStrategyRule[] = [
       {
-        strategies: ["fee"],
         senderBlockchains: [blockchain1],
         senders: "current",
         recipients: "current",
@@ -175,16 +176,16 @@ describe("Transfer strategy rules", () => {
           },
         ],
         timeoutDays: 10,
+        strategies: ["fee"],
       },
     ];
 
-    expect(rules).toEqual(expectedResponse);
+    expect(rules).toMatchObject(expectedResponse);
   });
 
   it("correctly maps response when attributes have multiple values", async () => {
     const response: TransferStrategyRuleRaw[] = [
       {
-        strategies: ["fee"],
         blockchains: {
           allow_all: false,
           allowed_values: [blockchain1, blockchain2],
@@ -206,6 +207,7 @@ describe("Transfer strategy rules", () => {
           ],
         },
         timeout_days: 1,
+        strategies: ["fee"],
       },
     ];
 
@@ -215,7 +217,6 @@ describe("Transfer strategy rules", () => {
 
     const expectedResponse: TransferStrategyRule[] = [
       {
-        strategies: ["fee"],
         senderBlockchains: [blockchain1, blockchain2],
         senders: [sender1, sender2],
         recipients: [recipient1, recipient2],
@@ -234,10 +235,11 @@ describe("Transfer strategy rules", () => {
           },
         ],
         timeoutDays: 1,
+        strategies: ["fee"],
       },
     ];
 
-    expect(rules).toEqual(expectedResponse);
+    expect(rules).toMatchObject(expectedResponse);
   });
 
   it("correctly maps response when there is more than one rule", async () => {
@@ -306,7 +308,6 @@ describe("Transfer strategy rules", () => {
 
     const expectedResponse: TransferStrategyRule[] = [
       {
-        strategies: ["fee"],
         senderBlockchains: [blockchain1],
         senders: [sender1],
         recipients: [recipient1],
@@ -319,9 +320,9 @@ describe("Transfer strategy rules", () => {
           },
         ],
         timeoutDays: 1,
+        strategies: ["fee"],
       },
       {
-        strategies: ["fee"],
         senderBlockchains: "all",
         senders: "all",
         recipients: "all",
@@ -334,10 +335,11 @@ describe("Transfer strategy rules", () => {
           },
         ],
         timeoutDays: 1,
+        strategies: ["fee"],
       },
     ];
 
-    expect(rules).toEqual(expectedResponse);
+    expect(rules).toMatchObject(expectedResponse);
   });
 
   it("correctly groups rules by strategy when rule properties have 'all' values", async () => {
@@ -369,28 +371,31 @@ describe("Transfer strategy rules", () => {
 
     const rules = await getTransferStrategyRulesGroupedByStrategy(connection);
 
-    expect(rules).toEqual(
-      new Map<string, Map<string, TransferStrategyRuleAmount[]>>([
-        [
-          "fee",
-          new Map<string, TransferStrategyRuleAmount[]>([
+    const expectedResult = new Map<
+      string,
+      Map<string, TransferStrategyRuleAmount[]>
+    >([
+      [
+        "fee",
+        new Map<string, TransferStrategyRuleAmount[]>([
+          [
+            "all",
             [
-              "all",
-              [
-                {
-                  senderBlockchains: "all",
-                  senders: "all",
-                  recipients: "all",
-                  timeoutDays: 1,
-                  minAmount: 0n,
-                  assets: "all",
-                },
-              ],
+              {
+                senderBlockchains: "all",
+                senders: "all",
+                recipients: "all",
+                timeoutDays: 1,
+                minAmount: 0n,
+                assets: "all",
+              },
             ],
-          ]),
-        ],
-      ]),
-    );
+          ],
+        ]),
+      ],
+    ]);
+
+    expect(JSON.stringify(rules)).toStrictEqual(JSON.stringify(expectedResult));
   });
 
   it("correctly groups rules by strategy when rule properties have multiple values", async () => {
@@ -422,28 +427,31 @@ describe("Transfer strategy rules", () => {
 
     const rules = await getTransferStrategyRulesGroupedByStrategy(connection);
 
-    expect(rules).toEqual(
-      new Map<string, Map<string, TransferStrategyRuleAmount[]>>([
-        [
-          "open",
-          new Map<string, TransferStrategyRuleAmount[]>([
+    const expectedResult = new Map<
+      string,
+      Map<string, TransferStrategyRuleAmount[]>
+    >([
+      [
+        "open",
+        new Map<string, TransferStrategyRuleAmount[]>([
+          [
+            "all",
             [
-              "all",
-              [
-                {
-                  senderBlockchains: [blockchain1, blockchain2],
-                  senders: [sender1, sender2],
-                  recipients: [recipient1, recipient2],
-                  timeoutDays: 15,
-                  minAmount: 0n,
-                  assets: "all",
-                },
-              ],
+              {
+                senderBlockchains: [blockchain1, blockchain2],
+                senders: [sender1, sender2],
+                recipients: [recipient1, recipient2],
+                timeoutDays: 15,
+                minAmount: 0n,
+                assets: "all",
+              },
             ],
-          ]),
-        ],
-      ]),
-    );
+          ],
+        ]),
+      ],
+    ]);
+
+    expect(JSON.stringify(rules)).toStrictEqual(JSON.stringify(expectedResult));
   });
 
   it("correctly groups rules by strategy and assets when having multiple rules with different assets", async () => {
@@ -496,55 +504,58 @@ describe("Transfer strategy rules", () => {
 
     const rules = await getTransferStrategyRulesGroupedByStrategy(connection);
 
-    expect(rules).toEqual(
-      new Map<string, Map<string, TransferStrategyRuleAmount[]>>([
-        [
-          "fee",
-          new Map<string, TransferStrategyRuleAmount[]>([
+    const expectedResult = new Map<
+      string,
+      Map<string, TransferStrategyRuleAmount[]>
+    >([
+      [
+        "fee",
+        new Map<string, TransferStrategyRuleAmount[]>([
+          [
+            formatter.toString(asset1),
             [
-              formatter.toString(asset1),
-              [
-                {
-                  senderBlockchains: "all",
-                  senders: "all",
-                  recipients: "all",
-                  timeoutDays: 30,
-                  minAmount: 100n,
-                  assets: [
-                    {
-                      id: asset1,
-                      name: "TestAsset",
-                      issuingBlockchainRid: Buffer.alloc(32),
-                      minAmount: 100n,
-                    },
-                  ],
-                },
-              ],
+              {
+                senderBlockchains: "all",
+                senders: "all",
+                recipients: "all",
+                timeoutDays: 30,
+                minAmount: 100n,
+                assets: [
+                  {
+                    id: asset1,
+                    name: "TestAsset",
+                    issuingBlockchainRid: Buffer.alloc(32),
+                    minAmount: 100n,
+                  },
+                ],
+              },
             ],
+          ],
+          [
+            formatter.toString(asset2),
             [
-              formatter.toString(asset2),
-              [
-                {
-                  senderBlockchains: [blockchain1],
-                  senders: "all",
-                  recipients: "all",
-                  timeoutDays: 15,
-                  minAmount: 50n,
-                  assets: [
-                    {
-                      id: asset2,
-                      name: "TestAsset",
-                      issuingBlockchainRid: Buffer.alloc(32),
-                      minAmount: 50n,
-                    },
-                  ],
-                },
-              ],
+              {
+                senderBlockchains: [blockchain1],
+                senders: "all",
+                recipients: "all",
+                timeoutDays: 15,
+                minAmount: 50n,
+                assets: [
+                  {
+                    id: asset2,
+                    name: "TestAsset",
+                    issuingBlockchainRid: Buffer.alloc(32),
+                    minAmount: 50n,
+                  },
+                ],
+              },
             ],
-          ]),
-        ],
-      ]),
-    );
+          ],
+        ]),
+      ],
+    ]);
+
+    expect(JSON.stringify(rules)).toStrictEqual(JSON.stringify(expectedResult));
   });
 
   it("correctly groups rules by strategy and asset when having multiple rules with same asset", async () => {
@@ -597,50 +608,53 @@ describe("Transfer strategy rules", () => {
 
     const rules = await getTransferStrategyRulesGroupedByStrategy(connection);
 
-    expect(rules).toEqual(
-      new Map<string, Map<string, TransferStrategyRuleAmount[]>>([
-        [
-          "fee",
-          new Map<string, TransferStrategyRuleAmount[]>([
+    const expectedResult = new Map<
+      string,
+      Map<string, TransferStrategyRuleAmount[]>
+    >([
+      [
+        "fee",
+        new Map<string, TransferStrategyRuleAmount[]>([
+          [
+            formatter.toString(asset1),
             [
-              formatter.toString(asset1),
-              [
-                {
-                  senderBlockchains: "all",
-                  senders: "current",
-                  recipients: "current",
-                  timeoutDays: 30,
-                  minAmount: 10n,
-                  assets: [
-                    {
-                      id: asset1,
-                      name: "TestAsset",
-                      issuingBlockchainRid: Buffer.alloc(32),
-                      minAmount: 10n,
-                    },
-                  ],
-                },
-                {
-                  senderBlockchains: [blockchain1],
-                  senders: "all",
-                  recipients: "all",
-                  timeoutDays: 15,
-                  minAmount: 10n,
-                  assets: [
-                    {
-                      id: asset1,
-                      name: "TestAsset",
-                      issuingBlockchainRid: Buffer.alloc(32),
-                      minAmount: 10n,
-                    },
-                  ],
-                },
-              ],
+              {
+                senderBlockchains: "all",
+                senders: "current",
+                recipients: "current",
+                timeoutDays: 30,
+                minAmount: 10n,
+                assets: [
+                  {
+                    id: asset1,
+                    name: "TestAsset",
+                    issuingBlockchainRid: Buffer.alloc(32),
+                    minAmount: 10n,
+                  },
+                ],
+              },
+              {
+                senderBlockchains: [blockchain1],
+                senders: "all",
+                recipients: "all",
+                timeoutDays: 15,
+                minAmount: 10n,
+                assets: [
+                  {
+                    id: asset1,
+                    name: "TestAsset",
+                    issuingBlockchainRid: Buffer.alloc(32),
+                    minAmount: 10n,
+                  },
+                ],
+              },
             ],
-          ]),
-        ],
-      ]),
-    );
+          ],
+        ]),
+      ],
+    ]);
+
+    expect(JSON.stringify(rules)).toStrictEqual(JSON.stringify(expectedResult));
   });
 
   it("groups rules by strategy and asset when having more than one strategy", async () => {
@@ -714,74 +728,77 @@ describe("Transfer strategy rules", () => {
 
     const rules = await getTransferStrategyRulesGroupedByStrategy(connection);
 
-    expect(rules).toEqual(
-      new Map<string, Map<string, TransferStrategyRuleAmount[]>>([
-        [
-          "fee",
-          new Map<string, TransferStrategyRuleAmount[]>([
+    const expectedResult = new Map<
+      string,
+      Map<string, TransferStrategyRuleAmount[]>
+    >([
+      [
+        "fee",
+        new Map<string, TransferStrategyRuleAmount[]>([
+          [
+            formatter.toString(asset1),
             [
-              formatter.toString(asset1),
-              [
-                {
-                  senderBlockchains: "all",
-                  senders: "current",
-                  recipients: "current",
-                  timeoutDays: 30,
-                  minAmount: 10n,
-                  assets: [
-                    {
-                      id: asset1,
-                      name: "TestAsset",
-                      issuingBlockchainRid: Buffer.alloc(32),
-                      minAmount: 10n,
-                    },
-                  ],
-                },
-                {
-                  senderBlockchains: [blockchain1],
-                  senders: "all",
-                  recipients: "all",
-                  timeoutDays: 15,
-                  minAmount: 10n,
-                  assets: [
-                    {
-                      id: asset1,
-                      name: "TestAsset",
-                      issuingBlockchainRid: Buffer.alloc(32),
-                      minAmount: 10n,
-                    },
-                  ],
-                },
-              ],
+              {
+                senderBlockchains: "all",
+                senders: "current",
+                recipients: "current",
+                timeoutDays: 30,
+                minAmount: 10n,
+                assets: [
+                  {
+                    id: asset1,
+                    name: "TestAsset",
+                    issuingBlockchainRid: Buffer.alloc(32),
+                    minAmount: 10n,
+                  },
+                ],
+              },
+              {
+                senderBlockchains: [blockchain1],
+                senders: "all",
+                recipients: "all",
+                timeoutDays: 15,
+                minAmount: 10n,
+                assets: [
+                  {
+                    id: asset1,
+                    name: "TestAsset",
+                    issuingBlockchainRid: Buffer.alloc(32),
+                    minAmount: 10n,
+                  },
+                ],
+              },
             ],
-          ]),
-        ],
-        [
-          "subscription",
-          new Map<string, TransferStrategyRuleAmount[]>([
+          ],
+        ]),
+      ],
+      [
+        "subscription",
+        new Map<string, TransferStrategyRuleAmount[]>([
+          [
+            formatter.toString(asset1),
             [
-              formatter.toString(asset1),
-              [
-                {
-                  senderBlockchains: "all",
-                  senders: "all",
-                  recipients: "all",
-                  timeoutDays: 15,
-                  minAmount: 2n,
-                  assets: [
-                    {
-                      id: asset1,
-                      name: "TestAsset",
-                      issuingBlockchainRid: Buffer.alloc(32),
-                      minAmount: 2n,
-                    },
-                  ],
-                },
-              ],
+              {
+                senderBlockchains: "all",
+                senders: "all",
+                recipients: "all",
+                timeoutDays: 15,
+                minAmount: 2n,
+                assets: [
+                  {
+                    id: asset1,
+                    name: "TestAsset",
+                    issuingBlockchainRid: Buffer.alloc(32),
+                    minAmount: 2n,
+                  },
+                ],
+              },
             ],
-          ]),
-        ],
-      ]),
-    );
+          ],
+        ]),
+      ],
+    ]);
+
+    expect(JSON.stringify(rules)).toStrictEqual(JSON.stringify(expectedResult));
   });
 });

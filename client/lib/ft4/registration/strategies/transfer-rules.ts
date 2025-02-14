@@ -6,6 +6,7 @@ import {
   AssetLimit,
   TransferStrategyRuleAmount,
   TransferStrategyRulePartial,
+  TransferStrategyRulePartialResponse,
 } from "@ft4/registration/types";
 
 /**
@@ -17,7 +18,9 @@ export async function getTransferStrategyRules(
   queryable: Queryable,
 ): Promise<TransferStrategyRule[]> {
   const rules = await queryable.query(transferRules());
-  return rules.map(mapTransferStrategyRule);
+  console.log("=======FETCHED RULES=========", rules);
+  console.log("=======FETCHED RULES array=========", rules[0].assets);
+  return rules.map((rule) => mapTransferStrategyRule(mapResponseToRaw(rule)));
 }
 
 /**
@@ -41,13 +44,16 @@ export async function getTransferStrategyRulesGroupedByStrategy(
   const rules = await queryable.query(transferRules());
   const rulesMap = new Map<string, Map<string, TransferStrategyRuleAmount[]>>();
   for (const rule of rules) {
-    const assets = rule.assets?.allow_all
-      ? [{ id: "all", amount: 0n }]
-      : rule.assets?.allowed_values.map(({ id, min_amount }) => ({
-          id: formatter.toString(id),
-          amount: min_amount,
-        })) || [];
-    for (const strategy of rule.strategies) {
+    const rawRule = mapResponseToRaw(rule);
+    const assets =
+      rawRule.assets?.allow_all ?? true
+        ? [{ id: "all", amount: 0n }]
+        : rawRule.assets?.allowed_values.map(({ id, min_amount }) => ({
+            id: formatter.toString(id),
+            amount: min_amount,
+          })) ?? [];
+
+    for (const strategy of rawRule.strategies) {
       for (const asset of assets) {
         if (!rulesMap.has(strategy)) {
           rulesMap.set(
@@ -55,19 +61,28 @@ export async function getTransferStrategyRulesGroupedByStrategy(
             new Map<string, TransferStrategyRuleAmount[]>(),
           );
         }
-        if (rulesMap.get(strategy)!.has(asset.id)) {
-          rulesMap
-            .get(strategy)!
-            .get(asset.id)!
-            .push(mapTransferStrategyRuleAmount(rule, asset.amount));
-        } else {
-          rulesMap
-            .get(strategy)!
-            .set(asset.id, [mapTransferStrategyRuleAmount(rule, asset.amount)]);
-        }
+
+        const strategyMap = rulesMap.get(strategy)!;
+        const assetRules = strategyMap.get(asset.id) || [];
+
+        strategyMap.set(asset.id, [
+          ...assetRules,
+          mapTransferStrategyRuleAmount(
+            {
+              ...rawRule,
+              blockchains: rawRule.blockchains,
+              senders: rawRule.senders,
+              recipients: rawRule.recipients,
+              require_same_address: rawRule.require_same_address,
+              assets: rawRule.assets,
+            },
+            asset.amount,
+          ),
+        ]);
       }
     }
   }
+
   return rulesMap;
 }
 
@@ -80,25 +95,36 @@ export async function getTransferStrategyRulesGroupedByStrategy(
 export function mapTransferStrategyRulePartial(
   rule: TransferStrategyRuleRaw,
 ): TransferStrategyRulePartial {
+  console.log("=====rule assets===", rule.assets);
   return {
     senderBlockchains: rule.blockchains.allow_all
       ? "all"
       : rule.blockchains.allowed_values,
-    senders: rule.require_same_address
-      ? "current"
-      : rule.senders.allow_all
+
+    senders:
+      rule.require_same_address ||
+      (rule.senders.allowed_values.length === 0 && !rule.senders.allow_all)
+        ? "current"
+        : rule.senders.allow_all
+          ? "all"
+          : rule.senders.allowed_values,
+
+    recipients:
+      rule.require_same_address ||
+      (rule.recipients.allowed_values.length === 0 &&
+        !rule.recipients.allow_all)
+        ? "current"
+        : rule.recipients.allow_all
+          ? "all"
+          : rule.recipients.allowed_values,
+
+    assets: !rule.assets
+      ? "all"
+      : rule.assets.allow_all
         ? "all"
-        : rule.senders.allowed_values,
-    recipients: rule.require_same_address
-      ? "current"
-      : rule.recipients.allow_all
-        ? "all"
-        : rule.recipients.allowed_values,
+        : rule.assets.allowed_values.map(mapAssetLimit),
+
     timeoutDays: rule.timeout_days,
-    assets:
-      rule.assets?.allow_all ?? true
-        ? "all"
-        : rule.assets?.allowed_values.map(mapAssetLimit) ?? [],
   };
 }
 
@@ -110,6 +136,7 @@ export function mapTransferStrategyRulePartial(
 export function mapTransferStrategyRule(
   rule: TransferStrategyRuleRaw,
 ): TransferStrategyRule {
+  console.log("===map 2==rule====", rule);
   return {
     ...mapTransferStrategyRulePartial(rule),
     strategies: rule.strategies,
@@ -127,7 +154,24 @@ export function mapTransferStrategyRuleAmount(
   minAmount: bigint,
 ): TransferStrategyRuleAmount {
   return {
-    ...mapTransferStrategyRulePartial(rule),
+    senderBlockchains: rule.blockchains.allow_all
+      ? "all"
+      : rule.blockchains.allowed_values,
+    senders: rule.require_same_address
+      ? "current"
+      : rule.senders.allow_all
+        ? "all"
+        : rule.senders.allowed_values,
+    recipients: rule.require_same_address
+      ? "current"
+      : rule.recipients.allow_all
+        ? "all"
+        : rule.recipients.allowed_values,
+    assets:
+      rule.assets?.allow_all ?? true
+        ? "all"
+        : rule.assets?.allowed_values.map(mapAssetLimit) ?? [],
+    timeoutDays: rule.timeout_days,
     minAmount,
   };
 }
@@ -143,5 +187,32 @@ export function mapAssetLimit(assetLimit: AllowedAssets): AssetLimit {
     name: assetLimit.name,
     issuingBlockchainRid: assetLimit.issuing_blockchain_rid,
     minAmount: assetLimit.min_amount,
+  };
+}
+
+function mapResponseToRaw(
+  rule: TransferStrategyRulePartialResponse,
+): TransferStrategyRuleRaw {
+  console.log("=======MAP RESPONSE TO RAW=========", rule);
+  return {
+    blockchains: {
+      allow_all: rule.blockchains.allow_all === 1,
+      allowed_values: rule.blockchains.allowed_values,
+    },
+    senders: {
+      allow_all: rule.senders.allow_all === 1,
+      allowed_values: rule.senders.allowed_values,
+    },
+    recipients: {
+      allow_all: rule.recipients.allow_all === 1,
+      allowed_values: rule.recipients.allowed_values,
+    },
+    require_same_address: rule.require_same_address === 1,
+    timeout_days: rule.timeout_days,
+    strategies: rule.strategies,
+    assets: {
+      allow_all: rule.assets.allow_all === 1,
+      allowed_values: rule.assets.allowed_values,
+    },
   };
 }

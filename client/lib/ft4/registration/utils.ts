@@ -224,7 +224,7 @@ function validateAssetLimitRule(assetLimit: AssetLimit, asset: Asset): boolean {
   }
 
   if ("name" in assetLimit && assetLimit.name !== undefined) {
-    if (assetLimit.name.toUpperCase() === asset.name.toUpperCase())
+    if (assetLimit.name.toUpperCase() !== asset.name.toUpperCase())
       return false;
   }
 
@@ -236,6 +236,10 @@ function validateAssetLimitRule(assetLimit: AssetLimit, asset: Asset): boolean {
       Buffer.compare(assetLimit.issuingBlockchainRid, asset.blockchainRid) !== 0
     )
       return false;
+  }
+
+  if ("minAmount" in assetLimit && assetLimit.minAmount !== undefined) {
+    if (assetLimit.minAmount > asset.supply) return false;
   }
 
   return true;
