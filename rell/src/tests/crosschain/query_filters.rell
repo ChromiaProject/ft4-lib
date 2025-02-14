@@ -448,7 +448,7 @@ function test_get_unapplied_transfers_filtered_by_multiple_init_tx_rids_using_al
     val unapplied_transfer_two = helpers.cancel_unapply_transfer_and_retrieve_unapplied_transfer(
         mocks.ASSET_NAME + 1,
         mocks.ASSET_SYMBOL + 1,
-        1578700830001,
+        1578700850001,
         sender_account_id = alice.account.id,
         recipient_account_id = bob.account.id,
         sender_auth_descriptor_id = alice.auth_descriptor_id
