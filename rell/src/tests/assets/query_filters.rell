@@ -507,7 +507,13 @@ function test_get_paginated_crosschain_transfer_history_entries_without_filter_n
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_without_filter() {
-    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = bob.account.id,
+        sender_auth_descriptor_id = alice.auth_descriptor_id
+    );
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(null, 1, null);
     assert_equals(fetched_crosschain_transfer_history_entries, utils.paged_result(
         next_cursor = null,
@@ -516,7 +522,13 @@ function test_get_paginated_crosschain_transfer_history_entries_without_filter()
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_filtered_by_single_account_id() {
-    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = bob.account.id,
+        sender_auth_descriptor_id = alice.auth_descriptor_id
+    );
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
             account_ids = [crosschain_transfer_history_entry.account_id]
@@ -531,12 +543,19 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_sing
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_filtered_by_multiple_account_ids() {
+    val alice = test.register_alice();
     val eve = test.register_eve();
-    val crosschain_transfer_history_entry_one = common_helpers.mock_crosschain_transfer();
+    val crosschain_transfer_history_entry_one = common_helpers.mock_crosschain_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = eve.account.id,
+        sender_auth_descriptor_id = alice.auth_descriptor_id
+    );
     val crosschain_transfer_history_entry_two = common_helpers.mock_crosschain_transfer(
         "test_asset_2",
         "TEST_SYMBOL_2",
-        recipient_account_id = eve.account.id,
+        sender_account_id = alice.account.id,
+        sender_auth_descriptor_id = alice.auth_descriptor_id,
+        recipient_account_id = eve.account.id
     );
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
@@ -558,7 +577,13 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_mult
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_filtered_by_single_asset_id() {
-    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = bob.account.id,
+        sender_auth_descriptor_id = alice.auth_descriptor_id
+    );
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
             asset_ids = [crosschain_transfer_history_entry.asset.id]
@@ -573,12 +598,19 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_sing
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_filtered_by_multiple_asset_ids() {
+    val alice = test.register_alice();
     val eve = test.register_eve();
-    val crosschain_transfer_history_entry_one = common_helpers.mock_crosschain_transfer();
+    val crosschain_transfer_history_entry_one = common_helpers.mock_crosschain_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = eve.account.id,
+        sender_auth_descriptor_id = alice.auth_descriptor_id
+    );
     val crosschain_transfer_history_entry_two = common_helpers.mock_crosschain_transfer(
         "test_asset_2",
         "TEST_SYMBOL_2",
-        recipient_account_id = eve.account.id,
+        sender_account_id = alice.account.id,
+        sender_auth_descriptor_id = alice.auth_descriptor_id,
+        recipient_account_id = eve.account.id
     );
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
@@ -600,7 +632,13 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_mult
 }
 
 function test_get_crosschain_transfer_history_entries_filtered_requires_transaction_rids_composite_index() {
-    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = bob.account.id,
+        sender_auth_descriptor_id = alice.auth_descriptor_id
+    );
     assert_fails(
         "INVALID FILTER: Composite index (transaction_rids, op_index) - transaction_rids filter cannot be empty",
         assets.external.get_crosschain_transfer_history_entries_filtered(
@@ -614,7 +652,13 @@ function test_get_crosschain_transfer_history_entries_filtered_requires_transact
 }
 
 function test_get_crosschain_transfer_history_entries_filtered_requires_op_index_composite_index() {
-    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = bob.account.id,
+        sender_auth_descriptor_id = alice.auth_descriptor_id
+    );
     assert_fails(
         "INVALID FILTER: Composite index (transaction_rids, op_index) - op_index filter is required",
         assets.external.get_crosschain_transfer_history_entries_filtered(
@@ -628,7 +672,13 @@ function test_get_crosschain_transfer_history_entries_filtered_requires_op_index
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_filtered_by_op_index_and_transaction_rids() {
-    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = bob.account.id,
+        sender_auth_descriptor_id = alice.auth_descriptor_id
+    );
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
             op_index = crosschain_transfer_history_entry.op_index,
@@ -644,7 +694,13 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_op_i
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_using_all_filter_no_crosschain_transfer_history_entries() {
-    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = bob.account.id,
+        sender_auth_descriptor_id = alice.auth_descriptor_id
+    );
     val mock_buffer = x"0000";
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
@@ -663,7 +719,13 @@ function test_get_paginated_crosschain_transfer_history_entries_using_all_filter
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_using_all_filter() {
-    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = bob.account.id,
+        sender_auth_descriptor_id = alice.auth_descriptor_id
+    );
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
             account_ids = [crosschain_transfer_history_entry.account_id],
