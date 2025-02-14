@@ -86,9 +86,7 @@ function get_paginated_pending_transfers(
     } (
         utils.pagination_result(
             data = (
-                tx_data = .transaction.tx_data,
-                op_index = .op_index,
-                account_id = .sender.id
+                map_pending_transfer($)
             ).to_gtv_pretty(),
             rowid = .rowid
         )
@@ -130,7 +128,5 @@ function get_last_pending_transfer_for_account(
     pt.op_index == cth.op_index
 } (
     @omit @sort_desc pt.rowid,
-    tx_data = pt.transaction.tx_data,
-    op_index = pt.op_index,
-    account_id = pt.sender.id
+    map_pending_transfer(pt),
 ) limit 1;

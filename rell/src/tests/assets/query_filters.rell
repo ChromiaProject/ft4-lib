@@ -534,9 +534,9 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_mult
     val eve = test.register_eve();
     val crosschain_transfer_history_entry_one = common_helpers.mock_crosschain_transfer();
     val crosschain_transfer_history_entry_two = common_helpers.mock_crosschain_transfer(
-        eve.account.id,
         "test_asset_2",
-        "TEST_SYMBOL_2"
+        "TEST_SYMBOL_2",
+        recipient_account_id = eve.account.id,
     );
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
@@ -576,9 +576,9 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_mult
     val eve = test.register_eve();
     val crosschain_transfer_history_entry_one = common_helpers.mock_crosschain_transfer();
     val crosschain_transfer_history_entry_two = common_helpers.mock_crosschain_transfer(
-        eve.account.id,
         "test_asset_2",
-        "TEST_SYMBOL_2"
+        "TEST_SYMBOL_2",
+        recipient_account_id = eve.account.id,
     );
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(

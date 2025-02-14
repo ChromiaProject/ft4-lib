@@ -14,6 +14,13 @@
 - Added in the `Connection` interface the query function `getBalancesFiltered` that retrieves paginated balances filtered by account ids and asset ids 
 - Added in the `Connection` interface the query function `getTransferHistoryEntriesFiltered` that retrieves paginated transfer history entries filtered by account ids, asset ids, transaction rids and op index
 - Added in the `Connection` interface the query function `getCrosschainTransferHistoryEntriesFiltered` that retrieves paginated crosschain transfer history entries filtered by account ids, asset ids, transaction rids and op index
+- In the `Connection` interface the crosschain query function `getAssetOriginFiltered` that retrieves paginated asset origins filtered by asset ids
+- In the `Connection` interface the crosschain query function `getAppliedTransfersFiltered` that retrieves paginated applied transfers filtered by init tx rids and init op index
+- In the `Connection` interface the crosschain query function `getCanceledTransfersFiltered` that retrieves paginated canceled transfers filtered by init tx rids and init op index
+- In the `Connection` interface the crosschain query function `getUnappliedTransfersFiltered` that retrieves paginated unapplied transfers filtered by init tx rids and init op index
+- In the `Connection` interface the crosschain query function `getRecalledTransfersFiltered` that retrieves paginated recalled transfers filtered by init tx rids and init op index
+- In the `Connection` interface the crosschain query function `getPendingTransfersFiltered` that retrieves paginated pending transfers filtered by transaction rids, op index and sender account id
+- In the `Connection` interface the crosschain query function `getRevertedTransfersFiltered` that retrieves paginated reverted transfers filtered by init tx rids and init op index
 
 ### Fixed 🔧
 

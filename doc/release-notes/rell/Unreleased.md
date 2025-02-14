@@ -6,6 +6,7 @@
 - Allow multiple smaller transfers to a non-existing account for the same asset type. 
 
 - The logic takes multiple senders for one recipient into consideration
+- Updated the response of the query `get_account_by_id` to also return type along with id
 
 ### Added ✅
 - Added a blacklist for operations that may not be used after an auth operation (`evm_auth` and `ft_auth`). Defined in the `chromia.yml` as `core.auth.auth_op_blacklisted_operations`, it works the same way as `evm_signatures_authorized_operations`, except the former is a list of operations that are not allowed, while the latter includes only allowed operations.
@@ -16,6 +17,13 @@
 - Added the query `get_balances_filtered` that retrieves paginated balances filtered by account ids and asset ids 
 - Added the query `get_transfer_history_entries_filtered` that retrieves paginated transfer history entries filtered by account ids, asset ids, transaction rids and op index
 - Added the query `get_crosschain_transfer_history_entries_filtered` that retrieves paginated crosschain transfer history entries filtered by account ids, asset ids, transaction rids and op index
+- The crosschain query `get_asset_origin_filtered` that retrieves paginated asset origins filtered by asset ids
+- The crosschain query `get_applied_transfers_filtered` that retrieves paginated applied transfers filtered by init tx rids and init op index
+- The crosschain query `get_canceled_transfers_filtered` that retrieves paginated canceled transfers filtered by init tx rids and init op index
+- The crosschain query `get_unapplied_transfers_filtered` that retrieves paginated unapplied transfers filtered by init tx rids and init op index
+- The crosschain query `get_recalled_transfers_filtered` that retrieves paginated recalled transfers filtered by init tx rids and init op index
+- The crosschain query `get_pending_transfers_filtered` that retrieves paginated pending transfers filtered by transaction rids, op index and sender account id
+- The crosschain query `get_reverted_transfers_filtered` that retrieves paginated reverted transfers filtered by init tx rids and init op index
 
 ### Fixed 🔧
 

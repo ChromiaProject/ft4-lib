@@ -117,3 +117,18 @@ function test_get_config() {
     auth_descriptor = acc.auth_descriptor_config(max_rules = 4)
   ));
 }
+
+function test_get_account_by_id() {
+  val alice = test.register_alice();
+  val found_account = acc.external.get_account_by_id(alice.account.id);
+  assert_not_null(found_account);
+  assert_equals(found_account, struct<acc.account>(
+    id = alice.account.id,
+    type = alice.account.type
+  ));
+}
+
+function test_get_account_by_id_when_account_does_not_exist() {
+  val found_account = acc.external.get_account_by_id(x"0000");
+  assert_null(found_account);
+}

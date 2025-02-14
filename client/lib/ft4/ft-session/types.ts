@@ -32,6 +32,15 @@ import {
   TransferHistoryEntryFilter,
 } from "@ft4/asset/types";
 import { CrosschainTransferHistoryEntry } from "@ft4/accounts/transfer-history";
+import {
+  AppliedTransfer,
+  AssetOrigin,
+  AssetOriginFilter,
+  PendingTransfer,
+  PendingTransferFilter,
+  Transfer,
+  TransferFilter,
+} from "@ft4/crosschain/types";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
@@ -236,6 +245,89 @@ export interface Connection extends Queryable {
     opIndex: number,
     assetId: BufferId,
   ) => Promise<TransferDetail[]>;
+  /**
+   * {@inheritDoc crosschain.getAssetOriginFiltered}
+   * @param assetOriginFilter - The asset origin filter (array of assetIds) that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   */
+  getAssetOriginFiltered: (
+    assetOriginFilter?: AssetOriginFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<AssetOrigin>>;
+  /**
+   * {@inheritDoc crosschain.getAppliedTransfersFiltered}
+   * @param appliedTransferFilter - The applied transfer filter (array of initTxRids and initOpIndex)
+   * that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   */
+  getAppliedTransfersFiltered: (
+    appliedTransferFilter?: TransferFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<AppliedTransfer>>;
+  /**
+   * {@inheritDoc crosschain.getCanceledTransfersFiltered}
+   * @param canceledTransferFilter - The canceled transfer filter (array of initTxRids and initOpIndex)
+   * that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   */
+  getCanceledTransfersFiltered: (
+    canceledTransferFilter?: TransferFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Transfer>>;
+  /**
+   * {@inheritDoc crosschain.getUnappliedTransfersFiltered}
+   * @param unappliedTransferFilter - The unapplied transfer filter (array of initTxRids and initOpIndex)
+   * that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   */
+  getUnappliedTransfersFiltered: (
+    unappliedTransferFilter?: TransferFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Transfer>>;
+  /**
+   * {@inheritDoc crosschain.getRecalledTransfersFiltered}
+   * @param recalledTransferFilter - The recalled transfer filter (array of initTxRids and initOpIndex)
+   * that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   */
+  getRecalledTransfersFiltered: (
+    recalledTransferFilter?: TransferFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Transfer>>;
+  /**
+   * {@inheritDoc crosschain.getPendingTransfersFiltered}
+   * @param pendingTransferFilter - The pending transfer filter (array of transactionIds, initOpIndex and senderAccountId)
+   * that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   */
+  getPendingTransfersFiltered: (
+    pendingTransferFilter?: PendingTransferFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<PendingTransfer>>;
+  /**
+   * {@inheritDoc crosschain.getRevertedTransfersFiltered}
+   * @param pendingTransferFilter - The pending transfer filter (array of initTxRids and initOpIndex)
+   * that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   */
+  getRevertedTransfersFiltered: (
+    revertedTransferFilter?: TransferFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Transfer>>;
 }
 
 /**

@@ -7,7 +7,11 @@ import {
   fetchBlockchains,
   getNewAsset,
 } from "@ft4-test/util";
-import { AuthFlag, getTransferDetailsByAsset } from "@ft4/accounts";
+import {
+  ACCOUNT_TYPE_USER,
+  AuthFlag,
+  getTransferDetailsByAsset,
+} from "@ft4/accounts";
 import { registerCrosschainAsset } from "@ft4/admin";
 import { createAmount } from "@ft4/asset";
 import { noopAuthenticator, days, FtKeyStore } from "@ft4/authentication";
@@ -174,18 +178,42 @@ describe("Crosschain transfer", () => {
 
     await connection00.client.sendTransaction(tx);
 
-    const transfer = await account00.getLastPendingCrosschainTransfer(
+    const pendingTransfer = await account00.getLastPendingCrosschainTransfer(
       multichain01.rid,
       account00.id,
       asset00.id,
       createAmount(100, asset00.decimals).value,
     );
 
-    expect(transfer).toEqual({
+    const rawGtxTransaction = Buffer.isBuffer(tx)
+      ? (gtv.decode(tx) as RawGtx)
+      : tx;
+
+    const operations = rawGtxTransaction[0][1];
+
+    const expectedTransfer = {
+      tx: {
+        blockchainRid: rawGtxTransaction[0][0],
+        operations: [
+          {
+            opName: operations[0][0],
+            args: operations[0][1],
+          },
+          {
+            opName: operations[1][0],
+            args: operations[1][1],
+          },
+        ],
+        signers: rawGtxTransaction[0][2],
+        signatures: rawGtxTransaction[1],
+      },
       opIndex: 1,
-      tx: gtv.decode(tx),
-      accountId: account00.id,
-    });
+      senderAccount: { id: account00.id, type: ACCOUNT_TYPE_USER },
+    };
+
+    expect(JSON.stringify(pendingTransfer)).toStrictEqual(
+      JSON.stringify(expectedTransfer),
+    );
   });
 
   it("transfer fails if expired before init", async () => {

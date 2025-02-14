@@ -266,7 +266,6 @@ function is_list(gtv) = gtv.to_bytes()[0] == 165;
  */
 function is_big_integer(gtv) = gtv.to_bytes()[0] == 166;
 
-
 /**
  * Throws `INVALID FILTER` if the list of `transaction_rids` is not empty, but `op_index` is not specified or
  * if `op_index` is specified, but `transaction_rids` is empty
@@ -284,6 +283,29 @@ function validate_composite_indexes_tx_rids_and_op_index(transaction_rids: list<
         require(
             not empty(transaction_rids),
             basic_error_message + "transaction_rids filter cannot be empty"
+        );
+    }
+}
+
+/**
+ * Throws `INVALID FILTER` if the list of `init_tx_rids` is not empty, but `init_op_index` is not specified or
+ * if `init_op_index` is specified, but `init_tx_rid` is empty
+ */
+function validate_composite_indexes_init_tx_rids_and_init_op_index(
+    init_tx_rids: list<byte_array>?, init_op_index: integer?
+) {
+    val basic_error_message = "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - ";
+    if (not empty(init_tx_rids)) {
+        require(
+            init_op_index??,
+            basic_error_message + "init_op_index filter is required"
+        );
+    }
+
+    if (init_op_index??) {
+        require(
+            not empty(init_tx_rids),
+            basic_error_message + "init_tx_rids filter cannot be empty"
         );
     }
 }
