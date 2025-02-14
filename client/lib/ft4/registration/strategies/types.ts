@@ -33,6 +33,17 @@ export type TransferStrategyRuleRaw = {
   senders: AllowListRaw;
   recipients: AllowListRaw;
   require_same_address: boolean;
+  allow_all_assets: boolean;
+  asset_limits: AllowedAssets[];
+  timeout_days: number;
+};
+
+export type TransferStrategyRuleRawV2 = {
+  strategies: string[];
+  blockchains: AllowListRaw;
+  senders: AllowListRaw;
+  recipients: AllowListRaw;
+  require_same_address: boolean;
   assets?: AssetLimitRaw;
   timeout_days: number;
 };

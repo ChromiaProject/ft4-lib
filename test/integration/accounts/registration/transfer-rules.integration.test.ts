@@ -112,7 +112,7 @@ describe("Transfer strategy rules", () => {
       },
     ];
 
-    expect(JSON.stringify(rules)).toStrictEqual(JSON.stringify(expectedRules));
+    expect(rules).toMatchObject(expectedRules);
   });
 
   it("returns transfer strategy rules grouped by strategy", async () => {

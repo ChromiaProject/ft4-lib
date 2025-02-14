@@ -1,7 +1,6 @@
 import { Operation } from "postchain-client";
 import { Connection } from "@ft4/ft-session";
 import { FtKeyStore, KeyStore, LoginKeyStore } from "@ft4/authentication";
-import { AllowedAssets } from "@ft4/registration/strategies/types";
 
 /**
  * Represents information about what strategy was used to create an account
@@ -67,26 +66,4 @@ export type AssetLimit = {
   name?: string;
   issuingBlockchainRid?: Buffer;
   minAmount: bigint;
-};
-
-export type TransferStrategyRulePartialResponse = {
-  blockchains: {
-    allow_all: number;
-    allowed_values: Buffer[];
-  };
-  senders: {
-    allow_all: number;
-    allowed_values: Buffer[];
-  };
-  recipients: {
-    allow_all: number;
-    allowed_values: Buffer[];
-  };
-  require_same_address: number;
-  timeout_days: number;
-  assets: {
-    allow_all: number;
-    allowed_values: AllowedAssets[];
-  };
-  strategies: string[];
 };

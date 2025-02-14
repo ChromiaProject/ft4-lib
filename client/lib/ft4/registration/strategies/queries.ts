@@ -1,8 +1,10 @@
 import { Filter, BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { QueryObject, formatter } from "postchain-client";
-import { PendingTransferExpirationState } from "./types";
-import { TransferStrategyRulePartialResponse } from "@ft4/registration/types";
+import {
+  PendingTransferExpirationState,
+  TransferStrategyRuleRaw,
+} from "./types";
 
 /**
  * Creates a query object for the `get_allowed_assets` - query
@@ -161,9 +163,7 @@ export function enabledRegistrationStrategies(): QueryObject<string[]> {
 /**
  * Creates a query object for the `ft4.get_transfer_rules` query
  */
-export function transferRules(): QueryObject<
-  TransferStrategyRulePartialResponse[]
-> {
+export function transferRules(): QueryObject<TransferStrategyRuleRaw[]> {
   return {
     name: "ft4.get_transfer_rules",
     args: {},

@@ -55,10 +55,8 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: false,
-        assets: {
-          allow_all: true,
-          allowed_values: [],
-        },
+        allow_all_assets: true,
+        asset_limits: [],
         timeout_days: 1,
       },
     ];
@@ -97,10 +95,8 @@ describe("Transfer strategy rules", () => {
           allowed_values: [recipient1],
         },
         require_same_address: false,
-        assets: {
-          allow_all: false,
-          allowed_values: [createAllowedAssets(asset1, 10n)],
-        },
+        allow_all_assets: false,
+        asset_limits: [createAllowedAssets(asset1, 10n)],
         timeout_days: 1,
         strategies: ["fee"],
       },
@@ -128,9 +124,7 @@ describe("Transfer strategy rules", () => {
       },
     ];
 
-    expect(JSON.stringify(rules)).toStrictEqual(
-      JSON.stringify(expectedResponse),
-    );
+    expect(rules).toMatchObject(expectedResponse);
   });
 
   it("correctly maps response with same sender and recipient", async () => {
@@ -149,10 +143,8 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: true,
-        assets: {
-          allow_all: false,
-          allowed_values: [createAllowedAssets(asset1, 11n)],
-        },
+        allow_all_assets: false,
+        asset_limits: [createAllowedAssets(asset1, 11n)],
         timeout_days: 10,
         strategies: ["fee"],
       },
@@ -199,13 +191,11 @@ describe("Transfer strategy rules", () => {
           allowed_values: [recipient1, recipient2],
         },
         require_same_address: false,
-        assets: {
-          allow_all: false,
-          allowed_values: [
-            createAllowedAssets(asset1, 100n),
-            createAllowedAssets(asset2, 200n),
-          ],
-        },
+        allow_all_assets: false,
+        asset_limits: [
+          createAllowedAssets(asset1, 100n),
+          createAllowedAssets(asset2, 200n),
+        ],
         timeout_days: 1,
         strategies: ["fee"],
       },
@@ -259,17 +249,15 @@ describe("Transfer strategy rules", () => {
           allowed_values: [recipient1],
         },
         require_same_address: false,
-        assets: {
-          allow_all: false,
-          allowed_values: [
-            {
-              id: asset1,
-              min_amount: 15n,
-              name: "TestAsset",
-              issuing_blockchain_rid: Buffer.alloc(32),
-            },
-          ],
-        },
+        allow_all_assets: false,
+        asset_limits: [
+          {
+            id: asset1,
+            min_amount: 15n,
+            name: "TestAsset",
+            issuing_blockchain_rid: Buffer.alloc(32),
+          },
+        ],
         timeout_days: 1,
       },
       {
@@ -287,17 +275,15 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: false,
-        assets: {
-          allow_all: false,
-          allowed_values: [
-            {
-              id: asset2,
-              min_amount: 20n,
-              name: "TestAsset",
-              issuing_blockchain_rid: Buffer.alloc(32),
-            },
-          ],
-        },
+        allow_all_assets: false,
+        asset_limits: [
+          {
+            id: asset2,
+            min_amount: 20n,
+            name: "TestAsset",
+            issuing_blockchain_rid: Buffer.alloc(32),
+          },
+        ],
         timeout_days: 1,
       },
     ];
@@ -358,10 +344,8 @@ describe("Transfer strategy rules", () => {
           allow_all: true,
           allowed_values: [],
         },
-        assets: {
-          allow_all: true,
-          allowed_values: [],
-        },
+        allow_all_assets: true,
+        asset_limits: [],
         require_same_address: false,
         timeout_days: 1,
       },
@@ -413,10 +397,8 @@ describe("Transfer strategy rules", () => {
           allow_all: false,
           allowed_values: [recipient1, recipient2],
         },
-        assets: {
-          allow_all: true,
-          allowed_values: [],
-        },
+        allow_all_assets: true,
+        asset_limits: [],
         strategies: ["open"],
         timeout_days: 15,
         require_same_address: false,
@@ -471,10 +453,8 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: false,
-        assets: {
-          allow_all: false,
-          allowed_values: [createAllowedAssets(asset1, 100n)],
-        },
+        allow_all_assets: false,
+        asset_limits: [createAllowedAssets(asset1, 100n)],
         timeout_days: 30,
       },
       {
@@ -492,10 +472,8 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: false,
-        assets: {
-          allow_all: false,
-          allowed_values: [createAllowedAssets(asset2, 50n)],
-        },
+        allow_all_assets: false,
+        asset_limits: [createAllowedAssets(asset2, 50n)],
         timeout_days: 15,
       },
     ];
@@ -575,10 +553,8 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: true,
-        assets: {
-          allow_all: false,
-          allowed_values: [createAllowedAssets(asset1, 10n)],
-        },
+        allow_all_assets: false,
+        asset_limits: [createAllowedAssets(asset1, 10n)],
         timeout_days: 30,
       },
       {
@@ -596,10 +572,8 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: false,
-        assets: {
-          allow_all: false,
-          allowed_values: [createAllowedAssets(asset1, 10n)],
-        },
+        allow_all_assets: false,
+        asset_limits: [createAllowedAssets(asset1, 10n)],
         timeout_days: 15,
       },
     ];
@@ -674,10 +648,8 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: true,
-        assets: {
-          allow_all: false,
-          allowed_values: [createAllowedAssets(asset1, 10n)],
-        },
+        allow_all_assets: false,
+        asset_limits: [createAllowedAssets(asset1, 10n)],
         timeout_days: 30,
       },
       {
@@ -695,10 +667,8 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: false,
-        assets: {
-          allow_all: false,
-          allowed_values: [createAllowedAssets(asset1, 10n)],
-        },
+        allow_all_assets: false,
+        asset_limits: [createAllowedAssets(asset1, 10n)],
         timeout_days: 15,
       },
       {
@@ -716,10 +686,8 @@ describe("Transfer strategy rules", () => {
           allowed_values: [],
         },
         require_same_address: false,
-        assets: {
-          allow_all: false,
-          allowed_values: [createAllowedAssets(asset1, 2n)],
-        },
+        allow_all_assets: false,
+        asset_limits: [createAllowedAssets(asset1, 2n)],
         timeout_days: 15,
       },
     ];

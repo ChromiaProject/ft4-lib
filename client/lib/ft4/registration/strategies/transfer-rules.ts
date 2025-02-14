@@ -1,12 +1,15 @@
 import { Queryable, formatter } from "postchain-client";
-import { AllowedAssets, TransferStrategyRuleRaw } from "./types";
+import {
+  AllowedAssets,
+  TransferStrategyRuleRaw,
+  TransferStrategyRuleRawV2,
+} from "./types";
 import { transferRules } from "./queries";
 import {
   TransferStrategyRule,
   AssetLimit,
   TransferStrategyRuleAmount,
   TransferStrategyRulePartial,
-  TransferStrategyRulePartialResponse,
 } from "@ft4/registration/types";
 
 /**
@@ -18,8 +21,6 @@ export async function getTransferStrategyRules(
   queryable: Queryable,
 ): Promise<TransferStrategyRule[]> {
   const rules = await queryable.query(transferRules());
-  console.log("=======FETCHED RULES=========", rules);
-  console.log("=======FETCHED RULES array=========", rules[0].assets);
   return rules.map((rule) => mapTransferStrategyRule(mapResponseToRaw(rule)));
 }
 
@@ -93,9 +94,8 @@ export async function getTransferStrategyRulesGroupedByStrategy(
  * @returns TransferStrategyRulePartial object
  */
 export function mapTransferStrategyRulePartial(
-  rule: TransferStrategyRuleRaw,
+  rule: TransferStrategyRuleRawV2,
 ): TransferStrategyRulePartial {
-  console.log("=====rule assets===", rule.assets);
   return {
     senderBlockchains: rule.blockchains.allow_all
       ? "all"
@@ -134,9 +134,8 @@ export function mapTransferStrategyRulePartial(
  * @returns TransferStrategyRule object
  */
 export function mapTransferStrategyRule(
-  rule: TransferStrategyRuleRaw,
+  rule: TransferStrategyRuleRawV2,
 ): TransferStrategyRule {
-  console.log("===map 2==rule====", rule);
   return {
     ...mapTransferStrategyRulePartial(rule),
     strategies: rule.strategies,
@@ -150,7 +149,7 @@ export function mapTransferStrategyRule(
  * @returns TransferStrategyRuleAmount object
  */
 export function mapTransferStrategyRuleAmount(
-  rule: TransferStrategyRuleRaw,
+  rule: TransferStrategyRuleRawV2,
   minAmount: bigint,
 ): TransferStrategyRuleAmount {
   return {
@@ -191,28 +190,13 @@ export function mapAssetLimit(assetLimit: AllowedAssets): AssetLimit {
 }
 
 function mapResponseToRaw(
-  rule: TransferStrategyRulePartialResponse,
-): TransferStrategyRuleRaw {
-  console.log("=======MAP RESPONSE TO RAW=========", rule);
+  rule: TransferStrategyRuleRaw,
+): TransferStrategyRuleRawV2 {
   return {
-    blockchains: {
-      allow_all: rule.blockchains.allow_all === 1,
-      allowed_values: rule.blockchains.allowed_values,
-    },
-    senders: {
-      allow_all: rule.senders.allow_all === 1,
-      allowed_values: rule.senders.allowed_values,
-    },
-    recipients: {
-      allow_all: rule.recipients.allow_all === 1,
-      allowed_values: rule.recipients.allowed_values,
-    },
-    require_same_address: rule.require_same_address === 1,
-    timeout_days: rule.timeout_days,
-    strategies: rule.strategies,
+    ...rule,
     assets: {
-      allow_all: rule.assets.allow_all === 1,
-      allowed_values: rule.assets.allowed_values,
+      allow_all: rule.allow_all_assets,
+      allowed_values: rule.asset_limits,
     },
   };
 }
