@@ -69,6 +69,32 @@ export type SupportedNumber = string | number | Amount;
 
 export type AnyAssetAmount = RawAmount | Amount;
 
+export type AssetFilter = Partial<{
+  ids: Array<Buffer> | null;
+  name: string | null;
+  symbol: string | null;
+  type: string | null;
+}> | null;
+
+export type BalanceFilter = Partial<{
+  accountIds?: Array<Buffer> | null;
+  assetIds?: Array<Buffer> | null;
+}> | null;
+
+export type TransferHistoryEntryFilter = Partial<{
+  accountIds?: Array<Buffer> | null;
+  assetIds?: Array<Buffer> | null;
+  transactionRids?: Array<Buffer> | null;
+  opIndex?: number | null;
+}> | null;
+
+export type CrosschainTransferHistoryEntryFilter = Partial<{
+  accountIds?: Array<Buffer> | null;
+  assetIds?: Array<Buffer> | null;
+  transactionRids?: Array<Buffer> | null;
+  opIndex?: number | null;
+}> | null;
+
 /**
  * An amount consists of a value and number of decimals. It wraps a
  * bigint value, and thus has the same limitations as a bigint in terms of size and precision.

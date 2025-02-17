@@ -47,6 +47,10 @@ import {
   getAssetsBySymbol,
   getAssetsByName,
   getAssetsByType,
+  getAssetsFiltered,
+  getBalancesFiltered,
+  getTransferHistoryEntriesFiltered,
+  getCrosschainTransferHistoryEntriesFiltered,
 } from "@ft4/asset";
 import {
   AuthDataService,
@@ -73,6 +77,12 @@ import {
   getConfigFromOptions,
 } from "@ft4/authentication/login";
 import { getApiVersion } from "@ft4/utils/main";
+import {
+  AssetFilter,
+  BalanceFilter,
+  CrosschainTransferHistoryEntryFilter,
+  TransferHistoryEntryFilter,
+} from "@ft4/asset/types";
 import {
   getAppliedTransfersFiltered,
   getAssetOriginFiltered,
@@ -188,6 +198,38 @@ export function createConnection(client: IClient): Connection {
     ) => getAssetsByType(connection, type, limit, cursor),
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
       getAllAssets(connection, limit, cursor),
+    getAssetsFiltered: (
+      assetFilter?: AssetFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) => getAssetsFiltered(connection, assetFilter, limit, cursor),
+    getBalancesFiltered: (
+      balanceFilter?: BalanceFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) => getBalancesFiltered(connection, balanceFilter, limit, cursor),
+    getTransferHistoryEntriesFiltered: (
+      transferHistoryEntryFilter?: TransferHistoryEntryFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getTransferHistoryEntriesFiltered(
+        connection,
+        transferHistoryEntryFilter,
+        limit,
+        cursor,
+      ),
+    getCrosschainTransferHistoryEntriesFiltered: (
+      crosschainTransferHistoryEntryFilter?: CrosschainTransferHistoryEntryFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getCrosschainTransferHistoryEntriesFiltered(
+        connection,
+        crosschainTransferHistoryEntryFilter,
+        limit,
+        cursor,
+      ),
     getTransferDetails: (txRid: BufferId, opIndex: number) =>
       getTransferDetails(connection, txRid, opIndex),
     getTransferDetailsByAsset: (

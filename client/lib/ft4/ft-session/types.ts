@@ -19,10 +19,19 @@ import {
   AuthDescriptorValidator,
   AuthenticatedAccount,
   TransferDetail,
+  TransferHistoryEntry,
 } from "@ft4/accounts";
 import { Asset } from "@ft4/asset";
 import { LoginOptions, SessionWithLogout } from "@ft4/authentication";
 import { TransactionWithReceipt } from "@ft4/transaction-builder/types";
+import {
+  AssetFilter,
+  Balance,
+  BalanceFilter,
+  CrosschainTransferHistoryEntryFilter,
+  TransferHistoryEntryFilter,
+} from "@ft4/asset/types";
+import { CrosschainTransferHistoryEntry } from "@ft4/accounts/transfer-history";
 import {
   AppliedTransfer,
   AssetOrigin,
@@ -165,6 +174,57 @@ export interface Connection extends Queryable {
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Asset>>;
+
+  /**
+   * {@inheritdoc asset.getAssetsFiltered}
+   * @param assetFilter - The asset filter (list of ids, name, symbol and type) that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   */
+  getAssetsFiltered: (
+    assetFilter?: AssetFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Asset>>;
+
+  /**
+   * {@inheritdoc asset.getBalancesFiltered}
+   * @param balanceFilter - The balance filter (list of account_ids and list of asset_ids) that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   */
+  getBalancesFiltered: (
+    balanceFilter?: BalanceFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Balance>>;
+
+  /**
+   * {@inheritdoc asset.getTransferHistoryEntriesFiltered}
+   * @param transferHistoryEntryFilter - The transfer history entry filter
+   * (list of account_ids, list of asset_ids, list of transaction_rids and op_index) that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   */
+  getTransferHistoryEntriesFiltered: (
+    transferHistoryEntryFilter?: TransferHistoryEntryFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<TransferHistoryEntry>>;
+
+  /**
+   * {@inheritdoc asset.getCrosschainTransferHistoryEntriesFiltered}
+   * @param crosschainTransferHistoryEntryFilter - The crosschain transfer history entry filter
+   * (list of account_ids, list of asset_ids, list of transaction_rids and op_index) that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   */
+  getCrosschainTransferHistoryEntriesFiltered: (
+    crosschainTransferHistoryEntryFilter?: CrosschainTransferHistoryEntryFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<CrosschainTransferHistoryEntry>>;
+
   /**
    * {@inheritDoc accounts.getTransferDetails}
    * @param txRid - the id of the transaction in which the transfer was made

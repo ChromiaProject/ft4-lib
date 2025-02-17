@@ -500,6 +500,6 @@ async function getOrRegisterCrosschainAsset(
       originMultichainRid,
     );
   } catch (error) {
-    console.error(error);
+    console.log(`Crosschain asset with id ${assetId} already exists`);
   }
 }

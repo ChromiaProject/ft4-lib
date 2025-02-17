@@ -8,6 +8,8 @@ import lib.ft4.accounts;
 
 import ^^.extensions.*;
 import test: lib.ft4.test.core;
+import ^.helpers;
+import common_helpers: ^^.common.helpers;
 
 function test_history() {
     val alice = test.register_alice();
@@ -222,21 +224,28 @@ function test_transfer_details() {
         .run();
 
     val tx_rid = test.get_last_transaction().tx_rid;
+    val last_two_transfer_history_entries = common_helpers.get_last_two_transfer_history_entries();
 
     val expected = [
         assets.transfer_detail(
+            rowid = last_two_transfer_history_entries[1].rowid,
             blockchain_rid = chain_context.blockchain_rid,
             account_id = alice.account.id,
             asset_id = asset.id,
             delta = 1L,
-            is_input = true
+            is_input = true,
+            op_index = last_two_transfer_history_entries[1].op_index,
+            transaction_rid = last_two_transfer_history_entries[1].transaction.tx_rid
         ),
         assets.transfer_detail(
+            rowid = last_two_transfer_history_entries[0].rowid,
             blockchain_rid = chain_context.blockchain_rid,
             account_id = bob.account.id,
             asset_id = asset.id,
             delta = 1L,
-            is_input = false
+            is_input = false,
+            op_index = last_two_transfer_history_entries[0].op_index,
+            transaction_rid = last_two_transfer_history_entries[0].transaction.tx_rid
         )
     ];
 

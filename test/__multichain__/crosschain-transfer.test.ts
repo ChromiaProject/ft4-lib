@@ -1,3 +1,4 @@
+import { setCrosschainAndTransferHistoryEntryFilter } from "@ft4-test/integration/assets/asset-filter-helpers";
 import {
   AccountBuilder,
   addNewAssetIfNeeded,
@@ -22,7 +23,7 @@ import {
 import { createConnection } from "@ft4/ft-session";
 import { registerAccount, registrationStrategy } from "@ft4/registration";
 import { transactionBuilder } from "@ft4/transaction-builder";
-import { BufferId } from "@ft4/utils";
+import { BufferId, getTransactionRid } from "@ft4/utils";
 import { Operation, RawGtx, gtv } from "postchain-client";
 
 describe("Crosschain transfer", () => {
@@ -311,5 +312,302 @@ describe("Crosschain transfer", () => {
 
     expect(senderRecord.accountId).toEqual(account00.id);
     expect(senderRecord.blockchainRid).toEqual(connection00.blockchainRid);
+  });
+
+  describe("getCrosschainTransferHistoryEntriesFiltered", () => {
+    const mockBuffer = Buffer.alloc(32);
+    it("returns empty pagination without filter", async () => {
+      const { multichain00 } = await fetchBlockchains();
+
+      const client00 = await createChromiaClientToMultichain(multichain00.rid);
+      const connection00 = createConnection(client00);
+
+      const { data } =
+        await connection00.getCrosschainTransferHistoryEntriesFiltered(null, 1);
+
+      const foundCrosschainTransferHistoryEntry =
+        data.find((item) => item.assetId === mockBuffer) ?? null;
+      expect(foundCrosschainTransferHistoryEntry).toBe(null);
+    });
+    it("returns empty pagination with filter", async () => {
+      const { multichain00 } = await fetchBlockchains();
+
+      const client00 = await createChromiaClientToMultichain(multichain00.rid);
+      const connection00 = createConnection(client00);
+      const { data } =
+        await connection00.getCrosschainTransferHistoryEntriesFiltered(
+          setCrosschainAndTransferHistoryEntryFilter(
+            [mockBuffer],
+            [mockBuffer],
+            [mockBuffer],
+            0,
+          ),
+          1,
+        );
+
+      const foundCrosschainTransferHistoryEntry =
+        data.find((item) => item.assetId === mockBuffer) ?? null;
+      expect(foundCrosschainTransferHistoryEntry).toBe(null);
+    });
+
+    it("returns paginated crosschain transfer history entries without filter", async () => {
+      const { multichain00, multichain01 } = await fetchBlockchains();
+
+      const client00 = await createChromiaClientToMultichain(multichain00.rid);
+      const connection00 = createConnection(client00);
+      const connection01 = createConnection(
+        await createChromiaClientToMultichain(multichain01.rid),
+      );
+
+      const asset00 = await getNewAsset(
+        connection00.client,
+        "crosschain-transfer-test-asset_2",
+        "CROSSCHAIN-transfer-test-asset_2",
+      );
+      await registerCrosschainAsset(
+        connection01.client,
+        adminUser().signatureProvider,
+        asset00.id,
+        multichain00.rid,
+      );
+
+      const account00 = await AccountBuilder.account(connection00)
+        .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+        .withBalance(asset00, createAmount(100, asset00.decimals))
+        .build();
+
+      const account01 = await AccountBuilder.account(connection01)
+        .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+        .build();
+
+      const tb = transactionBuilder(
+        account00.authenticator,
+        connection00.client,
+      );
+
+      const initOperation = initTransfer(
+        account01.id,
+        asset00.id,
+        createAmount(100, asset00.decimals),
+        [multichain01.rid],
+        10000000000000,
+      );
+
+      const applyState = {} as any;
+      await new Promise<void>((resolve, reject) => {
+        const onAnchoredHandler = async (
+          data: {
+            operation: Operation;
+            opIndex: number;
+            tx: RawGtx;
+            createProof: (blockchainRid: BufferId) => Promise<Operation>;
+          } | null,
+          error: Error | null,
+        ) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          if (!data) {
+            reject(new Error("No data provided"));
+            return;
+          }
+          applyState.tx = data?.tx;
+          applyState.opIndex = data?.opIndex;
+          const iccfProofOperation = await data.createProof(multichain01.rid);
+          try {
+            await transactionBuilder(
+              account00.authenticator,
+              connection01.client,
+            )
+              .add(iccfProofOperation, {
+                authenticator: noopAuthenticator,
+              })
+              .add(
+                applyTransfer(data.tx, data.opIndex, data.tx, data.opIndex, 0),
+                { authenticator: noopAuthenticator },
+              )
+              .buildAndSend();
+          } catch (error) {
+            reject(error);
+          }
+
+          resolve();
+        };
+
+        tb.add(initOperation, {
+          onAnchoredHandler,
+        }).buildAndSendWithAnchoring();
+      });
+
+      const { data } =
+        await connection00.getCrosschainTransferHistoryEntriesFiltered(
+          null,
+          100,
+        );
+
+      const transactionRid = getTransactionRid(applyState.tx);
+
+      const matchingCrosschainTransferHistoryEntry =
+        await connection00.getCrosschainTransferHistoryEntriesFiltered(
+          setCrosschainAndTransferHistoryEntryFilter(
+            null,
+            null,
+            [transactionRid],
+            applyState.opIndex,
+          ),
+          1,
+        );
+
+      const foundCrosschainTransferHistoryEntry = data.find(
+        (item) =>
+          item.transactionId.toString("hex") === transactionRid.toString("hex"),
+      );
+
+      expect(JSON.stringify(foundCrosschainTransferHistoryEntry)).toStrictEqual(
+        JSON.stringify({
+          rowid: matchingCrosschainTransferHistoryEntry.data[0].rowid,
+          blockchainRid: multichain01.rid,
+          accountId: account01.id,
+          assetId: asset00.id,
+          delta: matchingCrosschainTransferHistoryEntry.data[0].delta,
+          isInput: matchingCrosschainTransferHistoryEntry.data[0].isInput,
+          opIndex: matchingCrosschainTransferHistoryEntry.data[0].opIndex,
+          transactionId: transactionRid,
+        }),
+      );
+    });
+    it("returns paginated crosschain transfer history entries with filter", async () => {
+      const { multichain00, multichain01 } = await fetchBlockchains();
+
+      const client00 = await createChromiaClientToMultichain(multichain00.rid);
+      const connection00 = createConnection(client00);
+      const connection01 = createConnection(
+        await createChromiaClientToMultichain(multichain01.rid),
+      );
+
+      const asset00 = await getNewAsset(
+        connection00.client,
+        "crosschain-transfer-test-asset_3",
+        "CROSSCHAIN-transfer-test-asset_3",
+      );
+      await registerCrosschainAsset(
+        connection01.client,
+        adminUser().signatureProvider,
+        asset00.id,
+        multichain00.rid,
+      );
+
+      const account00 = await AccountBuilder.account(connection00)
+        .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+        .withBalance(asset00, createAmount(100, asset00.decimals))
+        .build();
+
+      const account01 = await AccountBuilder.account(connection01)
+        .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+        .build();
+
+      const tb = transactionBuilder(
+        account00.authenticator,
+        connection00.client,
+      );
+
+      const initOperation = initTransfer(
+        account01.id,
+        asset00.id,
+        createAmount(100, asset00.decimals),
+        [multichain01.rid],
+        10000000000000,
+      );
+
+      const applyState = {} as any;
+      await new Promise<void>((resolve, reject) => {
+        const onAnchoredHandler = async (
+          data: {
+            operation: Operation;
+            opIndex: number;
+            tx: RawGtx;
+            createProof: (blockchainRid: BufferId) => Promise<Operation>;
+          } | null,
+          error: Error | null,
+        ) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          if (!data) {
+            reject(new Error("No data provided"));
+            return;
+          }
+          applyState.tx = data?.tx;
+          applyState.opIndex = data?.opIndex;
+          const iccfProofOperation = await data.createProof(multichain01.rid);
+          try {
+            await transactionBuilder(
+              account00.authenticator,
+              connection01.client,
+            )
+              .add(iccfProofOperation, {
+                authenticator: noopAuthenticator,
+              })
+              .add(
+                applyTransfer(data.tx, data.opIndex, data.tx, data.opIndex, 0),
+                { authenticator: noopAuthenticator },
+              )
+              .buildAndSend();
+          } catch (error) {
+            reject(error);
+          }
+
+          resolve();
+        };
+
+        tb.add(initOperation, {
+          onAnchoredHandler,
+        }).buildAndSendWithAnchoring();
+      });
+
+      const transactionRid = getTransactionRid(applyState.tx);
+
+      const { data } =
+        await connection00.getCrosschainTransferHistoryEntriesFiltered(
+          setCrosschainAndTransferHistoryEntryFilter(
+            [account01.id],
+            [asset00.id],
+            [transactionRid],
+            applyState.opIndex,
+          ),
+          100,
+        );
+
+      const matchingCrosschainTransferHistoryEntry =
+        await connection00.getCrosschainTransferHistoryEntriesFiltered(
+          setCrosschainAndTransferHistoryEntryFilter(
+            null,
+            null,
+            [transactionRid],
+            applyState.opIndex,
+          ),
+          1,
+        );
+
+      const foundCrosschainTransferHistoryEntry = data.find(
+        (item) =>
+          item.transactionId.toString("hex") === transactionRid.toString("hex"),
+      );
+
+      expect(JSON.stringify(foundCrosschainTransferHistoryEntry)).toEqual(
+        JSON.stringify({
+          rowid: matchingCrosschainTransferHistoryEntry.data[0].rowid,
+          blockchainRid: multichain01.rid,
+          accountId: account01.id,
+          assetId: asset00.id,
+          delta: matchingCrosschainTransferHistoryEntry.data[0].delta,
+          isInput: matchingCrosschainTransferHistoryEntry.data[0].isInput,
+          opIndex: matchingCrosschainTransferHistoryEntry.data[0].opIndex,
+          transactionId: transactionRid,
+        }),
+      );
+    });
   });
 });

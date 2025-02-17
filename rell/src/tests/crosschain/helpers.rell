@@ -34,12 +34,14 @@ function create_crosschain_transfer_and_retrieve_applied_transfer(
     asset_symbol: text = mocks.ASSET_SYMBOL,
     sender_account_id: byte_array = rell.test.keypairs.alice.pub,
     recipient_account_id: byte_array = rell.test.keypairs.bob.pub,
+    sender_auth_descriptor_id: byte_array
 ) {
     common_helpers.mock_crosschain_transfer(
         asset_name,
         asset_symbol,
         sender_account_id,
-        recipient_account_id
+        recipient_account_id,
+        sender_auth_descriptor_id
     );
 
     return crosschain.applied_transfers @ {} (@omit @sort_desc .rowid, $) limit 1;
@@ -48,11 +50,17 @@ function create_crosschain_transfer_and_retrieve_applied_transfer(
 function init_cancel_and_retrieve_canceled_transfer_crosschain_transfer(
     asset_name: text = mocks.ASSET_NAME,
     asset_symbol: text = mocks.ASSET_SYMBOL,
+    sender_account_id: byte_array,
+    sender_auth_descriptor_id: byte_array,
+    recipient_account_id: byte_array
 ) {
     val (tx, source_blockchain_rid) = common_helpers.create_crosschain_init_transfer_with_auth_operations(
         rell.test.DEFAULT_FIRST_BLOCK_TIME - 1,
         asset_name,
-        asset_symbol
+        asset_symbol,
+        sender_account_id = sender_account_id,
+        recipient_account_id = recipient_account_id,
+        sender_auth_descriptor_id = sender_auth_descriptor_id
     );
 
     rell.test.tx()
@@ -67,14 +75,20 @@ function init_cancel_and_retrieve_canceled_transfer_crosschain_transfer(
 function cancel_unapply_transfer_and_retrieve_unapplied_transfer(
     asset_name: text = mocks.ASSET_NAME,
     asset_symbol: text = mocks.ASSET_SYMBOL,
-    deadline: integer = rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 2
+    deadline: integer = rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 2,
+    sender_account_id: byte_array,
+    sender_auth_descriptor_id: byte_array,
+    recipient_account_id: byte_array
 ) {
     val target_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
     val (init_transfer_tx, source_blockchain_rid) = common_helpers.create_crosschain_init_transfer_with_auth_operations(
         deadline = deadline,
         asset_name = asset_name,
         asset_symbol = asset_symbol,
-        target_blockchain_rid = target_blockchain_rid
+        target_blockchain_rid = target_blockchain_rid,
+        sender_account_id = sender_account_id,
+        sender_auth_descriptor_id = sender_auth_descriptor_id,
+        recipient_account_id = recipient_account_id
     );
     
     rell.test.tx()
