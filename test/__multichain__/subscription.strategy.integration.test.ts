@@ -113,7 +113,8 @@ describe("Subscription account creation single step", () => {
     ).session;
 
     const startingAmount = createAmount(20, 5);
-    mint(
+
+    await mint(
       senderConnection.client,
       adminUser().signatureProvider,
       senderAccount.id,
@@ -508,7 +509,7 @@ describe("Subscription account creation single step", () => {
 
     const subscriptionAmount = createAmountFromBalance(amount, asset.decimals);
 
-    mint(
+    await mint(
       senderConnection.client,
       adminUser().signatureProvider,
       session.account.id,

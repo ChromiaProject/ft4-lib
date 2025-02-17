@@ -50,9 +50,10 @@ export async function validateCrosschainRegistrationStrategyRules(
 
   let validRules: TransferStrategyRuleAmount[] = [];
   const senderBalances = await senderAccount.getBalances();
-  const foundAssetBalance = senderBalances.data.find(
-    (balance) => balance.asset.id === asset.id,
-  );
+  const foundAssetBalance =
+    senderBalances.data.find(
+      (balance) => Buffer.compare(balance.asset.id, asset.id) === 0,
+    ) ?? null;
 
   if (!isPendingTransfer) {
     if (!foundAssetBalance) {
