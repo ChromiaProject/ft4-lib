@@ -30,6 +30,12 @@ export default async function () {
     .withNetworkAliases("postgres")
     .start();
 
+  const isMacOS = process.platform === "darwin";
+  const isARM = process.arch === "arm64";
+
+  const JAVA_TOOL_OPTIONS =
+    isMacOS && isARM ? "-Xmx16g -XX:UseSVE=0" : "-Xmx16g";
+
   // Start a Chromia node container
   const container = await new GenericContainer(
     "registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.21.4",
@@ -44,6 +50,7 @@ export default async function () {
     .withExposedPorts(7740)
     .withEnvironment({
       CHR_DB_URL: "jdbc:postgresql://postgres/postchain",
+      JAVA_TOOL_OPTIONS,
     })
     .withCommand([
       "chr",

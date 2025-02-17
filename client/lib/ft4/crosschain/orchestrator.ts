@@ -585,7 +585,6 @@ async function createBaseOrchestrator(
         .buildAndSendWithAnchoring();
       localEmitter.emit("TransferHop", targetChainRid);
     } catch (error) {
-      console.log("====Error=====", error);
       throw new ApplyTransferError("Unable to apply transfer", error);
     }
   }
