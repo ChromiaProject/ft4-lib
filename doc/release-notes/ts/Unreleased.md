@@ -3,6 +3,10 @@
 ### Breaking 💔
 
 ### Changed 🪙
+- Moved the type `TransferStrategyRuleAmount`, `TransferSenderBlockchains`, `TransferParticipants`, `TransferStrategyRulePartial`, `TransferParticipantSingle` and `AssetLimit` a directory up
+- The type's `TransferStrategyRuleRaw` property `asset_limits` was changed from from `AssetLimitRaw[]` to `AllowedAssets[]`
+- The type `AssetLimitRaw` properties to `{ allow_all: boolean; allowed_values: AllowedAssets[];}`
+
 
 ### Added ✅
 
@@ -17,6 +21,10 @@
 - In the `Connection` interface the crosschain query function `getRecalledTransfersFiltered` that retrieves paginated recalled transfers filtered by init tx rids and init op index
 - In the `Connection` interface the crosschain query function `getPendingTransfersFiltered` that retrieves paginated pending transfers filtered by transaction rids, op index and sender account id
 - In the `Connection` interface the crosschain query function `getRevertedTransfersFiltered` that retrieves paginated reverted transfers filtered by init tx rids and init op index
+- Added the utility functions `validateCrosschainRegistrationStrategyRules`, `getValidRules`, `isValidParticipantRule`, `isValidSenderBlockchainRule`, `isValidAssetRule`, `validateAssetLimitRule` that perform improved validation of the transfer strategy rules, when using the strategies `fee` and `subscription`
+- Added the maping function `mapResponseToRaw` that sets consistency for the asset properties rules retrieved from rell, to match the format of the rest of the rules  
+- Added the type `TransferStrategyRuleRawV2`
+- Extended the type `AssetLimit` to also contain `name` and `issuingBlockchainRid`
 
 ### Fixed 🔧
 
