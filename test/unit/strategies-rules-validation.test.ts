@@ -1,27 +1,34 @@
-import { Asset, ASSET_TYPE_FT4, Balance, createAmount } from "@ft4/asset";
-import { Connection } from "@ft4/ft-session";
+import { Asset, ASSET_TYPE_FT4, createAmount } from "@ft4/asset";
 import { TransferStrategyRuleAmount } from "@ft4/registration";
 import {
-  findValidStrategyRulesAndGetLowestAmountOrZero,
+  validateCrosschainRegistrationStrategyRules,
   getValidRules,
   isValidParticipantRule,
   isValidSenderBlockchainRule,
   isValidAssetRule,
 } from "@ft4/registration/utils";
 import { Account } from "@ft4/accounts/types";
-import { mapTransferStrategyRule } from "@ft4/registration/strategies";
+import { Buffer } from "buffer";
+
+const TEST_BUFFER_SIZE = 32;
+const TEST_BUFFER_FILL = 0;
+const TEST_BUFFER_VALUE = "aa";
 
 const MOCKS = {
+  BUFFER: {
+    SIZE: 32,
+    FILL_VALUE: 0,
+    DIFFERENT_VALUE: "aa",
+    DEFAULT_VALUE: "1234",
+  },
   ASSET: {
-    NAME: "Test Token",
-    TEST_ASSET_NAME: "TestAsset",
-    DIFFERENT_ASSET_NAME: "DifferentAsset",
+    NAME: "Test Asset",
+    DIFFERENT_NAME: "DifferentAsset",
     SYMBOL: "TEST",
     DECIMALS: 8,
     ICON_URL: "https://example.com/icon.png",
-    SUPPLY: "1000000000000",
-    INITIAL_BALANCE: "100",
-    TEST_SUPPLY: "10000",
+    SUPPLY: "10000",
+    TYPE: "ft4",
   },
   AMOUNTS: {
     HIGH_AMOUNT: "10000000000",
@@ -32,11 +39,7 @@ const MOCKS = {
     MIN_AMOUNT_1: "100",
     MIN_AMOUNT_2: "5000",
     HIGH_MIN_AMOUNT: "20000",
-  },
-  BUFFER: {
-    SIZE: 32,
-    FILL_VALUE: 0,
-    DIFFERENT_VALUE: "aa",
+    DEFAULT_BALANCE: "1000",
   },
   PARTICIPANTS: {
     ALL: "all",
@@ -46,260 +49,205 @@ const MOCKS = {
     DEFAULT: 10,
     TEST_TIMEOUT: 7,
   },
-  BALANCE: {
-    TEST_AMOUNT: "1000",
-  },
   ERROR_MESSAGES: {
-    NO_VALID_RULES:
-      "No valid rules found for the account registration strategy",
+    NO_VALID_RULES: "No valid rules found. Registration failed.",
+    SENDER_BALANCE_NOT_FOUND:
+      "Sender's balance not found. Registration failed.",
     SENDER_NOT_ALLOWED: "Sender account not allowed",
     RECIPIENT_NOT_ALLOWED: "Recipient account not allowed",
-    INSUFFICIENT_BALANCE: "Insufficient balance. Registration failed.",
   },
 } as const;
 
+const createTestBuffer = (value: string = MOCKS.BUFFER.DEFAULT_VALUE) =>
+  Buffer.from(value);
+
+const createTestAccount = (overrides = {}): Account => ({
+  id: createTestBuffer(),
+  blockchainRid: createTestBuffer(),
+  connection: { getAccountById: jest.fn() } as any,
+  getBalanceByAssetId: jest.fn(),
+  getBalances: jest.fn(),
+  isAuthDescriptorValid: jest.fn(),
+  getMainAuthDescriptor: jest.fn(),
+  getAuthDescriptors: jest.fn(),
+  getAuthDescriptorById: jest.fn(),
+  getAuthDescriptorsBySigner: jest.fn(),
+  getRateLimit: jest.fn(),
+  getTransferHistory: jest.fn(),
+  getTransferHistoryEntry: jest.fn(),
+  getPendingCrosschainTransfers: jest.fn(),
+  getLastPendingCrosschainTransfer: jest.fn(),
+  ...overrides,
+});
+
+const createTestAsset = (overrides = {}): Asset => ({
+  id: createTestBuffer(),
+  name: "Test Asset",
+  symbol: "TEST",
+  decimals: 8,
+  blockchainRid: createTestBuffer(),
+  iconUrl: "",
+  type: "ft4",
+  supply: BigInt(1000),
+  ...overrides,
+});
+
+const createTestRule = (overrides = {}): TransferStrategyRuleAmount => ({
+  senderBlockchains: "all" as const,
+  senders: "all" as const,
+  recipients: "all" as const,
+  assets: "all" as const,
+  minAmount: BigInt(100),
+  timeoutDays: 10,
+  ...overrides,
+});
+
 describe("Strategy Rules Validation", () => {
-  const mockBuffer = Buffer.alloc(MOCKS.BUFFER.SIZE, MOCKS.BUFFER.FILL_VALUE);
-  const differentBuffer = Buffer.from(MOCKS.BUFFER.DIFFERENT_VALUE);
+  const mockBuffer = Buffer.alloc(TEST_BUFFER_SIZE, TEST_BUFFER_FILL);
+  const differentBuffer = Buffer.from(TEST_BUFFER_VALUE);
 
-  const mockConnection: jest.Mocked<Connection> = {
-    getAccountById: jest.fn().mockResolvedValue(null),
-  } as any;
+  describe("validateCrosschainRegistrationStrategyRules", () => {
+    const testAccount = createTestAccount();
+    const testAsset = createTestAsset();
 
-  const mockAsset: Asset = {
-    id: mockBuffer,
-    name: MOCKS.ASSET.NAME,
-    symbol: MOCKS.ASSET.SYMBOL,
-    decimals: MOCKS.ASSET.DECIMALS,
-    blockchainRid: mockBuffer,
-    iconUrl: MOCKS.ASSET.ICON_URL,
-    type: ASSET_TYPE_FT4,
-    supply: BigInt(MOCKS.ASSET.TEST_SUPPLY),
-  };
-
-  const mockBalance: Balance = {
-    amount: createAmount(MOCKS.AMOUNTS.SMALL_AMOUNT, MOCKS.ASSET.DECIMALS),
-    asset: mockAsset,
-  };
-
-  const mockAccount = {
-    id: mockBuffer,
-    blockchainRid: mockBuffer,
-    connection: mockConnection,
-    getBalanceByAssetId: jest.fn(),
-    getBalances: jest.fn(),
-    isAuthDescriptorValid: jest.fn(),
-    getMainAuthDescriptor: jest.fn(),
-    getAuthDescriptors: jest.fn(),
-    getAuthDescriptorById: jest.fn(),
-    getAuthDescriptorsBySigner: jest.fn(),
-    getRateLimit: jest.fn(),
-    getTransferHistory: jest.fn(),
-    getTransferHistoryEntry: jest.fn(),
-    getPendingCrosschainTransfers: jest.fn(),
-    getLastPendingCrosschainTransfer: jest.fn(),
-  } as Account;
-
-  const createRule = (
-    overrides: Partial<TransferStrategyRuleAmount> = {},
-  ): TransferStrategyRuleAmount => ({
-    senderBlockchains: MOCKS.PARTICIPANTS.ALL,
-    senders: MOCKS.PARTICIPANTS.ALL,
-    recipients: MOCKS.PARTICIPANTS.ALL,
-    assets: MOCKS.PARTICIPANTS.ALL, // todo fix later
-    minAmount: BigInt(MOCKS.AMOUNTS.SMALL_AMOUNT),
-    timeoutDays: MOCKS.TIMEOUT_DAYS.DEFAULT,
-    ...overrides,
-  });
-
-  describe("findValidStrategyRulesAndGetLowestAmountOrZero", () => {
     it("returns undefined when rules is undefined", async () => {
-      const result = await findValidStrategyRulesAndGetLowestAmountOrZero(
+      const result = await validateCrosschainRegistrationStrategyRules(
         undefined,
-        mockAccount,
-        mockAsset,
+        testAccount,
+        testAsset,
+        false,
+        null,
       );
       expect(result).toBeUndefined();
     });
 
     it("returns undefined when rules array is empty", async () => {
-      const result = await findValidStrategyRulesAndGetLowestAmountOrZero(
+      const result = await validateCrosschainRegistrationStrategyRules(
         [],
-        mockAccount,
-        mockAsset,
+        testAccount,
+        testAsset,
+        false,
+        null,
       );
       expect(result).toBeUndefined();
     });
 
-    it("throws an error when account balance is null", async () => {
-      mockConnection.getAccountById.mockResolvedValueOnce(null);
+    it("throws error when sender balance not found", async () => {
+      (testAccount.getBalances as jest.Mock).mockResolvedValueOnce({
+        data: [],
+      });
 
-      const promise = findValidStrategyRulesAndGetLowestAmountOrZero(
-        [createRule()],
-        mockAccount,
-        mockAsset,
-      );
-      await expect(promise).rejects.toThrow(
-        MOCKS.ERROR_MESSAGES.INSUFFICIENT_BALANCE,
-      );
+      await expect(
+        validateCrosschainRegistrationStrategyRules(
+          [createTestRule()],
+          testAccount,
+          testAsset,
+          false,
+          null,
+        ),
+      ).rejects.toThrow("Sender's balance not found. Registration failed.");
     });
 
-    it("returns amount after rules validation", async () => {
-      const rule = {
-        strategies: ["test-strategy"],
-        blockchains: {
-          allow_all: false,
-          allowed_values: [mockBuffer],
-        },
-        senders: {
-          allow_all: false,
-          allowed_values: [mockBuffer],
-        },
-        recipients: {
-          allow_all: false,
-          allowed_values: [mockBuffer],
-        },
-        require_same_address: false,
-        timeout_days: MOCKS.TIMEOUT_DAYS.TEST_TIMEOUT,
-        assets: {
-          allow_all: false,
-          allowed_values: [
-            {
-              id: mockBuffer,
-              name: MOCKS.ASSET.NAME,
-              issuing_blockchain_rid: mockBuffer,
-              min_amount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1),
-            },
-          ],
-        },
+    it("validates rules for non-pending transfer", async () => {
+      const balance = {
+        amount: createAmount("1000", 8),
+        asset: testAsset,
       };
 
-      const mockSpecificBalance: Balance = {
-        amount: createAmount(MOCKS.BALANCE.TEST_AMOUNT, MOCKS.ASSET.DECIMALS),
-        asset: {
-          ...mockAsset,
-          id: mockBuffer,
-          name: MOCKS.ASSET.NAME,
-          blockchainRid: mockBuffer,
-          supply: BigInt(MOCKS.ASSET.TEST_SUPPLY),
-        },
-      };
+      (testAccount.getBalances as jest.Mock).mockResolvedValueOnce({
+        data: [balance],
+      });
 
-      mockConnection.getAccountById.mockResolvedValueOnce(mockAccount);
-      (mockAccount.getBalanceByAssetId as jest.Mock).mockResolvedValueOnce(
-        mockSpecificBalance,
+      const result = await validateCrosschainRegistrationStrategyRules(
+        [createTestRule()],
+        testAccount,
+        testAsset,
+        false,
+        null,
       );
-
-      const mappedRule: TransferStrategyRuleAmount = {
-        ...mapTransferStrategyRule(rule),
-        minAmount: rule.assets.allowed_values[0].min_amount,
-      };
-
-      const result = await findValidStrategyRulesAndGetLowestAmountOrZero(
-        [mappedRule],
-        mockAccount,
-        mockSpecificBalance.asset,
-      );
-
-      expect(JSON.stringify(result)).toStrictEqual(
-        JSON.stringify(BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1)),
-      );
+      expect(result).toBeUndefined();
     });
 
-    it("returns lowest amount from multiple valid rules", async () => {
-      const mockHighBalance: Balance = {
-        amount: createAmount(MOCKS.AMOUNTS.HIGH_AMOUNT, MOCKS.ASSET.DECIMALS),
-        asset: mockAsset,
-      };
+    it("validates rules for pending transfer", async () => {
+      const pendingAmount = BigInt(200);
 
-      mockConnection.getAccountById.mockResolvedValueOnce(mockAccount);
-      (mockAccount.getBalanceByAssetId as jest.Mock).mockResolvedValueOnce(
-        mockHighBalance,
-      );
+      (testAccount.getBalances as jest.Mock).mockResolvedValueOnce({
+        data: [],
+      });
 
-      const rules = [
-        createRule({ minAmount: BigInt(MOCKS.AMOUNTS.MEDIUM_AMOUNT) }),
-        createRule({ minAmount: BigInt(MOCKS.AMOUNTS.SMALL_AMOUNT) }),
-        createRule({ minAmount: BigInt(MOCKS.AMOUNTS.HIGH_AMOUNT) }),
-      ];
+      const result = await validateCrosschainRegistrationStrategyRules(
+        [createTestRule()],
+        testAccount,
+        testAsset,
+        true,
+        pendingAmount,
+      );
+      expect(result).toBeUndefined();
+    });
 
-      const result = await findValidStrategyRulesAndGetLowestAmountOrZero(
-        rules,
-        mockAccount,
-        mockHighBalance.asset,
-      );
-      expect(JSON.stringify(result)).toStrictEqual(
-        JSON.stringify(BigInt(MOCKS.AMOUNTS.SMALL_AMOUNT)),
-      );
+    it("throws error when no valid rules for pending transfer", async () => {
+      const pendingAmount = BigInt(50);
+
+      (testAccount.getBalances as jest.Mock).mockResolvedValueOnce({
+        data: [],
+      });
+
+      await expect(
+        validateCrosschainRegistrationStrategyRules(
+          [createTestRule({ minAmount: BigInt(100) })],
+          testAccount,
+          testAsset,
+          true,
+          pendingAmount,
+        ),
+      ).rejects.toThrow("No valid rules found. Registration failed.");
     });
   });
 
   describe("getValidRules", () => {
-    it("returns empty array when no rules are valid", () => {
-      const differentAsset = {
-        ...mockAsset,
-        id: differentBuffer,
-        blockchainRid: differentBuffer,
-      };
+    const testAccount = createTestAccount();
+    const testAsset = createTestAsset();
+    const balanceAmount = BigInt(1000);
 
-      const mockBalanceHighAmount = {
-        ...mockBalance,
-        amount: createAmount(MOCKS.AMOUNTS.HIGH_AMOUNT, MOCKS.ASSET.DECIMALS),
-      };
-
-      const rules = [
-        createRule({ senderBlockchains: differentBuffer }),
-        createRule({ senders: differentBuffer }),
-        createRule({ recipients: differentBuffer }),
-        createRule({
-          minAmount: BigInt(MOCKS.AMOUNTS.HIGH_AMOUNT),
-          assets: [
-            {
-              id: differentAsset.id,
-              name: MOCKS.ASSET.DIFFERENT_ASSET_NAME,
-              issuingBlockchainRid: differentAsset.blockchainRid,
-              minAmount: BigInt(MOCKS.AMOUNTS.MEDIUM_AMOUNT),
-            },
-          ],
-        }),
-      ];
-
-      const result = getValidRules(rules, mockAccount, mockBalanceHighAmount);
-      expect(result).toHaveLength(0);
-    });
-
-    it("returns all valid rules", () => {
-      const validRules = [
-        createRule(),
-        createRule({ minAmount: BigInt(MOCKS.AMOUNTS.SMALL_AMOUNT) }),
-      ];
-
-      const result = getValidRules(validRules, mockAccount, mockBalance);
-      expect(JSON.stringify(result)).toStrictEqual(JSON.stringify(validRules));
-    });
-
-    it("filters mixed valid and invalid rules", () => {
-      const rules = [
-        createRule({ senderBlockchains: differentBuffer }),
-        createRule(),
-        createRule({ senders: differentBuffer }),
-        createRule({ minAmount: BigInt(MOCKS.AMOUNTS.TINY_AMOUNT) }),
-      ];
-
-      const result = getValidRules(rules, mockAccount, mockBalance);
-      expect(result).toHaveLength(2);
-      expect(JSON.stringify(result)).toStrictEqual(
-        JSON.stringify([rules[1], rules[3]]),
+    it("returns empty array when no rules provided", () => {
+      expect(getValidRules([], testAccount, testAsset, balanceAmount)).toEqual(
+        [],
       );
     });
 
-    it("filters rules with valid blockchain but invalid participants", () => {
-      const rules = [
-        createRule({ senders: differentBuffer, recipients: differentBuffer }),
-      ];
+    it("returns valid rules when all conditions match", () => {
+      const rule = createTestRule();
+      expect(
+        getValidRules([rule], testAccount, testAsset, balanceAmount),
+      ).toEqual([rule]);
+    });
 
-      const result = getValidRules(rules, mockAccount, mockBalance);
-      expect(result).toHaveLength(0);
+    it("filters out rules with invalid blockchain", () => {
+      const invalidRule = createTestRule({
+        senderBlockchains: createTestBuffer("invalid"),
+      });
+      expect(
+        getValidRules([invalidRule], testAccount, testAsset, balanceAmount),
+      ).toEqual([]);
+    });
+
+    it("filters out rules with insufficient balance", () => {
+      const highAmountRule = createTestRule({
+        minAmount: BigInt(2000),
+      });
+      expect(
+        getValidRules([highAmountRule], testAccount, testAsset, balanceAmount),
+      ).toEqual([]);
+    });
+
+    it("returns multiple valid rules", () => {
+      const rules = [
+        createTestRule({ minAmount: BigInt(100) }),
+        createTestRule({ minAmount: BigInt(500) }),
+      ];
+      expect(
+        getValidRules(rules, testAccount, testAsset, balanceAmount),
+      ).toEqual(rules);
     });
   });
 
@@ -357,11 +305,11 @@ describe("Strategy Rules Validation", () => {
   describe("isValidAssetRule", () => {
     const mockAsset: Asset = {
       id: Buffer.alloc(MOCKS.BUFFER.SIZE, MOCKS.BUFFER.FILL_VALUE),
-      name: MOCKS.ASSET.TEST_ASSET_NAME,
+      name: MOCKS.ASSET.NAME,
       blockchainRid: Buffer.alloc(MOCKS.BUFFER.SIZE, MOCKS.BUFFER.FILL_VALUE),
       type: ASSET_TYPE_FT4,
       decimals: 8,
-      supply: BigInt(MOCKS.ASSET.TEST_SUPPLY),
+      supply: BigInt(MOCKS.ASSET.SUPPLY),
       symbol: MOCKS.ASSET.SYMBOL,
       iconUrl: MOCKS.ASSET.ICON_URL,
     };
@@ -421,7 +369,7 @@ describe("Strategy Rules Validation", () => {
       const assetRules = [
         {
           id: Buffer.from(MOCKS.BUFFER.DIFFERENT_VALUE),
-          name: MOCKS.ASSET.DIFFERENT_ASSET_NAME,
+          name: MOCKS.ASSET.DIFFERENT_NAME,
           issuingBlockchainRid: Buffer.from(MOCKS.BUFFER.DIFFERENT_VALUE),
           minAmount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1),
         },
@@ -443,18 +391,10 @@ describe("Strategy Rules Validation", () => {
       expect(isValidAssetRule([assetRule], mockAsset)).toBe(false);
     });
 
-    it("returns false when minAmount is greater than asset supply", () => {
-      const assetRule = {
-        name: mockAsset.name,
-        minAmount: BigInt(MOCKS.AMOUNTS.HIGH_MIN_AMOUNT), // 20000 > 10000 (supply)
-      };
-      expect(isValidAssetRule([assetRule], mockAsset)).toBe(false);
-    });
-
     it("returns true when minAmount is less than asset supply", () => {
       const assetRule = {
         name: mockAsset.name,
-        minAmount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1), // 100 < 10000 (supply)
+        minAmount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1),
       };
       expect(isValidAssetRule([assetRule], mockAsset)).toBe(true);
     });

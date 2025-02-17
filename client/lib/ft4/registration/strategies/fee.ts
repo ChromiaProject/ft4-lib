@@ -20,7 +20,7 @@ import { getTransferStrategyRulesGroupedByStrategy } from "./transfer-rules";
 import { formatter } from "postchain-client";
 import { TransferRef } from "@ft4/crosschain";
 import { gtxToRawGtx } from "@ft4/crosschain/utils";
-import { findValidStrategyRulesAndGetLowestAmountOrZero } from "@ft4/registration/utils";
+import { validateCrosschainRegistrationStrategyRules } from "@ft4/registration/utils";
 
 export function fee(
   senderBlockchainRid: BufferId,
@@ -56,19 +56,11 @@ export function fee(
         .get("fee")
         ?.get(formatter.toString(feeAsset.id));
 
-      const senderAccountInCurrentChain =
-        await senderConnection.getAccountById(accountId);
-
-      if (!senderAccountInCurrentChain) {
-        throw new StrategyError(
-          `Sender account <${accountId.toString("hex")}> not found on blockchain <${senderConnection.blockchainRid.toString("hex")}>`,
-        );
-      }
-
-      const amount = await findValidStrategyRulesAndGetLowestAmountOrZero(
-        feeAssetTransferRules,
-        senderAccountInCurrentChain,
-        feeAsset,
+      const amount = feeAssetTransferRules?.reduce(
+        (prev, curr) => (prev > curr.minAmount ? curr.minAmount : prev),
+        feeAssetTransferRules.length > 0
+          ? feeAssetTransferRules[0].minAmount
+          : 0n,
       );
 
       if (amount === undefined) {
@@ -116,6 +108,27 @@ export function fee(
           feeAsset.id,
           amount,
         );
+
+      const senderAccountInCurrentChain =
+        await senderConnection.getAccountById(accountId);
+
+      if (!senderAccountInCurrentChain) {
+        throw new StrategyError(
+          `Sender account <${accountId.toString("hex")}> not found on blockchain <${senderConnection.blockchainRid.toString("hex")}>`,
+        );
+      }
+
+      const pendingTransferAmount = pendingTransfer
+        ? (pendingTransfer.tx.operations[1].args[2] as bigint)
+        : null;
+
+      await validateCrosschainRegistrationStrategyRules(
+        feeAssetTransferRules,
+        senderAccountInCurrentChain,
+        feeAsset,
+        Boolean(pendingTransfer),
+        pendingTransferAmount,
+      );
 
       // If there is a pending cross-chain transfer for account registration, resume it,
       // otherwise start new cross-chain transfer.

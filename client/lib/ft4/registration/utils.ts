@@ -1,6 +1,6 @@
 import { BufferId } from "@ft4/utils";
 import { ensureString } from "@ft4/authentication/login/stores/browser-login-keystore";
-import { Asset, Balance } from "@ft4/asset";
+import { Asset } from "@ft4/asset";
 import {
   AssetLimit,
   TransferAssets,
@@ -31,42 +31,60 @@ export function ensureBuffer(value: BufferId): Buffer {
  *
  * @param rules - The rules to find the valid rules from.
  * @param senderAccount - The senders Account.
- * @param asset - The asset to be checked for balance of the sender
+ * @param asset - The asset that is subject to crosschain transfer
+ * @param isPendingTransfer - Whether the transfer is already pending
+ * @param pendingTransferAmount - The amount of the pending transfer
  *
  * @returns The lowest amount or 0 if no valid rules are found.
  */
-export async function findValidStrategyRulesAndGetLowestAmountOrZero(
+export async function validateCrosschainRegistrationStrategyRules(
   rules: TransferStrategyRuleAmount[] | undefined,
   senderAccount: Account,
   asset: Asset,
-): Promise<bigint | undefined> {
+  isPendingTransfer: boolean,
+  pendingTransferAmount: bigint | null,
+): Promise<void> {
   if (!rules || rules.length === 0) {
     return undefined;
   }
 
-  const accountInCurrentchain = await senderAccount.connection.getAccountById(
-    senderAccount.id,
+  let validRules: TransferStrategyRuleAmount[] = [];
+  const senderBalances = await senderAccount.getBalances();
+  const foundAssetBalance = senderBalances.data.find(
+    (balance) => balance.asset.id === asset.id,
   );
 
-  const senderBalance = await accountInCurrentchain?.getBalanceByAssetId(
-    asset.id,
-  );
+  if (!isPendingTransfer) {
+    if (!foundAssetBalance) {
+      throw new Error("Sender's balance not found. Registration failed.");
+    }
 
-  if (!senderBalance) {
-    throw new Error("Insufficient balance. Registration failed.");
+    validRules = getValidRules(
+      rules,
+      senderAccount,
+      foundAssetBalance.asset,
+      foundAssetBalance.amount.value,
+    );
+
+    const ruleWithSmallestAmount = validRules.reduce((prev, current) =>
+      current.minAmount < prev.minAmount ? current : prev,
+    );
+
+    if (foundAssetBalance.amount.value < ruleWithSmallestAmount.minAmount) {
+      throw new Error("Insufficient balance. Registration failed.");
+    }
+  } else {
+    validRules = getValidRules(
+      rules,
+      senderAccount,
+      asset,
+      pendingTransferAmount ?? BigInt(0),
+    );
   }
-
-  const validRules = getValidRules(rules, senderAccount, senderBalance);
 
   if (validRules.length === 0) {
-    return BigInt(0);
+    throw new Error("No valid rules found. Registration failed.");
   }
-
-  const ruleWithSmallestAmount = validRules.reduce((prev, current) =>
-    current.minAmount < prev.minAmount ? current : prev,
-  );
-
-  return ruleWithSmallestAmount.minAmount;
 }
 
 /**
@@ -75,14 +93,16 @@ export async function findValidStrategyRulesAndGetLowestAmountOrZero(
  *
  * @param rules - The rules to get the valid rules from.
  * @param senderAccount - The sender account.
- * @param senderBalance - The sender Balance.
+ * @param asset - The asset that is subject to crosschain transfer
+ * @param senderBalanceAmountValue - The sender balance amount value of the asset.
  *
  * @returns The valid rules, which can be none, one or multiple.
  */
 export function getValidRules(
   rules: TransferStrategyRuleAmount[],
   senderAccount: Account,
-  senderBalance: Balance,
+  asset: Asset,
+  senderBalanceAmountValue: bigint,
 ): TransferStrategyRuleAmount[] {
   return rules.filter((rule) => {
     const isValiderBlockchain = isValidSenderBlockchainRule(
@@ -98,9 +118,8 @@ export function getValidRules(
       senderAccount.id,
     );
 
-    const isValidAsset = isValidAssetRule(rule.assets, senderBalance.asset);
-    const senderBalanceAmount = senderBalance.amount.value ?? BigInt(0);
-    const isSenderBalanceEnough = senderBalanceAmount >= rule.minAmount;
+    const isValidAsset = isValidAssetRule(rule.assets, asset);
+    const isSenderBalanceEnough = senderBalanceAmountValue >= rule.minAmount;
 
     return (
       isValiderBlockchain &&
@@ -236,10 +255,6 @@ function validateAssetLimitRule(assetLimit: AssetLimit, asset: Asset): boolean {
       Buffer.compare(assetLimit.issuingBlockchainRid, asset.blockchainRid) !== 0
     )
       return false;
-  }
-
-  if ("minAmount" in assetLimit && assetLimit.minAmount !== undefined) {
-    if (assetLimit.minAmount > asset.supply) return false;
   }
 
   return true;

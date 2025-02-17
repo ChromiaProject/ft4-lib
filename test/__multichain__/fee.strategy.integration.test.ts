@@ -480,7 +480,7 @@ describe("Fee account creation single step", () => {
     expect(await recipientConnection.getAccountById(recipientId)).toBeNull();
   });
 
-  it("handles asset missing on source chain properly", async () => {
+  it("throws error when asset is missing on source chain and sender balance does not exist", async () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
@@ -507,7 +507,7 @@ describe("Fee account creation single step", () => {
     );
 
     await expect(recipientSessionPromise).rejects.toThrow(
-      "The specified asset could not be found",
+      "Sender's balance not found. Registration failed.",
     );
 
     expect(

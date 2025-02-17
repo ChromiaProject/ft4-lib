@@ -58,7 +58,7 @@ export async function getNewAsset(
       iconUrl,
     );
   } catch (error) {
-    console.error(`Asset already exists ${error}`);
+    console.log(`Asset with name ${name} already exists`);
   }
 
   const id = gtv.gtvHash([

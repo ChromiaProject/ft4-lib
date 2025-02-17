@@ -20,7 +20,7 @@ import { getTransferStrategyRulesGroupedByStrategy } from "./transfer-rules";
 import { formatter } from "postchain-client";
 import { TransferRef } from "@ft4/crosschain";
 import { gtxToRawGtx } from "@ft4/crosschain/utils";
-import { findValidStrategyRulesAndGetLowestAmountOrZero } from "@ft4/registration/utils";
+import { validateCrosschainRegistrationStrategyRules } from "@ft4/registration/utils";
 
 export function subscription(
   senderBlockchainRid: BufferId,
@@ -56,19 +56,11 @@ export function subscription(
         .get("subscription")
         ?.get(formatter.toString(subscriptionAsset.id));
 
-      const senderAccountInCurrentChain =
-        await senderConnection.getAccountById(accountId);
-
-      if (!senderAccountInCurrentChain) {
-        throw new StrategyError(
-          `Sender account <${accountId.toString("hex")}> not found on blockchain <${senderConnection.blockchainRid.toString("hex")}>`,
-        );
-      }
-
-      const amount = await findValidStrategyRulesAndGetLowestAmountOrZero(
-        subscriptionAssetTransferRules,
-        senderAccountInCurrentChain,
-        subscriptionAsset,
+      const amount = subscriptionAssetTransferRules?.reduce(
+        (prev, curr) => (prev > curr.minAmount ? curr.minAmount : prev),
+        subscriptionAssetTransferRules.length > 0
+          ? subscriptionAssetTransferRules[0].minAmount
+          : 0n,
       );
 
       if (amount === undefined) {
@@ -116,6 +108,27 @@ export function subscription(
           subscriptionAsset.id,
           amount,
         );
+
+      const senderAccountInCurrentChain =
+        await senderConnection.getAccountById(accountId);
+
+      if (!senderAccountInCurrentChain) {
+        throw new StrategyError(
+          `Sender account <${accountId.toString("hex")}> not found on blockchain <${senderConnection.blockchainRid.toString("hex")}>`,
+        );
+      }
+
+      const pendingTransferAmount = pendingTransfer
+        ? (pendingTransfer.tx.operations[1].args[2] as bigint)
+        : null;
+
+      await validateCrosschainRegistrationStrategyRules(
+        subscriptionAssetTransferRules,
+        senderAccountInCurrentChain,
+        subscriptionAsset,
+        Boolean(pendingTransfer),
+        pendingTransferAmount,
+      );
 
       // If there is a pending cross-chain transfer for account registration, resume it,
       // otherwise start new cross-chain transfer.
