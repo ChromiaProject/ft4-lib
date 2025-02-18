@@ -23,7 +23,7 @@ export function createFakeAuthDataService(
     getAuthHandlerForOperation: (operationName: string) =>
       Promise.resolve({
         name: operationName,
-        flags: data[operationName].flags,
+        flags: data[operationName]?.flags || [],
         dynamic: true,
       }),
     getAllowedAuthDescriptor: (

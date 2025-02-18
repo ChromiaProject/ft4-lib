@@ -83,18 +83,20 @@ describe("Transaction Builder", () => {
       },
       exposureLogicFn,
     );
-  }
 
-  beforeEach(async () => {
-    setupTestEnvironment();
-    client = await createStubClient();
-    connection = createConnection(client!);
     authenticator = createAuthenticator(
       accountId,
       [keyHandler],
       authDataService,
       connection,
     );
+  }
+
+  beforeEach(async () => {
+    client = await createStubClient();
+    connection = createConnection(client!);
+    setupTestEnvironment();
+
     client.sendTransaction = jest.fn().mockReturnValue(
       new Web3PromiEvent((resolve, _reject) =>
         resolve({
@@ -190,10 +192,14 @@ describe("Transaction Builder", () => {
     setupTestEnvironment(() => Promise.resolve(false));
 
     const builder = transactionBuilder(authenticator, client);
-    builder.add(mockOperation);
+    const tempMockOp: Operation = {
+      name: "testOperation2",
+      args: [],
+    };
+    builder.add(tempMockOp);
 
     await expect(builder.build()).rejects.toThrow(
-      `Operation ${mockOperation.name} does not exist`,
+      `Operation ${tempMockOp.name} does not exist`,
     );
   });
 
