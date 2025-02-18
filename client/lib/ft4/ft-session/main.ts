@@ -385,7 +385,9 @@ export function callWithoutNop(
   }
 > {
   const tb = transactionBuilder(authenticator, connection.client);
-  operations.forEach((operation: Operation) => tb.add(operation));
+  operations.forEach((operation: Operation) =>
+    tb.add({ name: operation.name, args: operation.args ?? [] }),
+  );
   return tb.buildAndSend();
 }
 

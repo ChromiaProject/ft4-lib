@@ -25,3 +25,4 @@
 ### Fixed 🔧
 
 - added the `transferSubscription` strategy to `TransferStrategies`
+- fixed issue that caused invalid signature if the arguments were not specified on an operation in specific cases
