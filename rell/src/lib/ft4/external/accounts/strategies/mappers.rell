@@ -1,0 +1,28 @@
+/**
+ * Maps the account creation transfer details.
+ *
+ * @param account_creation_transfer - The transfer object containing account creation details.
+ * @return The mapped account creation transfer details.
+ */
+function map_account_creation_transfer(transfer.account_creation_transfer) {
+    return (
+        transaction_tx_rid = account_creation_transfer.transaction.tx_rid,
+        sender_blockchain_rid = account_creation_transfer.sender_blockchain_rid,
+        sender_id = account_creation_transfer.sender_id,
+        recipient_id = account_creation_transfer.recipient_id,
+        asset_id = account_creation_transfer.asset.id,
+        asset_name = account_creation_transfer.asset.name,
+        asset_symbol = account_creation_transfer.asset.symbol,
+        asset_decimals = account_creation_transfer.asset.decimals,
+        asset_issuing_blockchain_rid = account_creation_transfer.asset.issuing_blockchain_rid,
+        asset_icon_url = account_creation_transfer.asset.icon_url,
+        asset_type = account_creation_transfer.asset.type,
+        asset_total_supply = account_creation_transfer.asset.total_supply,
+        asset_uniqueness_resolver = account_creation_transfer.asset.uniqueness_resolver,
+        amount = account_creation_transfer.amount,
+        timestamp = account_creation_transfer.timestamp,
+        state = account_creation_transfer.state,
+        final_tx_rid = account_creation_transfer.final_tx_rid,
+        final_op_index = account_creation_transfer.final_op_index,
+    );
+}

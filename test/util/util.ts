@@ -41,7 +41,7 @@ import {
   gtx,
   gtv as pclGtv,
 } from "postchain-client";
-import { User } from "./test-user";
+import { User, FT4_USER_TYPE } from "./test-user";
 import { transactionBuilder } from "@ft4/transaction-builder";
 import { Amount, Asset } from "@ft4/asset";
 
@@ -143,6 +143,7 @@ export function createTestAuthDescriptorWithSigner(
 
   return {
     accountId: formatter.ensureBuffer(accountId),
+    accountType: FT4_USER_TYPE,
     id: deriveAuthDescriptorId(ad),
     created: new Date(0),
     ...ad,
@@ -176,6 +177,7 @@ export function testAdFromRegistration<T extends SingleSig | MultiSig>(
     ...reg,
     id: deriveAuthDescriptorId(reg as any),
     accountId: deriveAuthDescriptorId(reg as any),
+    accountType: FT4_USER_TYPE,
     created: new Date(),
   };
 }

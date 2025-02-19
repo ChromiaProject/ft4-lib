@@ -83,6 +83,14 @@ export {
   getByAuthDescriptorId,
   createAccountObject,
   getAccountMainAuthDescriptor,
+  getAccountsFiltered,
+  getAccountAuthDescriptorsFiltered,
+  getMainAuthDescriptorsFiltered,
+  getAuthDescriptorSignersFiltered,
+  getRlStatesFiltered,
+  getAccountCreationTransfersFiltered,
+  getAccountLinksFiltered,
+  getSubscriptionsFiltered,
 } from "./query-functions";
 
 export * from "./types";

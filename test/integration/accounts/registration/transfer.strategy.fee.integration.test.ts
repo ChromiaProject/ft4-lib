@@ -8,6 +8,7 @@ import {
   AuthenticatedAccount,
   AuthFlag,
   createSingleSigAuthDescriptorRegistration,
+  AccountCreationTransferFilter,
 } from "@ft4/accounts";
 import { Amount, Asset, createAmountFromBalance } from "@ft4/asset";
 import { FtKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
@@ -123,5 +124,21 @@ describe("Test transfer with fee", () => {
     expect(
       await connection.query(pendingTransferStrategies(recipientId)),
     ).toStrictEqual([]);
+  });
+
+  it("returns filtered account creation transfers", async () => {
+    await account1.transfer(recipientId, asset.id, amount);
+    const accountCreationTransferFilter: AccountCreationTransferFilter = {
+      rowids: null,
+      transaction_tx_rid: null,
+      op_index: null,
+      recipient_id: null,
+    };
+
+    const filteredAccountCreationTransfers =
+      await connection.getAccountCreationTransfersFiltered(
+        accountCreationTransferFilter,
+      );
+    expect(filteredAccountCreationTransfers.data.length).toBeGreaterThan(0);
   });
 });

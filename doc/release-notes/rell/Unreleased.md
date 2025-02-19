@@ -24,6 +24,8 @@
 - The crosschain query `get_recalled_transfers_filtered` that retrieves paginated recalled transfers filtered by init tx rids and init op index
 - The crosschain query `get_pending_transfers_filtered` that retrieves paginated pending transfers filtered by transaction rids, op index and sender account id
 - The crosschain query `get_reverted_transfers_filtered` that retrieves paginated reverted transfers filtered by init tx rids and init op index
+- Added filterable paginated queries for all account entities - the filterable fields are the ones which are indexed in their respective entities: 
+`get_accounts_filtered`, `get_account_auth_descriptors_filtered`, `get_main_auth_descriptors_filtered`, `get_auth_descriptor_signers_filtered`, `get_rl_states_filtered`, `get_account_creation_transfers_filtered`, `get_account_links_filtered`. All are mounted on 'ft4' directly.
 
 ### Fixed 🔧
 

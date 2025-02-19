@@ -6,7 +6,8 @@ import lib.ft4.utils;
 import lib.ft4.assets;
 import lib.ft4.accounts;
 import lib.ft4.accounts.strategies;
-import lib.ft4.accounts.strategies.transfer.subscription;
+import subscription: lib.ft4.accounts.strategies.transfer.subscription;
+
 import test: lib.ft4.test.core;
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
 import ^.helpers;
@@ -66,7 +67,9 @@ function test_create_account_on_internal_transfer_with_subscription() {
         (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
         1
     );
-    assert_equals(subscription.get_subscription_details(bob.id), (
+    val sub_details = subscription.get_subscription_details(bob.id);
+    assert_equals(sub_details, (
+        rowid = sub_details.rowid,
         asset_id = asset.id,
         period_millis = 30 * utils.MILLISECONDS_PER_DAY,
         last_payment = last_block_time
@@ -115,7 +118,9 @@ function test_create_account_on_internal_transfer_with_subscription() {
         .run();
     assert_equals(assets.get_asset_balance(bob, asset), amount - 2 * subscription_amount);
     assert_equals(assets.get_asset_balance(subscription_account, asset), 2 * subscription_amount);
-    assert_equals(subscription.get_subscription_details(bob.id), (
+    val sub_details_2 = subscription.get_subscription_details(bob.id);
+    assert_equals(sub_details_2, (
+        rowid = sub_details_2.rowid,
         asset_id = asset.id,
         period_millis = 30 * utils.MILLISECONDS_PER_DAY,
         last_payment = last_block_time
@@ -217,6 +222,96 @@ function test_create_account_on_internal_transfer_multiple_transfers_with_subscr
         2
     );
 }
+
+function test_get_account_creation_transfers_filtered() {
+    helpers.create_system_account(rell.test.pubkeys.charlie, create_on_transfer.ACCOUNT_TYPE_FEE).run();
+    val subscription_account = accounts.Account(rell.test.pubkeys.charlie);
+
+    val alice = test.register_alice();
+    val recipient_id = rell.test.pubkeys.bob.hash();
+
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 5);
+
+    val eve = test.register_eve();
+    test.mint(eve.account, asset, 5);
+
+    val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, alice.account.id, recipient_id)));
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount;
+
+    val subscription_assets = map(subscription.get_subscription_assets());
+    val subscription_amount = subscription_assets[asset.id];
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
+        .sign(alice.keypair)
+        .run();
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(eve.account.id, eve.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
+        .sign(eve.keypair)
+        .run();    
+
+    rell.test.tx()
+        .op(subscription.ras_transfer_subscription(asset.id, test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
+        .op(strategies.external.register_account())
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    var test_filter = strategies.external.account_creation_transfer_filter(rowids = null,transaction_tx_rid= null, op_index=null,  recipient_id=recipient_id);
+  
+    val rl_states_filtered = strategies.external.get_account_creation_transfers_filtered(test_filter, 10, null);
+
+    assert_equals(rl_states_filtered.data.size(), 2);
+}
+
+function test_get_subscriptions_filtered() {
+    helpers.create_system_account(rell.test.pubkeys.charlie, create_on_transfer.ACCOUNT_TYPE_FEE).run();
+    val subscription_account = accounts.Account(rell.test.pubkeys.charlie);
+
+    val alice = test.register_alice();
+    val recipient_id = rell.test.pubkeys.bob.hash();
+
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 5);
+
+    val eve = test.register_eve();
+    test.mint(eve.account, asset, 5);
+
+    val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, alice.account.id, recipient_id)));
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount;
+
+    val subscription_assets = map(subscription.get_subscription_assets());
+    val subscription_amount = subscription_assets[asset.id];
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
+        .sign(alice.keypair)
+        .run();
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(eve.account.id, eve.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
+        .sign(eve.keypair)
+        .run();    
+
+    rell.test.tx()
+        .op(subscription.ras_transfer_subscription(asset.id, test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
+        .op(strategies.external.register_account())
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    var test_filter = subscription.external.subscription_filter(account_ids = [recipient_id]);
+  
+    val subscriptions_filtered = subscription.external.get_subscriptions_filtered(test_filter, 10, null);
+    assert_equals(subscriptions_filtered.data.size(), 1);
+}
+
 
 function test_an_error_is_thrown_when_no_suceeding_op() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
