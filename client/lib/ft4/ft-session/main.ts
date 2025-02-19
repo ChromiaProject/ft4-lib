@@ -40,6 +40,14 @@ import {
   getBySigner,
   getTransferDetails,
   getTransferDetailsByAsset,
+  AccountFilter,
+  AccountAuthDescriptorFilter,
+  MainAccountAuthDescriptorFilter,
+  AuthDescriptorSignerFilter,
+  RlStateFilter,
+  AccountCreationTransferFilter,
+  AccountLinkFilter,
+  SubscriptionFilter,
 } from "@ft4/accounts";
 import {
   getAllAssets,
@@ -97,6 +105,16 @@ import {
   PendingTransferFilter,
   TransferFilter,
 } from "@ft4/crosschain/types";
+import {
+  getAccountsFiltered,
+  getAccountAuthDescriptorsFiltered,
+  getMainAuthDescriptorsFiltered,
+  getAuthDescriptorSignersFiltered,
+  getRlStatesFiltered,
+  getAccountCreationTransfersFiltered,
+  getAccountLinksFiltered,
+  getSubscriptionsFiltered,
+} from "@ft4/accounts/query-functions";
 
 /**
  * Uses the provided connection to create a new connection to the specified blockchain rid.
@@ -155,7 +173,71 @@ export function createConnection(client: IClient): Connection {
       const [block] = await client.getBlocksInfo(1);
       return block.height;
     },
-
+    getAccountsFiltered: (
+      accountFilter?: AccountFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) => getAccountsFiltered(connection, accountFilter, limit, cursor),
+    getAccountAuthDescriptorsFiltered: (
+      accountAuthDescriptorFilter?: AccountAuthDescriptorFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getAccountAuthDescriptorsFiltered(
+        connection,
+        accountAuthDescriptorFilter,
+        limit,
+        cursor,
+      ),
+    getMainAuthDescriptorsFiltered: (
+      mainAccountAuthDescriptorFilter?: MainAccountAuthDescriptorFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getMainAuthDescriptorsFiltered(
+        connection,
+        mainAccountAuthDescriptorFilter,
+        limit,
+        cursor,
+      ),
+    getAuthDescriptorSignersFiltered: (
+      authDescriptorSignerFilter?: AuthDescriptorSignerFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getAuthDescriptorSignersFiltered(
+        connection,
+        authDescriptorSignerFilter,
+        limit,
+        cursor,
+      ),
+    getRlStatesFiltered: (
+      rlStateFilter?: RlStateFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) => getRlStatesFiltered(connection, rlStateFilter, limit, cursor),
+    getAccountCreationTransfersFiltered: (
+      accountCreationTransferFilter?: AccountCreationTransferFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getAccountCreationTransfersFiltered(
+        connection,
+        accountCreationTransferFilter,
+        limit,
+        cursor,
+      ),
+    getAccountLinksFiltered: (
+      accountLinkFilter?: AccountLinkFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) => getAccountLinksFiltered(connection, accountLinkFilter, limit, cursor),
+    getSubscriptionsFiltered: (
+      subscriptionFilter?: SubscriptionFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getSubscriptionsFiltered(connection, subscriptionFilter, limit, cursor),
     getAccountById: (id: BufferId) => getById(connection, id),
     getAccountsBySigner: (
       id: BufferId,

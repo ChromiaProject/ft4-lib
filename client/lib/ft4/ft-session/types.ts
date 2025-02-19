@@ -16,10 +16,23 @@ import {
 } from "postchain-client";
 import {
   Account,
+  AccountFilter,
+  AnyAuthDescriptor,
   AuthDescriptorValidator,
   AuthenticatedAccount,
   TransferDetail,
   TransferHistoryEntry,
+  AccountAuthDescriptorFilter,
+  MainAccountAuthDescriptorFilter,
+  AuthDescriptorSignerFilter,
+  AuthDescriptorSigner,
+  RlStateFilter,
+  AccountCreationTransferFilter,
+  AccountLinkFilter,
+  RlState,
+  AccountCreationTransfer,
+  SubscriptionFilter,
+  Subscription,
 } from "@ft4/accounts";
 import { Asset } from "@ft4/asset";
 import { LoginOptions, SessionWithLogout } from "@ft4/authentication";
@@ -79,6 +92,94 @@ export interface Connection extends Queryable {
    */
   getBlockHeight: () => Promise<number>;
 
+  /**
+   * Fetches all accounts with satisfy the account filter, paginated
+   * @param accountFilter - the account filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   */
+  getAccountsFiltered: (
+    accountFilter?: AccountFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Account>>;
+  /**
+   * Fetches all AccountAuthDescriptors with satisfy the accountAuthDescriptor filter, paginated
+   * @param accountAuthDescriptorFilter - the accountAuthDescriptor filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   */
+  getAccountAuthDescriptorsFiltered: (
+    accountAuthDescriptorFilter?: AccountAuthDescriptorFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
+  /**
+   * Fetches all MainAuthDescriptors with satisfy the mainAccountAuthDescriptor filter, paginated
+   * @param mainAccountAuthDescriptorFilter - the mainAccountAuthDescriptor filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   */
+  getMainAuthDescriptorsFiltered: (
+    mainAccountAuthDescriptorFilter?: MainAccountAuthDescriptorFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
+  /**
+   * Fetches all AuthDescriptorSigners with satisfy the authDescriptorSigner filter, paginated
+   * @param authDescriptorSignerFilter - the authDescriptorSigner filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   */
+  getAuthDescriptorSignersFiltered: (
+    authDescriptorSignerFilter?: AuthDescriptorSignerFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<AuthDescriptorSigner>>;
+  /**
+   * Fetches all Rate limit states with satisfy the rlState filter, paginated
+   * @param rlStateFilter - the rlState filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   */
+  getRlStatesFiltered: (
+    rlStateFilter?: RlStateFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<RlState>>;
+  /**
+   * Fetches all AccountCreationTransfers with satisfy the accountCreationTransferFilter filter, paginated
+   * @param accountCreationTransferFilter - the accountCreationTransfer filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   */
+  getAccountCreationTransfersFiltered: (
+    accountCreationTransferFilter?: AccountCreationTransferFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<AccountCreationTransfer>>;
+  /**
+   * Fetches all AccountLinks with satisfy the accountLinkFilter filter, paginated
+   * @param accountLinkFilter - the accountLink filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   */
+  getAccountLinksFiltered: (
+    accountLinkFilter?: AccountLinkFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<{ account: Account; secondary: Account }>>;
+  /**
+   * Fetches all Subscriptions with satisfy the subscriptionFilter filter, paginated
+   * @param subscriptionFilter - the subscriptionFilter filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   */
+  getSubscriptionsFiltered: (
+    subscriptionFilter?: SubscriptionFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Subscription>>;
   /**
    * Fetches the account with the specified id
    * @param accountId - the id of the account to fetch

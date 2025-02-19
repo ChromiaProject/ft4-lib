@@ -1,0 +1,73 @@
+/**
+ * Maps an account authentication descriptor to the desired format.
+ *
+ * @param account_auth_descriptor account_auth_descriptor - The account authentication descriptor to be mapped.
+ * @return {desired_return_type} - The mapped account authentication descriptor in the desired format.
+ */
+function map_account_auth_descriptor(accounts.account_auth_descriptor) {
+    return (
+        id = account_auth_descriptor.id,
+        account_id = account_auth_descriptor.account.id,
+        account_type = account_auth_descriptor.account.type,
+        auth_type = account_auth_descriptor.auth_type,
+        args = gtv.from_bytes(account_auth_descriptor.args),
+        rules = gtv.from_bytes(account_auth_descriptor.rules),
+        ctr = account_auth_descriptor.ctr,
+        created = account_auth_descriptor.created,
+    );
+}
+
+/**
+ * Maps the main authentication descriptor for the given account.
+ *
+ * @param main_auth_descriptor - The main authentication descriptor of the account to be mapped.
+ * @return The mapped main authentication descriptor.
+ */
+function map_main_auth_descriptor(accounts.main_auth_descriptor) {
+    return (
+        id = main_auth_descriptor.auth_descriptor.id,
+        account_id = main_auth_descriptor.account.id,
+        account_type = main_auth_descriptor.account.type,
+        auth_type = main_auth_descriptor.auth_descriptor.auth_type,
+        args = gtv.from_bytes(main_auth_descriptor.auth_descriptor.args),
+        rules = gtv.from_bytes(main_auth_descriptor.auth_descriptor.rules),
+        ctr = main_auth_descriptor.auth_descriptor.ctr,
+        created = main_auth_descriptor.auth_descriptor.created,
+    );
+}
+
+/**
+ * Maps the given `accounts.auth_descriptor_signer` to the desired format.
+ *
+ * @param  auth_descriptor_signer - The auth descriptor signer to be mapped.
+ * @return {MappedType} The mapped auth descriptor signer.
+ */
+function map_auth_descriptor_signer(accounts.auth_descriptor_signer) {
+    return (
+        id = auth_descriptor_signer.id,
+        account_auth_descriptor_id = auth_descriptor_signer.account_auth_descriptor.id,
+        account_id = auth_descriptor_signer.account_auth_descriptor.account.id,
+        account_type = auth_descriptor_signer.account_auth_descriptor.account.type,
+        account_auth_descriptor_auth_type = auth_descriptor_signer.account_auth_descriptor.auth_type,
+        account_auth_descriptor_args = gtv.from_bytes(auth_descriptor_signer.account_auth_descriptor.args),
+        account_auth_descriptor_rules = gtv.from_bytes(auth_descriptor_signer.account_auth_descriptor.rules),
+        account_auth_descriptor_created = auth_descriptor_signer.account_auth_descriptor.created,
+        account_auth_descriptor_ctr = auth_descriptor_signer.account_auth_descriptor.ctr,
+    );
+}
+
+/**
+ * Maps the given rl_state from the accounts module.
+ *
+ * @param rl_state - The rl_state object to be mapped.
+ * @return {MappedType} - The mapped result.
+ */
+function map_rl_state(accounts.rl_state) {
+    return (
+        account_id = rl_state.account.id,
+        account_type = rl_state.account.type,
+        points = rl_state.points,
+        last_update = rl_state.last_update,
+        recovery_time = rl_state.recovery_time,
+    );
+}

@@ -21,6 +21,7 @@
 - In the `Connection` interface the crosschain query function `getRecalledTransfersFiltered` that retrieves paginated recalled transfers filtered by init tx rids and init op index
 - In the `Connection` interface the crosschain query function `getPendingTransfersFiltered` that retrieves paginated pending transfers filtered by transaction rids, op index and sender account id
 - In the `Connection` interface the crosschain query function `getRevertedTransfersFiltered` that retrieves paginated reverted transfers filtered by init tx rids and init op index
+- added `getAccountsFiltered`, `getAccountAuthDescriptorsFiltered`, `getMainAuthDescriptorsFiltered`, `getAuthDescriptorSignersFiltered`, `getRlStatesFiltered`,`getAccountCreationTransfersFiltered`, `getAccountLinksFiltered`, `getSubscriptionsFiltered` to the connection object. The functions all work the same - they have their respective filter and page limit and cursor as arguments. The filterable fields are the ones which are indexed in the corresponding rell entity.
 
 ### Fixed 🔧
 
