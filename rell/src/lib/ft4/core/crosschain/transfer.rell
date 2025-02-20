@@ -200,22 +200,30 @@ namespace Unsafe {
         );
 
         val origin_blockchain_rid = asset_origin @? { asset } .origin_blockchain_rid;
-        val is_sender_blockchain =  sender.type == ACCOUNT_TYPE_BLOCKCHAIN;
+        val is_sender_blockchain = sender.type == ACCOUNT_TYPE_BLOCKCHAIN;
         val is_recipient_blockchain = recipient.type == ACCOUNT_TYPE_BLOCKCHAIN;
+
+        val change_sender = not exists(origin_blockchain_rid) or not is_sender_blockchain or origin_blockchain_rid != sender.id;
+        val change_recipient = not exists(origin_blockchain_rid) or not is_recipient_blockchain or origin_blockchain_rid != recipient.id;
         
-        if (
-            not exists(origin_blockchain_rid)
-            or not is_sender_blockchain
-            or origin_blockchain_rid != sender.id
-        ) {
+        before_crosschain_balance_change(
+            sender,
+            recipient,
+            asset,
+            amount,
+            change_sender,
+            change_recipient
+        );
+
+        if (change_sender) {
             assets.deduct_balance(
                 sender,
-                asset, 
+                asset,
                 amount
             );
         }
 
-        create assets.transfer_history_entry(
+        create assets.transfer_history_entry (
             .account = sender,
             .asset = asset,
             .delta = amount,
@@ -223,15 +231,19 @@ namespace Unsafe {
             .is_input = true
         );
 
-        if (
-            not exists(origin_blockchain_rid)
-            or not is_recipient_blockchain
-            or origin_blockchain_rid != recipient.id
-        ) {
+        if (change_recipient) {
             assets.increase_balance(recipient, asset, amount);
         }
 
-        create assets.transfer_history_entry(
+        after_crosschain_balance_change(
+            sender,
+            recipient,
+            asset,
+            amount,
+            change_sender,
+            change_recipient
+        );
+        create assets.transfer_history_entry (
             .account = recipient,
             .asset = asset,
             .delta = amount,

@@ -189,7 +189,7 @@ database:
   password: postchain
   username: postchain
   database: postchain
-  host: localhost
+  host: postgres:5432
   logSqlErrors: true
   schema: ft4_tests
   driver: org.postgresql.Driver

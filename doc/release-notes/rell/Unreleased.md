@@ -26,6 +26,9 @@
 - The crosschain query `get_reverted_transfers_filtered` that retrieves paginated reverted transfers filtered by init tx rids and init op index
 - Added filterable paginated queries for all account entities - the filterable fields are the ones which are indexed in their respective entities: 
 `get_accounts_filtered`, `get_account_auth_descriptors_filtered`, `get_main_auth_descriptors_filtered`, `get_auth_descriptor_signers_filtered`, `get_rl_states_filtered`, `get_account_creation_transfers_filtered`, `get_account_links_filtered`. All are mounted on 'ft4' directly.
+extendable functions:  `before_crosschain_balance_change`, `after_crosschain_balance_change` added to core/crosschain/extensions, both with the same arguments: `sender: accounts.account, recipient: accounts.account, assets.asset,  amount: big_integer, will_change_sender: boolean, will_change_recipient: boolean`.
+The extensions are being called in the `Unsafe.update_balances_if_needed` function which is a part of crosschain transfers.
+
 
 ### Fixed 🔧
 

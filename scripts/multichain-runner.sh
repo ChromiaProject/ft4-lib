@@ -205,9 +205,6 @@ run_main_logic() {
     if $GITLAB; then
         log "Editing Directory Chain for GitLab..."
         sed -i -e 's/localhost/docker/g' $DEPENDENCIES_PATH/directory-chain/chromia.yml
-    else
-        log "Editing Directory Chain for Local..."
-        sed -i -e 's/docker/localhost/g' $DEPENDENCIES_PATH/directory-chain/chromia.yml
     fi 
 
     log "Installing Directory Chain dependencies..."
@@ -232,20 +229,13 @@ run_main_logic() {
 
     log "Running node container..."
     mkdir logs
-
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        JAVA_OPTS="-Xmx16g -XX:UseSVE=0"
-    else
-        JAVA_OPTS="-Xmx16g"
-    fi
-
     # $DOCKER -H $DOCKER_HOST network create -d bridge localnet
     $DOCKER run \
         --name $DOCKER_NODE_NAME \
         --restart unless-stopped \
         -v "$(pwd)/$BASE_CONFIG_DIR:/config" \
         -v "$(pwd)/$DEPENDENCIES_PATH/directory-chain/build:/build" \
-        -e JAVA_TOOL_OPTIONS="$JAVA_OPTS" \
+        -e JAVA_TOOL_OPTIONS="-Xmx16g" \
         -e POSTCHAIN_DEBUG=true \
         -e POSTCHAIN_CONFIG=/config/config.0.properties \
         -e POSTCHAIN_BLOCKCHAIN_CONFIG=/build/manager.xml \
