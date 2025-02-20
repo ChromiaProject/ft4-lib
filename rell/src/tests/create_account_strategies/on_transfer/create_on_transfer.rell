@@ -11,6 +11,7 @@ import lib.ft4.accounts.strategies.transfer.open;
 import xc: lib.ft4.crosschain;
 import test_op: lib.ft4.test.operations;
 import ^^^.operations.iccf_op.{ iccf_proof };
+import ^^^.crosschain.mocks;
 
 function test_create_account_on_internal_transfer_success() {
     val alice = test.register_alice();
@@ -501,4 +502,165 @@ function test_original_recipient_id_is_returned_on_account_creation() {
     val tx_rid = test.get_last_transaction().tx_rid;
     val sender_record = assets.external.get_transfer_details_by_asset(tx_rid, 1, asset.id) @ { .is_input == false } limit 1;
     assert_equals(sender_record.account_id, bob_account_id);
+}
+
+function test_crosschain_transfer_from_and_to_the_same_account_requires_no_signature_to_register_account() {
+    val sender_id = rell.test.pubkeys.alice.hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val recipient_id = sender_id;
+
+    val source_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
+    val asset = test.create_crosschain_asset("test", "TEST", 10, source_blockchain_rid, "", source_blockchain_rid);
+
+    val init_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth.external.ft_auth(sender_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
+                    recipient_id,
+                    asset.id,
+                    5L,
+                    [chain_context.blockchain_rid],
+                    10000000000000
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xc.external.apply_transfer(init_tx, 1, init_tx, 1, 0))
+        .run();
+
+    rell.test.tx()
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.alice, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
+        .op(strategies.external.register_account())
+        .run();
+}
+
+function test_crosschain_transfer_from_and_to_different_account_requires_signature_to_register_account() {
+    val alice = test.register_alice();
+    val bob_pubkey = rell.test.pubkeys.bob;
+    val recipient_id = bob_pubkey.hash();
+
+    val source_blockchain_rid = x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb";
+    val asset = test.create_crosschain_asset("test", "TEST", 10, source_blockchain_rid, "", source_blockchain_rid);
+    val amount = 5L;
+
+    val init_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
+                    recipient_id,
+                    asset.id,
+                    amount,
+                    [chain_context.blockchain_rid],
+                    10000000000000
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xc.external.apply_transfer(init_tx, 1, init_tx, 1, 0))
+        .run();
+
+    rell.test.tx()
+        .op(open.ras_transfer_open(test.create_auth_descriptor(bob_pubkey, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
+        .op(strategies.external.register_account())
+        .run_must_fail(
+           "MISSING SIGNATURE: Missing signature for public key <%s>".format(bob_pubkey)
+        );
+}
+
+function test_ensures_crosschain_transfer_from_and_to_the_same_account_with_disposable_fails_if_disposable_missing() {
+    val sender_id = rell.test.pubkeys.alice.hash();
+    val recipient_id = sender_id;
+    val main_auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.pubkeys.alice,
+        set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])
+    );
+
+    val disposable_auth_descriptor = accounts.single_sig_auth_descriptor(rell.test.pubkeys.bob, set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]));
+
+    val source_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
+    val asset = test.create_crosschain_asset("test", "TEST", 10, source_blockchain_rid, "", source_blockchain_rid);
+
+    val init_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth.external.ft_auth(sender_id, main_auth_descriptor.hash()).to_gtx_operation(),
+                xc.external.init_transfer(
+                    recipient_id,
+                    asset.id,
+                    5L,
+                    [chain_context.blockchain_rid],
+                    10000000000000
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xc.external.apply_transfer(init_tx, 1, init_tx, 1, 0))
+        .run();
+
+    rell.test.tx()
+        .op(open.ras_transfer_open(main_auth_descriptor, disposable_auth_descriptor))
+        .op(strategies.external.register_account())
+        .run_must_fail("MISSING SIGNATURE: Missing signature for public key <%s>".format(rell.test.pubkeys.bob));
+}
+
+function test_ensures_crosschain_transfer_from_and_to_the_same_account_with_disposable_succeeds_with_disposable() {
+    val sender_id = rell.test.pubkeys.alice.hash();
+    val recipient_id = sender_id;
+     val main_auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.pubkeys.alice,
+        set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])
+    );
+    val disposable_auth_descriptor = accounts.single_sig_auth_descriptor(rell.test.pubkeys.bob, set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]));
+
+    val source_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
+    val asset = test.create_crosschain_asset("test", "TEST", 10, source_blockchain_rid, "", source_blockchain_rid);
+
+    val init_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth.external.ft_auth(sender_id, sender_id.hash()).to_gtx_operation(),
+                xc.external.init_transfer(
+                    recipient_id,
+                    asset.id,
+                    5L,
+                    [chain_context.blockchain_rid],
+                    10000000000000
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xc.external.apply_transfer(init_tx, 1, init_tx, 1, 0))
+        .run();
+
+    rell.test.tx()
+        .op(open.ras_transfer_open(main_auth_descriptor, disposable_auth_descriptor))
+        .op(strategies.external.register_account())
+        .sign(rell.test.keypairs.bob)
+        .run();
 }

@@ -6,6 +6,7 @@
 - Allow multiple smaller transfers to a non-existing account for the same asset type. 
 
 - The logic takes multiple senders for one recipient into consideration
+- `register_account` used for crosschain transfers with the strategies `fee`, `open` and `subscription` does not require a signature, when transfering to the same account
 - Updated the response of the query `get_account_by_id` to also return type along with id
 
 ### Added ✅
