@@ -38,6 +38,7 @@ import {
   encryption,
   formatter,
   gtv,
+  gtx,
   newSignatureProvider,
 } from "postchain-client";
 import { nop } from "@ft4/utils/index";
@@ -706,7 +707,6 @@ describe("Fee account creation single step", () => {
       (await recipientConnection.query(pendingTransferStrategies(recipientId)))
         .length,
     ).toBe(0);
-
     await expect(
       transactionBuilder(noopAuthenticator, recipientConnection.client)
         .add(recallUnclaimedTransfer(transferRef.tx, transferRef.opIndex), {
@@ -715,7 +715,7 @@ describe("Fee account creation single step", () => {
         .add(nop())
         .buildAndSend(),
     ).rejects.toThrow(
-      `Transaction <0x${formatter.toString(gtv.gtvHash(transferRef.tx[0])).toLowerCase()}> transfer at index <${transferRef.opIndex}> has already been recalled on this chain.`,
+      `Transaction <0x${formatter.toString(gtx.getDigestToSign(transferRef.tx)).toLowerCase()}> transfer at index <${transferRef.opIndex}> has already been recalled on this chain.`,
     );
   });
 });

@@ -5,8 +5,13 @@ import {
   createAuthDescriptorValidatorWithTxContext,
 } from "@ft4/accounts";
 import { Connection } from "@ft4/ft-session";
-import { BufferId, TxContext, isRellOperation } from "@ft4/utils";
-import { Operation, RellOperation, formatter } from "postchain-client";
+import { TxContext, isRellOperation } from "@ft4/utils";
+import {
+  BufferId,
+  Operation,
+  RellOperation,
+  formatter,
+} from "postchain-client";
 import { AuthDataService, Authenticator, KeyHandler, KeyStore } from "./types";
 import { EVM_AUTH } from "./evm";
 import { FT_AUTH } from "./ft";

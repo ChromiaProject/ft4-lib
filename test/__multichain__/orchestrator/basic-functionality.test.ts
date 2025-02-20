@@ -30,7 +30,9 @@ describe("Basic Functionality", () => {
       .on("init", initListener)
       .on("hop", hopListener);
 
-    expect(transferRef.tx[0][0]).toEqual(testContext.account0.blockchainRid);
+    expect(transferRef.tx.blockchainRid).toEqual(
+      testContext.account0.blockchainRid,
+    );
     expect(transferRef.opIndex).toBe(1);
 
     expect(builtListener).toHaveBeenCalledTimes(1);
@@ -62,7 +64,9 @@ describe("Basic Functionality", () => {
       .on("init", initListener)
       .on("hop", hopListener);
 
-    expect(transferRef.tx[0][0]).toEqual(testContext.account0.blockchainRid);
+    expect(transferRef.tx.blockchainRid).toEqual(
+      testContext.account0.blockchainRid,
+    );
     expect(transferRef.opIndex).toBe(1);
 
     expect(builtListener).toHaveBeenCalledTimes(1);

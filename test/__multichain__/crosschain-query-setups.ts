@@ -17,10 +17,7 @@ import {
   TransferFilter,
   TransferRef,
 } from "@ft4/crosschain/types";
-import {
-  OnAnchoredHandlerData,
-  transactionBuilder,
-} from "@ft4/transaction-builder";
+import { transactionBuilder } from "@ft4/transaction-builder";
 import { nop, PaginatedEntity } from "@ft4/utils";
 import { applyTransfer, unapplyTransfer } from "@ft4/crosschain/operations";
 import { TestContext, setupTestEnvironment } from "./common-setup";
@@ -37,7 +34,6 @@ import {
   registerAccount,
   registrationStrategy,
 } from "@ft4/registration";
-import { gtxToRawGtx } from "@ft4/crosschain/utils";
 
 export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   assetName: string = "asset-name",
@@ -93,18 +89,15 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
         [testContext.multichain2.rid],
         Date.now(),
       ),
-      {
-        targetBlockchainRid: testContext.multichain2.rid,
-        onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
-          state.tx = data?.tx;
-          state.initialOpIndex = data?.opIndex;
-          state.initialTx = data?.tx;
-          state.opIndex = data?.opIndex;
-          state.proof = data?.createProof(testContext.multichain2.rid);
-        },
-      },
     )
-    .buildAndSendWithAnchoring();
+    .buildAndSendWithAnchoring()
+    .then((data) => {
+      state.tx = data.tx;
+      state.initialOpIndex = 1;
+      state.initialTx = data.tx;
+      state.opIndex = 1;
+      state.proof = data.systemConfirmationProof(testContext.multichain2.rid);
+    });
 
   state.proof = await state.proof;
 
@@ -174,20 +167,19 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
         testContext.sampleAsset.id,
         createAmount(10, mintAmount.decimals),
         [testContext.multichain2.rid, testContext.multichain1.rid],
-        Date.now() + 10000,
+        Date.now() + 5000,
       ),
-      {
-        targetBlockchainRid: testContext.multichain2.rid,
-        onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
-          initState.tx = data?.tx;
-          initState.initialOpIndex = data?.opIndex;
-          initState.initialTx = data?.tx;
-          initState.opIndex = data?.opIndex;
-          initState.proof = data?.createProof(testContext.multichain2.rid);
-        },
-      },
     )
-    .buildAndSendWithAnchoring();
+    .buildAndSendWithAnchoring()
+    .then((data) => {
+      initState.tx = data.tx;
+      initState.initialOpIndex = 1;
+      initState.initialTx = data.tx;
+      initState.opIndex = 1;
+      initState.proof = data.systemConfirmationProof(
+        testContext.multichain2.rid,
+      );
+    });
 
   initState.proof = await initState.proof;
 
@@ -203,19 +195,17 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
         initState.opIndex!,
         0,
       ),
-      {
-        authenticator: noopAuthenticator,
-        targetBlockchainRid: testContext.multichain2.rid,
-        onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
-          applyState.tx = data?.tx;
-          applyState.initialOpIndex = data?.opIndex;
-          applyState.initialTx = data?.tx;
-          applyState.opIndex = data?.opIndex;
-          applyState.proof = data?.createProof(testContext.multichain2.rid);
-        },
-      },
     )
-    .buildAndSendWithAnchoring();
+    .buildAndSendWithAnchoring()
+    .then((data) => {
+      applyState.tx = data.tx;
+      applyState.initialOpIndex = 1;
+      applyState.initialTx = data.tx;
+      applyState.opIndex = 2;
+      applyState.proof = data.systemConfirmationProof(
+        testContext.multichain2.rid,
+      );
+    });
 
   applyState.proof = await applyState.proof;
 
@@ -243,16 +233,15 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     .add(applyState.proof, { authenticator: noopAuthenticator })
     .add(cancelOperation, {
       authenticator: noopAuthenticator,
-      targetBlockchainRid: testContext.multichain1.rid,
-      onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
-        cancelState.tx = data?.tx;
-        cancelState.initialOpIndex = data?.opIndex;
-        cancelState.initialTx = data?.tx;
-        cancelState.opIndex = data?.opIndex;
-        cancelState.proof = data?.createProof(testContext.multichain1.rid);
-      },
     })
-    .buildAndSendWithAnchoring();
+    .buildAndSendWithAnchoring()
+    .then((data) => {
+      cancelState.tx = data?.tx;
+      cancelState.opIndex = 1;
+      cancelState.proof = data?.systemConfirmationProof(
+        testContext.multichain1.rid,
+      );
+    });
 
   cancelState.proof = await cancelState.proof;
 
@@ -447,7 +436,7 @@ export async function revertTransferAndGetRevertedTransfer(
     await testContext.account0.getPendingCrosschainTransfers();
 
   const transferRef: TransferRef = {
-    tx: gtxToRawGtx(pendingTransfers.data[0].tx),
+    tx: pendingTransfers.data[0].tx,
     opIndex: pendingTransfers.data[0].opIndex,
   };
 

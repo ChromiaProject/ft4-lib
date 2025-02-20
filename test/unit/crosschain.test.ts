@@ -29,7 +29,7 @@ function createDummyPendingTransfer(
 
   return {
     opIndex,
-    tx: tx,
+    tx,
     senderAccount: { id: accountId, type: ACCOUNT_TYPE_USER },
   };
 }

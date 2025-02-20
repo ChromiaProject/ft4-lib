@@ -1,8 +1,7 @@
 import { AuthDataService, LoginConfig } from "@ft4/authentication";
 import { Connection } from "@ft4/ft-session";
-import { BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { Operation } from "postchain-client";
+import { BufferId, Operation } from "postchain-client";
 import { asyncNumberGenerator } from "./util";
 
 export function createFakeAuthDataService(

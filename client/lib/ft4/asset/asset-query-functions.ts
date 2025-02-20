@@ -25,9 +25,9 @@ import {
   TransferHistoryEntryFilter,
 } from "./types";
 import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
-import { BufferId, PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
+import { PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
 import { createAmountFromBalance } from "./amount";
-import { Queryable } from "postchain-client";
+import { BufferId, Queryable } from "postchain-client";
 import {
   TransferHistoryEntry,
   TransferHistoryEntryResponse,

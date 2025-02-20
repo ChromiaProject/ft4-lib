@@ -1,7 +1,6 @@
 import { OptionalPageCursor } from "@ft4/ft-session";
-import { BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { QueryObject, formatter } from "postchain-client";
+import { BufferId, QueryObject, formatter } from "postchain-client";
 import { RawTransferDetail, TransferHistoryEntryResponse } from "./types";
 
 /**

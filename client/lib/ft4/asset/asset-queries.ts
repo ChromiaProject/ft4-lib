@@ -1,6 +1,5 @@
-import { QueryObject, formatter } from "postchain-client";
+import { BufferId, QueryObject, formatter } from "postchain-client";
 import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
-import { Buffer } from "buffer";
 import {
   AssetFilter,
   AssetResponse,
@@ -10,7 +9,7 @@ import {
   CrosschainTransferHistoryEntryFilter,
   TransferHistoryEntryFilter,
 } from "./types";
-import { BufferId, PaginatedEntity } from "@ft4/utils";
+import { PaginatedEntity } from "@ft4/utils";
 import { TransferHistoryEntryResponse } from "@ft4/accounts";
 import { CrosschainTransferHistoryEntryResponse } from "@ft4/accounts/transfer-history";
 
