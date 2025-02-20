@@ -116,6 +116,10 @@ struct _strategy {
      * If this function throws, the registration will be reverted.
      */
     action: (accounts.account, gtv) -> unit;
+    /**
+     * The required signers for a transfer using the strategies fee, open or subscription.
+     */
+    required_signers: (gtv) -> list<byte_array>;
 }
 
 /**
@@ -181,9 +185,23 @@ struct account_details {
  * @param account_details   the function that retrieves the account details from `op`
  * @param action            the function that implements the strategy logic. If null,
  *                          `_no_action` is called.
+ * @param required_signers  the function that determines the list of signers required.
+ * If it is null or the list is empty no signature is required
  */
-function add_strategy(op: rell.meta, account_details: (gtv) -> account_details, action: ((accounts.account, gtv) -> unit)? = null)
-    = [op.mount_name: _strategy(op, account_details, action ?: _no_action(*))];
+function add_strategy(
+    op: rell.meta,
+    account_details: (gtv) -> account_details,
+    action: ((accounts.account, gtv) -> unit)? = null,
+    required_signers: ((gtv) -> list<byte_array>)? = null
+)
+    = [
+        op.mount_name: _strategy(
+            op,
+            account_details,
+            action ?: _no_action(*),
+            required_signers ?: _default_signers(account_details, *)
+        )
+    ];
 
 /**
  * An empty function that can be used if a strategy does not need to perform checks for the
@@ -202,6 +220,25 @@ function add_strategy(op: rell.meta, account_details: (gtv) -> account_details, 
  * @param strategy_params   not used, as this function does nothing
  */
 function _no_action(accounts.account, strategy_params: gtv) {}
+
+/**
+ * Sets the default signers based on the provided account details, used only when adding a strategy
+ * and the required signers are not provided
+ * 
+ * @param account_details  A function that provides account details include main and disposable auth descriptors
+ * @param gtv              The data in gtv format containing the account details
+ * 
+ * @return The default signers based on the account details provided        
+ */
+function _default_signers(account_details: (gtv) -> account_details, gtv) {
+    val details = account_details(gtv);
+    val default_signers = accounts.get_signers(details.main);
+    if (details.disposable??) {
+        default_signers.add_all(accounts.get_signers(details.disposable!!));
+    }
+
+    return default_signers;
+}
 
 /**
  * Returns a strategy, given the mount name of the operation that defines it.
@@ -294,11 +331,7 @@ function register_account(): accounts.account {
 
     val strategy = get_strategy(strategy_name);
     val account_details = strategy.account_details(strategy_params);
-
-    var signers = accounts.get_signers(account_details.main);
-    if (account_details.disposable??) {
-        signers.add_all(accounts.get_signers(account_details.disposable!!));
-    }
+    val signers = strategy.required_signers(strategy_params);
 
     val message = get_register_account_message(strategy_op, op_context.get_current_operation());
     auth.verify_signers_with_message(signers, message);

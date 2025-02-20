@@ -189,6 +189,8 @@ database:
   password: postchain
   username: postchain
   database: postchain
+  # To run tests locally using chromia cli
+  # host: localhost
   host: postgres:5432
   logSqlErrors: true
   schema: ft4_tests
