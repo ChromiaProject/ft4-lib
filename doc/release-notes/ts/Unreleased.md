@@ -1,12 +1,10 @@
 ## [Unreleased] - 2024-xx-xx
 
 ### Breaking 💔
-
-### Changed 🪙
-- Moved the type `TransferStrategyRuleAmount`, `TransferSenderBlockchains`, `TransferParticipants`, `TransferStrategyRulePartial`, `TransferParticipantSingle` and `AssetLimit` a directory up
 - The type's `TransferStrategyRuleRaw` property `asset_limits` was changed from from `AssetLimitRaw[]` to `AllowedAssets[]`
 - The type `AssetLimitRaw` properties to `{ allow_all: boolean; allowed_values: AllowedAssets[];}`
 
+### Changed 🪙
 
 ### Added ✅
 

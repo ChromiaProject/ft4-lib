@@ -114,6 +114,7 @@ export function getValidRules(
       rule.senders,
       senderAccount.id,
     );
+
     const isValidRecipient = isValidParticipantRule(
       rule.recipients,
       senderAccount.id,
@@ -133,10 +134,10 @@ export function getValidRules(
 }
 
 /**
- * Validates the participant rules for the provided rules
+ * Validates the participant rules for the provided rules - Does not handle the current participant.
  *
- * @param ruleParticipant - The participant rules to validate. Does not handle the current participant.
- * @param accountId - The account ID to validate against against the rule participants
+ * @param ruleParticipant - The participant rules to validate.
+ * @param accountId - The account Id to validate against against the rule participants
  *
  * @returns A boolean value indicating if the participant rule is valid.
  */
@@ -239,9 +240,7 @@ export function isValidAssetRule(
  * @returns A boolean value indicating if the asset is valid.
  */
 function validateAssetLimitRule(assetLimit: AssetLimit, asset: Asset): boolean {
-  if ("id" in assetLimit && assetLimit.id !== undefined) {
-    if (Buffer.compare(assetLimit.id, asset.id) !== 0) return false;
-  }
+  if (Buffer.compare(assetLimit.id, asset.id) !== 0) return false;
 
   if ("name" in assetLimit && assetLimit.name !== undefined) {
     if (assetLimit.name.toUpperCase() !== asset.name.toUpperCase())

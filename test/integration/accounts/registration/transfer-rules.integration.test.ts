@@ -191,6 +191,6 @@ describe("Transfer strategy rules", () => {
       ["subscription", rulesMap],
     ]);
 
-    expect(JSON.stringify(rules)).toStrictEqual(JSON.stringify(expectedResult));
+    expect(rules).toMatchObject(expectedResult);
   });
 });

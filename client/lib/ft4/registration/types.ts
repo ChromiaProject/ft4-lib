@@ -74,7 +74,7 @@ export type TransferStrategyRule = TransferStrategyRulePartial & {
 };
 
 export type AssetLimit = {
-  id?: Buffer;
+  id: Buffer;
   name?: string;
   issuingBlockchainRid?: Buffer;
   minAmount: bigint;
