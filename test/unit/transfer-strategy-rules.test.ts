@@ -6,6 +6,10 @@ import {
   TransferStrategyRuleAmount,
   TransferStrategyRuleRaw,
 } from "@ft4/registration";
+import {
+  REGISTRATION_STRATEGY_ALL,
+  REGISTRATION_STRATEGY_CURRENT,
+} from "@ft4/registration/constants";
 import { AllowedAssets } from "@ft4/registration/strategies/types";
 import { createStubClient, encryption, formatter } from "postchain-client";
 
@@ -68,10 +72,10 @@ describe("Transfer strategy rules", () => {
     const expectedResponse: TransferStrategyRule[] = [
       {
         strategies: ["fee"],
-        senderBlockchains: "all",
-        senders: "all",
-        recipients: "all",
-        assets: "all",
+        senderBlockchains: REGISTRATION_STRATEGY_ALL,
+        senders: REGISTRATION_STRATEGY_ALL,
+        recipients: REGISTRATION_STRATEGY_ALL,
+        assets: REGISTRATION_STRATEGY_ALL,
         timeoutDays: 1,
       },
     ];
@@ -157,8 +161,8 @@ describe("Transfer strategy rules", () => {
     const expectedResponse: TransferStrategyRule[] = [
       {
         senderBlockchains: [blockchain1],
-        senders: "current",
-        recipients: "current",
+        senders: REGISTRATION_STRATEGY_CURRENT,
+        recipients: REGISTRATION_STRATEGY_CURRENT,
         assets: [
           {
             id: asset1,
@@ -309,9 +313,9 @@ describe("Transfer strategy rules", () => {
         strategies: ["fee"],
       },
       {
-        senderBlockchains: "all",
-        senders: "all",
-        recipients: "all",
+        senderBlockchains: REGISTRATION_STRATEGY_ALL,
+        senders: REGISTRATION_STRATEGY_ALL,
+        recipients: REGISTRATION_STRATEGY_ALL,
         assets: [
           {
             id: asset2,
@@ -363,15 +367,15 @@ describe("Transfer strategy rules", () => {
         "fee",
         new Map<string, TransferStrategyRuleAmount[]>([
           [
-            "all",
+            REGISTRATION_STRATEGY_ALL,
             [
               {
-                senderBlockchains: "all",
-                senders: "all",
-                recipients: "all",
+                senderBlockchains: REGISTRATION_STRATEGY_ALL,
+                senders: REGISTRATION_STRATEGY_ALL,
+                recipients: REGISTRATION_STRATEGY_ALL,
                 timeoutDays: 1,
                 minAmount: 0n,
-                assets: "all",
+                assets: REGISTRATION_STRATEGY_ALL,
               },
             ],
           ],
@@ -417,7 +421,7 @@ describe("Transfer strategy rules", () => {
         "open",
         new Map<string, TransferStrategyRuleAmount[]>([
           [
-            "all",
+            REGISTRATION_STRATEGY_ALL,
             [
               {
                 senderBlockchains: [blockchain1, blockchain2],
@@ -425,7 +429,7 @@ describe("Transfer strategy rules", () => {
                 recipients: [recipient1, recipient2],
                 timeoutDays: 15,
                 minAmount: 0n,
-                assets: "all",
+                assets: REGISTRATION_STRATEGY_ALL,
               },
             ],
           ],
@@ -493,9 +497,9 @@ describe("Transfer strategy rules", () => {
             formatter.toString(asset1),
             [
               {
-                senderBlockchains: "all",
-                senders: "all",
-                recipients: "all",
+                senderBlockchains: REGISTRATION_STRATEGY_ALL,
+                senders: REGISTRATION_STRATEGY_ALL,
+                recipients: REGISTRATION_STRATEGY_ALL,
                 timeoutDays: 30,
                 minAmount: 100n,
                 assets: [
@@ -514,8 +518,8 @@ describe("Transfer strategy rules", () => {
             [
               {
                 senderBlockchains: [blockchain1],
-                senders: "all",
-                recipients: "all",
+                senders: REGISTRATION_STRATEGY_ALL,
+                recipients: REGISTRATION_STRATEGY_ALL,
                 timeoutDays: 15,
                 minAmount: 50n,
                 assets: [
@@ -593,9 +597,9 @@ describe("Transfer strategy rules", () => {
             formatter.toString(asset1),
             [
               {
-                senderBlockchains: "all",
-                senders: "current",
-                recipients: "current",
+                senderBlockchains: REGISTRATION_STRATEGY_ALL,
+                senders: REGISTRATION_STRATEGY_CURRENT,
+                recipients: REGISTRATION_STRATEGY_CURRENT,
                 timeoutDays: 30,
                 minAmount: 10n,
                 assets: [
@@ -609,8 +613,8 @@ describe("Transfer strategy rules", () => {
               },
               {
                 senderBlockchains: [blockchain1],
-                senders: "all",
-                recipients: "all",
+                senders: REGISTRATION_STRATEGY_ALL,
+                recipients: REGISTRATION_STRATEGY_ALL,
                 timeoutDays: 15,
                 minAmount: 10n,
                 assets: [
@@ -707,9 +711,9 @@ describe("Transfer strategy rules", () => {
             formatter.toString(asset1),
             [
               {
-                senderBlockchains: "all",
-                senders: "current",
-                recipients: "current",
+                senderBlockchains: REGISTRATION_STRATEGY_ALL,
+                senders: REGISTRATION_STRATEGY_CURRENT,
+                recipients: REGISTRATION_STRATEGY_CURRENT,
                 timeoutDays: 30,
                 minAmount: 10n,
                 assets: [
@@ -723,8 +727,8 @@ describe("Transfer strategy rules", () => {
               },
               {
                 senderBlockchains: [blockchain1],
-                senders: "all",
-                recipients: "all",
+                senders: REGISTRATION_STRATEGY_ALL,
+                recipients: REGISTRATION_STRATEGY_ALL,
                 timeoutDays: 15,
                 minAmount: 10n,
                 assets: [
@@ -747,9 +751,9 @@ describe("Transfer strategy rules", () => {
             formatter.toString(asset1),
             [
               {
-                senderBlockchains: "all",
-                senders: "all",
-                recipients: "all",
+                senderBlockchains: REGISTRATION_STRATEGY_ALL,
+                senders: REGISTRATION_STRATEGY_ALL,
+                recipients: REGISTRATION_STRATEGY_ALL,
                 timeoutDays: 15,
                 minAmount: 2n,
                 assets: [

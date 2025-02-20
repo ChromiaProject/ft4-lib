@@ -1,0 +1,27 @@
+/*
+* The account filter struct is to be used in the general get_accounts query.
+*/
+struct account_filter {
+    ids: list<byte_array>?;
+    type: text?;
+}
+
+
+struct account_auth_descriptor_filter {
+    ids: list<byte_array>?;
+    account_id: byte_array?;
+}
+
+struct main_account_auth_descriptor_filter {
+    account_ids: list<byte_array>?;
+    account_auth_descriptor_id: byte_array?;
+}
+
+struct auth_descriptor_signer_filter {
+    ids: list<byte_array>?;
+    auth_descriptor_id: byte_array?;
+}
+
+struct rl_state_filter {
+    account_ids: list<byte_array>?;
+}

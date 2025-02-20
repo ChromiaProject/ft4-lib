@@ -1,0 +1,121 @@
+/**
+ * Retrieves all assets based on the selected filter of asset_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param asset_filter  the available filter for the assets to retrieve
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
+function get_assets_filtered(asset_filter: asset_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return asset @* {
+        if (asset_filter?.ids??) .id in asset_filter?.ids!! else true,
+        if (asset_filter?.name??) .name == asset_filter?.name else true,
+        if (asset_filter?.symbol??) .symbol == asset_filter?.symbol else true,
+        if (asset_filter?.type??) .type == asset_filter?.type else true,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (map_asset($)).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+/**
+ * Retrieves all balances based on the selected filter of balance_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param balance_filter  the available filter for the balances to retrieve
+ * @param page_size       the size of the pages to retrieve
+ * @param page_cursor     a pointer to where the page should start
+ */
+function get_balances_filtered(balance_filter: balance_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return balance @* {
+        if (balance_filter?.account_ids??) .account.id in balance_filter?.account_ids!! else true,
+        if (balance_filter?.asset_ids??) .asset.id in balance_filter?.asset_ids!! else true,
+        .rowid > (before_rowid ?: rowid(0))
+    }(
+        utils.pagination_result(
+            data = (map_balance($)).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+/**
+ * Fetches all transfer history entries allowing filtering in multiple ways, paginated.
+ * 
+ * Throws if the filter contains only `op_index` (as it is not an index or key)
+ * and does not contain `transaction_rid` as it is a composite index
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param transfer_history_entry_filter  the struct that allows filtering by account id, asset id, transaction rid and op index
+ * @param page_size                       the size of the pages to retrieve
+ * @param page_cursor                     a pointer to where the page should start 
+ */
+function get_transfer_history_entries_filtered(
+    transfer_history_entry_filter: transfer_history_entry_filter?,
+    page_size: integer?,
+    page_cursor: text?
+) {
+    utils.validate_composite_indexes_tx_rids_and_op_index(
+        transfer_history_entry_filter?.transaction_rids,
+        transfer_history_entry_filter?.op_index
+    );
+    val before_rowid = utils.before_rowid(page_cursor);
+    return transfer_history_entry @* {
+        if (transfer_history_entry_filter?.account_ids??) .account.id in transfer_history_entry_filter?.account_ids!! else true,
+        if (transfer_history_entry_filter?.asset_ids??) .asset.id in transfer_history_entry_filter?.asset_ids!! else true,
+        if (transfer_history_entry_filter?.transaction_rids??) .transaction.tx_rid in transfer_history_entry_filter?.transaction_rids!! else true,
+        if (transfer_history_entry_filter?.op_index??) .op_index == transfer_history_entry_filter?.op_index else true,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                extract_data_from_transfer_history_entry($)
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+/**
+ * Retrieves all crosschain transfer history entries based on the provided filtering, paginated
+ * 
+ * Throws if the filter contains only `op_index` (as it is not an index or key)
+ * and does not contain `transaction_rid` as it is a composite index
+ * 
+ * @see utils.paged_result for information about pagination
+ *
+ * @param crosschain_transfer_history_entry_filter  the available filter for the entities to retrieve
+ * @param page_size                                 the size of the pages to retrieve
+ * @param page_cursor                               a pointer to where the page should start
+ */
+function get_crosschain_transfer_history_entries_filtered(
+    crosschain_transfer_history_entry_filter: crosschain_transfer_history_entry_filter?,
+    page_size: integer?,
+    page_cursor: text?
+) {
+    utils.validate_composite_indexes_tx_rids_and_op_index(
+        crosschain_transfer_history_entry_filter?.transaction_rids,
+        crosschain_transfer_history_entry_filter?.op_index
+    );
+    val before_rowid = utils.before_rowid(page_cursor);
+    return crosschain_transfer_history_entry @* {
+        if (crosschain_transfer_history_entry_filter?.account_ids??) .account_id in crosschain_transfer_history_entry_filter?.account_ids!! else true,
+        if (crosschain_transfer_history_entry_filter?.asset_ids??) .asset.id in crosschain_transfer_history_entry_filter?.asset_ids!! else true,
+        if (crosschain_transfer_history_entry_filter?.transaction_rids??) .transaction.tx_rid in crosschain_transfer_history_entry_filter?.transaction_rids!! else true,
+        if (crosschain_transfer_history_entry_filter?.op_index??) .op_index == crosschain_transfer_history_entry_filter?.op_index else true,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (extract_details_from_crosschain_transfer_history_entry($)).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}

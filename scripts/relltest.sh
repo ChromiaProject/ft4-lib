@@ -28,6 +28,7 @@ exitfn () {
 trap "exitfn" 2
 
 docker=true
+GITLAB=false
 tests=""
 additional_args=""
 
@@ -59,7 +60,7 @@ while :; do
             fi
             ;;
         *)
-            [ -z "$1" ] && break 
+            [ -z "$1" ] && break
             additional_args="$additional_args $1"
             ;;
     esac

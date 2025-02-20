@@ -1,6 +1,10 @@
 import { Operation } from "postchain-client";
 import { Connection } from "@ft4/ft-session";
 import { FtKeyStore, KeyStore, LoginKeyStore } from "@ft4/authentication";
+import {
+  REGISTRATION_STRATEGY_ALL,
+  REGISTRATION_STRATEGY_CURRENT,
+} from "./constants";
 
 /**
  * Represents information about what strategy was used to create an account
@@ -38,14 +42,20 @@ export type TransferStrategyRuleAmount = TransferStrategyRulePartial & {
   minAmount: bigint;
 };
 
-export type TransferSenderBlockchains = "all" | Buffer | Buffer[];
+export type TransferSenderBlockchains =
+  | typeof REGISTRATION_STRATEGY_ALL
+  | Buffer
+  | Buffer[];
 
 export type TransferParticipants =
-  | "all"
+  | typeof REGISTRATION_STRATEGY_ALL
   | TransferParticipantSingle
   | TransferParticipantSingle[];
 
-export type TransferAssets = "all" | AssetLimit | AssetLimit[];
+export type TransferAssets =
+  | typeof REGISTRATION_STRATEGY_ALL
+  | AssetLimit
+  | AssetLimit[];
 
 export type TransferStrategyRulePartial = {
   senderBlockchains: TransferSenderBlockchains;
@@ -55,7 +65,9 @@ export type TransferStrategyRulePartial = {
   timeoutDays: number;
 };
 
-export type TransferParticipantSingle = "current" | Buffer;
+export type TransferParticipantSingle =
+  | typeof REGISTRATION_STRATEGY_CURRENT
+  | Buffer;
 
 export type TransferStrategyRule = TransferStrategyRulePartial & {
   strategies: string[];

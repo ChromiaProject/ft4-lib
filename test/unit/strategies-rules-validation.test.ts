@@ -1,7 +1,7 @@
 import { Asset, ASSET_TYPE_FT4, createAmount } from "@ft4/asset";
 import { TransferStrategyRuleAmount } from "@ft4/registration";
 import {
-  validateCrosschainRegistrationStrategyRules,
+  validateRegistrationStrategyRules,
   getValidRules,
   isValidParticipantRule,
   isValidSenderBlockchainRule,
@@ -9,6 +9,10 @@ import {
 } from "@ft4/registration/utils";
 import { Account } from "@ft4/accounts/types";
 import { Buffer } from "buffer";
+import {
+  REGISTRATION_STRATEGY_ALL,
+  REGISTRATION_STRATEGY_CURRENT,
+} from "@ft4/registration/constants";
 
 const TEST_BUFFER_SIZE = 32;
 const TEST_BUFFER_FILL = 0;
@@ -40,10 +44,6 @@ const MOCKS = {
     MIN_AMOUNT_2: "5000",
     HIGH_MIN_AMOUNT: "20000",
     DEFAULT_BALANCE: "1000",
-  },
-  PARTICIPANTS: {
-    ALL: "all",
-    CURRENT: "current",
   },
   TIMEOUT_DAYS: {
     DEFAULT: 10,
@@ -93,10 +93,10 @@ const createTestAsset = (overrides = {}): Asset => ({
 });
 
 const createTestRule = (overrides = {}): TransferStrategyRuleAmount => ({
-  senderBlockchains: "all" as const,
-  senders: "all" as const,
-  recipients: "all" as const,
-  assets: "all" as const,
+  senderBlockchains: REGISTRATION_STRATEGY_ALL,
+  senders: REGISTRATION_STRATEGY_ALL,
+  recipients: REGISTRATION_STRATEGY_ALL,
+  assets: REGISTRATION_STRATEGY_ALL,
   minAmount: BigInt(100),
   timeoutDays: 10,
   ...overrides,
@@ -111,7 +111,7 @@ describe("Strategy Rules Validation", () => {
     const testAsset = createTestAsset();
 
     it("returns undefined when rules is undefined", async () => {
-      const result = await validateCrosschainRegistrationStrategyRules(
+      const result = await validateRegistrationStrategyRules(
         undefined,
         testAccount,
         testAsset,
@@ -122,7 +122,7 @@ describe("Strategy Rules Validation", () => {
     });
 
     it("returns undefined when rules array is empty", async () => {
-      const result = await validateCrosschainRegistrationStrategyRules(
+      const result = await validateRegistrationStrategyRules(
         [],
         testAccount,
         testAsset,
@@ -133,12 +133,12 @@ describe("Strategy Rules Validation", () => {
     });
 
     it("throws error when sender balance not found", async () => {
-      (testAccount.getBalances as jest.Mock).mockResolvedValueOnce({
-        data: [],
-      });
+      (testAccount.getBalanceByAssetId as jest.Mock).mockResolvedValueOnce(
+        null,
+      );
 
       await expect(
-        validateCrosschainRegistrationStrategyRules(
+        validateRegistrationStrategyRules(
           [createTestRule()],
           testAccount,
           testAsset,
@@ -154,11 +154,11 @@ describe("Strategy Rules Validation", () => {
         asset: testAsset,
       };
 
-      (testAccount.getBalances as jest.Mock).mockResolvedValueOnce({
-        data: [balance],
-      });
+      (testAccount.getBalanceByAssetId as jest.Mock).mockResolvedValueOnce(
+        balance,
+      );
 
-      const result = await validateCrosschainRegistrationStrategyRules(
+      const result = await validateRegistrationStrategyRules(
         [createTestRule()],
         testAccount,
         testAsset,
@@ -171,11 +171,7 @@ describe("Strategy Rules Validation", () => {
     it("validates rules for pending transfer", async () => {
       const pendingAmount = BigInt(200);
 
-      (testAccount.getBalances as jest.Mock).mockResolvedValueOnce({
-        data: [],
-      });
-
-      const result = await validateCrosschainRegistrationStrategyRules(
+      const result = await validateRegistrationStrategyRules(
         [createTestRule()],
         testAccount,
         testAsset,
@@ -188,12 +184,12 @@ describe("Strategy Rules Validation", () => {
     it("throws error when no valid rules for pending transfer", async () => {
       const pendingAmount = BigInt(50);
 
-      (testAccount.getBalances as jest.Mock).mockResolvedValueOnce({
+      (testAccount.getBalanceByAssetId as jest.Mock).mockResolvedValueOnce({
         data: [],
       });
 
       await expect(
-        validateCrosschainRegistrationStrategyRules(
+        validateRegistrationStrategyRules(
           [createTestRule({ minAmount: BigInt(100) })],
           testAccount,
           testAsset,
@@ -253,14 +249,14 @@ describe("Strategy Rules Validation", () => {
 
   describe("isValidParticipantRule", () => {
     it("returns true for 'all' participant", () => {
-      expect(isValidParticipantRule(MOCKS.PARTICIPANTS.ALL, mockBuffer)).toBe(
-        true,
-      );
+      expect(
+        isValidParticipantRule(REGISTRATION_STRATEGY_ALL, mockBuffer),
+      ).toBe(true);
     });
 
     it("returns true for 'current' participant", () => {
       expect(
-        isValidParticipantRule(MOCKS.PARTICIPANTS.CURRENT, mockBuffer),
+        isValidParticipantRule(REGISTRATION_STRATEGY_CURRENT, mockBuffer),
       ).toBe(true);
     });
 
@@ -277,7 +273,7 @@ describe("Strategy Rules Validation", () => {
   describe("isValidSenderBlockchainRule", () => {
     it("returns true for 'all' blockchain", () => {
       expect(
-        isValidSenderBlockchainRule(MOCKS.PARTICIPANTS.ALL, mockBuffer),
+        isValidSenderBlockchainRule(REGISTRATION_STRATEGY_ALL, mockBuffer),
       ).toBe(true);
     });
 
@@ -315,7 +311,7 @@ describe("Strategy Rules Validation", () => {
     };
 
     it("returns true when assets rule is 'all'", () => {
-      expect(isValidAssetRule("all", mockAsset)).toBe(true);
+      expect(isValidAssetRule(REGISTRATION_STRATEGY_ALL, mockAsset)).toBe(true);
     });
 
     it("returns true when asset ID matches", () => {

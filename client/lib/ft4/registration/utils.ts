@@ -9,6 +9,10 @@ import {
   TransferStrategyRuleAmount,
 } from "@ft4/registration/types";
 import { Account } from "@ft4/accounts";
+import {
+  REGISTRATION_STRATEGY_ALL,
+  REGISTRATION_STRATEGY_CURRENT,
+} from "./constants";
 
 // Todo remove once it is properly exported from postchain-client
 // currently only exported from /built/
@@ -27,17 +31,17 @@ export function ensureBuffer(value: BufferId): Buffer {
 }
 
 /**
- * Finds the valid strategy rules and returns the one with the lowest amount or 0 if no valid rules are found.
+ * Validates registration strategy rules for transfers
  *
  * @param rules - The rules to find the valid rules from.
  * @param senderAccount - The senders Account.
- * @param asset - The asset that is subject to crosschain transfer
+ * @param asset - The asset that is subject to transfer
  * @param isPendingTransfer - Whether the transfer is already pending
  * @param pendingTransferAmount - The amount of the pending transfer
  *
  * @returns The lowest amount or 0 if no valid rules are found.
  */
-export async function validateCrosschainRegistrationStrategyRules(
+export async function validateRegistrationStrategyRules(
   rules: TransferStrategyRuleAmount[] | undefined,
   senderAccount: Account,
   asset: Asset,
@@ -49,29 +53,25 @@ export async function validateCrosschainRegistrationStrategyRules(
   }
 
   let validRules: TransferStrategyRuleAmount[] = [];
-  const senderBalances = await senderAccount.getBalances();
-  const foundAssetBalance =
-    senderBalances.data.find(
-      (balance) => Buffer.compare(balance.asset.id, asset.id) === 0,
-    ) ?? null;
+  const senderBalance = await senderAccount.getBalanceByAssetId(asset.id);
 
   if (!isPendingTransfer) {
-    if (!foundAssetBalance) {
+    if (!senderBalance) {
       throw new Error("Sender's balance not found. Registration failed.");
     }
 
     validRules = getValidRules(
       rules,
       senderAccount,
-      foundAssetBalance.asset,
-      foundAssetBalance.amount.value,
+      senderBalance.asset,
+      senderBalance.amount.value,
     );
 
     const ruleWithSmallestAmount = validRules.reduce((prev, current) =>
       current.minAmount < prev.minAmount ? current : prev,
     );
 
-    if (foundAssetBalance.amount.value < ruleWithSmallestAmount.minAmount) {
+    if (senderBalance.amount.value < ruleWithSmallestAmount.minAmount) {
       throw new Error("Insufficient balance. Registration failed.");
     }
   } else {
@@ -94,7 +94,7 @@ export async function validateCrosschainRegistrationStrategyRules(
  *
  * @param rules - The rules to get the valid rules from.
  * @param senderAccount - The sender account.
- * @param asset - The asset that is subject to crosschain transfer
+ * @param asset - The asset that is subject to transfer
  * @param senderBalanceAmountValue - The sender balance amount value of the asset.
  *
  * @returns The valid rules, which can be none, one or multiple.
@@ -106,7 +106,7 @@ export function getValidRules(
   senderBalanceAmountValue: bigint,
 ): TransferStrategyRuleAmount[] {
   return rules.filter((rule) => {
-    const isValiderBlockchain = isValidSenderBlockchainRule(
+    const isValidBlockchain = isValidSenderBlockchainRule(
       rule.senderBlockchains,
       senderAccount.blockchainRid,
     );
@@ -123,7 +123,7 @@ export function getValidRules(
     const isSenderBalanceEnough = senderBalanceAmountValue >= rule.minAmount;
 
     return (
-      isValiderBlockchain &&
+      isValidBlockchain &&
       isValidSender &&
       isValidRecipient &&
       isValidAsset &&
@@ -135,7 +135,7 @@ export function getValidRules(
 /**
  * Validates the participant rules for the provided rules
  *
- * @param ruleParticipant - The participant rules to validate.
+ * @param ruleParticipant - The participant rules to validate. Does not handle the current participant.
  * @param accountId - The account ID to validate against against the rule participants
  *
  * @returns A boolean value indicating if the participant rule is valid.
@@ -144,8 +144,8 @@ export function isValidParticipantRule(
   ruleParticipant: TransferParticipants,
   accountId: BufferId,
 ): boolean {
-  if (ruleParticipant !== "all") {
-    if (ruleParticipant !== "current") {
+  if (ruleParticipant !== REGISTRATION_STRATEGY_ALL) {
+    if (ruleParticipant !== REGISTRATION_STRATEGY_CURRENT) {
       if (Buffer.isBuffer(ruleParticipant)) {
         if (ensureString(ruleParticipant) !== ensureString(accountId)) {
           return false;
@@ -175,7 +175,7 @@ export function isValidSenderBlockchainRule(
   ruleSenderBlockchains: TransferSenderBlockchains,
   senderBlockchainRid: BufferId,
 ): boolean {
-  if (ruleSenderBlockchains !== "all") {
+  if (ruleSenderBlockchains !== REGISTRATION_STRATEGY_ALL) {
     if (
       Buffer.isBuffer(ruleSenderBlockchains) ||
       typeof ruleSenderBlockchains === "string"
@@ -209,7 +209,7 @@ export function isValidSenderBlockchainRule(
  * Validates the asset for the provided rules
  *
  * @param ruleAssets - The asset rules to validate.
- * @param asset - The asset to validate against against the rule assets
+ * @param asset - The asset to validate against the rule assets
  *
  * @returns A boolean value indicating if the asset is valid.
  */
@@ -217,7 +217,7 @@ export function isValidAssetRule(
   ruleAssets: TransferAssets,
   asset: Asset,
 ): boolean {
-  if (ruleAssets !== "all") {
+  if (ruleAssets !== REGISTRATION_STRATEGY_ALL) {
     if (!Array.isArray(ruleAssets)) {
       return validateAssetLimitRule(ruleAssets, asset);
     }

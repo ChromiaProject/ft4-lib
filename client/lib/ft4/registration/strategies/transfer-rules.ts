@@ -11,6 +11,10 @@ import {
   TransferStrategyRuleAmount,
   TransferStrategyRulePartial,
 } from "@ft4/registration/types";
+import {
+  REGISTRATION_STRATEGY_ALL,
+  REGISTRATION_STRATEGY_CURRENT,
+} from "@ft4/registration/constants";
 
 /**
  * Fetches all transfer strategy rules configured on the chain
@@ -48,7 +52,7 @@ export async function getTransferStrategyRulesGroupedByStrategy(
     const rawRule = mapResponseToRaw(rule);
     const assets =
       rawRule.assets?.allow_all ?? true
-        ? [{ id: "all", amount: 0n }]
+        ? [{ id: REGISTRATION_STRATEGY_ALL, amount: 0n }]
         : rawRule.assets?.allowed_values.map(({ id, min_amount }) => ({
             id: formatter.toString(id),
             amount: min_amount,
@@ -98,30 +102,30 @@ export function mapTransferStrategyRulePartial(
 ): TransferStrategyRulePartial {
   return {
     senderBlockchains: rule.blockchains.allow_all
-      ? "all"
+      ? REGISTRATION_STRATEGY_ALL
       : rule.blockchains.allowed_values,
 
     senders:
       rule.require_same_address ||
       (rule.senders.allowed_values.length === 0 && !rule.senders.allow_all)
-        ? "current"
+        ? REGISTRATION_STRATEGY_CURRENT
         : rule.senders.allow_all
-          ? "all"
+          ? REGISTRATION_STRATEGY_ALL
           : rule.senders.allowed_values,
 
     recipients:
       rule.require_same_address ||
       (rule.recipients.allowed_values.length === 0 &&
         !rule.recipients.allow_all)
-        ? "current"
+        ? REGISTRATION_STRATEGY_CURRENT
         : rule.recipients.allow_all
-          ? "all"
+          ? REGISTRATION_STRATEGY_ALL
           : rule.recipients.allowed_values,
 
     assets: !rule.assets
-      ? "all"
+      ? REGISTRATION_STRATEGY_ALL
       : rule.assets.allow_all
-        ? "all"
+        ? REGISTRATION_STRATEGY_ALL
         : rule.assets.allowed_values.map(mapAssetLimit),
 
     timeoutDays: rule.timeout_days,
@@ -154,21 +158,21 @@ export function mapTransferStrategyRuleAmount(
 ): TransferStrategyRuleAmount {
   return {
     senderBlockchains: rule.blockchains.allow_all
-      ? "all"
+      ? REGISTRATION_STRATEGY_ALL
       : rule.blockchains.allowed_values,
     senders: rule.require_same_address
-      ? "current"
+      ? REGISTRATION_STRATEGY_CURRENT
       : rule.senders.allow_all
-        ? "all"
+        ? REGISTRATION_STRATEGY_ALL
         : rule.senders.allowed_values,
     recipients: rule.require_same_address
-      ? "current"
+      ? REGISTRATION_STRATEGY_CURRENT
       : rule.recipients.allow_all
-        ? "all"
+        ? REGISTRATION_STRATEGY_ALL
         : rule.recipients.allowed_values,
     assets:
       rule.assets?.allow_all ?? true
-        ? "all"
+        ? REGISTRATION_STRATEGY_ALL
         : rule.assets?.allowed_values.map(mapAssetLimit) ?? [],
     timeoutDays: rule.timeout_days,
     minAmount,

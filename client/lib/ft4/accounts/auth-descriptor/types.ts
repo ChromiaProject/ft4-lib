@@ -14,6 +14,7 @@ export enum AuthType {
 export type AuthDescriptor<T extends SingleSig | MultiSig> = {
   id: Buffer;
   accountId: Buffer;
+  accountType: string;
   authType: AuthType;
   rules: AuthDescriptorRules | null;
   created: Date;
@@ -73,8 +74,10 @@ export type RawAnyAuthDescriptor =
 export type RawAuthDescriptor<T extends RawAuthDescriptorArgs> = {
   args: T;
   account_id: Buffer;
+  account_type: string;
   auth_type: string;
   created: number;
   id: Buffer;
   rules: RawRules | null;
+  ctr: number;
 };

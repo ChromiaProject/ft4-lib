@@ -13,6 +13,7 @@ import {
   getSessionForAccount,
   singleSigUser as testUser,
   useChromiaNode,
+  FT4_USER_TYPE,
 } from "@ft4-test/util";
 import {
   AuthDescriptorRegistration,
@@ -25,6 +26,12 @@ import {
   getAccountMainAuthDescriptor,
   deriveAuthDescriptorId,
   gtv,
+  AccountFilter,
+  AccountAuthDescriptorFilter,
+  MainAccountAuthDescriptorFilter,
+  AuthDescriptorSignerFilter,
+  RlStateFilter,
+  AccountCreationTransferFilter,
 } from "@ft4/accounts";
 import { registerAccountAdmin } from "@ft4/admin";
 import {
@@ -203,6 +210,7 @@ describe("Test the account", () => {
         ...registration,
         id: deriveAuthDescriptorId(registration),
         accountId: deriveAuthDescriptorId(registration),
+        accountType: FT4_USER_TYPE,
         created: new Date(),
       },
       signatureProvider: user1.signatureProvider,
@@ -264,6 +272,107 @@ describe("Test the account", () => {
     const foundAccount = await _connection.getAccountById(account.id);
 
     expect(account.id).toEqual(foundAccount!.id);
+  });
+
+  it("returns filtered accounts", async () => {
+    const account = await AccountBuilder.account(_connection).build();
+    const accountFilter: AccountFilter = {
+      ids: [account.id],
+      type: "FT4_USER",
+    };
+    const filteredAccounts =
+      await _connection.getAccountsFiltered(accountFilter);
+
+    expect(filteredAccounts.data.length).toBeGreaterThan(0);
+    expect(filteredAccounts.data[0].id).toStrictEqual(account.id);
+  });
+
+  it("returns filtered accounts partial filter", async () => {
+    const account = await AccountBuilder.account(_connection).build();
+    const accountFilter: AccountFilter = { ids: [account.id] };
+
+    const filteredAccounts =
+      await _connection.getAccountsFiltered(accountFilter);
+
+    expect(filteredAccounts.data.length).toBeGreaterThan(0);
+    expect(filteredAccounts.data[0].id).toStrictEqual(account.id);
+  });
+
+  it("returns filtered account auth descriptors", async () => {
+    const account = await AccountBuilder.account(_connection).build();
+    const accountAuthDescriptorFilter: AccountAuthDescriptorFilter = {
+      ids: null,
+      account_id: account.id,
+    };
+
+    const filteredAccountAuthDescriptors =
+      await _connection.getAccountAuthDescriptorsFiltered(
+        accountAuthDescriptorFilter,
+      );
+
+    expect(filteredAccountAuthDescriptors.data.length).toBeGreaterThan(0);
+  });
+
+  it("returns filtered main auth descriptors", async () => {
+    const account = await AccountBuilder.account(_connection).build();
+    const mainAccountAuthDescriptorFilter: MainAccountAuthDescriptorFilter = {
+      account_auth_descriptor_id: null,
+      account_ids: [account.id],
+    };
+
+    const filteredMainAuthDescriptors =
+      await _connection.getMainAuthDescriptorsFiltered(
+        mainAccountAuthDescriptorFilter,
+      );
+
+    expect(filteredMainAuthDescriptors.data.length).toBeGreaterThan(0);
+    expect(filteredMainAuthDescriptors.data[0].accountId).toStrictEqual(
+      account.id,
+    );
+  });
+
+  it("returns filtered auth descriptor signers", async () => {
+    await AccountBuilder.account(_connection).build();
+    const authDescriptorSignerFilter: AuthDescriptorSignerFilter = {
+      ids: null,
+      auth_descriptor_id: null,
+    };
+
+    const filteredAuthDescriptorSigners =
+      await _connection.getAuthDescriptorSignersFiltered(
+        authDescriptorSignerFilter,
+      );
+
+    expect(filteredAuthDescriptorSigners.data.length).toBeGreaterThan(0);
+  });
+
+  it("returns filtered rate limit states", async () => {
+    const account = await AccountBuilder.account(_connection).build();
+    const rlStateFilter: RlStateFilter = {
+      account_ids: [account.id] as Buffer[],
+    };
+
+    const filteredRlStates =
+      await _connection.getRlStatesFiltered(rlStateFilter);
+
+    expect(filteredRlStates.data.length).toBeGreaterThan(0);
+  });
+
+  it("returns filtered account creation transfers", async () => {
+    await AccountBuilder.account(_connection).build();
+    const accountCreationTransferFilter: AccountCreationTransferFilter = {
+      rowids: null,
+      transaction_tx_rid: null,
+      op_index: null,
+      recipient_id: null,
+    };
+
+    const filteredAccountCreationTransfers =
+      await _connection.getAccountCreationTransfersFiltered(
+        accountCreationTransferFilter,
+      );
+
+    expect(filteredAccountCreationTransfers.data.length).toBeGreaterThan(0);
   });
 
   it("Returns account by auth descriptor id", async () => {

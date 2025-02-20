@@ -20,7 +20,7 @@ import { getTransferStrategyRulesGroupedByStrategy } from "./transfer-rules";
 import { formatter } from "postchain-client";
 import { TransferRef } from "@ft4/crosschain";
 import { gtxToRawGtx } from "@ft4/crosschain/utils";
-import { validateCrosschainRegistrationStrategyRules } from "@ft4/registration/utils";
+import { validateRegistrationStrategyRules } from "@ft4/registration/utils";
 
 export function subscription(
   senderBlockchainRid: BufferId,
@@ -109,22 +109,13 @@ export function subscription(
           amount,
         );
 
-      const senderAccountInCurrentChain =
-        await senderConnection.getAccountById(accountId);
-
-      if (!senderAccountInCurrentChain) {
-        throw new StrategyError(
-          `Sender account <${accountId.toString("hex")}> not found on blockchain <${senderConnection.blockchainRid.toString("hex")}>`,
-        );
-      }
-
       const pendingTransferAmount = pendingTransfer
         ? (pendingTransfer.tx.operations[1].args[2] as bigint)
         : null;
 
-      await validateCrosschainRegistrationStrategyRules(
+      await validateRegistrationStrategyRules(
         subscriptionAssetTransferRules,
-        senderAccountInCurrentChain,
+        senderSession.account,
         subscriptionAsset,
         Boolean(pendingTransfer),
         pendingTransferAmount,

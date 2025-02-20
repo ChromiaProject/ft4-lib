@@ -62,14 +62,6 @@ enum transfer_type {
     received,
 }
 
-/** Filter used in queries, which allows to fetch only one direction of transfer */
-struct filter {
-    /**
-     * Whether you want to fetch outgoing or incoming transfers, or both if null.
-     */
-    transfer_type?;
-}
-
 /**
  * Takes a list of transfer history entries and builds a page that can be returned
  * from paginated queries with it.
@@ -158,23 +150,6 @@ function get_paginated_transfers(accounts.account?, asset?, filter, height: inte
 }
 
 /**
- * Details about a transfer. It contains a limited set of information that can be used to
- * describe a `transfer_history_entry` and a `crosschain_transfer_history_entry`.
- */
-struct transfer_detail {
-    /** The blockchain on which the transfer happened */
-    blockchain_rid: byte_array;
-    /** The account whose balance was affected */
-    account_id: byte_array;
-    /** The asset that was moved */
-    asset_id: byte_array;
-    /** The amount that was moved */
-    delta: big_integer;
-    /** If true, this movement of tokens went into a transfer (and out of this account) */
-    is_input: boolean;
-}
-
-/**
  * Returns a `transfer_detail` object for each `transfer_entry` that was registered during
  * the operation specified.
  * 
@@ -245,11 +220,14 @@ function get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, as
  */
 function extract_details_from_transfer_history_entry(entry: transfer_history_entry) {
     return transfer_detail(
+        rowid = entry.rowid,
         blockchain_rid = chain_context.blockchain_rid,
         account_id = entry.account.id,
         asset_id = entry.asset.id,
         delta = entry.delta,
-        is_input = entry.is_input
+        is_input = entry.is_input,
+        op_index = entry.op_index,
+        transaction_rid = entry.transaction.tx_rid
     );
 }
 
@@ -264,11 +242,14 @@ function extract_details_from_account_creation_transfer(
     transfer: transfer_strategy.account_creation_transfer
 ) {
     return transfer_detail(
+        rowid = transfer.rowid,
         blockchain_rid = transfer.sender_blockchain_rid,
         account_id = transfer.sender_id,
         asset_id = transfer.asset.id,
         delta = transfer.amount,
-        is_input = true
+        is_input = true,
+        op_index = transfer.op_index,
+        transaction_rid = transfer.transaction.tx_rid
     );
 }
 
@@ -283,10 +264,13 @@ function extract_details_from_crosschain_transfer_history_entry(
     entry: crosschain_transfer_history_entry
 ) {
     return transfer_detail(
+        rowid = entry.rowid,
         blockchain_rid = entry.blockchain_rid,
         account_id = entry.account_id,
         asset_id = entry.asset.id,
         delta = entry.delta,
-        is_input = entry.is_input
+        is_input = entry.is_input,
+        op_index = entry.op_index,
+        transaction_rid = entry.transaction.tx_rid
     );
 }

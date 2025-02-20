@@ -1,0 +1,7 @@
+@mount('ft4')
+module;
+
+import ^^^^^.core.accounts.strategies.transfer.subscription;
+import ^^^^^.core.accounts;
+import ^^^^^.auth;
+import ^^^^^.utils;

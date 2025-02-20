@@ -1,5 +1,138 @@
 
 /**
+ * Retrieves all accounts based on the selected filter of account_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param account_filter with indexed fileds from the account entity
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+query get_accounts_filtered(account_filter: account_filter, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return utils.make_page(
+        accounts.account @* {
+                if (account_filter.ids??) .id in account_filter.ids!! else true,
+                if (account_filter.type??) .type == account_filter.type else true,
+                .rowid > (before_rowid ?: rowid(0))
+            } (
+                utils.pagination_result(
+            data = $.to_struct().to_gtv_pretty(),
+            rowid = .rowid
+        )
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
+}
+
+/**
+ * Retrieves all account_auth_descriptors based on the selected filter of account_auth_descriptor_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param account_auth_descriptor_filter with indexed fileds from the account_auth_descriptor entity
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+query get_account_auth_descriptors_filtered(account_auth_descriptor_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return utils.make_page(
+        accounts.account_auth_descriptor @* {
+                if (account_auth_descriptor_filter?.ids??) .id in account_auth_descriptor_filter?.ids!! else true,
+                if (account_auth_descriptor_filter?.account_id??) .account.id == account_auth_descriptor_filter!!.account_id else true,
+                .rowid > (before_rowid ?: rowid(0))
+            } (
+                utils.pagination_result(
+            data = map_account_auth_descriptor($).to_gtv_pretty(),
+            rowid = .rowid
+        )
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
+}
+
+/**
+ * Retrieves all main_auth_descriptors based on the selected filter of main_account_auth_descriptor_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param main_account_auth_descriptor_filter with indexed fileds from the main_auth_descriptor entity
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+query get_main_auth_descriptors_filtered(
+    main_account_auth_descriptor_filter?,
+    page_size: integer?,
+    page_cursor: text?
+) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return utils.make_page(
+        accounts.main_auth_descriptor @* {
+                if (main_account_auth_descriptor_filter?.account_ids??) .account.id in main_account_auth_descriptor_filter?.account_ids!! else true,
+                if (main_account_auth_descriptor_filter?.account_auth_descriptor_id??) .auth_descriptor.id == main_account_auth_descriptor_filter!!.account_auth_descriptor_id else true,
+                .rowid > (before_rowid ?: rowid(0))
+            } (
+                utils.pagination_result(
+            data = map_main_auth_descriptor($).to_gtv_pretty(),
+            rowid = .rowid
+        )
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
+}
+
+/**
+ * Retrieves all auth_descriptor_signers based on the selected filter of auth_descriptor_signer_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param auth_descriptor_signer_filter with indexed fileds from the auth_descriptor_signer entity
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+query get_auth_descriptor_signers_filtered(auth_descriptor_signer_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return utils.make_page(
+        accounts.auth_descriptor_signer @* {
+                if (auth_descriptor_signer_filter?.ids??) .id in auth_descriptor_signer_filter?.ids!! else true,
+                if (auth_descriptor_signer_filter?.auth_descriptor_id??) .account_auth_descriptor.id == auth_descriptor_signer_filter!!.auth_descriptor_id else true,
+                .rowid > (before_rowid ?: rowid(0))
+            } (
+                utils.pagination_result(
+            data = map_auth_descriptor_signer($).to_gtv_pretty(),
+            rowid = .rowid
+        )
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
+}
+
+/**
+ * Retrieves all rl_states based on the selected filter of rl_state_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param rl_state_filter with indexed fileds from the rl_state entity
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+query get_rl_states_filtered(rl_state_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return utils.make_page(
+        accounts.rl_state @* {
+                if (rl_state_filter?.account_ids??) .account.id in rl_state_filter?.account_ids!! else true,
+                .rowid > (before_rowid ?: rowid(0))
+            } (
+                utils.pagination_result(
+            data = map_rl_state($).to_gtv_pretty(),
+            rowid = .rowid
+        )
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
+}
+
+/**
  * Fetches the account related part of the config used by this dApp.
  * As specified in module args configuration.
  */
@@ -27,12 +160,11 @@ query get_config() {
 query get_account_rate_limit_last_update(account_id: byte_array) {
     val account = accounts.Account(account_id);
     if (accounts.get_rate_limit_config_for_account(account).active == false) return (points = 0, last_update = 0);
-    
-    return accounts.rl_state @ { account }
-    (
-        .points, 
-        .last_update
-    );
+
+    return accounts.rl_state @ { account } (
+            .points,
+            .last_update
+        );
 }
 
 /**
@@ -48,10 +180,12 @@ query get_account_rate_limit_last_update(account_id: byte_array) {
  * @param auth_descriptor_id    the id of the auth descriptor to check
  */
 query is_auth_descriptor_valid(account_id: byte_array, auth_descriptor_id: byte_array) {
-    return not accounts.have_violating_rules(accounts.account_auth_descriptor @ {
-        .account.id == account_id,
-        .id == auth_descriptor_id
-    });
+    return not accounts.have_violating_rules(
+        accounts.account_auth_descriptor @ {
+                .account.id == account_id,
+                .id == auth_descriptor_id
+            }
+    );
 }
 
 /**
@@ -95,9 +229,9 @@ query get_account_auth_descriptors_by_signer(account_id: byte_array, signer: byt
  */
 query get_account_auth_descriptor_by_id(account_id: byte_array, id: byte_array) {
     return accounts.account_auth_descriptor @ {
-        .id == id,
-        .account.id == account_id
-    } ( accounts.get_auth_descriptor_data($.to_struct()) );
+            .id == id,
+            .account.id == account_id
+        } ( accounts.get_auth_descriptor_data($.to_struct()) );
 }
 
 /**
@@ -190,9 +324,9 @@ query get_accounts_by_type(type: text, page_size: integer, page_cursor: text?) {
  * @param auth_descriptor_id    id of the auth descriptor to get counter value for
  */
 query get_auth_descriptor_counter(
-    account_id: byte_array, 
+    account_id: byte_array,
     auth_descriptor_id: byte_array
-) = accounts.account_auth_descriptor @? { 
-        .account.id == account_id, 
-        .id == auth_descriptor_id 
+) = accounts.account_auth_descriptor @? {
+        .account.id == account_id,
+        .id == auth_descriptor_id
     } ( .ctr );

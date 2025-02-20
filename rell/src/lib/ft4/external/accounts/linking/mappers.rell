@@ -1,0 +1,16 @@
+
+/**
+ * Maps the given account link to the desired format.
+ *
+ * @param account_link - The account link to be mapped.
+ * @return The mapped account link.
+ */
+function map_account_link(linking.account_link) {
+    return (
+        account = account_link.account.id,
+        account_type = account_link.account.type,
+        secondary = account_link.secondary.id,
+        secondary_type = account_link.secondary.type,
+        type = account_link.type,
+    );
+}

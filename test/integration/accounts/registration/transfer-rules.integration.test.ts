@@ -7,6 +7,7 @@ import {
   TransferStrategyRule,
   TransferStrategyRuleAmount,
 } from "@ft4/registration";
+import { REGISTRATION_STRATEGY_ALL } from "@ft4/registration/constants";
 import { formatter } from "postchain-client";
 
 describe("Transfer strategy rules", () => {
@@ -60,8 +61,8 @@ describe("Transfer strategy rules", () => {
         senderBlockchains: [
           formatter.ensureBuffer(connection.client.config.blockchainRid),
         ],
-        senders: "all",
-        recipients: "all",
+        senders: REGISTRATION_STRATEGY_ALL,
+        recipients: REGISTRATION_STRATEGY_ALL,
         timeoutDays: 1,
         assets: [
           {
@@ -95,8 +96,8 @@ describe("Transfer strategy rules", () => {
         senderBlockchains: [
           formatter.ensureBuffer(connection.client.config.blockchainRid),
         ],
-        senders: "all",
-        recipients: "all",
+        senders: REGISTRATION_STRATEGY_ALL,
+        recipients: REGISTRATION_STRATEGY_ALL,
         timeoutDays: 0,
         assets: [
           {
@@ -126,11 +127,11 @@ describe("Transfer strategy rules", () => {
             senderBlockchains: [
               formatter.ensureBuffer(connection.client.config.blockchainRid),
             ],
-            senders: "all",
-            recipients: "all",
+            senders: REGISTRATION_STRATEGY_ALL,
+            recipients: REGISTRATION_STRATEGY_ALL,
             timeoutDays: 1,
             minAmount: 5n,
-            assets: "all",
+            assets: REGISTRATION_STRATEGY_ALL,
           },
         ],
       ],
@@ -141,11 +142,11 @@ describe("Transfer strategy rules", () => {
             senderBlockchains: [
               formatter.ensureBuffer(connection.client.config.blockchainRid),
             ],
-            senders: "all",
-            recipients: "all",
+            senders: REGISTRATION_STRATEGY_ALL,
+            recipients: REGISTRATION_STRATEGY_ALL,
             timeoutDays: 1,
             minAmount: 5n,
-            assets: "all",
+            assets: REGISTRATION_STRATEGY_ALL,
           },
         ],
       ],
@@ -156,11 +157,11 @@ describe("Transfer strategy rules", () => {
             senderBlockchains: [
               formatter.ensureBuffer(connection.client.config.blockchainRid),
             ],
-            senders: "all",
-            recipients: "all",
+            senders: REGISTRATION_STRATEGY_ALL,
+            recipients: REGISTRATION_STRATEGY_ALL,
             timeoutDays: 1,
             minAmount: 5n,
-            assets: "all",
+            assets: REGISTRATION_STRATEGY_ALL,
           },
         ],
       ],
@@ -171,11 +172,11 @@ describe("Transfer strategy rules", () => {
             senderBlockchains: [
               formatter.ensureBuffer(connection.client.config.blockchainRid),
             ],
-            senders: "all",
-            recipients: "all",
+            senders: REGISTRATION_STRATEGY_ALL,
+            recipients: REGISTRATION_STRATEGY_ALL,
             timeoutDays: 0,
             minAmount: 5n,
-            assets: "all",
+            assets: REGISTRATION_STRATEGY_ALL,
           },
         ],
       ],
