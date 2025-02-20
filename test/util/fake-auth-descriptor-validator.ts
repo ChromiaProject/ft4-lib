@@ -1,5 +1,5 @@
 import { AuthDescriptorValidationService } from "@ft4/accounts";
-import { BufferId } from "@ft4/utils";
+import { BufferId } from "postchain-client";
 
 export function createFakeAuthDescriptorValidationService(params: {
   blockHeight?: number;

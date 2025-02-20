@@ -1,6 +1,6 @@
 import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
-import { BufferId, PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
-import { Queryable } from "postchain-client";
+import { PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
+import { BufferId, Queryable } from "postchain-client";
 import {
   LockedBalanceResponse,
   LockedAmountResponse,

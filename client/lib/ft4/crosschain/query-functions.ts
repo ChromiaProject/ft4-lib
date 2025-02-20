@@ -14,8 +14,8 @@ import {
   TransferFilter,
   TransferResponse,
 } from "./types";
-import { Queryable, gtx } from "postchain-client";
-import { BufferId, PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
+import { BufferId, Queryable, gtx } from "postchain-client";
+import { PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
 
 /**
  * Retrieves the brid of the origin chain for the specified asset

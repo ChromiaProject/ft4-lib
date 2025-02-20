@@ -40,7 +40,7 @@ import {
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
 import { AuthorizationError } from "@ft4/transaction-builder";
-import { BufferId, nop, op } from "@ft4/utils";
+import { nop, op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import * as pcl from "postchain-client";
 
@@ -48,7 +48,7 @@ let _connection: Connection;
 const admin = adminUser();
 
 async function multiSigCall(
-  accountId: BufferId,
+  accountId: pcl.BufferId,
   multiSigAuthDescriptor: AuthDescriptorRegistration<MultiSig>,
   signers: (pcl.SignatureProvider | pcl.KeyPair)[],
   ...ops: pcl.Operation[]

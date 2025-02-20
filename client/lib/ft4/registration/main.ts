@@ -1,4 +1,3 @@
-import { Buffer } from "buffer";
 import {
   EvmKeyStore,
   FtKeyStore,
@@ -14,9 +13,9 @@ import {
   IClient,
   Operation,
   Queryable,
-  gtv,
+  ResponseStatus,
   SignedTransaction,
-  Web3PromiEvent,
+  gtv,
 } from "postchain-client";
 import { registerAccount as registerAccountOp } from "./operations";
 import { registerAccountMessage } from "./queries";
@@ -28,6 +27,7 @@ import {
   createSession,
 } from "@ft4/ft-session";
 import { evmSignatures } from "@ft4/transaction-builder/utils";
+import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 
 /**
  * Registers an account.
@@ -40,14 +40,14 @@ export function registerAccount(
   masterKeyStore: FtKeyStore | EvmKeyStore,
   strategy: Strategy,
   registerAccountOperation: Operation = registerAccountOp(),
-): Web3PromiEvent<
+): Web3CustomPromiEvent<
   SessionWithLogout,
   {
     built: SignedTransaction;
     sent: Buffer;
   }
 > {
-  const promiEvent = new Web3PromiEvent<
+  const promiEvent = new Web3CustomPromiEvent<
     SessionWithLogout,
     {
       built: SignedTransaction;
@@ -120,7 +120,9 @@ export function registerAccount(
           connection.client
             .sendTransaction(transaction)
             .on("sent", (receipt) => {
-              promiEvent.emit("sent", receipt.transactionRid);
+              if (receipt.status === ResponseStatus.Waiting) {
+                promiEvent.emit("sent", receipt.transactionRid);
+              }
             }),
         ]);
       })

@@ -11,15 +11,13 @@ import {
   createConnectionToBlockchainRid,
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
-import { BufferId } from "@ft4/utils";
 import { hasPendingCreateAccountTransferForStrategy } from "./queries";
 import { fetchLoginDetails } from "./main";
 import { LoginDetails } from "./types";
 import { authDescriptorRegistrationToGtv } from "@ft4/accounts/auth-descriptor/gtv";
 import { getTransferStrategyRulesGroupedByStrategy } from "./transfer-rules";
-import { formatter } from "postchain-client";
+import { BufferId, formatter } from "postchain-client";
 import { TransferRef } from "@ft4/crosschain";
-import { gtxToRawGtx } from "@ft4/crosschain/utils";
 
 export function fee(
   senderBlockchainRid: BufferId,
@@ -111,7 +109,7 @@ export function fee(
       // otherwise start new cross-chain transfer.
       if (pendingTransfer) {
         const transferRef: TransferRef = {
-          tx: gtxToRawGtx(pendingTransfer.tx),
+          tx: pendingTransfer.tx,
           opIndex: pendingTransfer.opIndex,
         };
         await senderSession.account.resumeCrosschainTransfer(transferRef);

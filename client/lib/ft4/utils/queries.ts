@@ -1,7 +1,12 @@
 import { Buffer } from "buffer";
 import { AuthHandler } from "@ft4/authentication";
-import { DictPair, QueryObject, RawGtv, formatter } from "postchain-client";
-import { BufferId } from "./types";
+import {
+  BufferId,
+  DictPair,
+  QueryObject,
+  RawGtv,
+  formatter,
+} from "postchain-client";
 
 export function rellAppStructure(): QueryObject<{
   modules: Record<string, DictPair>;

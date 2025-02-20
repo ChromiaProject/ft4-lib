@@ -1,4 +1,4 @@
-import { QueryObject, RawGtx, formatter } from "postchain-client";
+import { BufferId, QueryObject, RawGtx, formatter } from "postchain-client";
 import { Buffer } from "buffer";
 import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import {
@@ -10,7 +10,7 @@ import {
   TransferFilter,
   TransferResponse,
 } from "./types";
-import { BufferId, PaginatedEntity } from "@ft4/utils";
+import { PaginatedEntity } from "@ft4/utils";
 
 export function assetOriginById(
   assetId: BufferId,

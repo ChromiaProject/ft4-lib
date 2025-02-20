@@ -1,5 +1,4 @@
-import { BufferId } from "@ft4/utils";
-import { Operation, formatter } from "postchain-client";
+import { BufferId, Operation, formatter } from "postchain-client";
 import { FtKeyStore, FtSigner } from "./types";
 import { Signer } from "@ft4/authentication";
 

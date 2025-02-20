@@ -1,8 +1,8 @@
 import { AnyAuthDescriptor } from "@ft4/accounts";
 import { Connection } from "@ft4/ft-session";
-import { BufferId, TxContext } from "@ft4/utils";
+import { TxContext } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { GTX, Operation, RellOperation } from "postchain-client";
+import { BufferId, GTX, Operation, RellOperation } from "postchain-client";
 import { LoginConfig } from "./login";
 import { EvmSigner } from "./evm";
 import { FtSigner } from "./ft";

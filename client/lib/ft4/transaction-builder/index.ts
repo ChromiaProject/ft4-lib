@@ -1,16 +1,15 @@
 export {
-  AnchoringTimeoutError,
   AuthorizationError,
-  OnAnchoredHandler,
-  OnAnchoredHandlerData,
   TransactionBuilder,
-  TransactionBuilderConfig,
   TransactionWithReceipt,
+  AnchoringTransactionWithReceipt,
   OperationConfig,
-  ConfigOptions,
 } from "./types";
 
-export { transactionBuilder } from "./transaction-builder";
+export {
+  transactionBuilder,
+  getSystemAnchoringIccfProofOp,
+} from "./transaction-builder";
 
 export {
   signTransaction,

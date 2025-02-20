@@ -5,8 +5,8 @@ import {
   createAuthenticator,
   days,
 } from "@ft4/authentication";
-import { BufferId, TransactionSessionCompletion } from "@ft4/utils";
-import { formatter, SignedTransaction, Web3PromiEvent } from "postchain-client";
+import { TransactionSessionCompletion } from "@ft4/utils";
+import { BufferId, formatter, SignedTransaction } from "postchain-client";
 import {
   TransactionWithReceipt,
   transactionBuilder,
@@ -39,12 +39,14 @@ import {
 } from "@ft4/crosschain";
 import { Connection, call, createSession } from "@ft4/ft-session";
 import { revertCrosschainTransfer } from "@ft4/crosschain/transfer";
+import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 
 /**
  * Creates an authenticated account instance
  * @param connection - the connection to the blockchain where this account is registered
  * @param authenticator - authenticator which holds the keys for this account
  */
+
 export function createAuthenticatedAccount(
   connection: Connection,
   authenticator: Authenticator,
@@ -90,15 +92,11 @@ export function createAuthenticatedAccount(
         ttl,
       ),
     resumeCrosschainTransfer: (pendingTransfer: TransferRef) =>
-      resumeCrosschainTransfer(connection, authenticator, pendingTransfer),
+      resumeCrosschainTransfer(connection, pendingTransfer),
     revertCrosschainTransfer: (pendingTransfer: TransferRef) =>
-      revertCrosschainTransfer(connection, authenticator, pendingTransfer),
+      revertCrosschainTransfer(connection, pendingTransfer),
     recallUnclaimedCrosschainTransfer: (pendingTransfer: TransferRef) =>
-      recallUnclaimedCrosschainTransfer(
-        connection,
-        authenticator,
-        pendingTransfer,
-      ),
+      recallUnclaimedCrosschainTransfer(connection, pendingTransfer),
     burn: (assetId: BufferId, amount: Amount) =>
       burn(connection, authenticator, assetId, amount),
     ...createAccountObject(connection, authenticator.accountId),
@@ -110,14 +108,14 @@ function addAuthDescriptor(
   authenticator: Authenticator,
   authDescriptor: AuthDescriptorRegistration<SingleSig>,
   keyStore: KeyStore,
-): Web3PromiEvent<
+): Web3CustomPromiEvent<
   TransactionSessionCompletion,
   {
     built: SignedTransaction;
     sent: Buffer;
   }
 > {
-  const promiEvent = new Web3PromiEvent<
+  const promiEvent = new Web3CustomPromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -162,14 +160,14 @@ function updateMainAuthDescriptor(
   authenticator: Authenticator,
   authDescriptor: AuthDescriptorRegistration<SingleSig>,
   keyStore: KeyStore,
-): Web3PromiEvent<
+): Web3CustomPromiEvent<
   TransactionSessionCompletion,
   {
     built: SignedTransaction;
     sent: Buffer;
   }
 > {
-  const promiEvent = new Web3PromiEvent<
+  const promiEvent = new Web3CustomPromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -229,14 +227,14 @@ function deleteAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptorId: BufferId,
-): Web3PromiEvent<
+): Web3CustomPromiEvent<
   TransactionSessionCompletion,
   {
     built: SignedTransaction;
     sent: Buffer;
   }
 > {
-  const promiEvent = new Web3PromiEvent<
+  const promiEvent = new Web3CustomPromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -270,14 +268,14 @@ function deleteAuthDescriptor(
 function deleteAllAuthDescriptorsExceptMain(
   connection: Connection,
   authenticator: Authenticator,
-): Web3PromiEvent<
+): Web3CustomPromiEvent<
   TransactionSessionCompletion,
   {
     built: SignedTransaction;
     sent: Buffer;
   }
 > {
-  const promiEvent = new Web3PromiEvent<
+  const promiEvent = new Web3CustomPromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -316,7 +314,7 @@ function transfer(
   receiverId: BufferId,
   assetId: BufferId,
   amount: Amount,
-): Web3PromiEvent<
+): Web3CustomPromiEvent<
   TransactionWithReceipt,
   {
     built: SignedTransaction;
@@ -335,7 +333,7 @@ function recallUnclaimedTransfer(
   authenticator: Authenticator,
   txRid: BufferId,
   opIndex: number,
-): Web3PromiEvent<
+): Web3CustomPromiEvent<
   TransactionWithReceipt,
   {
     built: SignedTransaction;
@@ -354,7 +352,7 @@ function burn(
   authenticator: Authenticator,
   assetId: BufferId,
   amount: Amount,
-): Web3PromiEvent<
+): Web3CustomPromiEvent<
   TransactionWithReceipt,
   {
     built: SignedTransaction;

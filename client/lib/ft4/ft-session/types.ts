@@ -1,10 +1,8 @@
-import { BufferId, Config, PaginatedEntity } from "@ft4/utils";
+import { Config, PaginatedEntity } from "@ft4/utils";
 import { Buffer } from "buffer";
+import { TransactionBuilder } from "@ft4/transaction-builder";
 import {
-  TransactionBuilder,
-  TransactionBuilderConfig,
-} from "@ft4/transaction-builder";
-import {
+  BufferId,
   GTX,
   IClient,
   Operation,
@@ -12,7 +10,6 @@ import {
   RawGtx,
   SignedTransaction,
   TransactionReceipt,
-  Web3PromiEvent,
 } from "postchain-client";
 import {
   Account,
@@ -37,6 +34,7 @@ import {
 import { Asset } from "@ft4/asset";
 import { LoginOptions, SessionWithLogout } from "@ft4/authentication";
 import { TransactionWithReceipt } from "@ft4/transaction-builder/types";
+import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 import {
   AssetFilter,
   Balance,
@@ -444,7 +442,7 @@ export interface Session extends Connection {
    * want the tx to include a `nop` use {@link Session.callWithoutNop | callWithoutNop} instead.
    * @param operations - the operations to include in the transaction
    */
-  call: (...operations: Operation[]) => Web3PromiEvent<
+  call: (...operations: Operation[]) => Web3CustomPromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;
@@ -456,7 +454,7 @@ export interface Session extends Connection {
    * subsequent calls to this function with the same arguments is likely to be rejected.
    * @param operations - the operations to include in the transaction
    */
-  callWithoutNop: (...operations: Operation[]) => Web3PromiEvent<
+  callWithoutNop: (...operations: Operation[]) => Web3CustomPromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;
@@ -465,11 +463,8 @@ export interface Session extends Connection {
   >;
   /**
    * Returns a `TransactionBuilder` instance configured to use the same keys as enclosed in this `Session` instance.
-   * @param config - config to use when instantiating the transaction builder
    */
-  transactionBuilder: (
-    config?: TransactionBuilderConfig | undefined,
-  ) => TransactionBuilder;
+  transactionBuilder: () => TransactionBuilder;
   /**
    * Signs a transaction using an available key
    * @param tx - the transaction to sign
