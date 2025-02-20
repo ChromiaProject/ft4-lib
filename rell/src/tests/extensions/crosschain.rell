@@ -9,14 +9,12 @@ object crosschain_extensions_state {
     mutable before_init_transfer_asset: byte_array = x"";
     mutable before_init_transfer_amount: big_integer = 0L;
     mutable before_init_transfer_deadline: timestamp = 0;
-
     mutable is_after_init_transfer_called: boolean = false;
     mutable after_init_transfer_sender: byte_array = x"";
     mutable after_init_transfer_recipient: byte_array = x"";
     mutable after_init_transfer_asset: byte_array = x"";
     mutable after_init_transfer_amount: big_integer = 0L;
     mutable after_init_transfer_deadline: timestamp = 0;
-
     mutable is_before_apply_transfer_called: boolean = false;
     mutable before_apply_transfer_sender_blockchain_rid: byte_array = x"";
     mutable before_apply_transfer_sender: byte_array = x"";
@@ -24,7 +22,6 @@ object crosschain_extensions_state {
     mutable before_apply_transfer_asset: byte_array = x"";
     mutable before_apply_transfer_amount: big_integer = 0L;
     mutable before_apply_transfer_is_final: boolean = false;
-
     mutable is_after_apply_transfer_called: boolean = false;
     mutable after_apply_transfer_sender_blockchain_rid: byte_array = x"";
     mutable after_apply_transfer_sender: byte_array = x"";
@@ -32,9 +29,24 @@ object crosschain_extensions_state {
     mutable after_apply_transfer_asset: byte_array = x"";
     mutable after_apply_transfer_amount: big_integer = 0L;
     mutable after_apply_transfer_is_final: boolean = false;
+    mutable is_before_crosschain_balance_change_called: boolean = false;
+    mutable before_crosschain_balance_change_sender: byte_array = x"";
+    mutable before_crosschain_balance_change_recipient: byte_array = x"";
+    mutable before_crosschain_balance_change_asset: byte_array = x"";
+    mutable before_crosschain_balance_change_amount: big_integer = 0L;
+    mutable before_crosschain_balance_change_will_change_sender: boolean = false;
+    mutable before_crosschain_balance_change_will_change_recipient: boolean = false;
+    mutable is_after_crosschain_balance_change_called: boolean = false;
+    mutable after_crosschain_balance_change_sender: byte_array = x"";
+    mutable after_crosschain_balance_change_recipient: byte_array = x"";
+    mutable after_crosschain_balance_change_asset: byte_array = x"";
+    mutable after_crosschain_balance_change_amount: big_integer = 0L;
+    mutable after_crosschain_balance_change_will_change_sender: boolean = false;
+    mutable after_crosschain_balance_change_will_change_recipient: boolean = false;
 }
 
-@extend(crosschain.before_init_transfer) function(
+@extend(crosschain.before_init_transfer)
+function(
     sender: accounts.account,
     recipient_id: byte_array,
     assets.asset,
@@ -50,7 +62,8 @@ object crosschain_extensions_state {
     crosschain_extensions_state.before_init_transfer_deadline = deadline;
 }
 
-@extend(crosschain.after_init_transfer) function(
+@extend(crosschain.after_init_transfer)
+function(
     sender: accounts.account,
     recipient_id: byte_array,
     assets.asset,
@@ -67,7 +80,8 @@ object crosschain_extensions_state {
     crosschain_extensions_state.after_init_transfer_deadline = deadline;
 }
 
-@extend(crosschain.before_apply_transfer) function(
+@extend(crosschain.before_apply_transfer)
+function(
     sender_blockchain_rid: byte_array,
     sender_account_id: byte_array,
     recipient_id: byte_array,
@@ -85,7 +99,8 @@ object crosschain_extensions_state {
     crosschain_extensions_state.before_apply_transfer_is_final = is_final;
 }
 
-@extend(crosschain.after_apply_transfer) function(
+@extend(crosschain.after_apply_transfer)
+function(
     sender_blockchain_rid: byte_array,
     sender_account_id: byte_array,
     recipient_id: byte_array,
@@ -102,4 +117,40 @@ object crosschain_extensions_state {
     crosschain_extensions_state.after_apply_transfer_asset = asset.id;
     crosschain_extensions_state.after_apply_transfer_amount = amount;
     crosschain_extensions_state.after_apply_transfer_is_final = is_final;
+}
+
+@extend(crosschain.before_crosschain_balance_change)
+function(
+    sender: accounts.account,
+    recipient: accounts.account,
+    assets.asset,
+    amount: big_integer,
+    will_change_sender: boolean,
+    will_change_recipient: boolean
+) {
+    crosschain_extensions_state.is_before_crosschain_balance_change_called = true;
+    crosschain_extensions_state.before_crosschain_balance_change_sender = sender.id;
+    crosschain_extensions_state.before_crosschain_balance_change_recipient = recipient.id;
+    crosschain_extensions_state.before_crosschain_balance_change_asset = asset.id;
+    crosschain_extensions_state.before_crosschain_balance_change_amount = amount;
+    crosschain_extensions_state.before_crosschain_balance_change_will_change_sender = will_change_sender;
+    crosschain_extensions_state.before_crosschain_balance_change_will_change_recipient = will_change_recipient;
+}
+
+@extend(crosschain.after_crosschain_balance_change)
+function(
+    sender: accounts.account,
+    recipient: accounts.account,
+    assets.asset,
+    amount: big_integer,
+    will_change_sender: boolean,
+    will_change_recipient: boolean
+) {
+    crosschain_extensions_state.is_after_crosschain_balance_change_called = true;
+    crosschain_extensions_state.after_crosschain_balance_change_sender = sender.id;
+    crosschain_extensions_state.after_crosschain_balance_change_recipient = recipient.id;
+    crosschain_extensions_state.after_crosschain_balance_change_asset = asset.id;
+    crosschain_extensions_state.after_crosschain_balance_change_amount = amount;
+    crosschain_extensions_state.after_crosschain_balance_change_will_change_sender = will_change_sender;
+    crosschain_extensions_state.after_crosschain_balance_change_will_change_recipient = will_change_recipient;
 }

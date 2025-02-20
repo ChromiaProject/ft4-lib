@@ -181,7 +181,7 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = test.register_bob();
 
-    val source_blockchain_rid = x"aa".repeat(32);
+    val source_blockchain_rid: byte_array? = x"aa".repeat(32);
     val asset_valid = test.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     // Simulate a valid transaction and operation index
@@ -217,6 +217,14 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     assert_equals(extensions.crosschain_extensions_state.before_apply_transfer_amount, 5L);
     assert_true(extensions.crosschain_extensions_state.before_apply_transfer_is_final);
 
+    assert_true(extensions.crosschain_extensions_state.is_before_crosschain_balance_change_called);
+    assert_equals(extensions.crosschain_extensions_state.before_crosschain_balance_change_sender, source_blockchain_rid);
+    assert_equals(extensions.crosschain_extensions_state.before_crosschain_balance_change_recipient, bob.account.id);
+    assert_equals(extensions.crosschain_extensions_state.before_crosschain_balance_change_asset, asset_valid.id);
+    assert_equals(extensions.crosschain_extensions_state.before_crosschain_balance_change_amount, 5L);
+    assert_equals(extensions.crosschain_extensions_state.before_crosschain_balance_change_will_change_sender, false);
+    assert_equals(extensions.crosschain_extensions_state.before_crosschain_balance_change_will_change_recipient, true);
+
     assert_true(extensions.crosschain_extensions_state.is_after_apply_transfer_called);
     assert_equals(extensions.crosschain_extensions_state.after_apply_transfer_sender_blockchain_rid, source_blockchain_rid);
     assert_equals(extensions.crosschain_extensions_state.after_apply_transfer_sender, sender_account_id);
@@ -224,6 +232,15 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     assert_equals(extensions.crosschain_extensions_state.after_apply_transfer_asset, asset_valid.id);
     assert_equals(extensions.crosschain_extensions_state.after_apply_transfer_amount, 5L);
     assert_true(extensions.crosschain_extensions_state.after_apply_transfer_is_final);
+
+    assert_true(extensions.crosschain_extensions_state.is_after_crosschain_balance_change_called);
+    assert_equals(extensions.crosschain_extensions_state.after_crosschain_balance_change_sender, source_blockchain_rid);
+    assert_equals(extensions.crosschain_extensions_state.after_crosschain_balance_change_recipient, bob.account.id);
+    assert_equals(extensions.crosschain_extensions_state.after_crosschain_balance_change_asset, asset_valid.id);
+    assert_equals(extensions.crosschain_extensions_state.after_crosschain_balance_change_amount, 5L);
+    assert_equals(extensions.crosschain_extensions_state.after_crosschain_balance_change_will_change_sender, false);
+    assert_equals(extensions.crosschain_extensions_state.after_crosschain_balance_change_will_change_recipient, true);
+    
 }
 
 function test_apply_transfer_fails_if_expired() {
