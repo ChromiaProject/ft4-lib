@@ -381,6 +381,7 @@ describe("Strategy Rules Validation", () => {
 
     it("returns false when asset names do not match", () => {
       const assetRule = {
+        id: mockAsset.id,
         name: "DifferentAsset",
         minAmount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1),
       };
@@ -389,6 +390,7 @@ describe("Strategy Rules Validation", () => {
 
     it("returns true when minAmount is less than asset supply", () => {
       const assetRule = {
+        id: mockAsset.id,
         name: mockAsset.name,
         minAmount: BigInt(MOCKS.AMOUNTS.MIN_AMOUNT_1),
       };
