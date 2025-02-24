@@ -32,6 +32,8 @@ import {
  * @param {AccountFilter | null} accountFilter with indexed fileds from the account entity
  * @param {number | null} pageSize the size of the pages to retrieve
  * @param {string | null} pageCursor a pointer to where the page should start
+ *
+ * Available since ApiVersion 1
  */
 export function accountsFiltered(
   accountFilter: AccountFilter,
@@ -64,6 +66,8 @@ export function accountsFiltered(
  * @param {AccountAuthDescriptorFilter | null} accountAuthDescriptorFilter with indexed fileds from the account_auth_descriptor entity
  * @param {number | null} pageSize the size of the pages to retrieve
  * @param {string | null} pageCursor a pointer to where the page should start
+ *
+ * Available since ApiVersion 1
  */
 export function accountAuthDescriptorsFiltered(
   accountAuthDescriptorFilter: AccountAuthDescriptorFilter,
@@ -101,6 +105,8 @@ export function accountAuthDescriptorsFiltered(
  * @param {MainAccountAuthDescriptorFilter | null} mainAccountAuthDescriptorFilter with indexed fileds from the main_auth_descriptor entity
  * @param {number | null} pageSize the size of the pages to retrieve
  * @param {string | null} pageCursor a pointer to where the page should start
+ *
+ * Available since ApiVersion 1
  */
 export function mainAuthDescriptorsFiltered(
   mainAccountAuthDescriptorFilter: MainAccountAuthDescriptorFilter,
@@ -138,6 +144,8 @@ export function mainAuthDescriptorsFiltered(
  * @param {AuthDescriptorSignerFilter | null} authDescriptorSignerFilter with indexed fileds from the auth_descriptor_signer entity
  * @param {number | null} pageSize the size of the pages to retrieve
  * @param {string | null} pageCursor a pointer to where the page should start
+ *
+ * Available since ApiVersion 1
  */
 export function authDescriptorSignersFiltered(
   authDescriptorSignerFilter: AuthDescriptorSignerFilter,
@@ -175,6 +183,8 @@ export function authDescriptorSignersFiltered(
  * @param {RlStateFilter | null} rlStateFilter with indexed fileds from the rl_state entity
  * @param {number | null} pageSize the size of the pages to retrieve
  * @param {string | null} pageCursor a pointer to where the page should start
+ *
+ * Available since ApiVersion 1
  */
 export function rlStatesFiltered(
   rlStateFilter: RlStateFilter,
@@ -200,12 +210,15 @@ export function rlStatesFiltered(
   };
 }
 
-/*
+/**
+ *
  * Retrieves all account_creation_transfers based on the selected filter of account_creation_transfer_filter, paginated
  * @see utils.paged_result for information about pagination
  * @param {AccountCreationTransferFilter | null} accountCreationTransferFilter filter with indexed fileds from the account_creation_transfer entity
  * @param {number | null} pageSize the size of the pages to retrieve
  * @param {string | null} pageCursor a pointer to where the page should start
+ *
+ * Available since ApiVersion 1
  */
 export function accountCreationTransfersFiltered(
   accountCreationTransferFilter: AccountCreationTransferFilter,
@@ -244,11 +257,14 @@ export function accountCreationTransfersFiltered(
 }
 
 /**
+ *
  * Retrieves all account_links based on the selected filter of account_link_filter, paginated
  * @see utils.paged_result for information about pagination
  * @param {AccountLinkFilter | null} accountLinkFilter filter with indexed fileds from the account_link entity
  * @param {number | null} pageSize the size of the pages to retrieve
  * @param {string | null} pageCursor a pointer to where the page should start
+ *
+ * Available since ApiVersion 1
  */
 export function accountLinksFiltered(
   accountLinkFilter: AccountLinkFilter,
@@ -285,11 +301,14 @@ export function accountLinksFiltered(
 }
 
 /**
+ *
  * Retrieves all subscriptions based on the selected filter of subscription_filter, paginated
  * @see utils.paged_result for information about pagination
  * @param {SubscriptionFilter | null} subscriptionFilter filter with indexed fileds from the subscription entity
  * @param {number | null} pageSize the size of the pages to retrieve
  * @param {string | null} pageCursor a pointer to where the page should start
+ *
+ * Available since ApiVersion 1
  */
 export function subscriptionsFiltered(
   subscriptionFilter: SubscriptionFilter,

@@ -130,6 +130,8 @@ export async function isTransferApplied(
  * @param cursor - where the page should start
  *
  * @returns paginated results of assets origin based on the filter selection
+ *
+ * Available since ApiVersion 1
  */
 export async function getAssetOriginFiltered(
   connection: Connection,
@@ -153,6 +155,8 @@ export async function getAssetOriginFiltered(
  * @param cursor - where the page should start
  *
  * @returns paginated results of applied transfers based on the filter selection
+ *
+ * Available since ApiVersion 1
  */
 export async function getAppliedTransfersFiltered(
   connection: Connection,
@@ -176,6 +180,8 @@ export async function getAppliedTransfersFiltered(
  * @param cursor - where the page should start
  *
  * @returns paginated results of canceled transfers based on the filter selection
+ *
+ * Available since ApiVersion 1
  */
 export async function getCanceledTransfersFiltered(
   connection: Connection,
@@ -199,6 +205,8 @@ export async function getCanceledTransfersFiltered(
  * @param cursor - where the page should start
  *
  * @returns paginated results of unapplied transfers based on the filter selection
+ *
+ * Available since ApiVersion 1
  */
 export async function getUnappliedTransfersFiltered(
   connection: Connection,
@@ -222,6 +230,8 @@ export async function getUnappliedTransfersFiltered(
  * @param cursor - where the page should start
  *
  * @returns paginated results of recalled transfers based on the filter selection
+ *
+ * Available since ApiVersion 1
  */
 export async function getRecalledTransfersFiltered(
   connection: Connection,
@@ -245,6 +255,8 @@ export async function getRecalledTransfersFiltered(
  * @param cursor - where the page should start
  *
  * @returns paginated results of pending transfers based on the filter selection
+ *
+ * Available since ApiVersion 1
  */
 export async function getPendingTransfersFiltered(
   connection: Connection,
@@ -268,6 +280,8 @@ export async function getPendingTransfersFiltered(
  * @param cursor - where the page should start
  *
  * @returns paginated results of reverted transfers based on the filter selection
+ *
+ * Available since ApiVersion 1
  */
 export async function getRevertedTransfersFiltered(
   connection: Connection,

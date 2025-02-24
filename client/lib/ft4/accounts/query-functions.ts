@@ -181,6 +181,8 @@ export function createAccountObject(
  * @param limit - An optional limit to the number of accounts to retrieve.
  * @param cursor - An optional cursor for pagination.
  * @returns A promise that resolves to a paginated entity containing the accounts.
+ *
+ * Available since ApiVersion 1
  */
 export async function getAccountsFiltered(
   connection: Connection,
@@ -204,6 +206,8 @@ export async function getAccountsFiltered(
  * @param limit - An optional limit on the number of results to return.
  * @param cursor - An optional cursor for pagination.
  * @returns A promise that resolves to a paginated entity containing the account auth descriptors.
+ *
+ * Available since ApiVersion 1
  */
 export async function getAccountAuthDescriptorsFiltered(
   connection: Connection,
@@ -229,6 +233,8 @@ export async function getAccountAuthDescriptorsFiltered(
  * @param limit - An optional limit on the number of results to return.
  * @param cursor - An optional cursor for pagination.
  * @returns A promise that resolves to a paginated entity containing the filtered auth descriptors.
+ *
+ * Available since ApiVersion 1
  */
 export async function getMainAuthDescriptorsFiltered(
   connection: Connection,
@@ -254,6 +260,8 @@ export async function getMainAuthDescriptorsFiltered(
  * @param limit - An optional limit to the number of results returned.
  * @param cursor - An optional cursor for pagination.
  * @returns A promise that resolves to a PaginatedEntity containing AuthDescriptorSigners.
+ *
+ * Available since ApiVersion 1
  */
 export async function getAuthDescriptorSignersFiltered(
   connection: Connection,
@@ -282,6 +290,8 @@ export async function getAuthDescriptorSignersFiltered(
  * @param limit - The maximum number of results to return. Defaults to null.
  * @param cursor - The cursor for pagination. Defaults to null.
  * @returns A promise that resolves to a paginated entity containing the filtered rate limit states.
+ *
+ * Available since ApiVersion 1
  */
 export async function getRlStatesFiltered(
   connection: Connection,
@@ -304,6 +314,8 @@ export async function getRlStatesFiltered(
  * @param limit - An optional limit on the number of results to return.
  * @param cursor - An optional cursor for pagination.
  * @returns A promise that resolves to a paginated entity containing account creation transfers.
+ *
+ * Available since ApiVersion 1
  */
 export async function getAccountCreationTransfersFiltered(
   connection: Connection,
@@ -336,6 +348,8 @@ export async function getAccountCreationTransfersFiltered(
  * @param limit - An optional limit on the number of results to return.
  * @param cursor - An optional cursor for pagination.
  * @returns A promise that resolves to a paginated entity containing account links with primary and secondary accounts.
+ *
+ * Available since ApiVersion 1
  */
 export async function getAccountLinksFiltered(
   connection: Connection,
@@ -368,6 +382,8 @@ export async function getAccountLinksFiltered(
  * @param {OptionalLimit} [limit=null] - The maximum number of subscriptions to retrieve.
  * @param {OptionalPageCursor} [cursor=null] - The cursor for pagination.
  * @returns {Promise<PaginatedEntity<Subscription>>} A promise that resolves to a paginated list of subscriptions.
+ *
+ * Available since ApiVersion 1
  */
 export async function getSubscriptionsFiltered(
   connection: Connection,
