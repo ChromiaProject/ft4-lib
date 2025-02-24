@@ -95,6 +95,8 @@ export interface Connection extends Queryable {
    * @param accountFilter - the account filter
    * @param limit - maximum size of the returned page
    * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
    */
   getAccountsFiltered: (
     accountFilter?: AccountFilter,
@@ -106,6 +108,8 @@ export interface Connection extends Queryable {
    * @param accountAuthDescriptorFilter - the accountAuthDescriptor filter
    * @param limit - maximum size of the returned page
    * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
    */
   getAccountAuthDescriptorsFiltered: (
     accountAuthDescriptorFilter?: AccountAuthDescriptorFilter,
@@ -117,6 +121,8 @@ export interface Connection extends Queryable {
    * @param mainAccountAuthDescriptorFilter - the mainAccountAuthDescriptor filter
    * @param limit - maximum size of the returned page
    * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
    */
   getMainAuthDescriptorsFiltered: (
     mainAccountAuthDescriptorFilter?: MainAccountAuthDescriptorFilter,
@@ -128,6 +134,8 @@ export interface Connection extends Queryable {
    * @param authDescriptorSignerFilter - the authDescriptorSigner filter
    * @param limit - maximum size of the returned page
    * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
    */
   getAuthDescriptorSignersFiltered: (
     authDescriptorSignerFilter?: AuthDescriptorSignerFilter,
@@ -139,6 +147,8 @@ export interface Connection extends Queryable {
    * @param rlStateFilter - the rlState filter
    * @param limit - maximum size of the returned page
    * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
    */
   getRlStatesFiltered: (
     rlStateFilter?: RlStateFilter,
@@ -150,6 +160,8 @@ export interface Connection extends Queryable {
    * @param accountCreationTransferFilter - the accountCreationTransfer filter
    * @param limit - maximum size of the returned page
    * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
    */
   getAccountCreationTransfersFiltered: (
     accountCreationTransferFilter?: AccountCreationTransferFilter,
@@ -161,6 +173,8 @@ export interface Connection extends Queryable {
    * @param accountLinkFilter - the accountLink filter
    * @param limit - maximum size of the returned page
    * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
    */
   getAccountLinksFiltered: (
     accountLinkFilter?: AccountLinkFilter,
@@ -172,6 +186,8 @@ export interface Connection extends Queryable {
    * @param subscriptionFilter - the subscriptionFilter filter
    * @param limit - maximum size of the returned page
    * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
    */
   getSubscriptionsFiltered: (
     subscriptionFilter?: SubscriptionFilter,
@@ -279,6 +295,8 @@ export interface Connection extends Queryable {
    * @param assetFilter - The asset filter (list of ids, name, symbol and type) that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
    */
   getAssetsFiltered: (
     assetFilter?: AssetFilter,
@@ -291,6 +309,8 @@ export interface Connection extends Queryable {
    * @param balanceFilter - The balance filter (list of account_ids and list of asset_ids) that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
    */
   getBalancesFiltered: (
     balanceFilter?: BalanceFilter,
@@ -304,6 +324,8 @@ export interface Connection extends Queryable {
    * (list of account_ids, list of asset_ids, list of transaction_rids and op_index) that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
    */
   getTransferHistoryEntriesFiltered: (
     transferHistoryEntryFilter?: TransferHistoryEntryFilter,
@@ -317,6 +339,8 @@ export interface Connection extends Queryable {
    * (list of account_ids, list of asset_ids, list of transaction_rids and op_index) that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
    */
   getCrosschainTransferHistoryEntriesFiltered: (
     crosschainTransferHistoryEntryFilter?: CrosschainTransferHistoryEntryFilter,
@@ -349,6 +373,8 @@ export interface Connection extends Queryable {
    * @param assetOriginFilter - The asset origin filter (array of assetIds) that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
    */
   getAssetOriginFiltered: (
     assetOriginFilter?: AssetOriginFilter,
@@ -361,6 +387,8 @@ export interface Connection extends Queryable {
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
    */
   getAppliedTransfersFiltered: (
     appliedTransferFilter?: TransferFilter,
@@ -373,6 +401,8 @@ export interface Connection extends Queryable {
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
    */
   getCanceledTransfersFiltered: (
     canceledTransferFilter?: TransferFilter,
@@ -385,6 +415,8 @@ export interface Connection extends Queryable {
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
    */
   getUnappliedTransfersFiltered: (
     unappliedTransferFilter?: TransferFilter,
@@ -397,6 +429,8 @@ export interface Connection extends Queryable {
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
    */
   getRecalledTransfersFiltered: (
     recalledTransferFilter?: TransferFilter,
@@ -409,6 +443,8 @@ export interface Connection extends Queryable {
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
    */
   getPendingTransfersFiltered: (
     pendingTransferFilter?: PendingTransferFilter,
@@ -421,6 +457,8 @@ export interface Connection extends Queryable {
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
    */
   getRevertedTransfersFiltered: (
     revertedTransferFilter?: TransferFilter,

@@ -192,6 +192,8 @@ export async function getBalancesByAccountId(
  * @param assetFilter - object of AssetFilter that can be list of id, name, symbol and type
  * @param limit - maximum page size
  * @param cursor - where the page should start
+ *
+ * Available since ApiVersion 1
  */
 export async function getAssetsFiltered(
   queryable: Queryable,
@@ -214,6 +216,8 @@ export async function getAssetsFiltered(
  * @param balanceFilter - object of BalanceFilter that can be list of account_id and asset_id
  * @param limit - maximum page size
  * @param cursor - where the page should start
+ *
+ * Available since ApiVersion 1
  */
 export async function getBalancesFiltered(
   queryable: Queryable,
@@ -237,6 +241,8 @@ export async function getBalancesFiltered(
  * account_id, asset_id, transaction_rid and op_index
  * @param limit - maximum page size
  * @param cursor - where the page should start
+ *
+ * Available since ApiVersion 1
  */
 export async function getTransferHistoryEntriesFiltered(
   queryable: Queryable,
@@ -264,6 +270,8 @@ export async function getTransferHistoryEntriesFiltered(
  * list of, account_id, asset_id, transaction_rid and op_index
  * @param limit - maximum page size
  * @param cursor - where the page should start
+ *
+ * Available since ApiVersion 1
  */
 export async function getCrosschainTransferHistoryEntriesFiltered(
   queryable: Queryable,

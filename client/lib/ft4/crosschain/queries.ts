@@ -108,6 +108,9 @@ export function applyTransferTx(
   };
 }
 
+/**
+ * Available since ApiVersion 1
+ */
 export function assetOriginFiltered(
   assetOriginFilter: AssetOriginFilter,
   limit: OptionalLimit,
@@ -132,6 +135,9 @@ export function assetOriginFiltered(
   };
 }
 
+/**
+ * Available since ApiVersion 1
+ */
 export function appliedTransferFiltered(
   appliedTransferFilter: TransferFilter,
   limit: OptionalLimit,
@@ -161,6 +167,9 @@ export function appliedTransferFiltered(
   };
 }
 
+/**
+ * Available since ApiVersion 1
+ */
 export function canceledTransferFiltered(
   canceledTransferFilter: TransferFilter,
   limit: OptionalLimit,
@@ -190,6 +199,9 @@ export function canceledTransferFiltered(
   };
 }
 
+/**
+ * Available since ApiVersion 1
+ */
 export function unappliedTransferFiltered(
   unappliedTransferFilter: TransferFilter,
   limit: OptionalLimit,
@@ -219,6 +231,9 @@ export function unappliedTransferFiltered(
   };
 }
 
+/**
+ * Available since ApiVersion 1
+ */
 export function recalledTransferFiltered(
   recalledTransferFilter: TransferFilter,
   limit: OptionalLimit,
@@ -248,6 +263,9 @@ export function recalledTransferFiltered(
   };
 }
 
+/**
+ * Available since ApiVersion 1
+ */
 export function pendingTransferFiltered(
   pendingTransferFilter: PendingTransferFilter,
   limit: OptionalLimit,
@@ -282,6 +300,9 @@ export function pendingTransferFiltered(
   };
 }
 
+/**
+ * Available since ApiVersion 1
+ */
 export function revertedTransferFiltered(
   revertedTransferFilter: TransferFilter,
   limit: OptionalLimit,

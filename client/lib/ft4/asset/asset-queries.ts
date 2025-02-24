@@ -98,6 +98,9 @@ export function allAssets(
   };
 }
 
+/**
+ * Available since ApiVersion 1
+ */
 export function assetsFiltered(
   assetFilter: AssetFilter,
   limit: OptionalLimit,
@@ -169,6 +172,9 @@ export function balancesByAccountId(
   };
 }
 
+/**
+ * Available since ApiVersion 1
+ */
 export function balancesFiltered(
   balanceFilter: BalanceFilter,
   limit: OptionalLimit,
@@ -206,6 +212,9 @@ export function assetDetailsForCrosschainRegistration(
   };
 }
 
+/**
+ * Available since ApiVersion 1
+ */
 export function transferHistoryEntriesFiltered(
   transferHistoryEntryFilter: TransferHistoryEntryFilter,
   limit: OptionalLimit,
@@ -242,6 +251,9 @@ export function transferHistoryEntriesFiltered(
   };
 }
 
+/**
+ * Available since ApiVersion 1
+ */
 export function crossChainTransferHistoryEntriesFiltered(
   crosschainTransferHistoryEntryFilter: CrosschainTransferHistoryEntryFilter,
   limit: OptionalLimit,
