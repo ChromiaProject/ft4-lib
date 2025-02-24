@@ -4,6 +4,13 @@ export {
   getAssetOriginById,
   mapPendingTransfers,
   getLastPendingTransferForAccount,
+  getAssetOriginFiltered,
+  getAppliedTransfersFiltered,
+  getCanceledTransfersFiltered,
+  getUnappliedTransfersFiltered,
+  getRecalledTransfersFiltered,
+  getPendingTransfersFiltered,
+  getRevertedTransfersFiltered,
 } from "./query-functions";
 
 export {
@@ -40,6 +47,12 @@ export {
   PendingTransfer,
   PendingTransferResponse,
   TransferRef,
+  AppliedTransfer,
+  AssetOrigin,
+  Transfer,
+  TransferFilter,
+  AssetOriginFilter,
+  PendingTransferFilter,
 } from "./types";
 
 export {

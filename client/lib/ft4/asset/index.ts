@@ -10,6 +10,11 @@ export {
   AssetResponse,
   ASSET_TYPE_FT4,
   CrosschainAssetRegistration,
+  BalanceResponse,
+  AssetFilter,
+  BalanceFilter,
+  CrosschainTransferHistoryEntryFilter,
+  TransferHistoryEntryFilter,
 } from "./types";
 
 export {

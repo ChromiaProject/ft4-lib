@@ -27,6 +27,11 @@ export function hasCrosschainTransferExpired(
   return extractExpirationTimeFromCrosschainTransfer(transfer) < Date.now();
 }
 
+/**
+ * Converts a GTX transaction to a RawGtx format
+ * @param tx - The GTX transaction to convert
+ * @returns The transaction in RawGtx format
+ */
 export function gtxToRawGtx(tx: GTX): RawGtx {
   return [gtx.gtxToRawGtxBody(tx), tx.signatures ?? []];
 }
