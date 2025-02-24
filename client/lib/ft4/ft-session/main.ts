@@ -210,6 +210,7 @@ export function createConnection(client: IClient): Connection {
         limit,
         cursor,
       ),
+
     getRlStatesFiltered: (
       rlStateFilter?: RlStateFilter,
       limit?: number,
@@ -260,7 +261,6 @@ export function createConnection(client: IClient): Connection {
       ),
     getEnabledRegistrationStrategies: () =>
       getEnabledRegistrationStrategies(connection),
-
     getAssetById: (id: BufferId) => getAssetById(connection, id),
     getAssetsBySymbol: (
       symbol: string,

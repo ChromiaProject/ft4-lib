@@ -60,6 +60,7 @@ export {
   getTransferDetails,
   getTransferDetailsByAsset,
   getTransferHistoryFromHeight,
+  CrosschainTransferHistoryEntry,
 } from "./transfer-history";
 
 export { createAuthenticatedAccount } from "./op-functions";

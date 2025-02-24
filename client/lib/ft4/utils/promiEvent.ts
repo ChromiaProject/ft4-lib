@@ -27,8 +27,16 @@ export type Web3CustomEventMap = {
   confirmed?: TransactionReceipt;
 };
 
+/**
+ * Type for event keys in Web3CustomEventMap
+ * @template T The event map type extending Web3CustomEventMap
+ */
 export type Web3EventKey<T extends Web3CustomEventMap> = string & keyof T;
 
+/**
+ * Type for event callback functions
+ * @template T The type of data passed to the callback
+ */
 export type Web3EventCallback<T> = (params: T) => void | Promise<void>;
 
 /**

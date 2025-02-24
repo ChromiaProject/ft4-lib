@@ -291,7 +291,7 @@ export interface Connection extends Queryable {
   ) => Promise<PaginatedEntity<Asset>>;
 
   /**
-   * {@inheritdoc asset.getAssetsFiltered}
+   * {@inheritDoc asset.getAssetsFiltered}
    * @param assetFilter - The asset filter (list of ids, name, symbol and type) that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
@@ -305,7 +305,7 @@ export interface Connection extends Queryable {
   ) => Promise<PaginatedEntity<Asset>>;
 
   /**
-   * {@inheritdoc asset.getBalancesFiltered}
+   * {@inheritDoc asset.getBalancesFiltered}
    * @param balanceFilter - The balance filter (list of account_ids and list of asset_ids) that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
@@ -319,7 +319,7 @@ export interface Connection extends Queryable {
   ) => Promise<PaginatedEntity<Balance>>;
 
   /**
-   * {@inheritdoc asset.getTransferHistoryEntriesFiltered}
+   * {@inheritDoc asset.getTransferHistoryEntriesFiltered}
    * @param transferHistoryEntryFilter - The transfer history entry filter
    * (list of account_ids, list of asset_ids, list of transaction_rids and op_index) that can be applied to the query results
    * @param limit - maximum page size
@@ -334,7 +334,7 @@ export interface Connection extends Queryable {
   ) => Promise<PaginatedEntity<TransferHistoryEntry>>;
 
   /**
-   * {@inheritdoc asset.getCrosschainTransferHistoryEntriesFiltered}
+   * {@inheritDoc asset.getCrosschainTransferHistoryEntriesFiltered}
    * @param crosschainTransferHistoryEntryFilter - The crosschain transfer history entry filter
    * (list of account_ids, list of asset_ids, list of transaction_rids and op_index) that can be applied to the query results
    * @param limit - maximum page size

@@ -259,7 +259,6 @@ export async function createResumeOrchestrator(
  * Creates an orchestrator instance to handle reverting a transfer that was started
  * but did not reach its target chain withing the specified timeout.
  * @param connection - a connection to the source chain
- * @param authenticator - the authenticator to use when reverting the transfer
  * @param pendingTransfer - the pending transfer to revert
  * @returns The orchestrator instance which will be able to revert the transfer
  */

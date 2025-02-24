@@ -296,6 +296,11 @@ export async function getCrosschainTransferHistoryEntriesFiltered(
   );
 }
 
+/**
+ * Creates a Balance object from a BalanceResponse
+ * @param balance - The balance response from the blockchain
+ * @returns A frozen Balance object
+ */
 export function createBalanceObject(balance: BalanceResponse): Balance {
   return Object.freeze({
     asset: createAssetObject(balance.asset),

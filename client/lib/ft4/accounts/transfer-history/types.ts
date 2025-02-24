@@ -57,6 +57,9 @@ export type CrosschainTransferHistoryEntryResponse = {
   transaction_rid: Buffer;
 };
 
+/**
+ * Represents a crosschain transfer history entry
+ */
 export type CrosschainTransferHistoryEntry = {
   rowid: number;
   blockchainRid: Buffer;
