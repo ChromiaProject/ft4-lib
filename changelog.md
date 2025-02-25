@@ -7,8 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0] - 2025-02-25
 
-### Breaking 💔
-
 ### Changed 🪙
 
 - In `applyTransfer`, `cancelTransfer`, `unapplyTransfer`, `revertTransfer` and `recallUnclaimedTransfer` the type of `initTransferTx` and `tx` input arguments has been changed from `RawGtx` to `GTX`
