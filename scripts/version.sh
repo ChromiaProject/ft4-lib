@@ -10,7 +10,17 @@ updaterell(){
       exit 1
     fi
     sed -i 's/[0-9]\+\.[0-9]\+\.[0-9]\+/'${version}'/' rell/src/lib/ft4/version.rell
-    sed -i 's/toEqual("[0-9]\+\.[0-9]\+\.[0-9]\+")/toEqual("'${version}'")/' test/blockchain.test.ts
+    sed -i 's/toEqual("[0-9]\+\.[0-9]\+\.[0-9]\+")/toEqual("'${version}'")/' test/integration/blockchain.integration.test.ts
+}
+
+updateapi(){
+    version=$1
+    if ! [[ $version =~ [0-9]+$ ]]; then
+      echo "ERROR: Invalid version format"
+      exit 1
+    fi
+    sed -i 's/[0-9]\+;/'${version}';/' rell/src/lib/ft4/version.rell
+    sed -i 's/toEqual([0-9]\+)/toEqual('${version}')/' test/integration/blockchain.integration.test.ts
 }
 
 function usage {
@@ -58,7 +68,8 @@ done
 
 shift $(($OPTIND - 1))
 
-currVersion=$(grep -o "[0-9]*\.[0-9]*\.[0-9]*" rell/src/lib/ft4/version.rell);
+currVersion=$(grep "get_version" rell/src/lib/ft4/version.rell | grep -o "[0-9]*\.[0-9]*\.[0-9]*");
+currApiVersion=$(grep "get_api_version" rell/src/lib/ft4/version.rell | grep -o "[0-9]*");
 if [[ $no_args = "true" ]]; then version=$1; else version=$currVersion; fi
 
 # Build array from version string.
@@ -93,5 +104,10 @@ then
   ((a[2]++))
 fi
 
+currApiVersion=$((currApiVersion + 1));
+
 echo -e "moving rell version to ${a[0]}.${a[1]}.${a[2]}";
 updaterell "${a[0]}.${a[1]}.${a[2]}"
+
+echo -e "moving api version to ${currApiVersion}";
+updateapi "${currApiVersion}"

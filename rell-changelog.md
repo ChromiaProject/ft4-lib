@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-02-25
+
+### Breaking 💔
+
+### Changed 🪙
+- Allow multiple smaller transfers to a non-existing account for the same asset type. 
+
+- The logic takes multiple senders for one recipient into consideration
+- `register_account` used for crosschain transfers with the strategies `fee`, `open` and `subscription` does not require a signature, when transfering to the same account
+- Updated the response of the query `get_account_by_id` to also return type along with id
+
+### Added ✅
+- Added a blacklist for operations that may not be used after an auth operation (`evm_auth` and `ft_auth`). Defined in the `chromia.yml` as `core.auth.auth_op_blacklisted_operations`, it works the same way as `evm_signatures_authorized_operations`, except the former is a list of operations that are not allowed, while the latter includes only allowed operations.
+- Added RellDocs for everything
+- Added `get_api_version`. While version looks like "1.0.3", and it's difficult to parse, api version is an integer that is increased by one every time the API (queries and operations) changes. It will start at 1 for version 1.1.0.
+- Added `get_block_height`, analogous to `latest_time`. The main difference is that the block height returned is the height of the *next* block to be produced, if in a query. This is also analogous to the difference between `op_context.last_block_time` and `op_context.block_height`, where the height refers to the current block and the time to the last block.
+- Multiple queries were added:
+  - `get_assets_filtered`
+  - `get_balances_filtered`
+  - `get_transfer_history_entries_filtered`
+  - `get_crosschain_transfer_history_entries_filtered`
+  - `get_asset_origin_filtered`
+  - `get_applied_transfers_filtered`
+  - `get_canceled_transfers_filtered`
+  - `get_unapplied_transfers_filtered`
+  - `get_recalled_transfers_filtered`
+  - `get_pending_transfers_filtered`
+  - `get_reverted_transfers_filtered`
+  - `get_accounts_filtered`
+  - `get_account_auth_descriptors_filtered`
+  - `get_main_auth_descriptors_filtered`
+  - `get_auth_descriptor_signers_filtered`
+  - `get_rl_states_filtered`
+  - `get_account_creation_transfers_filtered`
+  - `get_account_links_filtered`
+  
+  All are mounted on 'ft4' directly.
+- Added two extendable functions:
+  - `before_crosschain_balance_change`
+  - `after_crosschain_balance_change`
+  
+  The extensions are being called in the `Unsafe.update_balances_if_needed` function which is a part of crosschain transfers.
+
+
+### Fixed 🔧
+
+- `authenticate()` and `authenticate_and_return_context()` will no longer delete the auth descriptor used to authenticate the operation, even if it expired during the authentication process.
+
 ## [1.0.0r] - 2024-07-04
 
 ### Added ✅
