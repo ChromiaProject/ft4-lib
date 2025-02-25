@@ -1,21 +1,112 @@
 import ^.assets;
 import ^.accounts;
 
+/**
+ * The account type for blockchain accounts.
+ * 
+ * These accounts represent the balance of chains that are downstream of this one, in the
+ * scheme of crosschain transfers. 
+ * - If tokens are sent to that chain, its account balance is increased.
+ * - If tokens are received from that chain, its account balance is decreased.
+ * - If tokens are sent to or received from an upstream chain, its account balance is not modified.
+ * 
+ * @see asset_origin for info on what a downstream chain is
+ * 
+ * @see core.accounts.account.type for informations on what an account type is
+ */
 val ACCOUNT_TYPE_BLOCKCHAIN = "FT4_BLOCKCHAIN";
 
+/**
+ * The origin of a crosschain asset that can be used on this chain.
+ * 
+ * An asset can be issued on this chain, or a different one. If it is issued on a different
+ * chain, it's considered a crosschain asset, and it will have an `asset_origin` linked to it.
+ * 
+ * An asset has an `asset_origin` if it is a crosschain asset and vice versa.
+ * 
+ * The origin of the asset might be different from the issuing chain, although in many cases it
+ * will be the same. The origin chain represents a chain that is providing the assets to this
+ * chain, considered its parent. Assets can only be transferred from a parent to a child chain
+ * and vice versa, and only one parent chain can exist for a given asset. Different assets
+ * can have different origins.
+ * 
+ * When this chain sends assets to chains that are not the parent chain (children), it will
+ * keep track of the balance of each child chain through blockchain account entities; the
+ * children chain cannot send assets among themselves - they must send them through the parent
+ * chain. On the other hand, children chains will not keep track of the parent chain balance.
+ * 
+ * @see ACCOUNT_TYPE_BLOCKCHAIN for more info on blockchain account entities
+ * 
+ * @see core.assets.issuing_chain_brid for information on issuing chains
+ */
 entity asset_origin {
+   /** The crosschain asset */
    key assets.asset;
+   /** The origin of that asset */
    origin_blockchain_rid: byte_array;
 }
 
+/**
+ * Whether a certain account is a blockchain account
+ * 
+ * @param account_id    the account to check
+ */
 function is_blockchain(account_id: byte_array): boolean {
    return accounts.account @? { .id == account_id, .type == ACCOUNT_TYPE_BLOCKCHAIN }??;
 }
 
+/**
+ * Returns the blockchain account with the given ID, creating it if needed.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws when an account with given ID exists, but the type is not `ACCOUNT_TYPE_BLOCKCHAIN`.
+ * 
+ * @param blockchain_rid    the ID of the blockchain whose account is to be returned
+ */
 function ensure_blockchain_account(blockchain_rid: byte_array) =
    accounts.ensure_account_without_auth(blockchain_rid, ACCOUNT_TYPE_BLOCKCHAIN);
 
 namespace Unsafe {
+    /**
+     * Registers a crosschain asset on this chain. Since this could be used to register
+     * many assets and use up a lot of storage space, it is marked as `Unsafe`
+     * 
+     * Can only be called from an operation.
+     * 
+     * Throws `"INVALID ORIGIN"` when the origin blockchain RID is the blockchain RID of this
+     * chain.
+     * 
+     * Throws `"INVALID ISSUING CHAIN"` when the issuing blockchain RID is the blockchain RID
+     * of this chain.
+     * 
+     * Throws if the input parameters are invalid. Common cases include:
+     * - IDs are not 32 bytes long
+     * - strings are longer than 1024 characters
+     * - type is empty
+     * - uniqueness resolver is longer than 1024 bytes
+     * - decimals is not in the accepted range [0, 78] (inclusive)
+     * - `icon_url` is not a valid URL
+     * 
+     * @see asset_origin for information on the `origin_blockchain_rid` parameter
+     * 
+     * @see core.assets.asset for informations on all other parameters
+     * 
+     * @param asset_id                  the ID of the asset to be registered
+     * @param name                      the name of the asset to be registered
+     * @param symbol                    the symbol of the asset to be registered
+     * @param decimals                  the decimals of the asset to be registered
+     * @param issuing_blockchain_rid    the first chain where the asset was registered
+     * @param icon_url                  the URL of the icon for the asset, can be an empty
+     *                                  string in the case of no icon
+     * @param type                      the type of the asset to be registered. In most cases,
+     *                                  this should be the value of `core.asset.ASSET_TYPE_FT4`
+     * @param uniqueness_resolver       the uniqueness resolver for the asset. In most cases,
+     *                                  this is not needed and it can be set to `x""`
+     * @param origin_blockchain_rid     the blockchain we'll receive this asset from. This is
+     *                                  not necessarily the same as `issuing_blockchain_rid`,
+     *                                  but it will often be.
+     */
     function register_crosschain_asset(
         asset_id: byte_array,
         name,
@@ -38,11 +129,11 @@ namespace Unsafe {
 
         require(
             chain_context.blockchain_rid != origin_blockchain_rid,
-            "Asset origin cannot be the current chain."
+            "INVALID ORIGIN: Asset origin cannot be the current chain."
         );
         require(
             chain_context.blockchain_rid != issuing_blockchain_rid,
-            "Cannot register an asset that originated on this chain as a crosschain asset."
+            "INVALID ISSUING CHAIN: Cannot register an asset that originated on this chain as a crosschain asset."
         );
 
         

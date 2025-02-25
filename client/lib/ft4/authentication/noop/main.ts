@@ -5,9 +5,9 @@ import {
   KeyHandler,
   KeyStore,
 } from "@ft4/authentication";
-import { BufferId, TxContext } from "@ft4/utils";
+import { TxContext } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { GTX, Operation } from "postchain-client";
+import { BufferId, GTX, Operation } from "postchain-client";
 import { nullAuthDescriptor } from "./auth-descriptor";
 import { Connection } from "@ft4/ft-session";
 

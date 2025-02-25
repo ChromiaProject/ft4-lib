@@ -28,6 +28,7 @@ exitfn () {
 trap "exitfn" 2
 
 docker=true
+GITLAB=false
 tests=""
 additional_args=""
 
@@ -39,6 +40,10 @@ while :; do
         --no-docker)
             echo 'skipping docker build'
             docker=false
+            ;;
+        --gitlab)
+            echo 'running for gitlab'
+            GITLAB=true
             ;;
         --tests=* | --test=*)
             echo "Testing specified tests: ${1#*=}"
@@ -55,7 +60,7 @@ while :; do
             fi
             ;;
         *)
-            [ -z "$1" ] && break 
+            [ -z "$1" ] && break
             additional_args="$additional_args $1"
             ;;
     esac
@@ -66,6 +71,12 @@ if $docker; then
     $DOCKER run --name ft4_rell_test -e POSTGRES_USER=postchain \
         --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs \
         -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres:14.9-alpine3.18 > /dev/null
+fi
+
+if $GITLAB; then
+    sed -i "s/  host:.*/  host: postgres:5432/" chromia.yml
+else
+    sed -i "s/  host:.*/  host: localhost/" chromia.yml
 fi
 
 chr test --use-db $tests $additional_args

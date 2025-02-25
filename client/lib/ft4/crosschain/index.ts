@@ -4,6 +4,13 @@ export {
   getAssetOriginById,
   mapPendingTransfers,
   getLastPendingTransferForAccount,
+  getAssetOriginFiltered,
+  getAppliedTransfersFiltered,
+  getCanceledTransfersFiltered,
+  getUnappliedTransfersFiltered,
+  getRecalledTransfersFiltered,
+  getPendingTransfersFiltered,
+  getRevertedTransfersFiltered,
 } from "./query-functions";
 
 export {
@@ -25,20 +32,27 @@ export { findPathToChainForAsset, PathfinderError } from "./pathfinder";
 
 export { pendingTransfersForAccount } from "./queries";
 
-export { hasCrosschainTransferExpired } from "./utils";
+export { hasCrosschainTransferExpired, gtxToRawGtx } from "./utils";
 
 export {
   Orchestrator,
   OrchestratorEvents,
   OrchestratorState,
+  OrchestratorData,
   ResumeOrchestrator,
   RevertOrchestrator,
-  OrchestratorBase,
-  ExternalOrchestratorBase,
+  OrchestratorCore,
+  OrchestratorEventHandler,
   GtvInitTransferArgs,
   PendingTransfer,
   PendingTransferResponse,
   TransferRef,
+  AppliedTransfer,
+  AssetOrigin,
+  Transfer,
+  TransferFilter,
+  AssetOriginFilter,
+  PendingTransferFilter,
 } from "./types";
 
 export {

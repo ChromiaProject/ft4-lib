@@ -1,11 +1,35 @@
-
+/**
+ * Returns a list of assets that can be used to pay for the subscription fee, alongside the
+ * amount to be paid.
+ */
 query get_subscription_assets(): list<(asset_id: byte_array, amount: big_integer)> =
         transfer.resolve_fee_assets(subscription_assets()) @* {} ((asset_id = $[0], amount = $[1]));
 
-query get_subscription_details(account_id: byte_array): (asset_id: byte_array, period_millis: integer, last_payment: timestamp) {
+/**
+ * Returns details about the subscription of the specified account, including the asset ID,
+ * the total duration of the subscription and the timestamp of the last payment.
+ * 
+ * Throws if the account does not exist.
+ * 
+ * Throws `"MISSING SUBSCRIPTION"` if no subscription was found for the account.
+ */
+query get_subscription_details(account_id: byte_array): (
+        rowid: rowid,
+        asset_id: byte_array,
+        period_millis: integer,
+        last_payment: timestamp
+) {
     val account = accounts.Account(account_id);
-    return require(subscription @? { account } (asset_id = .asset.id, period_millis = .period_millis, last_payment = .last_payment),
-        "No subscription for account <%s>".format(account.id));
+    return require(
+        subscription @? { account } (
+                rowid = .rowid,
+                asset_id = .asset.id,
+                period_millis = .period_millis,
+                last_payment = .last_payment
+        ),
+        "MISSING SUBSCRIPTION: No subscription for account <%s>".format(account.id)
+        );
 }
 
+/** Returns the number of milliseconds that take for a subscription to expire. */
 query get_subscription_period_millis(): integer = subscription_period_days() * utils.MILLISECONDS_PER_DAY;

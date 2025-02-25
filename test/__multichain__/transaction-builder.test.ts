@@ -10,15 +10,14 @@ import { ftAuth } from "@ft4/authentication";
 import { Connection, createConnection } from "@ft4/ft-session";
 import { transactionBuilder } from "@ft4/transaction-builder";
 import { nop } from "@ft4/utils";
-import { SignedTransaction, TransactionReceipt } from "postchain-client";
+import { gtx, SignedTransaction, TransactionReceipt } from "postchain-client";
 
 describe("transaction builder", () => {
   let connection00: Connection;
   let account00: AuthenticatedAccount;
-  let rid01: Buffer;
 
   beforeEach(async () => {
-    const { multichain00, multichain01 } = await fetchBlockchains();
+    const { multichain00 } = await fetchBlockchains();
 
     connection00 = createConnection(
       await createChromiaClientToMultichain(multichain00.rid),
@@ -27,29 +26,19 @@ describe("transaction builder", () => {
     account00 = await AccountBuilder.account(connection00)
       .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
-
-    rid01 = multichain01.rid;
   });
 
-  it("calls registered handler when block is anchored in system anchoring chain", async () => {
-    const callback: jest.Mock<any, any, any> = jest.fn();
-    const callback2: jest.Mock<any, any, any> = jest.fn();
+  it("returns correct data when block is anchored in system anchoring chain", async () => {
     const operation = nop();
 
     let builtEvent: SignedTransaction | undefined = undefined;
     let sentEvent: Buffer | undefined = undefined;
     let confirmedEvent: TransactionReceipt | undefined = undefined;
-    const { tx, receipt } = await transactionBuilder(
+    const data = await transactionBuilder(
       account00.authenticator,
       connection00.client,
     )
-      .add(emptyOp(), {
-        onAnchoredHandler: callback,
-      })
-      .add(emptyOp(), {
-        targetBlockchainRid: rid01,
-        onAnchoredHandler: callback2,
-      })
+      .add(emptyOp())
       .add(operation)
       .buildAndSendWithAnchoring()
       .on("built", (tx) => {
@@ -62,38 +51,18 @@ describe("transaction builder", () => {
         confirmedEvent = receipt;
       });
 
-    expect(builtEvent!.equals(tx));
-    expect(sentEvent!.equals(receipt.transactionRid));
-    expect(confirmedEvent!.transactionRid.equals(receipt.transactionRid));
+    expect(builtEvent!.equals(gtx.serialize(data.tx)));
+    expect(sentEvent!.equals(data.receipt.transactionRid));
+    expect(confirmedEvent!.transactionRid.equals(data.receipt.transactionRid));
 
     const authDescriptorId = (await account00.getAuthDescriptors())[0].id;
-    expect(callback).toHaveBeenCalledWith(
-      anchoredHandlerCallbackParameters(
-        connection00.client,
-        [
-          ftAuth(account00.id, authDescriptorId),
-          emptyOp(),
-          ftAuth(account00.id, authDescriptorId),
-          emptyOp(),
-          operation,
-        ],
-        1,
-      ),
-      null,
-    );
-    expect(callback2).toHaveBeenCalledWith(
-      anchoredHandlerCallbackParameters(
-        connection00.client,
-        [
-          ftAuth(account00.id, authDescriptorId),
-          emptyOp(),
-          ftAuth(account00.id, authDescriptorId),
-          emptyOp(),
-          operation,
-        ],
-        3,
-      ),
-      null,
+
+    expect(data).toMatchObject(
+      anchoredHandlerCallbackParameters(connection00.client, [
+        ftAuth(account00.id, authDescriptorId),
+        emptyOp(),
+        operation,
+      ]),
     );
   });
 });

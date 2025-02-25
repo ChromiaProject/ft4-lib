@@ -10,6 +10,11 @@ export {
   AssetResponse,
   ASSET_TYPE_FT4,
   CrosschainAssetRegistration,
+  BalanceResponse,
+  AssetFilter,
+  BalanceFilter,
+  CrosschainTransferHistoryEntryFilter,
+  TransferHistoryEntryFilter,
 } from "./types";
 
 export {
@@ -29,6 +34,11 @@ export {
   getAssetsByName,
   getAssetsByType,
   getAssetDetailsForCrosschainRegistration,
+  getAssetsFiltered,
+  getBalancesFiltered,
+  getTransferHistoryEntriesFiltered,
+  getCrosschainTransferHistoryEntriesFiltered,
+  createBalanceObject,
 } from "./asset-query-functions";
 
 export {

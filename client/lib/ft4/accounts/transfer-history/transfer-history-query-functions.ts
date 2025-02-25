@@ -3,9 +3,9 @@ import {
   transferDetailsByAsset,
   transferHistoryFromHeight,
 } from "./transfer-history-queries";
-import { Queryable } from "postchain-client";
+import { BufferId, Queryable } from "postchain-client";
 import { OptionalPageCursor } from "@ft4/ft-session";
-import { retrievePaginatedEntity, BufferId } from "@ft4/utils";
+import { retrievePaginatedEntity } from "@ft4/utils";
 import {
   TransferDetail,
   TransferHistoryEntry,

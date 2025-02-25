@@ -1,4 +1,12 @@
-
+/**
+ * Retrieves all the balances of a certain account, paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ *
+ * @param account_id    the id of the account
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 query get_asset_balances(account_id: byte_array, page_size: integer?, page_cursor: text?) {
     return utils.make_page(
         assets.get_paginated_asset_balances(account_id, page_size, page_cursor),
@@ -6,16 +14,29 @@ query get_asset_balances(account_id: byte_array, page_size: integer?, page_curso
     );
 }
 
+/**
+ * Returns how much of an asset the account holds. This query returns
+ * `null` if the account does not have the asset.
+ * 
+ * @param account_id   the id of the account to query the balance for
+ * @param asset_id     the id of the asset held by the account
+ */
 query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
     return assets.balance @? {
         .account.id == account_id,
         .asset.id == asset_id
     } (
+        rowid = .rowid,
         asset = assets.map_asset(.asset),
         amount = .amount
     );
 }
 
+/**
+ * Returns all assets that have the specified name, paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ */
 query get_assets_by_name(name, page_size: integer?, page_cursor: text?) {
     return utils.make_page(
         assets.get_paginated_assets_by_name(name, page_size, page_cursor),
@@ -23,6 +44,15 @@ query get_assets_by_name(name, page_size: integer?, page_cursor: text?) {
     );
 }
 
+/**
+ * Retrieves all assets with the given symbol, paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ *
+ * @param symbol        the symbol of the assets to retrieve
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 query get_assets_by_symbol(symbol: text, page_size: integer?, page_cursor: text?) {
     return utils.make_page(
         assets.get_paginated_assets_by_symbol(symbol, page_size, page_cursor),
@@ -30,10 +60,96 @@ query get_assets_by_symbol(symbol: text, page_size: integer?, page_cursor: text?
     );
 }
 
+/**
+ * Returns the details of an asset given its id
+ * 
+ * @param asset_id  id of the asset to fetch
+ */
 query get_asset_by_id(asset_id: byte_array) {
     return assets.asset @? { .id == asset_id } ( assets.map_asset($) );
 }
 
+/**
+ * Returns paginated and filtered details of all assets based on the selected filtering
+ * 
+ * @param asset_filter  a struct containing the keys and indexes of the asset entity to enable filtering for the assets to fetch
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
+query get_assets_filtered(asset_filter: assets.asset_filter?, page_size: integer?, page_cursor: text?) {
+    return utils.make_page(
+        assets.get_assets_filtered(asset_filter, page_size, page_cursor),
+        page_size
+    );
+}
+
+/**
+ * Returns paginated and filtered details of all assets based on the applied filter
+ * 
+ * @param balance_filter  a struct containing the keys and indexes of the balance entity to enable filtering for the balances to fetch
+ * @param page_size       the size of the pages to retrieve
+ * @param page_cursor     a pointer to where the page should start
+ */
+query get_balances_filtered(balance_filter: assets.balance_filter?, page_size: integer?, page_cursor: text?) {
+    return utils.make_page(
+        assets.get_balances_filtered(balance_filter, page_size, page_cursor),
+        page_size
+    );
+}
+
+/**
+ * Returns paginated and filtered details of all transfer history entries based on the applied filter
+ * 
+ * @param transfer_history_entry_filter  a struct containing the keys and indexes of the transfer history entry entity to enable filtering for the data to fetch
+ * @param page_size                      the size of the pages to retrieve
+ * @param page_cursor                    a pointer to where the page should start
+ */
+query get_transfer_history_entries_filtered(
+    transfer_history_entry_filter: assets.transfer_history_entry_filter?,
+    page_size: integer?,
+    page_cursor: text?
+) {
+    return utils.make_page(
+        assets.get_transfer_history_entries_filtered(
+            transfer_history_entry_filter,
+            page_size,
+            page_cursor
+        ),
+        page_size
+    );
+}
+
+/**
+ * Returns paginated and filtered details of all crosschain  entries based on the applied filter
+ * 
+ * @param crosschain_transfer_history_entry_filter  a struct containing the keys and indexes of the crosschain transfer history entry entity to enable filtering for the data to fetch
+ * @param page_size                                 the size of the pages to retrieve
+ * @param page_cursor                               a pointer to where the page should start
+ */
+query get_crosschain_transfer_history_entries_filtered(
+    crosschain_transfer_history_entry_filter: assets.crosschain_transfer_history_entry_filter?,
+    page_size: integer?,
+    page_cursor: text?
+) {
+    return utils.make_page(
+        assets.get_crosschain_transfer_history_entries_filtered(
+            crosschain_transfer_history_entry_filter,
+            page_size,
+            page_cursor
+        ),
+        page_size
+    );
+}
+
+/**
+ * Retrieves all assets of a specified type, paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ *
+ * @param type          the type of assets to be returned
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 query get_assets_by_type(type: text, page_size: integer?, page_cursor: text?) {
     return utils.make_page(
         assets.get_assets_by_type(type, page_size, page_cursor),
@@ -41,6 +157,14 @@ query get_assets_by_type(type: text, page_size: integer?, page_cursor: text?) {
     );
 }
 
+/**
+ * Retrieves all registered assets, paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ *
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 query get_all_assets(page_size: integer?, page_cursor: text?) {
     return utils.make_page(
         assets.get_all_assets(page_size, page_cursor),
@@ -48,10 +172,29 @@ query get_all_assets(page_size: integer?, page_cursor: text?) {
     );
 }
 
+/**
+ * Outputs the details of an asset in a format that is used by other chains to register
+ * it as a crosschain asset.
+ * 
+ * Throws if the asset does not exist on this chain.
+ * 
+ * @param asset_id  the id of the asset
+ */
 query get_asset_details_for_crosschain_registration(asset_id: byte_array) {
     return assets.get_asset_details_for_crosschain_registration(asset_id);
 }
 
+/**
+ * Fetches all transfers to and from an account, allowing filtering
+ * in multiple ways. Paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param account_id        only return transfers from/to this account
+ * @param filter            Whether to return only incoming, outgoing or all transfers
+ * @param page_size         the size of the pages to retrieve
+ * @param page_cursor       a pointer to where the page should start 
+ */
 query get_transfer_history(account_id: byte_array, filter: assets.filter, page_size: integer?, page_cursor: text?) {
     val account = accounts.account @? { account_id };
     if (empty(account)) return null;
@@ -66,6 +209,16 @@ query get_transfer_history(account_id: byte_array, filter: assets.filter, page_s
     return utils.make_page(paginated_transfers, page_size);
 }
 
+/**
+ * Fetches all transfers to and from an any account,
+ * which occurred after a specific height. Paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param height            the height after which to fetch transfers
+ * @param page_size         the size of the pages to retrieve
+ * @param page_cursor       a pointer to where the page should start 
+ */
 query get_transfer_history_from_height(height: integer, asset_id: byte_array?, page_size: integer?, page_cursor: text?) {
     val asset = if (asset_id != null) assets.Asset(asset_id) else null;
 
@@ -79,13 +232,38 @@ query get_transfer_history_from_height(height: integer, asset_id: byte_array?, p
     return utils.make_page(paginated_transfers, page_size);
 }
 
+/**
+ * Retrieves a transfer history entry given its `rowid`. Said `rowid` can
+ * be acquired by for example using the `get_transfer_history` query.
+ * 
+ * Returns null if no transfer history is found at the specified `rowid`
+ * 
+ * @see get_transfer_history
+ * 
+ * @param rowid     the rowid of the transfer history entry to fetch
+ */
 query get_transfer_history_entry(rowid) {
     val entry = assets.transfer_history_entry @? { .rowid == rowid };
     return if (empty(entry)) null else assets.extract_data_from_transfer_history_entry(entry);
 }
 
-query get_transfer_details(tx_rid: byte_array, op_index: integer): set<assets.transfer_detail> =
+/**
+ * Returns a `transfer_detail` object for each `transfer_entry` that was registered during
+ * the operation specified.
+ * 
+ * @param tx_rid    The transaction where the operation was performed
+ * @param op_index  The index of the operation
+ */
+query get_transfer_details(tx_rid: byte_array, op_index: integer): list<assets.transfer_detail> =
     assets.get_transfer_details(tx_rid, op_index);
 
-query get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, asset_id: byte_array): set<assets.transfer_detail> =
+/**
+ * Same as `get_transfer_details`, but restricts the results to transfer entries related
+ * to the asset specified.
+ * 
+ * @param tx_rid    The transaction where the operation was performed
+ * @param op_index  The index of the operation
+ * @param asset_id  Only return entries where this asset was transferred
+ */
+query get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, asset_id: byte_array): list<assets.transfer_detail> =
     assets.get_transfer_details_by_asset(tx_rid, op_index, asset_id);

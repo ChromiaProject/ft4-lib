@@ -1,0 +1,12 @@
+/**
+ * Maps an account's info into a readable format for the frontend
+ * 
+ * @param account  the account to retrieve
+ */
+function map_account(account) {
+    return (
+        rowid = account.rowid,
+        id = account.id,
+        type = account.type
+    );
+}

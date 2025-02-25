@@ -60,6 +60,7 @@ export {
   getTransferDetails,
   getTransferDetailsByAsset,
   getTransferHistoryFromHeight,
+  CrosschainTransferHistoryEntry,
 } from "./transfer-history";
 
 export { createAuthenticatedAccount } from "./op-functions";
@@ -83,6 +84,14 @@ export {
   getByAuthDescriptorId,
   createAccountObject,
   getAccountMainAuthDescriptor,
+  getAccountsFiltered,
+  getAccountAuthDescriptorsFiltered,
+  getMainAuthDescriptorsFiltered,
+  getAuthDescriptorSignersFiltered,
+  getRlStatesFiltered,
+  getAccountCreationTransfersFiltered,
+  getAccountLinksFiltered,
+  getSubscriptionsFiltered,
 } from "./query-functions";
 
 export * from "./types";

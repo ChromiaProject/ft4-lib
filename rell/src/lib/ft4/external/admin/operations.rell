@@ -1,26 +1,119 @@
-
+/**
+ * Registers a new account on this chain.
+ * 
+ * Throws if not signed by the admin.
+ * 
+ * Throws if the account cannot be created. Common cases include:
+ * - errors with the `args` field:
+ *   - some required flags are missing
+ *   - in multi-sig auth descriptors, the `required_signatures` field:
+ *     - is 0 or less
+ *     - is greater than the number of signers
+ * - errors with the `rules` field:
+ *   - `rules` is not `null.to_gtv().to_bytes()`
+ * 
+ * @param auth_descriptor   the main auth descriptor for the account
+ */
 operation register_account(accounts.auth_descriptor) {
     admin.require_admin();
     accounts.create_account_with_auth(auth_descriptor);
 }
 
+/**
+ * Registers a new asset on this chain, with this chain as issuer of the token.
+ * 
+ * Throws if not signed by the admin.
+ * 
+ * Throws if the asset cannot be registered. Common cases include:
+ * - the input parameters do not follow this criteria:
+ *   - strings are longer than 1024
+ *   - decimals is not in the accepted range [0, 78] (inclusive)
+ * - `icon_url` is not a valid URL
+ * 
+ * @see register_asset_with_type if you need to specify a type different from
+ * `asset.ASSET_TYPE_FT4`
+ * 
+ * @param name      the name of the asset
+ * @param symbol    the symbol (or ticker) of the asset
+ * @param decimals  the number of decimals this asset will have
+ * @param icon_url  an URL to an icon of the asset to register, can be an empty string in case
+ *                  of no icon url
+ */
 operation register_asset(name, symbol: text, decimals: integer, icon_url: text) {
     admin.require_admin();
     assets.Unsafe.register_asset(name, symbol, decimals, chain_context.blockchain_rid, icon_url);
 }
 
+/**
+ * Like `register_asset`, but allows specifying a type for the asset as well.
+ * 
+ * Throws if not signed by the admin.
+ * 
+ * Throws if the asset cannot be registered. Common cases include:
+ * - the input parameters do not follow this criteria:
+ *   - strings are longer than 1024 characters
+ *   - type is empty
+ *   - decimals is not in the accepted range [0, 78] (inclusive)
+ * - `icon_url` is not a valid URL
+ * 
+ * @see register_asset if you will use `asset.ASSET_TYPE_FT4` as type
+ * 
+ * @see asset.ASSET_TYPE_FT4 to have more informations on asset types
+ * 
+ * @param name      the name of the asset
+ * @param symbol    the symbol (or ticker) of the asset
+ * @param decimals  the number of decimals this asset will have
+ * @param icon_url  an URL to an icon of the asset to register, can be an empty string in case
+ *                  of no icon url
+ * @param type      the type of the asset to register, in most cases thisshould be set to the
+ *                  value of `core.asset.ASSET_TYPE_FT4`
+ */
 operation register_asset_with_type(name, symbol: text, decimals: integer, icon_url: text, type: text) {
     admin.require_admin();
     assets.Unsafe.register_asset(name, symbol, decimals, chain_context.blockchain_rid, icon_url, type);
 }
 
+/**
+ * Mints assets and gives them to an account.
+ * 
+ * Throws if not signed by the admin.
+ * 
+ * Throws if the account or the asset is not found.
+ * 
+ * Throws if the asset cannot be minted. Common cases include:
+ * - the amount to mint is not in the accepted range (0, 2^256) (exclusive)
+ * - some conditions added in development through mint extensions (`before_mint` or
+ *   `after_mint`) aren't met
+ * - the asset's issuing blockchain is not this blockchain
+ * - the asset's total supply, increased by the amount being minted, is higher than 2^256
+ * 
+ * @param account_id    the account that will receive the assets
+ * @param asset_id      the asset to mint
+ * @param amount        the amount to mint
+ */
 operation mint(account_id: byte_array, asset_id: byte_array, amount: big_integer) {
     admin.require_admin();
     assets.Unsafe.mint(accounts.Account(account_id), assets.Asset(asset_id), amount);
 }
 
+/**
+ * Adds rate limit points to an account, allowing it to send more transactions even if
+ * it reached the limit. If the new amount of points is greater than the maximum amount
+ * of allowed points, the account will have the maximum amount of points.
+ * 
+ * Throws if not signed by the admin.
+ * 
+ * Throws `"NEGATIVE RATE LIMIT"` when amount is less than 1
+ * 
+ * Throws if the account or its `rl_config` does not exist
+ * 
+ * @see accounts.rl_state to know more about rate limiting
+ * 
+ * @param account_id    the account that will receive the points
+ * @param amount        the amount of points to give
+ */
 operation add_rate_limit_points(account_id: byte_array, amount: integer) {
     admin.require_admin();
-    require(amount > 0, "Amount must be a positive integer.");
+    require(amount > 0, "NEGATIVE RATE LIMIT: Amount must be a positive integer.");
 	accounts.add_rate_limit_points(accounts.Account(account_id), amount);
 }

@@ -12,7 +12,7 @@ npx typedoc --out docs-repo/static/pages/ft4-ts-client/client
 # create rell docs
 chr install
 chr build
-chr generate docs-site --target docs-repo/static/pages/ft4-rell
+chr generate docs-site --target docs-repo/static/pages/ft4-rell -s doc/docs-chromia.yml
 
 # create changelogs
 ./scripts/compile-changelog.sh

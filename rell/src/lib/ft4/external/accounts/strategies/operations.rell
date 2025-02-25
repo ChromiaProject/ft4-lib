@@ -1,3 +1,44 @@
+/**
+ * An operation which can be called to create an account. This operation is part
+ * of the account registration framework and it must be preceded by a strategy
+ * operation which contains information about how the account is supposed to 
+ * be registered.
+ * 
+ * Throws if the operation that came just before this one cannot be handled. Common cases are:
+ * - the operation is not registered as a strategy operation through extensions of `strategy`
+ * - the operation has been misconfigured, and its name does not match the operation mount name
+ * 
+ * Throws if the signature verification is unsuccessful. Common cases are:
+ * - `evm_signatures` is misconfigured:
+ *   - any of the signers and signatures don't match in the exact order they're found
+ *   - any of the signatures is null
+ *   - there's more signatures than signers
+ * - a signature from one of the auth descriptor participants is missing:
+ *   - an EVM signer is specified but the signature is not found in `evm_signatures`
+ *   - an FT signer is specified but the signature is not in the transaction
+ *   - a signer passed is neither an EVM nor an FT signer (its length does not match either of
+ *     `core.auth.EVM_ADDRESS_SIZE` and `core.auth.FT_PUBKEY_SIZE`)
+ *
+ * Throws if either auth descriptor is invalid. Common cases include:
+ * - the main auth descriptor has expiration rules instead of `core.accounts.GTV_NULL`
+ * - the disposable auth descriptor's expiration rules:
+ *   - is a complex rule with too many rule components
+ *   - has already expired
+ *   - is not the valid GTV representation of a rule
+ * - errors with the `args` field:
+ *   - some required flags are missing
+ *   - in multi-sig auth descriptors, the `required_signatures` field:
+ *     - is 0 or less
+ *     - is greater than the number of signers
+ * 
+ * Throws if `core.accounts.AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND` is set to 1 and
+ * `disposable` passed to the strategy operation is not null.
+ * 
+ * Throws if some conditions added in development through extensions (`before_register_account`
+ * or `after_register_account`) aren't met
+ * 
+ * @see core.accounts.strategies.register_account for information on how to use this operation
+ */
 operation register_account() {
     strategies.register_account();
 }

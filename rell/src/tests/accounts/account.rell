@@ -2,28 +2,42 @@
 
 import acc: ^^^.lib.ft4.accounts;
 import utils: ^^^.lib.ft4.utils;
-import asset_utils: ^^.assets.utils;
-import test_op: ^^.operations;
-import test_utils: ^^^.lib.ft4.test.utils;
+import test_op: lib.ft4.test.operations;
+import test: lib.ft4.test.core;
 
 struct gtv_auth_descriptor {
-    id: byte_array;
-    account_id: byte_array;
-    acc.auth_type;
-    args: gtv;
-    rules: gtv;
-    created: timestamp;
+  id: byte_array;
+  account_id: byte_array;
+  acc.auth_type;
+  args: gtv;
+  rules: gtv;
+  created: timestamp;
 }
 
 function setup_account_with_many_ads() {
-  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A", "T"]);
-  asset_utils.create_test_account_with_auth_descriptor(alice_ad, rell.test.keypairs.alice);
+  val alice_ad = test
+    .create_auth_descriptor(
+      rell
+        .test
+        .keypairs
+        .alice
+        .pub,
+      [
+        acc
+        .auth_flags
+        .ACCOUNT,
+        acc
+        .auth_flags
+        .TRANSFER
+      ]
+    );
+  test.register_account_with_auth_descriptor(alice_ad, rell.test.keypairs.alice);
 
   val account = acc.account @ { rell.test.keypairs.alice.pub.hash() };
-  val bob_ad = test_utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
-  val eve_ad = test_utils.create_auth_descriptor(rell.test.keypairs.eve.pub);
-  val trudy_ad = test_utils.create_auth_descriptor(rell.test.keypairs.trudy.pub);
-  
+  val bob_ad = test.create_auth_descriptor(rell.test.keypairs.bob.pub);
+  val eve_ad = test.create_auth_descriptor(rell.test.keypairs.eve.pub);
+  val trudy_ad = test.create_auth_descriptor(rell.test.keypairs.trudy.pub);
+
   rell.test.tx().op(test_op.add_ad_to_account(account, bob_ad)).sign(rell.test.keypairs.bob).run();
   rell.test.tx().op(test_op.add_ad_to_account(account, eve_ad)).sign(rell.test.keypairs.eve).run();
   rell.test.tx().op(test_op.add_ad_to_account(account, trudy_ad)).sign(rell.test.keypairs.trudy).run();
@@ -52,7 +66,23 @@ function test_items_have_the_correct_return_format() {
   val descriptors = acc.external.get_account_auth_descriptors(account.id);
 
   val alice_ad_id = acc.account_auth_descriptor @* {.account == account} ( .id )[0];
-  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A", "T"]);
+  val alice_ad = test.create_auth_descriptor(rell.test.keypairs.alice.pub, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
+  val alice_ad_mod = test
+    .create_auth_descriptor(
+      rell
+        .test
+        .keypairs
+        .alice
+        .pub,
+      [
+        acc
+        .auth_flags
+        .ACCOUNT,
+        acc
+        .auth_flags
+        .TRANSFER
+      ]
+    );
 
   assert_equals(descriptors[0], (
     id = alice_ad_id,
@@ -65,10 +95,24 @@ function test_items_have_the_correct_return_format() {
 }
 
 function test_get_accounts_by_signer_is_paginated() {
-  val account1 = asset_utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
-  val account2 = asset_utils.create_test_account(rell.test.keypairs.bob, ["A", "T"]);
+  val account1 = test
+    .register_account_open(
+      rell
+        .test
+        .keypairs
+        .alice,
+      [
+        acc
+        .auth_flags
+        .ACCOUNT,
+        acc
+        .auth_flags
+        .TRANSFER
+      ]
+    );
+  val account2 = test.register_account_open(rell.test.keypairs.bob, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
 
-  test_op.add_ad_to_account(account2.account, test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub)).run();
+  test_op.add_ad_to_account(account2.account, test.create_auth_descriptor(rell.test.keypairs.alice.pub)).run();
 
   val page1 = acc.external.get_accounts_by_signer(rell.test.keypairs.alice.pub, 1, null);
   val page2 = acc.external.get_accounts_by_signer(rell.test.keypairs.alice.pub, 1, page1.next_cursor);
@@ -79,11 +123,272 @@ function test_get_accounts_by_signer_is_paginated() {
   assert_equals(page2.data[0], account2.account.to_struct().to_gtv_pretty());
 }
 
+function test_get_rl_states_filtered() {
+  val account1 = test
+    .register_account_open(
+      rell.test.keypairs.alice,
+      [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]
+    );
+  val account2 = test.register_account_open(rell.test.keypairs.bob, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
+
+  var test_filter = acc.external.rl_state_filter(account_ids = [account1.account.id]);
+  val rl_states_filtered = acc.external.get_rl_states_filtered(test_filter, 1, null);
+  val rl_state = acc.rl_state @? { .account == account1.account }!!;
+  val compare_data = (
+    account_id = account1.account.id,
+    account_type = account1.account.type,
+    points = rl_state.points,
+    last_update = rl_state.last_update,
+    recovery_time = rl_state.recovery_time,
+  );
+  assert_equals(rl_states_filtered.data[0], compare_data.to_gtv_pretty());
+}
+
+function test_get_accounts_filtered() {
+  val account1 = test
+    .register_account_open(
+      rell.test.keypairs.alice,
+      [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]
+    );
+  val account2 = test.register_account_open(rell.test.keypairs.bob, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
+
+  var test_filter = acc.external.account_filter(ids = [account1.account.id], type = "FT4_USER");
+
+  val account_ret = acc.external.get_accounts_filtered(test_filter, 1, null);
+  assert_equals(account_ret.data[0], account1.account.to_struct().to_gtv_pretty());
+}
+
+function test_get_accounts_filtered_is_paginated() {
+  val account1 = test
+    .register_account_open(
+      rell.test.keypairs.alice,
+      [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]
+    );
+  val account2 = test.register_account_open(rell.test.keypairs.bob, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
+
+  var test_filter = acc.external.account_filter(ids = null, type = "FT4_USER");
+  val page1 = acc.external.get_accounts_filtered(test_filter, 1, null);
+  val page2 = acc.external.get_accounts_filtered(test_filter, 1, page1.next_cursor);
+  val page3 = acc.external.get_accounts_filtered(test_filter, 1, page2.next_cursor);
+  assert_equals(page2.data.size(), 1);
+  assert_equals(page2.data[0], account1.account.to_struct().to_gtv_pretty());
+  assert_equals(page3.data.size(), 1);
+  assert_equals(page3.data[0], account2.account.to_struct().to_gtv_pretty());
+}
+
+function test_get_account_auth_descriptors_filtered() {
+  val account1 = test.register_account_open(
+    rell.test.keypairs.alice,
+    [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]
+  );
+  val account2 = test.register_account_open(rell.test.keypairs.bob, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
+
+  var test_filter = acc.external.account_auth_descriptor_filter(ids = null, account_id = account1.account.id);
+  val account_ret = acc.external.get_account_auth_descriptors_filtered(test_filter, 1, null);
+
+  val account_ad = acc.account_auth_descriptor @? { .account == account1.account }!!;
+  val compare_data = (
+    account_id = account1.account.id,
+    account_type = account1.account.type,
+    args = gtv.from_bytes(account_ad.args),
+    auth_type = account_ad.auth_type,
+    created = account_ad.created,
+    ctr = account_ad.ctr,
+    id = account_ad.id,
+    rules = gtv.from_bytes(account_ad.rules)
+  );
+  assert_equals(account_ret.data[0], compare_data.to_gtv_pretty());
+}
+
+function test_get_account_auth_descriptors_filtered_is_paginated() {
+  val account1 = test.register_account_open(
+    rell.test.keypairs.alice,
+    [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]
+  );
+  val account2 = test.register_account_open(rell.test.keypairs.bob, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
+
+  var test_filter = acc.external.account_auth_descriptor_filter(ids = null, account_id = null);
+
+  val page1 = acc.external.get_account_auth_descriptors_filtered(test_filter, 1, null);
+  val page2 = acc.external.get_account_auth_descriptors_filtered(test_filter, 1, page1.next_cursor);
+  val page3 = acc.external.get_account_auth_descriptors_filtered(test_filter, 1, page2.next_cursor);
+
+  val account_ad_1 = acc.account_auth_descriptor @? { .account == account1.account }!!;
+  val account_ad_2 = acc.account_auth_descriptor @? { .account == account2.account }!!;
+  val compare_data_1 = (
+    account_id = account1.account.id,
+    account_type = account1.account.type,
+    args = gtv.from_bytes(account_ad_1.args),
+    auth_type = account_ad_1.auth_type,
+    created = account_ad_1.created,
+    ctr = account_ad_1.ctr,
+    id = account_ad_1.id,
+    rules = gtv.from_bytes(account_ad_1.rules)
+  );
+  val compare_data_2 = (
+    account_id = account2.account.id,
+    account_type = account2.account.type,
+    args = gtv.from_bytes(account_ad_2.args),
+    auth_type = account_ad_2.auth_type,
+    created = account_ad_2.created,
+    ctr = account_ad_2.ctr,
+    id = account_ad_2.id,
+    rules = gtv.from_bytes(account_ad_2.rules)
+  );
+  assert_equals(page2.data[0], compare_data_1.to_gtv_pretty());
+  assert_equals(page3.data[0], compare_data_2.to_gtv_pretty());
+}
+
+function test_get_main_auth_descriptors_filtered() {
+  val account1 = test.register_account_open(
+    rell.test.keypairs.alice,
+    [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]
+  );
+  val account2 = test.register_account_open(rell.test.keypairs.bob, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
+
+  var test_filter = acc
+    .external
+    .main_account_auth_descriptor_filter(
+      account_ids = [account1.account.id],
+      account_auth_descriptor_id = null
+    );
+  val account_ret = acc.external.get_main_auth_descriptors_filtered(test_filter, 1, null); 
+
+  val account_ad = acc.account_auth_descriptor @? { .account == account1.account }!!;
+  val compare_data = (
+    account_id = account1.account.id,
+    account_type = account1.account.type,
+    args = gtv.from_bytes(account_ad.args),
+    auth_type = account_ad.auth_type,
+    created = account_ad.created,
+    ctr = account_ad.ctr,
+    id = account_ad.id,
+    rules = gtv.from_bytes(account_ad.rules)
+  );
+  assert_equals(account_ret.data[0], compare_data.to_gtv_pretty());
+}
+
+function test_get_main_auth_descriptors_filtered_is_paginated() {
+  val account1 = test.register_account_open(
+    rell.test.keypairs.alice,
+    [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]
+  );
+  val account2 = test.register_account_open(rell.test.keypairs.bob, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
+
+  var test_filter = acc
+    .external
+    .main_account_auth_descriptor_filter(
+      account_ids = [account1.account.id, account2.account.id],
+      account_auth_descriptor_id = null
+    );
+
+  val page1 = acc.external.get_main_auth_descriptors_filtered(test_filter, 1, null);
+  val page2 = acc.external.get_main_auth_descriptors_filtered(test_filter, 1, page1.next_cursor);
+  val page3 = acc.external.get_main_auth_descriptors_filtered(test_filter, null, page2.next_cursor);
+  val account_ad_1 = acc.main_auth_descriptor @? { .account == account1.account }!!;
+  val account_ad_2 = acc.main_auth_descriptor @? { .account == account2.account }!!;
+  val compare_data_1 = (
+    account_id = account1.account.id,
+    account_type = account1.account.type,
+    args = gtv.from_bytes(account_ad_1.auth_descriptor.args),
+    auth_type = account_ad_1.auth_descriptor.auth_type,
+    created = account_ad_1.auth_descriptor.created,
+    ctr = account_ad_1.auth_descriptor.ctr,
+    id = account_ad_1.auth_descriptor.id,
+    rules = gtv.from_bytes(account_ad_1.auth_descriptor.rules),
+  );
+  val compare_data_2 = (
+    account_id = account2.account.id,
+    account_type = account2.account.type,
+    args = gtv.from_bytes(account_ad_2.auth_descriptor.args),
+    auth_type = account_ad_2.auth_descriptor.auth_type,
+    created = account_ad_2.auth_descriptor.created,
+    ctr = account_ad_2.auth_descriptor.ctr,
+    id = account_ad_2.auth_descriptor.id,
+    rules = gtv.from_bytes(account_ad_2.auth_descriptor.rules),
+  );
+
+  assert_equals(page1.data[0], compare_data_1.to_gtv_pretty());
+  assert_equals(page2.data[0], compare_data_2.to_gtv_pretty());
+}
+
+function test_get_auth_descriptor_signers_filtered() {
+  val account1 = test.register_account_open(
+    rell.test.keypairs.alice,
+    [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]
+  );
+  val account2 = test.register_account_open(rell.test.keypairs.bob, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
+  test_op.add_ad_to_account(account1.account, test.create_auth_descriptor(rell.test.keypairs.alice.pub)).run();
+
+  var test_filter = acc
+    .external
+    .auth_descriptor_signer_filter(
+      ids = null,
+      auth_descriptor_id = account1.auth_descriptor_id
+    );
+  val auth_descriptor_signer_ret = acc.external.get_auth_descriptor_signers_filtered(test_filter, 1, null);
+
+  val account_ad = acc.account_auth_descriptor @* { .account == account1.account }[0];
+  val auth_desc_signer = acc.auth_descriptor_signer @? { .account_auth_descriptor == account_ad }!!;
+  val compare_data = (
+    account_auth_descriptor_args = gtv.from_bytes(account_ad.args),
+    account_auth_descriptor_auth_type = account_ad.auth_type,
+    account_auth_descriptor_created = account_ad.created,
+    account_auth_descriptor_ctr = account_ad.ctr,
+    account_auth_descriptor_id = account_ad.id,
+    account_auth_descriptor_rules = gtv.from_bytes(account_ad.rules),
+    account_id = account1.account.id,
+    account_type = account1.account.type,
+    id = auth_desc_signer.id,
+  );
+  assert_equals(auth_descriptor_signer_ret.data[0], compare_data.to_gtv_pretty());
+}
+
+function test_get_auth_descriptor_signers_filtered_is_paginated() {
+  val account1 = test.register_account_open(
+    rell.test.keypairs.alice,
+    [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]
+  );
+  val account2 = test.register_account_open(rell.test.keypairs.bob, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
+  test_op.add_ad_to_account(account1.account, test.create_auth_descriptor(rell.test.keypairs.alice.pub)).run();
+
+  var test_filter = acc.external.auth_descriptor_signer_filter(ids = null, auth_descriptor_id = null);
+  val auth_descriptor_signer_ret = acc.external.get_auth_descriptor_signers_filtered(test_filter, 10, null);
+  val account_ads = acc.account_auth_descriptor @* { .account == account1.account };
+  val auth_desc_signer = acc.auth_descriptor_signer @? { .account_auth_descriptor == account_ads[0] }!!;
+  val auth_desc_signer2 = acc.auth_descriptor_signer @? { .account_auth_descriptor == account_ads[1] }!!;
+  val compare_data = (
+    account_auth_descriptor_args = gtv.from_bytes(account_ads[0].args),
+    account_auth_descriptor_auth_type = account_ads[0].auth_type,
+    account_auth_descriptor_created = account_ads[0].created,
+    account_auth_descriptor_ctr = account_ads[0].ctr,
+    account_auth_descriptor_id = account_ads[0].id,
+    account_auth_descriptor_rules = gtv.from_bytes(account_ads[0].rules),
+    account_id = account1.account.id,
+    account_type = account1.account.type,
+    id = auth_desc_signer.id,
+  );
+
+  val compare_data2 = (
+    account_auth_descriptor_args = gtv.from_bytes(account_ads[1].args),
+    account_auth_descriptor_auth_type = account_ads[1].auth_type,
+    account_auth_descriptor_created = account_ads[1].created,
+    account_auth_descriptor_ctr = account_ads[1].ctr,
+    account_auth_descriptor_id = account_ads[1].id,
+    account_auth_descriptor_rules = gtv.from_bytes(account_ads[1].rules),
+    account_id = account1.account.id,
+    account_type = account1.account.type,
+    id = auth_desc_signer.id,
+  );
+  assert_equals(auth_descriptor_signer_ret.data[1], compare_data.to_gtv_pretty());
+  assert_equals(auth_descriptor_signer_ret.data[3], compare_data2.to_gtv_pretty());
+}
+
 function test_accounts_by_ad_id_is_paginated() {
-  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A"]);
-  val bob = asset_utils.register_bob();
-  val eve = asset_utils.register_eve();
-  val trudy = asset_utils.register_trudy();
+  val alice_ad = test.create_auth_descriptor(rell.test.keypairs.alice.pub, [acc.auth_flags.ACCOUNT]);
+  val bob = test.register_bob();
+  val eve = test.register_eve();
+  val trudy = test.register_trudy();
 
   rell.test.tx()
     .op(test_op.add_ad_to_account(bob.account, alice_ad))
@@ -94,27 +399,45 @@ function test_accounts_by_ad_id_is_paginated() {
 
   val accounts_p1 = acc.external.get_accounts_by_auth_descriptor_id(alice_ad.hash(), 2, null);
   assert_equals(
-    accounts_p1, 
+    accounts_p1,
     utils.paged_result(
-        data = [bob.account.id.to_gtv(), eve.account.id.to_gtv()],
-        next_cursor = accounts_p1.next_cursor
+      data = [bob.account.id.to_gtv(), eve.account.id.to_gtv()],
+      next_cursor = accounts_p1.next_cursor
     )
   );
-  
+
   val accounts_p2 = acc.external.get_accounts_by_auth_descriptor_id(alice_ad.hash(), 2, accounts_p1.next_cursor);
   assert_equals(byte_array.from_gtv_pretty(accounts_p2.data[0]), trudy.account.id);
   assert_equals(
-    accounts_p2, 
+    accounts_p2,
     utils.paged_result(
-        data = [trudy.account.id.to_gtv()],
-        next_cursor = null
+      data = [trudy.account.id.to_gtv()],
+      next_cursor = null
     )
   );
 }
 
 function test_get_config() {
-  assert_equals(acc.external.get_config(), (
-    rate_limit = acc.rate_limit_config(max_points = 5),
-    auth_descriptor = acc.auth_descriptor_config(max_rules = 4)
+  assert_equals(
+    acc.external.get_config(),
+    (
+      rate_limit = acc.rate_limit_config(max_points = 5),
+      auth_descriptor = acc.auth_descriptor_config(max_rules = 4)
+    )
+  );
+}
+
+function test_get_account_by_id() {
+  val alice = test.register_alice();
+  val found_account = acc.external.get_account_by_id(alice.account.id);
+  assert_not_null(found_account);
+  assert_equals(found_account, struct<acc.account>(
+    id = alice.account.id,
+    type = alice.account.type
   ));
+}
+
+function test_get_account_by_id_when_account_does_not_exist() {
+  val found_account = acc.external.get_account_by_id(x"0000");
+  assert_null(found_account);
 }

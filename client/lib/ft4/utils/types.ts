@@ -1,8 +1,5 @@
 import { TransactionReceipt } from "postchain-client";
 import { OptionalPageCursor, Session } from "@ft4/ft-session";
-import { Buffer } from "buffer";
-
-export type BufferId = string | Buffer;
 
 export type EnumLike = Record<string, string | number>;
 

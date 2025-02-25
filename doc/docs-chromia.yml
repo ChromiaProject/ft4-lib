@@ -1,0 +1,24 @@
+blockchains:
+  ft4:
+    type: library
+    module: docs_module
+
+libs:
+  iccf:
+    registry: https://gitlab.com/chromaway/core/directory-chain
+    path: src/iccf
+    tagOrBranch: 1.32.2
+    rid: x"1D567580C717B91D2F188A4D786DB1D41501086B155A68303661D25364314A4D"
+
+compile:
+  source: ../rell/src
+  rellVersion: 0.13.14
+
+docs:
+  title: "FT4 Library"
+  footerMessage: © 2024 Chromia
+  additionalContent:
+    - api-docs-header.md
+  sourceLink:
+    remoteUrl: https://bitbucket.org/chromawallet/ft3-lib/src/development/rell/src
+    remoteLineSuffix: "#lines-"

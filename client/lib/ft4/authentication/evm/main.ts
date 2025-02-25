@@ -1,7 +1,6 @@
-import { Operation, formatter } from "postchain-client";
+import { BufferId, Operation, formatter } from "postchain-client";
 import { ethers } from "ethers";
 import { Buffer } from "buffer";
-import { BufferId } from "@ft4/utils";
 import { EvmKeyStore, EvmSigner, RawSignature, Signature } from "./types";
 import { Signer } from "@ft4/authentication";
 

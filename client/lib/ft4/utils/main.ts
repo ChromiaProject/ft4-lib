@@ -1,6 +1,7 @@
 import { Connection } from "@ft4/ft-session";
 import { Buffer } from "buffer";
 import {
+  BufferId,
   GTX,
   IClient,
   Operation,
@@ -14,7 +15,7 @@ import {
   gtv,
   gtx,
 } from "postchain-client";
-import { BufferId, Config, ConfigResponse } from "./types";
+import { Config, ConfigResponse } from "./types";
 import { allAuthHandlers } from "./queries";
 import { AuthHandler, FtKeyStore } from "@ft4/authentication";
 
@@ -58,8 +59,10 @@ export async function getConfig(queryable: Queryable): Promise<Config> {
  * Computes the transaction rid of the provided `RawGtx`
  * @param tx - the tx to compute the rid for
  */
-export function getTransactionRid(tx: RawGtx): Buffer {
-  return gtv.gtvHash(tx[0]); //tx body
+export function getTransactionRid(tx: RawGtx | GTX): Buffer {
+  if (Array.isArray(tx)) {
+    return gtv.gtvHash(tx[0]); //tx body
+  } else return gtv.gtvHash(gtx.gtxToRawGtxBody(tx));
 }
 
 /**
@@ -100,6 +103,21 @@ export function getAuthDescriptorCounterIdForTxContext(
  */
 export async function getVersion(session: IClient): Promise<string> {
   return Object.freeze(await session.query<string>("ft4.get_version"));
+}
+
+/**
+ * Returns the API version of `ft` lib that is installed on the blockchain
+ * @param session - a client that will be used to get the version from the blockchain
+ */
+export async function getApiVersion(session: IClient): Promise<number> {
+  try {
+    return Object.freeze(await session.query<number>("ft4.get_api_version"));
+  } catch (e) {
+    const v = await getVersion(session);
+    if (v === "1.0.0") return 0;
+    // get_version exists but get_api_version doesn't, and it's not v1.0.0
+    throw e;
+  }
 }
 
 /**

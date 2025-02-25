@@ -1,0 +1,135 @@
+image: registry.gitlab.com/chromaway/ft4-lib:latest
+
+stages:
+  - install
+  - docs
+  - test
+  - multichain
+  - deploy
+
+services:
+  - name: docker:dind
+    command: ["--tls=false"]
+  - name: postgres
+    alias: postgres
+    variables:
+      POSTGRES_DB: "postchain"
+      POSTGRES_USER: "postchain"
+      POSTGRES_PASSWORD: "postchain"
+      POSTGRES_INITDB_ARGS: "--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8"
+
+variables:
+  MAX_TIME: "15"
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_VERIFY: ""
+  DOCKER_TLS_CERTDIR: ""
+
+default:
+  tags:
+    # - gitlab-org-docker
+    - saas-linux-large-amd64
+    # - ft4-pipeline-docker
+    # - ft4-kanta
+  cache:
+    paths:
+      - node_modules/
+      - .npm/
+
+install_rell:
+  stage: install
+  script:
+    - ./scripts/install-chr-and-pmc.sh --gitlab
+    - chr install -s chromia.yml
+    - chr build
+  artifacts:
+    paths:
+      - rell/out
+      - rell/src/lib/iccf
+      - bin/
+
+install_js:
+  stage: install
+  script:
+    - npm ci --cache .npm --prefer-offline
+    - npm run compile
+  artifacts:
+    paths:
+      - node_modules
+
+build_docs:
+  stage: docs
+  needs: ["install_rell", "install_js"]
+  allow_failure: true # allows skipping this step, which might not be necessary
+  rules:
+    - when: manual
+  script:
+    - ./scripts/install-chr-and-pmc.sh --link-only
+    - npm run generate:docs
+  artifacts:
+    paths:
+      - doc/api
+
+unit_rell_tests:
+  stage: test
+  needs: ["install_rell"]
+  script:
+    - ./scripts/install-chr-and-pmc.sh --link-only
+    - npm run test:rell -- --gitlab
+  artifacts:
+    paths:
+      - logs/**
+
+unit_js_tests:
+  stage: test
+  needs: ["install_js"]
+  script:
+    - export JEST_JUNIT_OUTPUT_NAME=logs/unit.xml
+    - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS unit tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
+  artifacts:
+    paths:
+      - logs/**
+
+integration_js_tests:
+  stage: test
+  needs: ["install_rell", "install_js"]
+  script:
+    - ./scripts/install-chr-and-pmc.sh --link-only
+    - export TESTCONTAINERS_RYUK_DISABLED=true
+    - export JEST_JUNIT_OUTPUT_NAME=logs/integration.xml
+    - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/ --ci --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS integration tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
+  artifacts:
+    paths:
+      - logs/**
+
+multichain_tests:
+  stage: multichain
+  needs: ["install_rell", "install_js"]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+  script:
+    - ./scripts/install-chr-and-pmc.sh --link-only
+    - npm ci
+    - chmod +x ./scripts/multichain-jesttest.sh; ./scripts/multichain-jesttest.sh --gitlab
+  artifacts:
+    paths:
+      - logs/**
+
+# update_docs:
+#   stage: deploy
+#   script:
+#     - ./scripts/update-docs.sh
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
+      changes:
+        - "*"
+      when: always
+    - if: $CI_COMMIT_BRANCH == "development"
+      changes:
+        - "*"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always

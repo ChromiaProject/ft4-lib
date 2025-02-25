@@ -28,9 +28,10 @@ import {
   createKeyStoreInteractor,
   createSession,
 } from "@ft4/ft-session";
-import { BufferId, op } from "@ft4/utils";
+import { op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
+  BufferId,
   IClient,
   KeyPair,
   Operation,
@@ -41,7 +42,7 @@ import {
   gtx,
   gtv as pclGtv,
 } from "postchain-client";
-import { User } from "./test-user";
+import { User, FT4_USER_TYPE } from "./test-user";
 import { transactionBuilder } from "@ft4/transaction-builder";
 import { Amount, Asset } from "@ft4/asset";
 
@@ -143,6 +144,7 @@ export function createTestAuthDescriptorWithSigner(
 
   return {
     accountId: formatter.ensureBuffer(accountId),
+    accountType: FT4_USER_TYPE,
     id: deriveAuthDescriptorId(ad),
     created: new Date(0),
     ...ad,
@@ -176,6 +178,7 @@ export function testAdFromRegistration<T extends SingleSig | MultiSig>(
     ...reg,
     id: deriveAuthDescriptorId(reg as any),
     accountId: deriveAuthDescriptorId(reg as any),
+    accountType: FT4_USER_TYPE,
     created: new Date(),
   };
 }
@@ -221,7 +224,7 @@ export async function createAccount(
 ) {
   await client.signAndSendUniqueTransaction(
     op(
-      "register_account_test",
+      "ft4.test.register_account",
       gtv.authDescriptorRegistrationToGtv(descriptor),
     ),
     adminUser().signatureProvider,
@@ -305,11 +308,11 @@ export function opToRellOp(operation: Operation): RellOperation {
 }
 
 export function emptyOp(): Operation {
-  return { name: "empty_op", args: [] };
+  return { name: "ft4.test.empty_op", args: [] };
 }
 
 export function rejectedOp(): Operation {
-  return { name: "rejected_op", args: [] };
+  return { name: "ft4.test.rejected_op", args: [] };
 }
 
 export function* numberGenerator(): Generator<number> {

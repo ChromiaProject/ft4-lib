@@ -1,5 +1,5 @@
 #!/bin/bash
-
+GITLAB=false
 postgres=true
 while :; do
     case $1 in
@@ -39,6 +39,10 @@ while :; do
               echo 'generating test reports'
               opt="$opt --ci --reporters=default --reporters=jest-junit"
               ;;
+        --gitlab)
+              echo 'running for gitlab pipeline'
+              GITLAB=true
+              ;;
         --)
             shift
             break
@@ -55,6 +59,22 @@ done
 
 source ./scripts/multichain-runner.sh
 
+# log "sleep20"
+# sleep 20
+
+# log "TESTING ANCHOR..."
+
+# node test_anchor.js
+
+
+# creating bak is mandatory on some platforms like Mac
+if $GITLAB; then
+    sed -i.bak 's|^const NODE_URL = .*$|const NODE_URL = "http://docker:7740"|' test/util/blockchain-util.ts
+else
+    sed -i.bak 's|^const NODE_URL = .*$|const NODE_URL = "http://localhost:7740"|' test/util/blockchain-util.ts
+fi
+rm test/util/blockchain-util.ts.bak
+
 log "Running Jest tests..."
 
 NODE_OPTIONS='--stack-trace-limit=100' JEST_JUNIT_OUTPUT_NAME="multichain.xml" npx jest \
@@ -62,3 +82,5 @@ NODE_OPTIONS='--stack-trace-limit=100' JEST_JUNIT_OUTPUT_NAME="multichain.xml" n
     --testPathPattern=__multichain__ \
     --verbose \
     $opt
+
+    # --testPathPattern=temp_tst \

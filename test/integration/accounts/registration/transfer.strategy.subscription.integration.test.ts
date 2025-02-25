@@ -6,7 +6,9 @@ import {
 import {
   AnyAuthDescriptorRegistration,
   AuthenticatedAccount,
+  AuthFlag,
   createSingleSigAuthDescriptorRegistration,
+  SubscriptionFilter,
 } from "@ft4/accounts";
 import { Asset, createAmountFromBalance } from "@ft4/asset";
 import { FtKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
@@ -53,7 +55,7 @@ describe("Test transfer with subscription", () => {
       .build();
     ftKeyStore = createInMemoryFtKeyStore(keyPair);
     authDescriptorToRegister = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       ftKeyStore.id,
     );
   });
@@ -83,6 +85,30 @@ describe("Test transfer with subscription", () => {
     );
 
     expect(session.account.id).toEqual(recipientId);
+  });
+
+  it("returns filtered subscriptions", async () => {
+    const amount = await getDynamicAmount(
+      asset,
+      allowedAssets(connection.blockchainRid, senderAccount.id, recipientId),
+    );
+    await senderAccount.transfer(recipientId, asset.id, amount);
+
+    await registerAccount(
+      connection.client,
+      ftKeyStore,
+      transferSubscription(asset, authDescriptorToRegister),
+    );
+
+    const subscriptionFilter: SubscriptionFilter = {
+      account_ids: [recipientId],
+    };
+
+    const filteredSubscriptions =
+      await connection.getSubscriptionsFiltered(subscriptionFilter);
+    expect(filteredSubscriptions.data[0].subscriptionAccountId).toStrictEqual(
+      recipientId,
+    );
   });
 
   it("receives transferred assets, minus subscription fee when account is created", async () => {

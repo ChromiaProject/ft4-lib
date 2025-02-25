@@ -12,8 +12,8 @@ import {
   isEvmSigner,
   toRawSignature,
 } from "@ft4/authentication";
-import { BufferId, deriveNonce } from "@ft4/utils";
-import { GTX, Operation, formatter, gtx } from "postchain-client";
+import { deriveNonce } from "@ft4/utils";
+import { BufferId, GTX, Operation, formatter, gtx } from "postchain-client";
 
 export const EMPTY_SIGNATURE = Buffer.alloc(64);
 export const EVM_SIGNATURES = "ft4.evm_signatures";

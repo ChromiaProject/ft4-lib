@@ -4,17 +4,325 @@ module;
 import ^^^.core.accounts;
 import ^^^.core.auth;
 
+/**
+ * Extendable function that allows the developer to add more functionality to the
+ * `register_account` function, before the registration happens.
+ * 
+ * This allows, for example, to add fees on registration or check that any given condition
+ * is present before the registration can be completed.
+ * 
+ * If this function throws an exception, the registration will not happen.
+ * 
+ * When using the transfer submodule, the strategies defined there already implement extensions
+ * of this function, requiring no additional code from the developer. This function should
+ * only be extended if functionality that is not found in the predefined strategies is required.
+ * 
+ * In some cases, creating a new strategy is a better alternative: this function will run on
+ * all account registrations, regardless of the strategy they used.
+ * 
+ * Throws if any extension of this function throws.
+ * 
+ * @param account_id    the ID of the account that will be registered
+ */
+@extendable function before_register_account(account_id: byte_array);
+
+/**
+ * Extendable function that allows the developer to add more functionality to the
+ * `register_account` function, after the registration happens.
+ * 
+ * This allows, for example, to add fees on registration or check that any given condition
+ * is present after the registration can be completed.
+ * 
+ * If this function throws an exception, the registration will not happen.
+ * 
+ * When using the transfer submodule, the strategies defined there already implement extensions
+ * of this function, requiring no additional code from the developer. This function should
+ * only be extended if functionality that is not found in the predefined strategies is required.
+ * 
+ * In some cases, creating a new strategy is a better alternative: this function will run on
+ * all account registrations, regardless of the strategy they used.
+ * 
+ * Throws if any extension of this function throws.
+ * 
+ * @param account   the account that has just been registered
+ */
+@extendable function after_register_account(accounts.account);
+
+/**
+ * Returns a map of all possible strategies used to register accounts on this chain.
+ * Can be extended to add custom strategies and make them work seamlessly with the existing
+ * `register_account` framework.
+ * 
+ * The map pairs up a strategy operation mount name and the `_strategy` struct representing it.
+ * The name must be the mount name of `_strategy.op`
+ * 
+ * To avoid misconfiguring strategies, it is strongly recommended to add extensions to this
+ * function using `add_strategy`.
+ * 
+ * Throws if any extension of this function throws.
+ * 
+ * @see add_strategy for example usage.
+ */
+@extendable 
+function strategy(): map<name, _strategy>;
+
+/**
+ * Represents a single strategy which can be used to register accounts. It is composed of three
+ * parts:
+ * - an operation, used to represent the usage of this strategy
+ * - a function that extracts `account_details` from the operation arguments
+ * - a function that performs any action required by the strategy, given the account and the
+ *   operation arguments
+ * 
+ * The transaction that will actually perform the registration will be composed of:
+ * - optionally, `evm_signers`
+ * - the operation defined here
+ * - `register_account`
+ * 
+ * `evm_signers` must contain the signatures of all the EVM participants to the account that
+ * will be registered. If the account will be registered with two auth descriptors, all EVM
+ * signers of both auth descriptors must add their signatures there. The message to sign can
+ * be retrieved by `get_register_account_message`.
+ * FT signers must simply sign the whole transaction instead. If all signers are FT signers,
+ * `evm_signers` must be omitted.
+ * 
+ * The operation will contain some parameters which will be used by `account_details` and
+ * `action`. It should not run any code, except checking requirements to call the operation.
+ * One common requirement is that it is being used to register an account, and it can be
+ * checked with `require_register_account_next_operation`. Most other requirements should be
+ * checked in the `action` function. The mount name of the operation must be the name of the
+ * strategy in the map returned by `strategy`.
+ * 
+ * The `register_account` operation will take the name of the previous operation, find out
+ * the `_strategy` it represents, use the parameters in conjunction with
+ * `_strategy.account_details` to extract information about the account it needs to create,
+ * and call the `_strategy.action` function to run the code for the strategy.
+ * 
+ * @see external.auth.evm_signers for info on how to get EVM signatures for account registration
+ */
+struct _strategy {
+    /**
+     * The operation that this strategy uses. It must have the same mount name as the strategy
+     * name itself, as registered through extensions of `strategy`
+     */
+    op: rell.meta;
+    /** 
+     * Used to extract details for the account that will be registered.
+     * If this function throws, the registration will be reverted.
+     */
+    account_details: (gtv) -> account_details;
+    /** 
+     * Allows custom logic to be executed after the account is created.
+     * If this function throws, the registration will be reverted.
+     */
+    action: (accounts.account, gtv) -> unit;
+    /**
+     * The required signers for a transfer using the strategies fee, open or subscription.
+     */
+    required_signers: (gtv) -> list<byte_array>;
+}
+
+/**
+ * Represents information about an account that will be created using a strategy.
+ */
+struct account_details {
+    /** the ID of the account to be registered */
+    account_id: byte_array;
+    /** the main auth descriptor for that account */
+    main: accounts.auth_descriptor;
+    /**
+     * Optionally, a disposable auth descriptor that can be used to access this account.
+     * This allows the user to be logged in when creating the account, as if a
+     * `core.auth._login_config` was used.
+     */
+    disposable: accounts.auth_descriptor? = null;
+}
+
+/**
+ * Used to add new strategies to the dapp. This does not need to be called for FT4-defined
+ * strategies.
+ * 
+ * This function helps avoid a common issue where a strategy is registered with the wrong name.
+ * If that happens, many functions of this module will throw errors pointing to that strategy
+ * as missing, since they won't be able to find it.
+ * 
+ * Example usage:
+ * ```
+ * operation my_strategy(
+ *     main: accounts.auth_descriptor,
+ *     disposable: accounts.auth_descriptor? = null
+ * ) {
+ *     strategies.require_register_account_next_operation();
+ * }
+ * 
+ * function account_details(gtv) {
+ *     val params = struct<ras_open>.from_gtv(gtv);
+ *     val signers = accounts.get_signers(params.main);
+ *     return strategies.account_details(
+ *         account_id = accounts.get_account_id_from_signers(signers),
+ *         main = params.main,
+ *         disposable = params.disposable
+ *     );
+ * }
+ * 
+ * function my_custom_logic(accounts.account, gtv) {
+ *     // custom logic that the strategy has to follow
+ * }
+ * 
+ * @extend(strategies.strategy)
+ * function () = strategies.add_strategy(
+ *     op = rell.meta(my_strategy),
+ *     account_details = account_details(*),
+ *     action = my_custom_logic(*)
+ * );
+ * ```
+ * 
+ * @see _strategy for more information about the parameters of this function
+ * 
+ * @see _no_action for more information on performing no action
+ *
+ * @param op                the custom operation that defines the strategy and its name
+ * @param account_details   the function that retrieves the account details from `op`
+ * @param action            the function that implements the strategy logic. If null,
+ *                          `_no_action` is called.
+ * @param required_signers  the function that determines the list of signers required.
+ * If it is null or the list is empty no signature is required
+ */
+function add_strategy(
+    op: rell.meta,
+    account_details: (gtv) -> account_details,
+    action: ((accounts.account, gtv) -> unit)? = null,
+    required_signers: ((gtv) -> list<byte_array>)? = null
+)
+    = [
+        op.mount_name: _strategy(
+            op,
+            account_details,
+            action ?: _no_action(*),
+            required_signers ?: _default_signers(account_details, *)
+        )
+    ];
+
+/**
+ * An empty function that can be used if a strategy does not need to perform checks for the
+ * account creation.
+ * 
+ * This should generally not be the function to use, but it can be useful for debugging and
+ * testing. Sometimes the `_strategy.account_details` function will be forced to have some
+ * requirements, and if those are considered enough this function could be passed in
+ * `_strategy.action` (by leaving `action` null in `add_strategy`, if used).
+ * 
+ * If your strategy will use no action, please double check that it does not have requirements
+ * that are so loose that they let users create infinite accounts, or your dapp may be
+ * vulnerable to DoS attacks.
+ * 
+ * @param account           not used, as this function does nothing
+ * @param strategy_params   not used, as this function does nothing
+ */
+function _no_action(accounts.account, strategy_params: gtv) {}
+
+/**
+ * Sets the default signers based on the provided account details, used only when adding a strategy
+ * and the required signers are not provided
+ * 
+ * @param account_details  A function that provides account details include main and disposable auth descriptors
+ * @param gtv              The data in gtv format containing the account details
+ * 
+ * @return The default signers based on the account details provided        
+ */
+function _default_signers(account_details: (gtv) -> account_details, gtv) {
+    val details = account_details(gtv);
+    val default_signers = accounts.get_signers(details.main);
+    if (details.disposable??) {
+        default_signers.add_all(accounts.get_signers(details.disposable!!));
+    }
+
+    return default_signers;
+}
+
+/**
+ * Returns a strategy, given the mount name of the operation that defines it.
+ * 
+ * Throws `"MISSING STRATEGY"` if the strategy cannot be found. If `strategy_name` is correct,
+ * this could also be caused by having misconfigured the registration defined in the function
+ * that extends `strategy` in such a way that the strategy name and the 
+ * `_strategy.op.mount_name` are not the same value.
+ * 
+ * @see add_strategy for an easy way to avoid extension misconfiguration issues
+ * 
+ * @param strategy_name     the mount name of the operation found in `_strategy.op`
+ */
 function get_strategy(strategy_name: name): _strategy {
     val strategies = strategy();
-    require(strategy_name in strategies, "Strategy <%s> is not loaded or does not exist.".format(strategy_name));
+    require(
+        strategy_name in strategies,
+        "MISSING STRATEGY: Strategy <%s> is not loaded or does not exist.".format(strategy_name)
+    );
     return strategies[strategy_name];
 }
 
+/** 
+ * Checks whether an operation is a strategy operation that can be used on this chain.
+ * Strategy operations not registered through extensions of `strategy` will return false,
+ * as they won't be usable on this chain.
+ * 
+ * @param op    the operation to check
+ */
 function is_strategy_op(op: gtx_operation): boolean {
     val strategy_operations = strategy().values() @* {} ($.op.mount_name);
     return op.name in strategy_operations;
 }
 
+/**
+ * Registers an account on this chain, using a certain strategy.
+ * 
+ * Can only be called from an operation.
+ * 
+ * It will register the account with the `account_details` retrieved by
+ * `_strategy.account_details`, and using the logic found in `_strategy.action`.
+ * 
+ * The new account will have a main auth descriptor given by `account_details.main`, and
+ * optionally a disposable auth descriptor given by `account_details.disposable`
+ * 
+ * It expects all signers of both auth descriptors to have signed this transaction.
+ * 
+ * Throws if the operation that came just before this one cannot be handled. Common cases are:
+ * - the operation is not registered as a strategy operation through extensions of `strategy`
+ * - the operation has been misconfigured, and its name does not match the operation mount name
+ * 
+ * Throws if the signature verification is unsuccessful. Common cases are:
+ * - `evm_signatures` is misconfigured:
+ *   - any of the signers and signatures don't match in the exact order they're found
+ *   - any of the signatures is null
+ *   - there's more signatures than signers
+ * - a signature from one of the auth descriptor participants is missing:
+ *   - an EVM signer is specified but the signature is not found in `evm_signatures`
+ *   - an FT signer is specified but the signature is not in the transaction
+ *   - a signer passed is neither an EVM nor an FT signer (its length does not match either of
+ *     `core.auth.EVM_ADDRESS_SIZE` and `core.auth.FT_PUBKEY_SIZE`)
+ *
+ * Throws if either auth descriptor is invalid. Common cases include:
+ * - the main auth descriptor has expiration rules instead of `core.accounts.GTV_NULL`
+ * - the disposable auth descriptor's expiration rules:
+ *   - is a complex rule with too many rule components
+ *   - has already expired
+ *   - is not the valid GTV representation of a rule
+ * - errors with the `args` field:
+ *   - some required flags are missing
+ *   - in multi-sig auth descriptors, the `required_signatures` field:
+ *     - is 0 or less
+ *     - is greater than the number of signers
+ * 
+ * Throws if `core.accounts.AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND` is set to 1 and
+ * `account_details.disposable` is not null.
+ * 
+ * Throws if some conditions added in development through extensions (`before_register_account`
+ * or `after_register_account`) aren't met
+ * 
+ * @see _strategy for information on how to structure the transaction that calls this function.
+ * 
+ * @return the newly registered account
+ */
 function register_account(): accounts.account {
     val tx_operations = op_context.get_all_operations();
     val strategy_op = tx_operations[op_context.op_index-1];
@@ -23,11 +331,7 @@ function register_account(): accounts.account {
 
     val strategy = get_strategy(strategy_name);
     val account_details = strategy.account_details(strategy_params);
-
-    var signers = accounts.get_signers(account_details.main);
-    if (account_details.disposable??) {
-        signers.add_all(accounts.get_signers(account_details.disposable!!));
-    }
+    val signers = strategy.required_signers(strategy_params);
 
     val message = get_register_account_message(strategy_op, op_context.get_current_operation());
     auth.verify_signers_with_message(signers, message);
@@ -48,43 +352,47 @@ function register_account(): accounts.account {
     return account;
 }
 
-@extendable function before_register_account(account_id: byte_array);
-
-@extendable function after_register_account(accounts.account);
-
-@extendable 
-function strategy(): map<name, _strategy>;
-
-struct _strategy {
-    op: rell.meta;
-    account_details: (gtv) -> account_details;
-    action: (accounts.account, gtv) -> unit;
-}
-
-struct account_details {
-    account_id: byte_array;
-    main: accounts.auth_descriptor;
-    disposable: accounts.auth_descriptor? = null;
-}
-
-function add_strategy(op: rell.meta, account_details: (gtv) -> account_details, action: ((accounts.account, gtv) -> unit)? = null)
-    = [op.mount_name: _strategy(op, account_details, action ?: _no_action(*))];
-
-function _no_action(accounts.account, strategy_params: gtv) {}
-
+/**
+ * Verifies that the next operation in the transaction is an operation that can be used to
+ * register accounts. Any operation that is whitelisted to be called after `evm_signatures` is
+ * considered valid here.
+ * 
+ * Throws `"MISSING REGISTER ACCOUNT"` if:
+ * - the next operation is not whitelisted
+ * - this is the last operation in the transaction
+ * 
+ * Throws if the `chromia.yml` cannot be parsed for `evm_signatures_authorized_operations`,
+ * e.g. if some elements are not text or there are duplicates.
+ * 
+ * @see core.auth.auth.is_evm_signatures_authorized_operation for information on what operations
+ * are authorized.
+ */
 function require_register_account_next_operation() {
     val all_operations = op_context.get_all_operations();
     val this_op = op_context.get_all_operations()[op_context.op_index];
     
     require(
         all_operations.size() > op_context.op_index + 1,
-        "<%s> must be followed by a register account operation".format(this_op.name)
+        "MISSING REGISTER ACCOUNT: <%s> must be followed by a register account operation"
+            .format(this_op.name)
     );
     
     val next_op = all_operations[op_context.op_index + 1];
 
     require(
         auth.is_evm_signatures_authorized_operation(next_op.name),
-        "<%s> operation must be followed by a register account operation, not <%s>".format(this_op.name, next_op.name)
+        "MISSING REGISTER ACCOUNT: <%s> operation must be followed by a register account operation, not <%s>"
+            .format(this_op.name, next_op.name)
     );
+}
+
+/**
+ * Retrieves an account id given the strategy operation, using the `account_details` function
+ * defined for the `_strategy` in question.
+ * 
+ * @param strategy_op   the operation that defines the strategy
+ */
+function get_account_id_for_strategy(strategy_op: gtx_operation) {
+    val strategy = get_strategy(strategy_op.name);
+    return strategy.account_details(strategy_op.args.to_gtv()).account_id;
 }

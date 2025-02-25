@@ -1,5 +1,4 @@
 export {
-  BufferId,
   Config,
   EnumLike,
   TxContext,
@@ -42,3 +41,11 @@ export {
   getBlockchainApiUrls,
   getDirectoryClient,
 } from "./directory-chain";
+
+export {
+  Web3CustomPromiEvent,
+  Web3CustomEventMap,
+  PromiseExecutor,
+  Web3EventCallback,
+  Web3EventKey,
+} from "./promiEvent";

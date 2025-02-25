@@ -250,14 +250,14 @@ describe("Transaction Builder", () => {
   it("can build and submit a transaction, and emits 'built' event while doing so", async () => {
     const { authenticatorMock, keyPair } = getMocks();
     const operation = nop();
-    const expectedTx = gtx.serialize({
+    const expectedTx = {
       blockchainRid: formatter.ensureBuffer(client.config.blockchainRid),
       operations: [
         { opName: emptyOp().name, args: [] },
         { opName: operation.name, args: operation.args! },
       ],
       signers: [keyPair.pubKey],
-    });
+    };
 
     let builtEvent: SignedTransaction | undefined = undefined;
     const { tx } = await transactionBuilder(authenticatorMock, client)
@@ -268,12 +268,12 @@ describe("Transaction Builder", () => {
         builtEvent = tx;
       });
 
-    expect(gtx.deserialize(tx)).toMatchObject({
-      ...gtx.deserialize(expectedTx),
+    expect(tx).toMatchObject({
+      ...expectedTx,
       signatures: expect.arrayContaining([]),
     });
 
-    expect(builtEvent!.equals(tx));
+    expect(builtEvent!.equals(gtx.serialize(tx)));
   }, 5000);
 
   it("throw SigningError if user rejects FT signature", async () => {
@@ -292,7 +292,7 @@ describe("Transaction Builder", () => {
     keyStore = { ...keyStore, sign };
 
     const authService = createFakeAuthDataService({
-      foo: { flags: ["T"], message: "bogus" },
+      foo: { flags: [AuthFlag.Transfer], message: "bogus" },
     });
     const authenticator = createAuthenticator(
       accountId,
@@ -327,7 +327,7 @@ describe("Transaction Builder", () => {
     keyStore = { ...keyStore, signMessage };
 
     const authService = createFakeAuthDataService({
-      foo: { flags: ["T"], message },
+      foo: { flags: [AuthFlag.Transfer], message },
     });
     const authenticator = createAuthenticator(
       accountId,

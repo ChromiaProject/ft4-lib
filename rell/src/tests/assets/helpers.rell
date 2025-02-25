@@ -1,0 +1,83 @@
+@test module;
+
+import test: lib.ft4.test.core;
+import lib.ft4.admin;
+import lib.ft4.assets;
+import lib.ft4.accounts;
+
+function register_account_create_and_mint_assets(
+    assets_amount: integer = 1
+) {
+    val alice = test.register_alice();
+    val assets = list<assets.asset>();
+
+    for (i in range(assets_amount)) {
+        val asset = test.create_asset("test"+i, "TST"+i, 0);
+        admin.external.mint(alice.account.id, asset.id, 10L)
+            .sign(test.admin_priv_key())
+            .run();
+        assets.add(asset);
+    }
+
+    return (alice, assets);
+}
+
+function get_last_balance(): assets.balance {
+    return get_last_balance_or_null()!!;
+}
+
+function get_last_balance_or_null(): assets.balance? {
+    return assets.balance @? {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function set_asset_filter(
+    ids: list<byte_array>? = null,
+    name: text? = null,
+    symbol: text? = null,
+    type: text? = null
+): assets.asset_filter {
+    return assets.asset_filter(
+        ids = ids,
+        name = name,
+        symbol = symbol,
+        type = type
+    );
+}
+
+function set_balance_filter(
+    account_ids: list<byte_array>? = null,
+    asset_ids: list<byte_array>? = null
+): assets.balance_filter {
+    return assets.balance_filter(
+        account_ids = account_ids,
+        asset_ids = asset_ids
+    );
+}
+
+function set_transfer_history_entry_filter(
+    account_ids: list<byte_array>? = null,
+    asset_ids: list<byte_array>? = null,
+    transaction_rids: list<byte_array>? = null,
+    op_index: integer? = null
+): assets.transfer_history_entry_filter {
+    return assets.transfer_history_entry_filter(
+        account_ids = account_ids,
+        asset_ids = asset_ids,
+        transaction_rids = transaction_rids,
+        op_index = op_index
+    );
+}
+
+function set_crosschain_transfer_history_entry_filter(
+    account_ids: list<byte_array>? = null,
+    asset_ids: list<byte_array>? = null,
+    transaction_rids: list<byte_array>? = null,
+    op_index: integer? = null
+): assets.crosschain_transfer_history_entry_filter {
+    return assets.crosschain_transfer_history_entry_filter(
+        account_ids = account_ids,
+        asset_ids = asset_ids,
+        transaction_rids = transaction_rids,
+        op_index = op_index
+    );
+}

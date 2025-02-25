@@ -1,0 +1,3 @@
+struct subscription_filter {
+    account_ids: list<byte_array>?;
+}

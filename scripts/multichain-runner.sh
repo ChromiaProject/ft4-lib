@@ -6,17 +6,24 @@ NUM_BLOCKCHAINS=3
 POSTGRES_PORT=5432
 NODE_PORT=9870
 API_PORT=7740
+# API_PORT=80
 
-CHROMIA_NODE_VERSION='3.16.0'
-DIRECTORY_CHAIN_VERSION='1.28.0'
+CHROMIA_NODE_VERSION='3.22.5'
+DIRECTORY_CHAIN_VERSION='1.75.2'
 
-BASE_CONFIG_DIR="rell/config/jest-test/multichain"
+if $GITLAB; then
+    BASE_CONFIG_DIR="rell/config/jest-test-gitlab/multichain"
+else
+    BASE_CONFIG_DIR="rell/config/jest-test/multichain"
+fi
+
 DEPENDENCIES_PATH="rell/dep"
 
 PMC_CONFIG="$BASE_CONFIG_DIR/.pmc/config"
 PMC_CONFIG_TEMPLATE="$BASE_CONFIG_DIR/pmc-config.template"
 
-DOCKER=${DOCKER:-docker}
+# DOCKER=${DOCKER:-docker}
+DOCKER=docker
 DOCKER_POSTGRES_NAME='ft4-multichain-test-postgres'
 DOCKER_NODE_NAME='ft4-multichain-test-node'
 
@@ -192,6 +199,14 @@ run_main_logic() {
         fi
     fi
 
+    # export GENESIS_HOST_NAME=docker
+    # export GENESIS_API_URL=docker:7740
+
+    if $GITLAB; then
+        log "Editing Directory Chain for GitLab..."
+        sed -i -e 's/localhost/docker/g' $DEPENDENCIES_PATH/directory-chain/chromia.yml
+    fi 
+
     log "Installing Directory Chain dependencies..."
     chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml > /dev/null
 
@@ -213,6 +228,8 @@ run_main_logic() {
     done
 
     log "Running node container..."
+    mkdir logs
+    # $DOCKER -H $DOCKER_HOST network create -d bridge localnet
     $DOCKER run \
         --name $DOCKER_NODE_NAME \
         --restart unless-stopped \
@@ -223,28 +240,41 @@ run_main_logic() {
         -e POSTCHAIN_CONFIG=/config/config.0.properties \
         -e POSTCHAIN_BLOCKCHAIN_CONFIG=/build/manager.xml \
         -p $NODE_PORT:9870/tcp \
-        -p 127.0.0.1:$API_PORT:7740/tcp \
+        -p $API_PORT:7740/tcp \
         registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:${CHROMIA_NODE_VERSION} \
-        run-node > ./multichain-postchain.log &
+        run-node > ./logs/multichain-postchain.log &
 
     debug "Fetching manager chain BRID..."
     BRID=""
     retry_count=0
 
-    # Loop until BRID receives a non-empty value or until 10 tries
-    while [ -z "$BRID" ] && [ $retry_count -lt 1000 ]; do
+
+    # Loop until BRID receives a non-empty value or until 100 tries
+    while [ -z "$BRID" ] && [ $retry_count -lt 100 ]; do
       # Attempt to fetch the value
-      BRID=$(curl -s http://localhost:7740/brid/iid_0)
-      
+      if $GITLAB; then
+        BRID=$(curl -s http://docker:7740/brid/iid_0)
+      else
+        BRID=$(curl -s http://localhost:7740/brid/iid_0)
+      fi
+
       # Increment retry counter
       ((retry_count++))
-      
       # Wait for the correct BRID
       if [ ${#BRID} -ne 64 ]; then
         BRID=""
         sleep 1
       fi
     done
+
+     
+    # Wait for the correct BRID
+    if [ ${#BRID} -ne 64 ]; then
+        err "Did not find the BRID for chain0, exiting" 
+        cat ./logs/multichain-postchain.log
+        exit 1
+    fi
+
 
     log "Got manager chain BRID: $BRID"
     export MULTICHAIN_D1_BRID=$BRID
@@ -259,6 +289,7 @@ run_main_logic() {
         -cfg $PMC_CONFIG
 
     sleep 1
+
     debug "Verifying the network"
     VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
 
@@ -269,18 +300,25 @@ run_main_logic() {
 
     log "Network verified successfully."
 
+    debug "Creating voterset"
+    pmc voterset create \
+        --name manager \
+        --threshold 1 \
+        --pubkeys $(pmc config --get pubkey --file $PMC_CONFIG) \
+        -cfg $PMC_CONFIG
+
     debug "Adding container for the multichain test blockchains"
     pmc container add \
         --name ft4_multichain_test \
         --cluster system \
-        --pubkeys $(pmc config --get pubkey --file $PMC_CONFIG) \
-        -cfg $PMC_CONFIG
+        --voter-set manager \
+        -cfg $PMC_CONFIG \
+        --proposal
 
     log "Building and adding blockchains to the container..."
     for chain_num in $(bash scripts/chain-numbers.sh $NUM_BLOCKCHAINS)
-    do
+    do  
         include_brids $chain_num
-
         MULTICHAIN_DAPP_BRID=$(
             pmc blockchain add \
                 --quiet \
@@ -292,6 +330,8 @@ run_main_logic() {
 
         export_var="MULTICHAIN${chain_num}_BRID"
         export $export_var="$MULTICHAIN_DAPP_BRID"
+        
+       
 
         debug "Added multichain$chain_num with BRID: $MULTICHAIN_DAPP_BRID"
     done

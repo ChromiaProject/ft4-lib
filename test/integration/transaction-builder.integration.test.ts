@@ -7,15 +7,16 @@ import {
 } from "@ft4-test/util";
 import {
   AnyAuthDescriptor,
+  AuthFlag,
   deleteAllAuthDescriptorsExceptMain,
 } from "@ft4/accounts";
 import { Session, createConnection } from "@ft4/ft-session";
 import { AuthorizationError } from "@ft4/transaction-builder";
 import { nop, op } from "@ft4/utils";
 import {
+  gtx,
   ResponseStatus,
   SignedTransaction,
-  SystemChainException,
   TransactionReceipt,
   TxRejectedError,
 } from "postchain-client";
@@ -30,7 +31,7 @@ describe("transaction builder", () => {
     const connection = createConnection(client);
 
     const { keyPair, authDescriptor: _authDescriptor } =
-      createTestAuthDescriptor(["A", "T"]);
+      createTestAuthDescriptor([AuthFlag.Account, AuthFlag.Transfer]);
     authDescriptor = _authDescriptor;
 
     const accountId = await createAccount(connection.client, authDescriptor);
@@ -93,7 +94,7 @@ describe("transaction builder", () => {
         sentEvent = txRid;
       });
 
-    expect(builtEvent!.equals(tx));
+    expect(builtEvent!.equals(gtx.serialize(tx)));
     expect(sentEvent!.equals(receipt.transactionRid));
   }, 5000);
 
@@ -132,6 +133,10 @@ describe("transaction builder", () => {
       .add(nop())
       .buildAndSendWithAnchoring();
 
-    await expect(promise).rejects.toThrow(SystemChainException);
+    await expect(promise).rejects.toThrow(TxRejectedError);
+    await expect(promise).rejects.toHaveProperty(
+      "message",
+      expect.stringContaining("Transaction was rejected, failedAnchoring"),
+    );
   }, 5000);
 });

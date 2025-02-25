@@ -17,6 +17,8 @@ blockchains:
           max_rules: 4
 
       lib.ft4.core.auth:
+        auth_op_blacklisted_operations:
+          - unauthable_op
         evm_signatures_authorized_operations:
           - extra_signatures_op
           - empty_op
@@ -24,12 +26,12 @@ blockchains:
       lib.ft4.core.admin:
         admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
 
-      tests.assets.utils:
+      lib.ft4.test.core.auth:
         admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
     test:
       modules:
         - tests.accounts
-        - tests.assets        
+        - tests.assets
         - tests.auth
         - tests.crosschain
         - tests.default_prioritization
@@ -50,7 +52,7 @@ blockchains:
       lib.ft4.core.admin:
         admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
 
-      tests.assets.utils:
+      lib.ft4.test.core.auth:
         admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
     test:
       modules:
@@ -65,7 +67,7 @@ blockchains:
       lib.ft4.core.admin:
         admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
 
-      tests.assets.utils:
+      lib.ft4.test.core.auth:
         admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
 
       lib.ft4.core.auth:
@@ -105,6 +107,8 @@ blockchains:
                 min_amount: 5L
               - name: test1 # issued by current blockchain
                 min_amount: 3L
+              - name: test2 # issued by current blockchain
+                min_amount: 2L
               - id: x"eb72b0d3de2ce5c8ec5ccf15ee8a9fbe4bed074f6d4385fdbf552904fc0b8dce" # "test" issued by other blockchain
                 min_amount: 5L
               - issuing_blockchain_rid: x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
@@ -140,9 +144,11 @@ blockchains:
       lib.ft4.core.accounts.strategies.transfer.fee:
         asset:
           - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa" # "test" issued by current blockchain
-            amount: 2L
+            amount: 10L
           - name: test1 # issued by current blockchain
             amount: 1L
+          - name: test2 # issued by current blockchain
+            amount: 3L
           - issuing_blockchain_rid: x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
             name: test1
             amount: 3L
@@ -151,7 +157,7 @@ blockchains:
       lib.ft4.core.accounts.strategies.transfer.subscription:
         asset:
           - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa" # "test" issued by current blockchain
-            amount: 2L
+            amount: 10L
           - name: test1 # issued by current blockchain
             amount: 1L
           - issuing_blockchain_rid: x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
@@ -174,10 +180,21 @@ libs:
 
 compile:
   source: rell/src
-  rellVersion: 0.13.10
+  rellVersion: 0.13.14
 
 test:
   failOnError: false
+
+database:
+  password: postchain
+  username: postchain
+  database: postchain
+  # To run tests locally using chromia cli
+  # host: localhost
+  host: postgres:5432
+  logSqlErrors: true
+  schema: ft4_tests
+  driver: org.postgresql.Driver
 
 docs:
   title: "FT4 Library"
@@ -185,5 +202,5 @@ docs:
   additionalContent:
     - api-docs-header.md
   sourceLink:
-    remoteUrl: https://bitbucket.org/chromawallet/ft3-lib/src/development/rell/src
+    remoteUrl: https://gitlab.com/chromaway/ft4-lib/src/development/rell/src
     remoteLineSuffix: "#lines-"

@@ -1,6 +1,6 @@
-import { Filter, BufferId } from "@ft4/utils";
+import { Filter } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { QueryObject, formatter } from "postchain-client";
+import { BufferId, QueryObject, formatter } from "postchain-client";
 import {
   PendingTransferExpirationState,
   TransferStrategyRuleRaw,
