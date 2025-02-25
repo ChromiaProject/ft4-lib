@@ -4,71 +4,42 @@ import lib.ft4.accounts;
 import lib.ft4.accounts.strategies;
 import test_auth: .auth;
 
+
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    flags = ["T"]
+    flags = [accounts.auth_flags.TRANSFER]
 );
 
-operation operation_without_auth_message_template(
-    integer,
-    big_integer,
-    decimal,
-    boolean,
-    byte_array,
-    text,
-    optional_text: text?
-) {
+operation operation_without_auth_message_template() {
     auth.authenticate();
 }
 
-operation add_ad_to_account(accounts.account, accounts.auth_descriptor) {
-    accounts.add_auth_descriptor(account, auth_descriptor);
+function operation_with_invalid_auth_message_template_message(gtv?) {
+    return "Invalid message template. Nonce: {nonce}";
 }
 
-operation register_asset(name, symbol: text, decimals: integer, issuing_blockchain_rid: byte_array, icon_url: text) {
-    assets.Unsafe.register_asset(name, symbol, decimals, issuing_blockchain_rid, icon_url);
-}
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = rell.meta(operation_with_invalid_auth_message_template).mount_name,
+    flags = [accounts.auth_flags.TRANSFER],
+    message = operation_with_invalid_auth_message_template_message(*)
+);
 
-operation register_account_test(accounts.auth_descriptor) {
-    accounts.create_account_with_auth(auth_descriptor);
+operation operation_with_invalid_auth_message_template() {
+    auth.authenticate();
 }
 
 operation register_account_without_auth_test(id: byte_array, type: text) {
     accounts.create_account_without_auth(id, type);
 }
 
-operation empty_op() {}
-
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
     scope = rell.meta(empty_op_with_auth_handler).mount_name,
-    flags = ["E"]
+    flags = ["E"],
 );
-
 operation empty_op_with_auth_handler() {
     auth.authenticate();
-}
-
-operation consume_point(account_id: byte_array) {
-    var state = require(
-        accounts.rl_state @? { accounts.account @ { .id == account_id } },
-        "Rate limiter state not found for the account with ID: %s".format(account_id)
-    );
-
-    require(state.points > 0, "Insufficient rate limiter points");
-
-	state.points -= 1;
-    state.last_update = op_context.last_block_time;
-}
-
-@extend(auth.auth_handler)
-function () = auth.add_auth_handler(
-    scope = rell.meta(rejected_op).mount_name,
-    flags = ["A"]
-);
-
-operation rejected_op() {
-    require(false, "always rejected");
 }
 
 entity player {

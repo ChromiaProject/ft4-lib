@@ -1,6 +1,71 @@
+/**
+ * Retrieves all account_creation_transfers based on the selected filter of account_creation_transfer_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param account_creation_transfer_filter filter with indexed fileds from the account_creation_transfer entity
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+query get_account_creation_transfers_filtered(
+    account_creation_transfer_filter?,
+    page_size: integer?,
+    page_cursor: text?
+) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    if (account_creation_transfer_filter?.op_index??)
+        require(
+            account_creation_transfer_filter?.transaction_tx_rid??,
+            "MALFORMED FILTER: composite index, transaction required (transaction, op_index)"
+        );
+    return utils.make_page(
+        transfer.account_creation_transfer @* {
+                if (account_creation_transfer_filter?.rowids??) .rowid in account_creation_transfer_filter!!.rowids!! else true,
+                if (account_creation_transfer_filter?.transaction_tx_rid??) .transaction.tx_rid == account_creation_transfer_filter!!.transaction_tx_rid else true,
+                if (account_creation_transfer_filter?.op_index??) .op_index == account_creation_transfer_filter!!.op_index else true,
+                if (account_creation_transfer_filter?.recipient_id??) .recipient_id == account_creation_transfer_filter!!.recipient_id else true,
+                .rowid > (before_rowid ?: rowid(0))
+            } (
+                utils.pagination_result(
+            data = map_account_creation_transfer($).to_gtv_pretty(),
+            rowid = .rowid
+        )
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
+}
+
+/**
+ * Fetches the message that the user must sign in order to register
+ * an account, provided that they are using evm signatures.
+ * 
+ * Throws if the strategy cannot be found. If `strategy_name` is correct, this could also be
+ * caused by having misconfigured the registration defined in the function that extends
+ * `strategy` in such a way that the strategy name and the `_strategy.op.mount_name` are not
+ * the same value.
+ * 
+ * @param strategy_operation            the operation that will be used to represent the strategy
+ * @param register_account_operation    the operation that will be used to register the account
+ */
 query get_register_account_message(
     strategy_operation: gtx_operation,
     register_account_operation: gtx_operation
 ) = strategies.get_register_account_message(strategy_operation, register_account_operation);
 
+/**
+ * Fetches an array of registrations strategies that are currently enabled on this chain.
+ */
 query get_enabled_registration_strategies(): set<text> = strategies.strategy().keys();
+
+/**
+ * Retrieves the id of the account that will the result of registering
+ * an account using the provided strategy operation. 
+ * 
+ * Usually called before the account is registered, but it will give the
+ * same result after the account was registered as well.
+ * 
+ * @param strategy_operation    the operation which represents the strategy with which the
+ *                              account will be registered.
+ */
+query get_account_id_for_strategy(strategy_operation: gtx_operation)
+    = strategies.get_account_id_for_strategy(strategy_operation);

@@ -1,22 +1,51 @@
+/** The number of milliseconds in a day, mainly used for transfer time-to-live */
 val MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
+val RECIPIENT_ID_MAX_SIZE = 1024;
+
 /*
+/**
  * For complex validation we might not want to use simple "require()"
  * but an error message that is returned. 
  */
 struct validation_result {
+    /** Whether the attempt succeeded */
     valid: boolean;
+    /** If `valid` is false, the error message. `null` otherwise */
     error: text? = null;
 }
 
+/** A `validation_result` to be returned when no error should be thrown */
 val VALID = validation_result(true, null);
 
+/**
+ * A `validation_result` to be returned when an error should be thrown
+ * @param error     the error message
+ */
 function invalid(error: text) = validation_result(false, error);
 
+/**
+ * A utility function that adds a header and a footer to every auth message.
+ * 
+ * The header contains the blockchain RID to avoid the same signature to be maliciously used
+ * on other chains in a cross-chain replay attack.
+ * 
+ * The footer contains a nonce to avoid the same signature to be maliciously used on this same
+ * chain in a classic replay attack.
+ * 
+ * @param message   the body of the message
+ */
 function make_auth_message(message: text) {
     return "Blockchain:\n{blockchain_rid}\n\n" + message + "\n\nNonce: {nonce}";
 }
 
+/**
+ * A utility function that computes a unique nonce for this operation's message to sign.
+ * 
+ * @param op        the operation to be signed
+ * @param nonce     starting from 0, it will be increased on every operation performed by
+ *                  the same auth descriptor. 0 if the signer is creating a new auth descriptor
+ */
 function derive_nonce(op: gtx_operation, nonce: integer) {
     return (
         chain_context.blockchain_rid, 
@@ -26,22 +55,75 @@ function derive_nonce(op: gtx_operation, nonce: integer) {
     ).hash().to_hex().upper_case();
 }
 
+/**
+ * Returns the last block time regardless of whether `op_context` exists.
+ * Returns 0 if this is the first block.
+ */
 function latest_time() =
     if (op_context.exists and op_context.block_height > 0)
         op_context.last_block_time
     else
         block @ {} (@max .timestamp) ?: 0;
 
+/**
+ * Returns the block height regardless of whether `op_context` exists.
+ * Returns:
+ * - 0 if this is the first block
+ * - `block_height` if `op_context` exists
+ * - last block height + 1 if `op_context` does not exist
+ */
+function get_block_height() =
+    if (op_context.exists)
+        op_context.block_height
+    else
+        (block @ {} (@max .block_height) ?: -1) +1;
+
+/**
+ * Checks whether the blockchain RID has the correct size
+ * 
+ * Throws `"INVALID BRID"` if the RID's length is not 32 bytes.
+ * 
+ * Should be used inside other functions, and the `descriptor` parameter should be passed
+ * in a way that the error message is understood by the end users.
+ * 
+ * Example: `validate_blockchain_rid(x"", "Chain X's RID")`
+ * will throw this error: `"INVALID BRID: Chain X's RID cannot be empty"`
+ * 
+ * @param blockchain_rid    The RID to check
+ * @param descriptor        the name of the parameter for nicer error printing
+ */
 function validate_blockchain_rid(blockchain_rid: byte_array, descriptor: text = "blockchain_rid") {
-    require(blockchain_rid.size() > 0, "%s cannot be empty".format(descriptor));
+    require(blockchain_rid.size() > 0, "INVALID BRID: %s cannot be empty".format(descriptor));
     require(
         blockchain_rid.size() == 32, 
-        "%s <%s> has invalid length. Expected <32> bytes, found <%d>.".format(descriptor, blockchain_rid, blockchain_rid.size())
+        "INVALID BRID: %s <%s> has invalid length. Expected <32> bytes, found <%d>.".format(descriptor, blockchain_rid, blockchain_rid.size())
     );
 }
 
 /**
+ * Checks if the recipient id has the correct size
+ * 
+ * Throws `"INVALID RECIPIENT ID"` if the recipient's id length is longer than 1024 bytes
+ * 
+ * Should be used inside other functions to validate the size of the recipient's id in transfers
+ * 
+ * Example: `validate_recipient_id(x"")`
+ * will throw this error: `"INVALID RECIPIENT ID: x"". Recipient id has invalid length. Expected 1024 bytes, but found <0>"`
+ * 
+ * @param recipient_id  The id to validate
+ */
+function validate_recipient_id(recipient_id: byte_array) {
+    require(recipient_id.size() <= RECIPIENT_ID_MAX_SIZE,
+        "INVALID RECIPIENT ID: %s. Recipient id has invalid length, Expected %d bytes, but found <%d>".format(recipient_id, RECIPIENT_ID_MAX_SIZE, recipient_id.size()));
+}
+
+/**
  * Converts a gtv value to a pretty text representation, with newlines and indentations.
+ * Used to create pretty auth messages which include all parameters passed to a certain
+ * operation, regardless of complexity.
+ * 
+ * It's still recommended to create custom auth messages for complex operations, as they
+ * will always be more readable than any automatically generated text.
  *
  * @param gtv                   the gtv value to convert.
  *
@@ -142,14 +224,88 @@ function convert_gtv_to_text(
  * In the future these functions will be replaced with native Rell functions.
  */ 
 
+/**
+ * Used to check if a gtv value is encoding a `byte_array`
+ * 
+ * @param gtv   the value to check
+ */
 function is_byte_array(gtv) = gtv.to_bytes()[0] == 161;
 
+/**
+ * Used to check if a gtv value is encoding a `text`
+ * 
+ * @param gtv   the value to check
+ */
 function is_text(gtv) = gtv.to_bytes()[0] == 162;
 
+/**
+ * Used to check if a gtv value is encoding an `integer`
+ * 
+ * @param gtv   the value to check
+ */
 function is_integer(gtv) = gtv.to_bytes()[0] == 163;
 
+/**
+ * Used to check if a gtv value is encoding a `dict`
+ * 
+ * @param gtv   the value to check
+ */
 function is_dict(gtv) = gtv.to_bytes()[0] == 164;
 
+/**
+ * Used to check if a gtv value is encoding a `list`
+ * 
+ * @param gtv   the value to check
+ */
 function is_list(gtv) = gtv.to_bytes()[0] == 165;
 
+/**
+ * Used to check if a gtv value is encoding a `big_integer`
+ * 
+ * @param gtv   the value to check
+ */
 function is_big_integer(gtv) = gtv.to_bytes()[0] == 166;
+
+/**
+ * Throws `INVALID FILTER` if the list of `transaction_rids` is not empty, but `op_index` is not specified or
+ * if `op_index` is specified, but `transaction_rids` is empty
+ */
+function validate_composite_indexes_tx_rids_and_op_index(transaction_rids: list<byte_array>?, op_index: integer?) {
+    val basic_error_message = "INVALID FILTER: Composite index (transaction_rids, op_index) - ";
+    if (not empty(transaction_rids)) {
+        require(
+            op_index??,
+            basic_error_message + "op_index filter is required"
+        );
+    }
+
+    if (op_index??) {
+        require(
+            not empty(transaction_rids),
+            basic_error_message + "transaction_rids filter cannot be empty"
+        );
+    }
+}
+
+/**
+ * Throws `INVALID FILTER` if the list of `init_tx_rids` is not empty, but `init_op_index` is not specified or
+ * if `init_op_index` is specified, but `init_tx_rid` is empty
+ */
+function validate_composite_indexes_init_tx_rids_and_init_op_index(
+    init_tx_rids: list<byte_array>?, init_op_index: integer?
+) {
+    val basic_error_message = "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - ";
+    if (not empty(init_tx_rids)) {
+        require(
+            init_op_index??,
+            basic_error_message + "init_op_index filter is required"
+        );
+    }
+
+    if (init_op_index??) {
+        require(
+            not empty(init_tx_rids),
+            basic_error_message + "init_tx_rids filter cannot be empty"
+        );
+    }
+}

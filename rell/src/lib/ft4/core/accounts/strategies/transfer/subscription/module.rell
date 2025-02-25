@@ -8,13 +8,35 @@ import ^^^^^.core.accounts.strategies;
 import ^^^^^.utils;
 import transfer: ^;
 
+/**
+ * Represents an account's subscription, used to maintain the account active
+ */
 entity subscription {
+    /** the account that is being kept active */
     key accounts.account;
+    /** the asset used to pay */
     assets.asset;
+    /** the amount of time one payment lasts for */
     mutable period_millis: integer;
+    /** the timestamp of the last payment */
     mutable last_payment: timestamp;
 }
 
+/**
+ * The operation that defines this strategy. The subscription strategy allows users to
+ * register a new account by paying a recurring fee. It does not grant the account any
+ * additional benefits.
+ * 
+ * Throws if the next operation in the transaction is not accepted by
+ * `require_register_account_next_operation`
+ * 
+ * @see core.accounts.strategies._strategy for information on how to register an account
+ * using this strategy
+ * 
+ * @param asset_id      the ID of the asset used to pay the subscription fees
+ * @param main          the main auth descriptor for the account that will be registered
+ * @param disposable    optionally, the disposable auth descriptor for the same account
+ */
 operation ras_transfer_subscription(
    asset_id: byte_array,
    main: accounts.auth_descriptor,
@@ -23,6 +45,12 @@ operation ras_transfer_subscription(
     strategies.require_register_account_next_operation();
 }
 
+/**
+ * Calculates the account details for the account that will be registered using the
+ * `ft4.ras_transfer_subscription` strategy.
+ * 
+ * @param gtv   the parameters for the `ras_transfer_subscription` operation, GTV-encoded
+ */
 function account_details(gtv) {
     val params = struct<ras_transfer_subscription>.from_gtv(gtv);
     val signers = accounts.get_signers(params.main);
@@ -33,17 +61,37 @@ function account_details(gtv) {
     );
 }
 
+/**
+ * The `action` for the subscription `_strategy`. Transfers the funds to the account, paying
+ * the fee and creating a `subscription` entity for the given account.
+ * 
+ * Throws `"FORBIDDEN ASSET"` if the asset:
+ * - cannot be used to pay the fee, or
+ * - is not found.
+ * 
+ * Throws if the transfer cannot be executed. Common cases are:
+ * - an account with the fee account ID exists, but it's not of `transfer.ACCOUNT_TYPE_FEE`
+ * 
+ * Throws if the chain configuration cannot be parsed.
+ * 
+ * @param account               the account that was registered
+ * @param strategy_params_gtv   the parameters for the `ras_transfer_subscription` operation,
+ *                              GTV-encoded
+ */
 function transfer_action(accounts.account, strategy_params_gtv: gtv) {
 	transfer.do_transfer(account, "subscription");
 
 	val strategy_params = struct<ras_transfer_subscription>.from_gtv(strategy_params_gtv);
     val subscription_assets = transfer.resolve_fee_assets(subscription_assets());
-	val subscription_amount = require(subscription_assets.get_or_null(strategy_params.asset_id),
-        "Asset <%s> is not allowed to pay subscription with".format(strategy_params.asset_id));
+	val subscription_amount = require(
+        subscription_assets.get_or_null(strategy_params.asset_id),
+        "FORBIDDEN ASSET: Asset <%s> is not allowed to pay subscription with"
+            .format(strategy_params.asset_id)
+    );
     val asset = assets.Asset(strategy_params.asset_id);
 	assets.Unsafe.transfer(
 		account,
-		transfer.ensure_fee_account(subscription_account_id(), chain_context.blockchain_rid),
+		transfer.ensure_chain_fee_account(subscription_account_id()),
 		asset,
 		subscription_amount);
 
@@ -59,30 +107,60 @@ function transfer_action(accounts.account, strategy_params_gtv: gtv) {
 function () = strategies.add_strategy(
     op = rell.meta(ras_transfer_subscription),
     account_details = account_details(*),
-    action = transfer_action(*)
+    action = transfer_action(*),
+    required_signers = required_signers_subscription(*)
 );
+
+/**
+ * The `required_signers` for the subscription strategy.
+ * 
+ * @see `transfer.required_signers` for more information.
+ * @see core.accounts.strategies.required_signers
+ *
+ * @param gtv the arguments for `ras_transfer_subscription`.
+ */
+function required_signers_subscription(gtv) {
+    val params = struct<ras_transfer_subscription>.from_gtv(gtv);
+    return transfer.required_signers(params.main, params.disposable);
+}
 
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(renew_subscription).mount_name,
-    flags = ["T"],
+    flags = [accounts.auth_flags.TRANSFER],
     message = renew_subscription_message(*)
 );
 
+/**
+ * Renews the subscription for an account by paying from that account with the given asset.
+ * 
+ * Must be signed by an auth descriptor with the `accounts.AUTH_FLAG_TRANSFER`.
+ * 
+ * Throws `"MISSING SUBSCRIPTION"` if the account does not have a subscription.
+ * 
+ * Throws `"INPUT ERROR"` if the asset cannot be used to pay the fees.
+ * 
+ * Throws if the transfer cannot be executed. Common cases are:
+ * - the account does not have enough funds
+ * - an account with the fee account ID exists, but it's not of `transfer.ACCOUNT_TYPE_FEE`
+ * 
+ * @param asset_id  the asset that should be used to pay the fee, or null for the same one
+ *                  that was used in the first payment.
+ */
 operation renew_subscription(asset_id: byte_array?) {
     val account = auth.authenticate();
 
     val subscription = require(subscription @? { account },
-        "No subscription for account <%s>".format(account.id));
+        "MISSING SUBSCRIPTION: No subscription for account <%s>".format(account.id));
 
     val subscription_assets = transfer.resolve_fee_assets(subscription_assets());
     val subscription_asset = if (asset_id != null) assets.Asset(asset_id) else subscription.asset;
     val subscription_amount = require(subscription_assets.get_or_null(subscription_asset.id),
-        "Asset <%s> is not allowed to pay subscription with".format(subscription_asset.id));
+        "INPUT ERROR: Asset <%s> is not allowed to pay subscription with".format(subscription_asset.id));
 
     assets.Unsafe.transfer(
    		account,
-   		transfer.ensure_fee_account(subscription_account_id(), chain_context.blockchain_rid),
+   		transfer.ensure_chain_fee_account(subscription_account_id()),
    		subscription_asset,
    		subscription_amount);
 
@@ -96,15 +174,29 @@ function renew_subscription_message(gtv) {
     return "Please sign the message\nto renew subscription for account: {account_id}";
 }
 
+/**
+ * Extension of the `before_authenticate` function, that only allows a certain account to call
+ * an operation if:
+ * - it has paid its subscription
+ * - it is not required to pay the subscription (e.g., it was registered with a one-time fee)
+ * - the operation being called is included in the free operations.
+ * 
+ * Throws `"SUBSCRIPTION EXPIRED"` if the subscription has expired.
+ * 
+ * @see free_operations for information on free operations.
+ * 
+ * @param account                   the account calling the operation
+ * @param account_auth_descriptor   the auth descriptor being used to authenticate
+ */
 @extend(auth.before_authenticate) function(accounts.account, accounts.account_auth_descriptor) {
     val subscription = subscription @? { account };
     if (subscription != null) {
         val op = op_context.get_current_operation();
-        val free_operations = free_operations();
-        free_operations.add(rell.meta(renew_subscription).mount_name);
-        if (op.name not in free_operations) {
-            require(utils.latest_time() <= (subscription.last_payment + subscription.period_millis),
-                "Subscription has expired");
+        if (op.name not in free_operations()) {
+            require(
+                utils.latest_time() <= (subscription.last_payment + subscription.period_millis),
+                "SUBSCRIPTION EXPIRED: Subscription has expired"
+            );
         }
     }
 }

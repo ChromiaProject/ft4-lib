@@ -10,46 +10,207 @@ import ^^.external.auth.{
     evm_signatures
 };
 
+/** configuration used by the auth module, as defined in the `chromia.yml` file */
 struct module_args {
+    /**
+     * List of operations which require the `evm_signatures` operation.
+     * Generally, these operations will have a call to `verify_signers` inside.
+     * 
+     * Standard FT4 operations which require `evm_signatures` do not need to be added here.
+     * 
+     * If a transaction contains `evm_signatures`, but this operation is not used to
+     * authorize an operation in this list, the transaction will fail. This prevents users
+     * from adding a lot of signatures to make the transaction arbitrarily heavy.
+     * 
+     * Defined in the `chromia.yml` file as:
+     * ```
+     *   evm_signatures_authorized_operations:
+     *     - op_1
+     *     - op_2
+     * ```
+     * The value of this field will be
+     * `["op_1", "op_2"].to_gtv()`
+     * 
+     * When parsing it, it will be converted to `set<text>`, which means duplicate entries
+     * will make the parsing fail
+     */
     evm_signatures_authorized_operations: gtv? = null;
+    /**
+     * List of operations which should never follow an auth operation.
+     * Generally, any operations which does not call `authenticate` and does not prevent the
+     * users from repeatedly calling by rate limiting them should be included here.
+     * 
+     * Standard operations which cannot be used with an auth operation do not need to be added
+     * here.
+     * 
+     * Defined in the `chromia.yml` file as:
+     * ```
+     *   evm_signatures_authorized_operations:
+     *     - op_1
+     *     - op_2
+     * ```
+     * The value of this field will be
+     * `["op_1", "op_2"].to_gtv()`
+     * 
+     * When parsing it, it will be converted to `set<text>`, which means duplicate entries
+     * will make the parsing fail
+     * 
+     * @see is_auth_op for information on built-in auth operation
+     */
+    auth_op_blacklisted_operations: gtv? = null;
 }
 
+// unused
 struct auth_data {
     flags: list<text>;
     message: text;
 }
 
+/**
+ * An auth handler defines who can and should call a specific operation. A new auth handler
+ * should be defined for each operation in the dapp.
+ * 
+ * @see add_auth_handler for a usage example
+ */
 struct _auth_handler {
+    /**
+     * The flags an auth descriptor should have to be authorized to call this operation.
+     * In this way, access levels can be defined, and a function can be setup in a way
+     * that calling it requires special permissions.
+     * 
+     * By default, two flags are defined in FT4 operations:
+     * - `T` - Transfer. Everything that requires transferring assets requires this flag.
+     * - `A` - Account. Everything that modifies the account and its auth descriptors requires
+     *         this flag
+     * 
+     * If multiple flags appear here, an auth descriptor is required to have them all to be
+     * able to call the operation.
+     * 
+     * No flags means any auth descriptor can be used.
+     * 
+     * The `resolver` field of the auth handler might partially or completely override this
+     * field.
+     */
     flags: list<text>;
+    /**
+     * A function that receives the the arguments of the operation and returns a message
+     * that should be signed if the signer that is authorizing is an EVM signer.
+     * 
+     * This text will thus appear on the EVM wallet of the user to approve the operation.
+     * 
+     * If null, a default message will be created by `generate_operation_auth_message`.
+     * It is suggested to only use the default messages in development environments.
+     * 
+     * An example function that could be used as a message formatter is:
+     * ```
+     * operation send_chroma_tokens (amount: big_integer, account) { ... }
+     * 
+     * function message_formatter_for_send_chroma_tokens (gtv) {
+     *     val params = struct<send_chroma_tokens>.from_gtv(gtv);
+     *     return "Do you want to send %s CHR to account %s?".format(
+     *         params.amount,
+     *         params.account
+     *     );
+     * }
+     * ```
+     * The function can be as complex or simple as needed, and it can as well make no use
+     * of the gtv parameters by returning a default message in all cases - the message will
+     * have a nonce that prevents replay attacks.
+     */
     message_formatter: ((gtv) -> text)? = null;
+    /**
+     * Either null, or a function that receives:
+     * - the arguments of the operation
+     * - the account ID
+     * - a list of auth descriptor IDs
+     * and returns the ID of the auth descriptor that should be used to authorize the
+     * operation, or null if none is acceptable.
+     * 
+     * If this function is defined, it will be called by the client to pick the best auth
+     * descriptor to use between the ones that are available.
+     * 
+     * If flags is not an empty list, it will be used to preselect which auth descriptors to
+     * pass to the resolver - otherwise, all auth descriptors can be passed, and the resolver
+     * could manually check flags if needed.
+     * 
+     * This behavior allows the resolver to define cases in which one of the auth descriptors
+     * could call a certain operation with some flags, while a different auth descriptor needs
+     * a different flag to call the same operation.
+     */
     resolver: ((gtv, byte_array, list<byte_array>) -> byte_array?)? = null;
 }
 
-/*
+/**
  * The constant that defines app level authentication scope.
  * If scope is omitted when defining an auth handler, then
  * it has 'app' scope, i.e. it is used to authenticate 
- * operations that do not have own auth handlers or if 
+ * operations that do not have their own auth handlers if 
  * there is no mount point auth handler for the operation.
+ * 
+ * @see https://docs.chromia.com/ft4/ft4-authentication#application-scope-auth-handler for
+ * more information on app scope auth handler resolution
  */
 val APP_SCOPE = "app";
 
-/*
- * Extendable function used to define auth handlers. 
- * When called it returns a list of all auth handlers defined
- * in the dapp.
+/**
+ * This prefix could appear before an auth handler's scope to mark that it can be overridden.
+ * If two auth handlers are found with the same scope, but one has the override prefix, the
+ * other one is used.
+ */
+val OVERRIDE_PREFIX = "__override__";
+
+/**
+ * Extendable function used to define auth handlers. When called it returns a map of all auth
+ * handlers defined in the dapp.
+ * 
+ * The map pairs up the auth handlers with their scopes.
+ * 
+ * Throws if any extension of this function throws.
+ * 
+ * @see add_auth_handler for an example
+ *
+ * @see get_auth_handler for a definition of auth handler scopes
  */
 @extendable 
 function auth_handler(): map<name, _auth_handler>;
 
-/*
- * Finds auth handler for provided operation name.
+/**
+ * Finds the auth handler for the provided operation name among all the auth handlers
+ * defined in this dapp as extensions of `auth_handler`.
+ * 
+ * All auth handlers will be in a `map<scope: text, _auth_handler>`
+ * 
+ * A scope can be:
+ * - an operation name, in the way it is called from the client: `a.b.my_op`
+ * - an operation name prefixed with `OVERRIDE_PREFIX`: `OVERRIDE_PREFIX + "a.b.my_op"`
+ * - a mount point: `a.b`
+ * - the value of `APP_SCOPE`
+ * 
+ * When calling an operation, the auth handler that will be used is (in this order):
+ * - the auth handler with the operation name as scope, if it exists
+ * - the auth handler with the operation name and `OVERRIDE_PREFIX` as scope, if it exists
+ * - the auth handler with the closest mount point as scope, if it exists
+ * - the auth handler with the app scope, if it exists
+ * 
+ * For example, an operation mounted on `a.b.my_op` will look for, in this order:
+ * - the auth handler with scope `a.b.my_op`
+ * - the auth handler with scope `OVERRIDE_PREFIX + "a.b.my_op"`
+ * - the auth handler with scope `a.b`
+ * - the auth handler with scope `a`
+ * - the auth handler with the app scope
+ * 
+ * Throws if `op_name` is not valid
+ * 
+ * Throws `"MISSING HANDLER"` if no auth handler is defined for this operation, nor any
+ * mount point above it.
+ * 
+ * @param op_name   the name of the operation
  */
 function get_auth_handler(op_name: name) {
     require_valid_scope_name(op_name);
     val auth_handlers = auth_handler();
     if (op_name in auth_handlers) return auth_handlers[op_name];
-    val override_name = "__override__" + op_name;
+    val override_name = OVERRIDE_PREFIX + op_name;
     if (override_name in auth_handlers) return auth_handlers[override_name];
 
     val handler = get_mount_scope_auth_handler(auth_handlers, op_name);
@@ -57,11 +218,40 @@ function get_auth_handler(op_name: name) {
 
     require(
         auth_handlers.get_or_null(APP_SCOPE),
-        "Cannot find auth handler for operation <%s>".format(op_name)
+        "MISSING HANDLER: Cannot find auth handler for operation <%s>".format(op_name)
     );
     return auth_handlers[APP_SCOPE];
 }
 
+/**
+ * Utility function that allows easily adding an auth handler.
+ * It should be used by dapps, while library developers should generally prefer using
+ * `add_overridable_auth_handler` instead, allowing dapps to override the default handler.
+ * 
+ * Throws if `scope` is not valid
+ * 
+ * Example:
+ * ``` 
+ * operation my_op() { ... } 
+ *
+ * @extend(auth.auth_handler)
+ * function () = auth.add_auth_handler(
+ *     rell.meta(my_op).mount_name,
+ *     flags,
+ *     message_function,
+ *     resolver_function
+ * );
+ * ```
+ * 
+ * @see _auth_handler for more information on `flags`, `message` and `resolver`
+ * 
+ * @see get_auth_handler for a definition of auth handler scope
+ * 
+ * @param scope     The scope of the auth handler - either an operation name or a mount point
+ * @param flags     The `flags` parameter of the auth handler
+ * @param message   The `message` parameter of the auth handler
+ * @param resolver  The `resolver` parameter of the auth handler
+ */
 function add_auth_handler(
     scope: text = APP_SCOPE, 
     flags: list<text>,
@@ -69,6 +259,26 @@ function add_auth_handler(
     resolver: ((gtv, byte_array, list<byte_array>) -> byte_array?)? = null
 ) = [valid_scope_name(scope): _auth_handler(flags, message, resolver)];
 
+/**
+ * Like `add_auth_handler`, but the auth handler here defined will not be used if a different
+ * auth handler for the same scope was created with `add_auth_handler`.
+ * 
+ * As normal, however, for an operation with mount point `a.b.operation`, an overridable auth
+ * handler with scope `a.b` will take precedence over a non-overridable auth handler with
+ * scope `a`
+ * 
+ * Throws if `scope` is not valid
+ * 
+ * @see _auth_handler for more information on `flags`, `message` and `resolver`
+ * 
+ * @see add_auth_handler for a usage example
+ * 
+ * @see get_auth_handler for a definition of auth handler scope
+ * 
+ * @param scope     The scope of the auth handler - either an operation name or a mount point
+ * @param message   The `message` parameter of the auth handler
+ * @param resolver  The `resolver` parameter of the auth handler
+ */
 function add_overridable_auth_handler(
     scope: text = APP_SCOPE,
     flags: list<text>,
@@ -76,26 +286,66 @@ function add_overridable_auth_handler(
     resolver: ((gtv, byte_array, list<byte_array>) -> byte_array?)? = null
 ) = ["__override__" + valid_scope_name(scope): _auth_handler(flags, message, resolver)];
 
+/**
+ * Ensures that the scope is valid, also trimming leading and trailing whitespace.
+ * 
+ * Throws if `scope` is not valid
+ * 
+ * @see require_valid_scope_name for the rules on scope validation
+ * 
+ * @param scope     The `scope` parameter of the auth handler to trim and check
+ * 
+ * @return the valid scope name, trimmed from leading and trailing whitespace
+ */
 function valid_scope_name(scope: text) {
     val scope_name = scope.trim();
     require_valid_scope_name(scope_name);
     return scope_name;
 }
 
+/**
+ * Retrieves the arguments of the operation that led to this function call
+ * 
+ * Can only be called from an operation.
+ */
 function args() = op_context.get_current_operation().args.to_gtv();
 
+/** An EVM signature */
 struct signature {
+    /** The `r` value of the signature, or the first 32 bytes */
     r: byte_array;
+    /** The `s` value of the signature, or the next 32 bytes */
     s: byte_array;
+    /** The `v` value of the signature, or the last byte, either 26 or 27 */
     v: integer;
 }
 
+/**
+ * The arguments of the `evm_auth` operation
+ * 
+ * @see external.auth.evm_auth for informations about the specific arguments
+ */
 struct evm_auth_args {
     accounts.account;
     accounts.account_auth_descriptor;
     signatures: list<signature?>;
 }
 
+/**
+ * Retrieves the auth handler that should be applied to the given operation name, only looking
+ * through mount scope auth handlers.
+ * 
+ * Example:
+ * If the operation `a.b.my_op` is passed, it will return the first auth handler found from
+ * this list:
+ * - an auth handler with scope `a.b`
+ * - an auth handler with scope `a`
+ * - null
+ * regardless of whether an auth handler with scope `a.b.my_op` exists.
+ * 
+ * @param auth_handlers     the map returned by `auth_handler()`
+ * @param op_name           the mount name of the operation to check
+ */
 function get_mount_scope_auth_handler(auth_handlers: map<name, _auth_handler>, op_name: name) {
     val op_name_components = op_name.split(".");
     if (op_name_components.size() < 2) return null;
@@ -108,10 +358,17 @@ function get_mount_scope_auth_handler(auth_handlers: map<name, _auth_handler>, o
     return null;
 }
 
-/*
- * Creates message from operation name and arguments.
- * It is used when `evm_auth` is used to authenticate a user, 
- * but auth message is not specified in the auth handler of the operation.
+// brid is unused
+/**
+ * Creates message from operation name and arguments. It is used when `evm_auth` is used to
+ * authenticate a user, but auth message is not specified in the auth handler of the operation.
+ * 
+ * The message will contain the operation name and all parameters, formatted in a way that
+ * favors readability of every parameter. It is not expected to be a sensible message for
+ * end users to read, as the parameters will not have a label identifying what they represent.
+ * 
+ * @param blockchain_rid    the RID of the blockchain we're on
+ * @param op                the operation that needs to be signed
  */
 function generate_operation_auth_message(blockchain_rid: byte_array, op: gtx_operation) {
     var message = "Please sign the message to call\noperation:\n- %s".format(op.name);
@@ -130,8 +387,21 @@ function generate_operation_auth_message(blockchain_rid: byte_array, op: gtx_ope
     return message;
 }
 
+/**
+ * Utility function that builds a mount scope given all the parts of it and a number indicating
+ * the depth.
+ * Example:
+ * `join_text_list(["a", "b", "c"], 2)` outputs `"a.b"`
+ * 
+ * Throws `"INPUT ERROR"` if:
+ * - count is 0, or
+ * - count is greater or equal to the `components` size
+ * 
+ * @param components    the components of the mount name
+ * @param count         the depth of the new mount name to return
+ */
 function join_text_list(components: list<text>, count: integer) {
-    require(count < components.size() and count > 0, "Error building mount path");
+    require(count < components.size() and count > 0, "INPUT ERROR: Error building mount path");
     var result = components[0];
     for (i in range(1, count)) {
         result = result + "." + components[i];
@@ -139,24 +409,46 @@ function join_text_list(components: list<text>, count: integer) {
     return result;
 }
 
+/**
+ * Verifies that the scope name is valid, i.e. that it matches this regex:
+ * `/^\w+(\.\w+)*$/`
+ * any single word (matched by `\w+`) or sequence of such words separated by dots is valid.
+ * `name` may not start or end with a dot.
+ * 
+ * Throws `"INVALID SCOPE"` if the name does not match
+ * 
+ * @param name  the name to check
+ */
 function require_valid_scope_name(name) =     
     require(
         name.matches("^\\w+(\\.\\w+)*$"), 
-        "Invalid scope name <%s>".format(name)
+        "INVALID SCOPE: Invalid scope name <%s>".format(name)
     );
 
-/*
+/**
  * Checks whether `evm_signatures` operation can be used with provided operation.
- * We don't keep track of nonce for keys used with evm_signatures, therefore if not used with care,
- * authorizing an operation with `evm_signatures` could lead to replay attack. In order to use it with
- * an operation, the operation has to be whitelisted. By default, library only allows 
- * `evm_signatures` to be used with `ft4.add_auth_descriptor` and `ft4.register_account`.
+ * 
+ * We don't keep track of nonce for keys used with `evm_signatures`, therefore if not used with
+ * care, authorizing an operation with `evm_signatures` could lead to replay attack.
+ * 
+ * In order to use it with an operation, the operation has to be whitelisted.
+ * By default, library only allows `evm_signatures` to be used with certain operations.
+ * 
  * `evm_signatures` is safe to use in combination with `ft_auth` or `evm_auth` operation.
- * However if used as only way to authorize an operation, then the operation has to ensure that it
- * cannot be called more than once with same parameters, e.g. operation creates an entity that has id
+ * 
+ * However, if used as only way to authorize an operation, the operation has to ensure that it
+ * cannot be called more than once with same parameters.
+ * 
+ * One way to avoid that is if the operation creates an entity that has some `key` value
  * that is derived from operation parameters.
+ * 
+ * Throws `"EVM SIG PARSING ERROR"` if the `chromia.yml` cannot be parsed for this parameter,
+ * e.g. if some elements are not text or there are duplicates.
+ * 
+ * @see module_args.evm_signatures_authorized_operations for the whitelist
+ * 
+ * @param name  the operation to check
  */
-  
 function is_evm_signatures_authorized_operation(name): boolean {
     val whitelisted_operations = set([
         "ft4.register_account",
@@ -167,19 +459,41 @@ function is_evm_signatures_authorized_operation(name): boolean {
     if (chain_context.args.evm_signatures_authorized_operations??) {
         whitelisted_operations.add_all(require(
             try_call(set<text>.from_gtv(chain_context.args.evm_signatures_authorized_operations!!, *)),
-            "Cannot parse 'evm_signatures_authorized_operations' config parameter"
+            "EVM SIG PARSING ERROR: Cannot parse 'evm_signatures_authorized_operations' config parameter"
         ));
     }
 
     return name in whitelisted_operations;
 }
 
+/**
+ * Ensures that this operation is authorizing an operation which is whitelisted for usage with
+ * `evm_signatures`
+ * 
+ * The operation that is being authorized should be the next operation in the transaction,
+ * but it's allowed to have an auth operation or a strategy operation between this operation
+ * and the authorized one.
+ * 
+ * Throws `"EVM SIG FORBIDDEN"` if:
+ * - the operation that is being authorized is not whitelisted,
+ * - there's no operation after this one, or
+ * - there is only one operation after this one, and it's an auth or strategy operation
+ * 
+ * Can only be called from an operation, and it should only be called by `evm_signatures`
+ * 
+ * @see is_evm_signatures_authorized_operation for information on whitelisting operations
+ * 
+ * @see is_auth_op for information on what is an auth operation
+ * 
+ * @see core.accounts.strategies.is_strategy_op for information on what is a strategy
+ * operation
+ */
 function require_evm_signatures_can_be_used() {
     val all_operations = op_context.get_all_operations();
 
     require(
         all_operations.size() > op_context.op_index+1,
-        "Cannot find an operation to authorize with 'ft4.evm_signatures'"
+        "EVM SIG FORBIDDEN: Cannot find an operation to authorize with 'ft4.evm_signatures'"
     );
     var next_op = all_operations[op_context.op_index+1];
 
@@ -189,27 +503,86 @@ function require_evm_signatures_can_be_used() {
     } else {
         require(
             all_operations.size() > op_context.op_index+2,
-            "Cannot find an operation to authorize with 'ft4.evm_signatures'"
+            "EVM SIG FORBIDDEN: Cannot find an operation to authorize with 'ft4.evm_signatures'"
         );
         op_to_authorize = all_operations[op_context.op_index+2];
     }
 
     require(
         is_evm_signatures_authorized_operation(op_to_authorize.name),
-        "Cannot authorize operation <%s> with evm_signatures".format(op_to_authorize.name)
+        "EVM SIG FORBIDDEN: Cannot authorize operation <%s> with evm_signatures".format(op_to_authorize.name)
     );
 }
 
+
+/**
+ * Checks whether auth operations cannot be used with provided operation.
+ * 
+ * Auth operations don't perform any checks, which means that if they're used with an operation
+ * that does not call `authenticate`, users could pass a lot of signatures to it without being
+ * rate limited.
+ * 
+ * For example, they could send `evm_auth` followed by a `nop`, and no logic would be performed
+ * on chain. However, the transaction would be stored, allowing a malicious user to store a lot
+ * of data on chain very quickly (since rate limiting doesn't take place).
+ * 
+ * The next operation thus be one that either rate limits or checks the auth operation in some
+ * way.
+ * 
+ * Throws `"AUTH OP PARSING ERROR"` if the `chromia.yml` cannot be parsed for this parameter,
+ * e.g. if some elements are not text or there are duplicates.
+ * 
+ * @see is_auth_op for information on what is an auth operation
+ * 
+ * @see module_args.auth_op_blacklisted_operations for the blacklist
+ * 
+ * @param name  the operation to check
+ */
+function is_auth_blacklisted_operation(name): boolean {
+    val blacklisted_operations = set([
+        "nop",
+        "timeb",
+        "iccf_proof",
+        "ft4.ft_auth",
+        "ft4.evm_auth", 
+        "ft4.evm_signatures"
+    ]);
+
+    if (chain_context.args.auth_op_blacklisted_operations??) {
+        blacklisted_operations.add_all(require(
+            try_call(set<text>.from_gtv(chain_context.args.auth_op_blacklisted_operations!!, *)),
+            "AUTH OP PARSING ERROR: Cannot parse 'auth_op_blacklisted_operations' config parameter"
+        ));
+    }
+
+    return name in blacklisted_operations;
+}
+
+/**
+ * Verifies that the next operation is one that will make use of the auth operation that is
+ * being called.
+ * 
+ * Can only be called from an operation, and it should only be called by auth operations.
+ * 
+ * Throws `"AUTH OP FORBIDDEN"` if the next operation is blacklisted or this is the last
+ * operation in the transaction
+ * 
+ * @see is_auth_blacklisted_operation for information on blacklisting operations
+ * 
+ * @see is_auth_op for information on what is an auth operation
+ */
 function require_regular_next_operation() {
     val all_operations = op_context.get_all_operations();
     val this_op = op_context.get_all_operations()[op_context.op_index];
     
     require(
         all_operations.size() > op_context.op_index + 1,
-        "<%s> must be followed by an operation to authorize".format(this_op.name)
+        "AUTH OP FORBIDDEN: <%s> must be followed by an operation to authorize".format(this_op.name)
     );
     
     val next_op = all_operations[op_context.op_index + 1];
-    val prohibited_operations = ["nop", "timeb", "iccf_proof", "ft4.ft_auth", "ft4.evm_auth", "ft4.evm_signatures"];
-    require(not prohibited_operations.contains(next_op.name), "<%s> cannot authorize <%s>".format(this_op.name, next_op.name));
+    require(
+        not is_auth_blacklisted_operation(next_op.name),
+        "AUTH OP FORBIDDEN: <%s> cannot authorize <%s>".format(this_op.name, next_op.name)
+    );
 }

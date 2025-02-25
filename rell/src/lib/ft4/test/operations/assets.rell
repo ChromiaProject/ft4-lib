@@ -1,0 +1,68 @@
+module;
+
+import lib.ft4.assets;
+import lib.ft4.auth;
+import lib.ft4.accounts;
+import lib.ft4.assets.locking;
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = rell.meta(register_asset).mount_name,
+    flags = [],
+);
+
+/**
+ * Operation to register a new asset on the blockchain with the provided info. 
+ * Note however that the initial balance of this asset is alway 0 so to actually
+ * use this newly created asset, you will have to mint some of it.
+ * 
+ * @see mint
+ * 
+ * @param name                      the name of the asset
+ * @param symbol                    symbol or ticker of the asset
+ * @param decimals                  how many decimals to use for this asset
+ * @param issuing_blockchain_rid    the rid of the issuing blockchain. In most cases this should be `chain_context.blockchain_rid`
+ * @param icon_url                  optional url to an icon for this asset
+ */
+operation register_asset(name, symbol: text, decimals: integer, issuing_blockchain_rid: byte_array, icon_url: text) {
+    assets.Unsafe.register_asset(name, symbol, decimals, issuing_blockchain_rid, icon_url);
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = rell.meta(lock_asset).mount_name,
+    flags = [],
+);
+
+/**
+ * Operation to lock a specific amount of a specific asset from a specific account.
+ * 
+ * @param type          the type of lock account to use
+ * @param account_id    the account from which to lock the assets
+ * @param asset_id      the id of the asset to lock
+ * @param amount        how much of the asset to lock
+ */
+operation lock_asset(type: text, account_id: byte_array, asset_id: byte_array, amount: big_integer) {
+    locking.lock_asset(type, accounts.Account(account_id), assets.Asset(asset_id), amount);
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = rell.meta(unlock_asset).mount_name,
+    flags = [],
+);
+
+/**
+ * Operation to unlock a specific amount of a specific asset from a specific account
+ * which was previously locked using the `lock(...)` operation.
+ * 
+ * @see lock
+ * 
+ * @param type          the type of lock account to use
+ * @param account_id    the account from which to lock the assets
+ * @param asset_id      the id of the asset to lock
+ * @param amount        how much of the asset to lock
+ */
+operation unlock_asset(type: text, account_id: byte_array, asset_id: byte_array, amount: big_integer) {
+    locking.unlock_asset(type, accounts.Account(account_id), assets.Asset(asset_id), amount);
+}

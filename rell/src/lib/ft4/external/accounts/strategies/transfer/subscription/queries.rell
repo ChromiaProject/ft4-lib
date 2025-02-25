@@ -1,0 +1,24 @@
+/**
+ * Retrieves all subscriptions based on the selected filter of subscription_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param subscription_filter  filter with indexed fileds from the subscription entity
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+query get_subscriptions_filtered(subscription_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return utils.make_page(
+        subscription.subscription @* {
+                if (subscription_filter?.account_ids??) .account.id in subscription_filter?.account_ids!! else true,
+                .rowid > (before_rowid ?: rowid(0))
+            } (
+                utils.pagination_result(
+            data = map_subscription($).to_gtv_pretty(),
+            rowid = .rowid
+        )
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
+}

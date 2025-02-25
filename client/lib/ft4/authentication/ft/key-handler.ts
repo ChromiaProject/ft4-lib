@@ -4,8 +4,8 @@ import {
   KeyHandler,
   hasAuthDescriptorFlags,
 } from "@ft4/authentication";
-import { BufferId, TxContext } from "@ft4/utils";
-import { GTX, Operation } from "postchain-client";
+import { TxContext } from "@ft4/utils";
+import { BufferId, GTX, Operation } from "postchain-client";
 import { FtKeyStore } from "./types";
 import { ftAuth } from "./main";
 

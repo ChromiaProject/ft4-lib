@@ -1,0 +1,6 @@
+struct account_creation_transfer_filter {
+    rowids: list<rowid>?;
+    transaction_tx_rid: byte_array?;
+    op_index: integer?;
+    recipient_id: byte_array?;
+}

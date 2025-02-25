@@ -2,21 +2,22 @@
 
 import lib.ft4.auth;
 import lib.ft4.assets;
-import test_utils: ^^.utils.utils;
-import ^^.assets.utils;
 import ^^.extensions;
 import xc: lib.ft4.crosschain;
 import admin_crosschain: ^^^.lib.ft4.admin.crosschain;
-import iccf_op: ^^.operations.iccf_op;
+import test: lib.ft4.test.core;
+import test_op: lib.ft4.test.operations;
+import ^^.operations.iccf_op.{ iccf_proof };
+import common_helpers: ^^.common.helpers;
 
 function test_init_transfer_history() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
 
-    val bob = utils.register_bob();
+    val bob = test.register_bob();
     val target_blockchain_rid = "target blockchain".hash();
 
-    val asset = utils.create_asset("validAsset", "va", 1);
-    utils.mint(alice.account, asset, 10L);
+    val asset = test.create_asset("validAsset", "va", 1);
+    test.mint(alice.account, asset, 10L);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -30,7 +31,7 @@ function test_init_transfer_history() {
         .sign(rell.test.keypairs.alice)
         .run();
 
-    val tx_rid = test_utils.get_last_transaction().tx_rid;
+    val tx_rid = test.get_last_transaction().tx_rid;
 
     val history = assets.external.get_transfer_history(alice.account.id, assets.filter(null), null, null)!!.data;
     val history_entry = map<text,gtv>.from_gtv(history[0]);
@@ -41,22 +42,31 @@ function test_init_transfer_history() {
     assert_equals(history_entry["is_input"], (1).to_gtv());
     assert_equals(history_entry["is_crosschain"], (1).to_gtv());
 
-    val expected = set([
+    val last_two_transfer_history_entries = common_helpers.get_last_two_transfer_history_entries();
+    val last_crosschain_transfer_history_entry = common_helpers.get_last_crosschain_transfer_history_entry();
+
+    val expected = [
         assets.transfer_detail(
+            rowid = last_two_transfer_history_entries[1].rowid,
             blockchain_rid = chain_context.blockchain_rid,
             account_id = alice.account.id,
             asset_id = asset.id,
             delta = 5L,
-            is_input = true
+            is_input = true,
+            op_index = last_two_transfer_history_entries[1].op_index,
+            transaction_rid = last_two_transfer_history_entries[1].transaction.tx_rid
         ),
         assets.transfer_detail(
+            rowid = last_crosschain_transfer_history_entry.rowid,
             blockchain_rid = target_blockchain_rid,
             account_id = bob.account.id,
             asset_id = asset.id,
             delta = 5L,
-            is_input = false
+            is_input = false,
+            op_index = last_crosschain_transfer_history_entry.op_index,
+            transaction_rid = last_crosschain_transfer_history_entry.transaction.tx_rid
         )
-    ]);
+    ];
     assert_equals(assets.external.get_transfer_details(tx_rid, 1), expected);
     assert_equals(assets.external.get_transfer_details_by_asset(tx_rid, 1, asset.id), expected);
 }
@@ -66,9 +76,9 @@ function test_apply_transfer_history() {
     val sender_account_id = "the sender".hash();
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
 
-    val bob = utils.register_bob();
+    val bob = test.register_bob();
 
-    val asset = utils.create_crosschain_asset("validAsset", "va", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+    val asset = test.create_crosschain_asset("validAsset", "va", 1, sender_blockchain_rid, "", sender_blockchain_rid);
 
     // Simulate a valid transaction and operation index
     val tx = gtx_transaction(
@@ -90,12 +100,12 @@ function test_apply_transfer_history() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run();
 
-    val tx_rid = test_utils.get_last_transaction().tx_rid;
+    val tx_rid = test.get_last_transaction().tx_rid;
 
     val history = assets.external.get_transfer_history(bob.account.id, assets.filter(null), null, null)!!.data;
     val history_entry = map<text,gtv>.from_gtv(history[0]);
@@ -106,22 +116,32 @@ function test_apply_transfer_history() {
     assert_equals(history_entry["is_input"], (0).to_gtv());
     assert_equals(history_entry["is_crosschain"], (1).to_gtv());
 
-    val expected = set([
+    val last_transfer_history_entry = common_helpers.get_last_transfer_history_entry();
+    val last_crosschain_transfer_history_entry = common_helpers.get_last_crosschain_transfer_history_entry();
+
+    val expected = [
         assets.transfer_detail(
-            blockchain_rid = sender_blockchain_rid,
-            account_id = sender_account_id,
-            asset_id = asset.id,
-            delta = 5L,
-            is_input = true
-        ),
-        assets.transfer_detail(
+            rowid = last_transfer_history_entry.rowid,
             blockchain_rid = chain_context.blockchain_rid,
             account_id = bob.account.id,
             asset_id = asset.id,
             delta = 5L,
-            is_input = false
-        )
-    ]);
+            is_input = false,
+            op_index = last_transfer_history_entry.op_index,
+            transaction_rid = last_transfer_history_entry.transaction.tx_rid
+        ),
+        assets.transfer_detail(
+            rowid = last_crosschain_transfer_history_entry.rowid,
+            blockchain_rid = sender_blockchain_rid,
+            account_id = sender_account_id,
+            asset_id = asset.id,
+            delta = 5L,
+            is_input = true,
+            op_index = last_crosschain_transfer_history_entry.op_index,
+            transaction_rid = last_crosschain_transfer_history_entry.transaction.tx_rid
+        ),
+    ];
+
     assert_equals(assets.external.get_transfer_details(tx_rid, 1), expected);
     assert_equals(assets.external.get_transfer_details_by_asset(tx_rid, 1, asset.id), expected);
 }

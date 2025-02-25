@@ -1,46 +1,181 @@
 import ^.assets;
 import ^.accounts;
 
+/**
+ * Represents a crosschain transfer that has been applied on this chain.
+ * 
+ * When a transfer is going from chain A to C, passing through chain B, this is what will
+ * happen on the chains:
+ * - `init_transfer` gets called on chain A
+ * - `crosschain_transfer_history_entry` is created for this transfer on chain A
+ * - `pending_transfer` is created for this transfer on chain A
+ * - `apply_transfer` is called on chain B
+ * - `applied_transfer` is created for this transfer on chain B
+ * - `apply_transfer` is called on chain C
+ * - `crosschain_transfer_history_entry` is created for this transfer on chain C
+ * - `applied_transfer` is created for this transfer on chain C
+ * - `complete_transfer` is called on chain A
+ * - `pending_transfer` created in step 3 on chain A is removed
+ * 
+ * Chain A is the "init chain", chain B and C are "hops". Chain C is also the "target chain"
+ * for this transfer.
+ */
 entity applied_transfers {
     key init_tx_rid, init_op_index;
+    /** The ID of the transaction that initialized this cross-chain transfer */
     init_tx_rid: byte_array;
+    /** The index of the operation in the transaction that initialized this cross-chain transfer */
     init_op_index: integer;
+    /** The transaction that applied this transfer */
     transaction;
+    /** The index of the operation in the transaction that applied this transfer */
     op_index: integer;
 }
 
+/**
+ * Represents a crosschain transfer that has been canceled.
+ * 
+ * A cross-chain transfer that is past its deadline can be canceled if it never was applied
+ * (with `apply_transfer` on the last chain). To do so, `cancel_transfer` needs to be called 
+ * (instead of `apply_transfer`) on the chain that would be next in the flow.
+ * 
+ * For example, if a chain going A -> B -> C expired after `init_transfer` and never got
+ * applied on chain B, `cancel_transfer` must be called on chain B.
+ * If it instead expired after applying it on chain B, it must be canceled on chain C.
+ * 
+ * @see applied_transfers for an example flow of normal crosschain transfers
+ */
 entity canceled_transfers {
     key init_tx_rid, init_op_index;
+    /** The ID of the transaction that initialized this cross-chain transfer */
     init_tx_rid: byte_array;
+    /** The index of the operation in the transaction that initialized this cross-chain transfer */
     init_op_index: integer;
 }
 
+/**
+ * Represents a crosschain transfer that has been unapplied.
+ * 
+ * A cross-chain transfer that is past its deadline must be recalled or canceled. After doing
+ * so, `unapply_transfer` needs to be called on all chains where the transfer was applied before
+ * reverting it on the starting chain.
+ * 
+ * For example, if a chain going A -> B -> C -> D got cancelled or recalled on chain D, it
+ * must be unapplied on chain C, then on chain B, then reverted on chain A.
+ * 
+ * @see applied_transfers for an example flow of normal crosschain transfers
+ */
 entity unapplied_transfers {
     key init_tx_rid, init_op_index;
+    /** The ID of the transaction that initialized this cross-chain transfer */
     init_tx_rid: byte_array;
+    /** The index of the operation in the transaction that initialized this cross-chain transfer */
     init_op_index: integer;
 }
 
+/**
+ * Represents a crosschain transfer that has been recalled.
+ * 
+ * A cross-chain transfer can be used to register accounts if the chain was configured to do so.
+ * If it is possible, the transfer must be "claimed" on the end chain by using the correct
+ * register account strategy. This will end upregistering the account, moving the funds to it,
+ * and removing any funds that should be consumed on account registration, if applicable.
+ * 
+ * For example, if a chain going A -> B -> C has been sent to an account which does not exist
+ * on chain C, chain C will consider that transfer to be aimed at registering that account.
+ * There will be no way for the user that sent the funds to retrieve them until the expiration
+ * date. After the transfer has expired, if the account wasn't registered, the user that sent
+ * the funds will be able to call `recall_unclaimed_transfer` on chain C; the transfer must
+ * then be unapplied on chain B and reverted on chain A.
+ * 
+ * @see applied_transfers for an example flow of normal crosschain transfers
+ * 
+ * @see create_on_crosschain_transfers for more information on registering accounts with
+ * crosschain transfers
+ * 
+ * @see core.accounts.strategies.register_account for more information on register account
+ * strategies
+ */
 entity recalled_transfers {
     key init_tx_rid, init_op_index;
+    /** The ID of the transaction that initialized this cross-chain transfer */
     init_tx_rid: byte_array;
+    /** The index of the operation in the transaction that initialized this cross-chain transfer */
     init_op_index: integer;
 }
 
+/**
+ * Represents a crosschain transfer that has been initialized.
+ * 
+ * This entity will be created on the starting chain, and it will be deleted when the transfer
+ * is completed (by calling `complete_transfer` on the starting chain) or when it is reverted
+ * (by calling `revert_transfer` on the starting chain).
+ * 
+ * @see applied_transfers for an example flow of normal crosschain transfers
+ */
 entity pending_transfer {
+    /**
+     * The transaction that created this pending transfer. This will be referred to on
+     * subsequent chains as init transaction
+     */
     key transaction, op_index; 
+    /** The index of the operation that initialized this transaction */
     op_index: integer;
+    /** The account that sent the funds */
     index sender: accounts.account;
 }
 
+/**
+ * Represents a crosschain transfer that has been reverted.
+ * 
+ * A cross-chain transfer that is past its deadline must be recalled or canceled. If there are
+ * intermediate chains where the transfer was applied, it must be unapplied there, and then
+ * it can be reverted on the initial chain.
+ * 
+ * For example, if a chain going A -> B -> C got cancelled or recalled on chain C, it must be
+ * unapplied on chain B, then reverted on chain A.
+ * 
+ * @see applied_transfers for an example flow of normal crosschain transfers
+ */
 entity reverted_transfer {
     key init_tx_rid, init_op_index;
+    /** The ID of the transaction that initialized this cross-chain transfer */
     init_tx_rid: byte_array;
+    /** The index of the operation in the transaction that initialized this cross-chain transfer */
     init_op_index: integer;
 }
 
 namespace Unsafe {
-
+    /**
+     * For a transfer going from an account to another, this function checks whether any
+     * balances need to be updated, then does so.
+     * This function should only be used in the context of crosschain transfers.
+     * 
+     * A balance does **not** need to be updated if it pertains to a blockchain that is
+     * marked as `asset_origin` for the asset being transferred. This is because the asset
+     * origin chain's balance does not need to be tracked.
+     * 
+     * Can only be called from an operation.
+     * 
+     * Throws `"SELF TRANSFER"` if sender and recipient are the same account
+     * 
+     * Throws `"INVALID BLOCKCHAIN SENDER"` if sender is a blockchain account with this
+     * blockchain's RID
+     * 
+     * Throws `"INVALID BLOCKCHAIN RECIPIENT"` if recipient is a blockchain account with this
+     * blockchain's RID
+     * 
+     * Throws if the required assets cannot be transferred. Common cases include:
+     * - the amount to transfer is not in the accepted range (0, 2^256) (exclusive)
+     * - the sender account's balance is lower than `amount`
+     * 
+     * @see asset_origin for more information on asset origin chains and balance tracking
+     * 
+     * @param sender        the account the assets are coming from
+     * @param recipient     the account the assets are going to
+     * @param asset         the asset being transferred
+     * @param amount        the amount being transferred
+     */
     function update_balances_if_needed(
         sender: accounts.account,
         recipient: accounts.account,
@@ -49,15 +184,15 @@ namespace Unsafe {
     ) {
         require(
             sender != recipient,
-            "Cannot transfer to own account"
+            "SELF TRANSFER: Cannot transfer to own account"
         );
         require(
             chain_context.blockchain_rid != sender.id,
-            "Cannot transfer from this blockchain's account"
+            "INVALID BLOCKCHAIN SENDER: Cannot transfer from this blockchain's account"
         );
         require(
             chain_context.blockchain_rid != recipient.id,
-            "Cannot transfer to this blockchain's account"
+            "INVALID BLOCKCHAIN RECIPIENT: Cannot transfer to this blockchain's account"
         );
         assets.require_zero_exclusive_asset_amount_limits(
             amount,
@@ -65,22 +200,30 @@ namespace Unsafe {
         );
 
         val origin_blockchain_rid = asset_origin @? { asset } .origin_blockchain_rid;
-        val is_sender_blockchain =  sender.type == ACCOUNT_TYPE_BLOCKCHAIN;
+        val is_sender_blockchain = sender.type == ACCOUNT_TYPE_BLOCKCHAIN;
         val is_recipient_blockchain = recipient.type == ACCOUNT_TYPE_BLOCKCHAIN;
+
+        val change_sender = not exists(origin_blockchain_rid) or not is_sender_blockchain or origin_blockchain_rid != sender.id;
+        val change_recipient = not exists(origin_blockchain_rid) or not is_recipient_blockchain or origin_blockchain_rid != recipient.id;
         
-        if (
-            not exists(origin_blockchain_rid)
-            or not is_sender_blockchain
-            or origin_blockchain_rid != sender.id
-        ) {
+        before_crosschain_balance_change(
+            sender,
+            recipient,
+            asset,
+            amount,
+            change_sender,
+            change_recipient
+        );
+
+        if (change_sender) {
             assets.deduct_balance(
                 sender,
-                asset, 
+                asset,
                 amount
             );
         }
 
-        create assets.transfer_history_entry(
+        create assets.transfer_history_entry (
             .account = sender,
             .asset = asset,
             .delta = amount,
@@ -88,15 +231,19 @@ namespace Unsafe {
             .is_input = true
         );
 
-        if (
-            not exists(origin_blockchain_rid)
-            or not is_recipient_blockchain
-            or origin_blockchain_rid != recipient.id
-        ) {
+        if (change_recipient) {
             assets.increase_balance(recipient, asset, amount);
         }
 
-        create assets.transfer_history_entry(
+        after_crosschain_balance_change(
+            sender,
+            recipient,
+            asset,
+            amount,
+            change_sender,
+            change_recipient
+        );
+        create assets.transfer_history_entry (
             .account = recipient,
             .asset = asset,
             .delta = amount,

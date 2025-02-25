@@ -2,18 +2,19 @@
 
 import lib.ft4.auth;
 import xc: lib.ft4.crosschain;
-import ^^.assets.utils;
+import test: lib.ft4.test.core;
+import ^.mocks;
 
 function test_it_registers_a_pending_transaction_in_init_transfer() {
-  val alice = utils.register_alice();
-  val bob = utils.register_bob();
+  val alice = test.register_alice();
+  val bob = test.register_bob();
 
-  val asset = utils.create_asset("test", "t", 1);
-  utils.mint(alice.account, asset, 1);
+  val asset = test.create_asset("test", "t", 1);
+  test.mint(alice.account, asset, 1);
 
   rell.test.tx()
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc.external.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()], 10000000000000))
+    .op(xc.external.init_transfer(bob.account.id, asset.id, 1, [mocks.BLOCKCHAIN_RID_ONE], 10000000000000))
     .sign(alice.keypair)
     .run();
 
@@ -23,18 +24,20 @@ function test_it_registers_a_pending_transaction_in_init_transfer() {
 }
 
 function test_it_fetches_pending_transactions_for_the_specified_account() {
-  val alice = utils.register_alice();
-  val bob = utils.register_bob();
+  val alice = test.register_alice();
+  val bob = test.register_bob();
 
-  val asset = utils.create_asset("test", "t", 1);
-  utils.mint(alice.account, asset, 1);
-  utils.mint(bob.account, asset, 1);
+  val asset = test.create_asset("test", "t", 1);
+  test.mint(alice.account, asset, 1);
+  test.mint(bob.account, asset, 1);
+
+  val target_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
 
   rell.test.tx()
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc.external.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()], 10000000000000))
+    .op(xc.external.init_transfer(bob.account.id, asset.id, 1, [target_blockchain_rid], 10000000000000))
     .op(auth.external.ft_auth(bob.account.id, bob.auth_descriptor_id))
-    .op(xc.external.init_transfer(alice.account.id, asset.id, 1, ["1".to_bytes()], 10000000000000))
+    .op(xc.external.init_transfer(alice.account.id, asset.id, 1, [target_blockchain_rid], 10000000000000))
     .sign(alice.keypair, bob.keypair)
     .run();
 
@@ -42,17 +45,19 @@ function test_it_fetches_pending_transactions_for_the_specified_account() {
 }
 
 function test_get_pending_transfers_for_account_is_paginated() {
-  val alice = utils.register_alice();
-  val bob = utils.register_bob();
-  val asset_valid = utils.create_asset("validAsset", "va", 1);
+  val alice = test.register_alice();
+  val bob = test.register_bob();
+  val asset_valid = test.create_asset("validAsset", "va", 1);
 
-  utils.mint(alice.account, asset_valid, 10);
+  test.mint(alice.account, asset_valid, 10);
+
+  val target_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
 
   rell.test.tx()
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc.external.init_transfer(bob.account.id, asset_valid.id, 1L, [x"abcdef"], 10000000000000))
+    .op(xc.external.init_transfer(bob.account.id, asset_valid.id, 1L, [target_blockchain_rid], 10000000000000))
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc.external.init_transfer(bob.account.id, asset_valid.id, 1L, [x"abcdef"], 10000000000000))
+    .op(xc.external.init_transfer(bob.account.id, asset_valid.id, 1L, [target_blockchain_rid], 10000000000000))
     .sign(rell.test.keypairs.alice)
     .run();
 
@@ -60,11 +65,7 @@ function test_get_pending_transfers_for_account_is_paginated() {
   val page2 = xc.external.get_pending_transfers_for_account(alice.account.id, 1, page1.next_cursor);
 
   val pending_transfers = xc.pending_transfer @* {} (
-    (
-      tx_data = .transaction.tx_data,
-      op_index = .op_index,
-      account_id = .sender.id
-    ).to_gtv_pretty()
+    xc.map_pending_transfer($).to_gtv_pretty()
   );
 
   assert_equals(page1.data.size(), 1);
@@ -74,13 +75,13 @@ function test_get_pending_transfers_for_account_is_paginated() {
 }
 
 function test_it_fetches_pending_transfers_by_sender_asset_and_amount() {
-  val alice = utils.register_alice();
+  val alice = test.register_alice();
   val recipient1_id = rell.test.pubkeys.bob.hash();
   val recipient2_id = rell.test.pubkeys.trudy.hash();
   val target_blockchain_rid = "1".hash();
 
-  val asset = utils.create_asset("test", "t", 1);
-  utils.mint(alice.account, asset, 3);
+  val asset = test.create_asset("test", "t", 1);
+  test.mint(alice.account, asset, 3);
 
   rell.test.tx()
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))

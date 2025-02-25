@@ -1,8 +1,7 @@
 import { registerCrosschainAsset as registerCrosschainAssetOp } from "@ft4/admin/admin-operations";
 import { Asset, CrosschainAssetRegistration } from "@ft4/asset";
 import { Connection } from "@ft4/ft-session";
-import { BufferId } from "@ft4/utils";
-import { SignatureProvider, formatter } from "postchain-client";
+import { BufferId, SignatureProvider, formatter } from "postchain-client";
 
 /**
  * Registers crosschain asset by providing asset registration object.

@@ -15,6 +15,8 @@ import {
   SignatureProvider,
 } from "postchain-client";
 
+export const FT4_USER_TYPE = "FT4_USER";
+
 export function singleSigUser(rule: AuthDescriptorRules | null = null): User {
   return newSingleSigUser(encryption.makeKeyPair(), rule);
 }
@@ -35,6 +37,7 @@ export function newSingleSigUser(
       ...singleSigAuthDescriptor,
       id: deriveAuthDescriptorId(singleSigAuthDescriptor),
       accountId: gtv.gtvHash(keyPair.pubKey),
+      accountType: FT4_USER_TYPE,
       created: new Date(),
     },
     keyStore: createInMemoryFtKeyStore(keyPair),

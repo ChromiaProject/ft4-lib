@@ -1,10 +1,8 @@
-import { BufferId, Config, PaginatedEntity } from "@ft4/utils";
+import { Config, PaginatedEntity } from "@ft4/utils";
 import { Buffer } from "buffer";
+import { TransactionBuilder } from "@ft4/transaction-builder";
 import {
-  TransactionBuilder,
-  TransactionBuilderConfig,
-} from "@ft4/transaction-builder";
-import {
+  BufferId,
   GTX,
   IClient,
   Operation,
@@ -12,17 +10,48 @@ import {
   RawGtx,
   SignedTransaction,
   TransactionReceipt,
-  Web3PromiEvent,
 } from "postchain-client";
 import {
   Account,
+  AccountFilter,
+  AnyAuthDescriptor,
   AuthDescriptorValidator,
   AuthenticatedAccount,
   TransferDetail,
+  TransferHistoryEntry,
+  AccountAuthDescriptorFilter,
+  MainAccountAuthDescriptorFilter,
+  AuthDescriptorSignerFilter,
+  AuthDescriptorSigner,
+  RlStateFilter,
+  AccountCreationTransferFilter,
+  AccountLinkFilter,
+  RlState,
+  AccountCreationTransfer,
+  SubscriptionFilter,
+  Subscription,
 } from "@ft4/accounts";
 import { Asset } from "@ft4/asset";
 import { LoginOptions, SessionWithLogout } from "@ft4/authentication";
 import { TransactionWithReceipt } from "@ft4/transaction-builder/types";
+import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
+import {
+  AssetFilter,
+  Balance,
+  BalanceFilter,
+  CrosschainTransferHistoryEntryFilter,
+  TransferHistoryEntryFilter,
+} from "@ft4/asset/types";
+import { CrosschainTransferHistoryEntry } from "@ft4/accounts/transfer-history";
+import {
+  AppliedTransfer,
+  AssetOrigin,
+  AssetOriginFilter,
+  PendingTransfer,
+  PendingTransferFilter,
+  Transfer,
+  TransferFilter,
+} from "@ft4/crosschain/types";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
@@ -37,7 +66,7 @@ export type PagedResponse<T> = {
  * The queries that can be made using this object are general queries that are
  * not specific to one account. However, a `Connection` instance can be used
  * to acquire an `Account` instance, from which account specific details can
- * be found. @see {@link accounts.Account}
+ * be found. @see {@link Account}
  */
 export interface Connection extends Queryable {
   client: IClient;
@@ -51,12 +80,120 @@ export interface Connection extends Queryable {
    * Returns the version of ft library installed on the blockchain with the format <major>.<minor>.<patch>
    */
   getVersion: () => Promise<string>;
+  /**
+   * Returns the API version of ft library installed on the blockchain. It will be an integer.
+   */
+  getApiVersion: () => Promise<number>;
 
   /**
    * Returns the current block height of the underlying chain
    */
   getBlockHeight: () => Promise<number>;
 
+  /**
+   * Fetches all accounts with satisfy the account filter, paginated
+   * @param accountFilter - the account filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getAccountsFiltered: (
+    accountFilter?: AccountFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Account>>;
+  /**
+   * Fetches all AccountAuthDescriptors with satisfy the accountAuthDescriptor filter, paginated
+   * @param accountAuthDescriptorFilter - the accountAuthDescriptor filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getAccountAuthDescriptorsFiltered: (
+    accountAuthDescriptorFilter?: AccountAuthDescriptorFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
+  /**
+   * Fetches all MainAuthDescriptors with satisfy the mainAccountAuthDescriptor filter, paginated
+   * @param mainAccountAuthDescriptorFilter - the mainAccountAuthDescriptor filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getMainAuthDescriptorsFiltered: (
+    mainAccountAuthDescriptorFilter?: MainAccountAuthDescriptorFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
+  /**
+   * Fetches all AuthDescriptorSigners with satisfy the authDescriptorSigner filter, paginated
+   * @param authDescriptorSignerFilter - the authDescriptorSigner filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getAuthDescriptorSignersFiltered: (
+    authDescriptorSignerFilter?: AuthDescriptorSignerFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<AuthDescriptorSigner>>;
+  /**
+   * Fetches all Rate limit states with satisfy the rlState filter, paginated
+   * @param rlStateFilter - the rlState filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getRlStatesFiltered: (
+    rlStateFilter?: RlStateFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<RlState>>;
+  /**
+   * Fetches all AccountCreationTransfers with satisfy the accountCreationTransferFilter filter, paginated
+   * @param accountCreationTransferFilter - the accountCreationTransfer filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getAccountCreationTransfersFiltered: (
+    accountCreationTransferFilter?: AccountCreationTransferFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<AccountCreationTransfer>>;
+  /**
+   * Fetches all AccountLinks with satisfy the accountLinkFilter filter, paginated
+   * @param accountLinkFilter - the accountLink filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getAccountLinksFiltered: (
+    accountLinkFilter?: AccountLinkFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<{ account: Account; secondary: Account }>>;
+  /**
+   * Fetches all Subscriptions with satisfy the subscriptionFilter filter, paginated
+   * @param subscriptionFilter - the subscriptionFilter filter
+   * @param limit - maximum size of the returned page
+   * @param cursor - at what entry the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getSubscriptionsFiltered: (
+    subscriptionFilter?: SubscriptionFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Subscription>>;
   /**
    * Fetches the account with the specified id
    * @param accountId - the id of the account to fetch
@@ -152,6 +289,65 @@ export interface Connection extends Queryable {
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Asset>>;
+
+  /**
+   * {@inheritDoc asset.getAssetsFiltered}
+   * @param assetFilter - The asset filter (list of ids, name, symbol and type) that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getAssetsFiltered: (
+    assetFilter?: AssetFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Asset>>;
+
+  /**
+   * {@inheritDoc asset.getBalancesFiltered}
+   * @param balanceFilter - The balance filter (list of account_ids and list of asset_ids) that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getBalancesFiltered: (
+    balanceFilter?: BalanceFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Balance>>;
+
+  /**
+   * {@inheritDoc asset.getTransferHistoryEntriesFiltered}
+   * @param transferHistoryEntryFilter - The transfer history entry filter
+   * (list of account_ids, list of asset_ids, list of transaction_rids and op_index) that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getTransferHistoryEntriesFiltered: (
+    transferHistoryEntryFilter?: TransferHistoryEntryFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<TransferHistoryEntry>>;
+
+  /**
+   * {@inheritDoc asset.getCrosschainTransferHistoryEntriesFiltered}
+   * @param crosschainTransferHistoryEntryFilter - The crosschain transfer history entry filter
+   * (list of account_ids, list of asset_ids, list of transaction_rids and op_index) that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getCrosschainTransferHistoryEntriesFiltered: (
+    crosschainTransferHistoryEntryFilter?: CrosschainTransferHistoryEntryFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<CrosschainTransferHistoryEntry>>;
+
   /**
    * {@inheritDoc accounts.getTransferDetails}
    * @param txRid - the id of the transaction in which the transfer was made
@@ -172,6 +368,103 @@ export interface Connection extends Queryable {
     opIndex: number,
     assetId: BufferId,
   ) => Promise<TransferDetail[]>;
+  /**
+   * {@inheritDoc crosschain.getAssetOriginFiltered}
+   * @param assetOriginFilter - The asset origin filter (array of assetIds) that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getAssetOriginFiltered: (
+    assetOriginFilter?: AssetOriginFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<AssetOrigin>>;
+  /**
+   * {@inheritDoc crosschain.getAppliedTransfersFiltered}
+   * @param appliedTransferFilter - The applied transfer filter (array of initTxRids and initOpIndex)
+   * that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getAppliedTransfersFiltered: (
+    appliedTransferFilter?: TransferFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<AppliedTransfer>>;
+  /**
+   * {@inheritDoc crosschain.getCanceledTransfersFiltered}
+   * @param canceledTransferFilter - The canceled transfer filter (array of initTxRids and initOpIndex)
+   * that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getCanceledTransfersFiltered: (
+    canceledTransferFilter?: TransferFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Transfer>>;
+  /**
+   * {@inheritDoc crosschain.getUnappliedTransfersFiltered}
+   * @param unappliedTransferFilter - The unapplied transfer filter (array of initTxRids and initOpIndex)
+   * that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getUnappliedTransfersFiltered: (
+    unappliedTransferFilter?: TransferFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Transfer>>;
+  /**
+   * {@inheritDoc crosschain.getRecalledTransfersFiltered}
+   * @param recalledTransferFilter - The recalled transfer filter (array of initTxRids and initOpIndex)
+   * that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getRecalledTransfersFiltered: (
+    recalledTransferFilter?: TransferFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Transfer>>;
+  /**
+   * {@inheritDoc crosschain.getPendingTransfersFiltered}
+   * @param pendingTransferFilter - The pending transfer filter (array of transactionIds, initOpIndex and senderAccountId)
+   * that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getPendingTransfersFiltered: (
+    pendingTransferFilter?: PendingTransferFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<PendingTransfer>>;
+  /**
+   * {@inheritDoc crosschain.getRevertedTransfersFiltered}
+   * @param pendingTransferFilter - The pending transfer filter (array of initTxRids and initOpIndex)
+   * that can be applied to the query results
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
+   *
+   * Available since ApiVersion 1
+   */
+  getRevertedTransfersFiltered: (
+    revertedTransferFilter?: TransferFilter,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Transfer>>;
 }
 
 /**
@@ -187,7 +480,7 @@ export interface Session extends Connection {
    * want the tx to include a `nop` use {@link Session.callWithoutNop | callWithoutNop} instead.
    * @param operations - the operations to include in the transaction
    */
-  call: (...operations: Operation[]) => Web3PromiEvent<
+  call: (...operations: Operation[]) => Web3CustomPromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;
@@ -199,7 +492,7 @@ export interface Session extends Connection {
    * subsequent calls to this function with the same arguments is likely to be rejected.
    * @param operations - the operations to include in the transaction
    */
-  callWithoutNop: (...operations: Operation[]) => Web3PromiEvent<
+  callWithoutNop: (...operations: Operation[]) => Web3CustomPromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;
@@ -208,11 +501,8 @@ export interface Session extends Connection {
   >;
   /**
    * Returns a `TransactionBuilder` instance configured to use the same keys as enclosed in this `Session` instance.
-   * @param config - config to use when instantiating the transaction builder
    */
-  transactionBuilder: (
-    config?: TransactionBuilderConfig | undefined,
-  ) => TransactionBuilder;
+  transactionBuilder: () => TransactionBuilder;
   /**
    * Signs a transaction using an available key
    * @param tx - the transaction to sign
@@ -263,4 +553,15 @@ export type KeyStoreInteractor = {
   onKeyStoreChanged(
     callback: (newKeyStore: KeyStoreInteractor | null) => void,
   ): void;
+  /**
+   * Allows checking whether calling login will result in an authentication request for the
+   * user or an old login key and auth descriptor will be reused.
+   *
+   * If an active session is found, calling `login` will not prompt the user to login again.
+   *
+   * `rules` field will **NOT** be validated against, except checking whether the auth
+   * descriptor has expired. This means that if the `loginOptions` ask for 5 minutes expiration,
+   * an auth descriptor expiring in 2 seconds will be deemed valid and reused by `login`
+   */
+  hasActiveLogin(loginOptions: LoginOptions): Promise<boolean>;
 };

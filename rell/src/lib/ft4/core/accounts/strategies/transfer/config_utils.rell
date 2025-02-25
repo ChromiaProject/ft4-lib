@@ -1,42 +1,128 @@
-val _CONFIG_ERROR_TEXT = "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): ";
+/** A starting string for configuration errors */
+val _CONFIG_ERROR_TEXT = "CONFIG ERROR: Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): ";
 
-/*
+/**
  * Used in transfer strategy rules config to specify current chain
+ * 
+ * @see module_args_list_element.sender_blockchain for possible uses of this constant
  */
 val CURRENT_CHAIN_REF = "$";
 
-/*
- * Used in transfer strategy rules to specify current user for 
+/**
+ * Used in transfer strategy rules to specify current account for 
  * the scenario when transfer rule requires that sender and recipient is the same.
+ * 
+ * @see module_args_list_element for possible uses of this constant
  */
-val CURRENT_USER_REF = "X";
+val CURRENT_ACCOUNT_REF = "X";
 
+/**
+ * Used in transfer strategy rules to specify that any value is accepted.
+ * All accounts, blockchains or assets (depending on the field this is found in) will be
+ * allowed for that rule.
+ * 
+ * @see module_args_list_element for possible uses of this constant
+ */
+val ANY_REF = "*";
+
+/**
+ * Represents a list of allowed values. Used by rules to represent allowed senders, recipients,
+ * assets, and blockchain senders.
+ */
 struct allowlist {
+    /** whether all values are allowed. If true, the other field will be ignored */
     allow_all: boolean = false;
+    /** list of allowed values. Empty means no values are allowed (except if `allow_all` is true) */
     allowed_values: list<byte_array> = [];
 }
 
+/**
+ * Represents an asset's lower limit, below which a transfer is deemed not sufficient for
+ * account registration.
+ * This struct must contain either of these options:
+ * - `id`
+ * - `name` and `blockchain_rid`
+ * 
+ * If `id` and `name` are missing or both present, functions using this struct will
+ * consider it invalid.
+ * 
+ * If this value is being parsed from a GTV and `name` is present instead of `id`,
+ * `blockchain_rid` is optional. If missing, its value will be this chain's RID.
+ */
 struct asset_limit {
+    /** The ID of the asset */
     id: byte_array? = null;
+    /**
+     * The RID of the chain that issues the asset.
+     * When parsing from the `chromia.yml` or GTV format, it is interpreted as this chain
+     * if null unless `id` is present.
+     */
     issuing_blockchain_rid: byte_array? = null;
+    /** The name of the asset */
     name: text? = null;
+    /** The minimum amount of this asset that should be transferred */
     min_amount: big_integer;
 }
 
+/**
+ * A set of requirements to be satisfied to register an account.
+ */
 struct rule {
+    /**
+     * How many days must pass after the transfer being received by the non-existing account
+     * before the account can no longer be registered and the transfer can be recalled.
+     */
     timeout_days: integer = 0;
+    /**
+     * What strategies can be used to register an account if all requirements of this rule
+     * are met.
+     */
     strategies: list<text> = [];
 
+    /** 
+     * From which blockchains must assets arrive to create an account. For on-chain transfers,
+     * this blockchain's ID will appear in the `allowlist` 
+     */
     blockchains: allowlist = allowlist();
+    /** Which accounts can send to a non-existing account to register it */
     senders: allowlist = allowlist();
+    /** Which accounts can be registered */
     recipients: allowlist = allowlist();
 
+    /**
+     * Whether a certain sender can only register an account with its same ID.
+     * Only makes sense for cross-chain transfers.
+     */
     require_same_address: boolean = false;
 
+    /**
+     * Whether all assets can be sent.
+     * If true, `asset_limits` won't be parsed - minimum amounts cannot be set.
+     */
     allow_all_assets: boolean = false;
+    /** What minimum amounts of each assets must be sent to register an account. */
     asset_limits: list<asset_limit> = list<asset_limit>();
 }
 
+/**
+ * Retrieves all rules following which a transfer can be used to register a new account.
+ * 
+ * Throws `"CONFIG ERROR"` if the config cannot be parsed. Common cases are:
+ * - `CURRENT_ACCOUNT_REF` is used in exactly one of sender or recipient
+ * - `timeout_days` is a negative number
+ * - sender or recipient have a list of values, alongside which `CURRENT_ACCOUNT_REF` or
+ *   `ANY_REF` are found
+ * - some fields contain unexpected values. For example:
+ *   - IDs cannot be parsed as hex `byte_array`s 
+ *   - asset limits are invalid
+ * 
+ * Throws if any field is improperly formatted, in such a way that the values cannot be parsed.
+ * 
+ * @see asset_limit for examples of invalid values
+ * 
+ * @param config_gtv    the GTV-encoded configuration containing rules. Generally comes from
+ *                      the `chromia.yml` moduleArgs field.
+ */
 function get_config(config_gtv: gtv = chain_context.args.rules): list<rule> {
     val config = list<rule>();
 
@@ -57,7 +143,8 @@ function get_config(config_gtv: gtv = chain_context.args.rules): list<rule> {
 
         require(
             sender_res.require_same == recipient_res.require_same,
-            _CONFIG_ERROR_TEXT + "'X' should appear in both or none of recipient and sender."
+            _CONFIG_ERROR_TEXT + "'%s' should appear in both or none of recipient and sender."
+                .format(CURRENT_ACCOUNT_REF)
         );
 
         var allow_all_assets: boolean;
@@ -71,7 +158,7 @@ function get_config(config_gtv: gtv = chain_context.args.rules): list<rule> {
             asset_limits = res;
         }
 
-        require(input.timeout_days >= 0, "timeout_days cannot be negative");
+        require(input.timeout_days >= 0, _CONFIG_ERROR_TEXT + "timeout_days cannot be negative");
         config.add(
             rule(
                 timeout_days = input.timeout_days,
@@ -89,6 +176,15 @@ function get_config(config_gtv: gtv = chain_context.args.rules): list<rule> {
     return config;
 }
 
+/**
+ * Reads a GTV-encoded moduleArgs field containing account IDs.
+ * 
+ * Throws `"CONFIG ERROR"` if the config cannot be parsed. Common cases are:
+ * - a list of values is received, alongside which `CURRENT_ACCOUNT_REF` or `ANY_REF` are found
+ * - IDs cannot be parsed as hex `byte_array`s
+ * 
+ * @param gtv   the GTV-encoded configuration to parse
+ */
 function parse_account_ids_from_gtv(gtv): (
     allowlist: allowlist,
     require_same: boolean
@@ -102,7 +198,9 @@ function parse_account_ids_from_gtv(gtv): (
             if (parsed_element.allow_all) {
                 require(
                     gtv_list.size() == 1,
-                    _CONFIG_ERROR_TEXT + "using multiple values alongside '*' and 'X' is not allowed."
+                    _CONFIG_ERROR_TEXT +
+                    "using multiple values alongside '%s' and '%s' is not allowed."
+                        .format(ANY_REF, CURRENT_ACCOUNT_REF)
                 );
                 return (allowlist=allowlist(true), require_same=parsed_element.is_x);
             } else allowed_values.add(parsed_element.allowed_value!!);
@@ -123,6 +221,13 @@ function parse_account_ids_from_gtv(gtv): (
     }
 }
 
+/**
+ * Reads a GTV-encoded moduleArgs field containing a single account ID.
+ * 
+ * Throws `"CONFIG ERROR"` if the ID cannot be parsed as hex `byte_array`
+ * 
+ * @param gtv   the GTV-encoded configuration to parse
+ */
 function parse_account_id_single_value_from_gtv(gtv): (
     allow_all: boolean,
     allowed_value: byte_array?,
@@ -134,9 +239,9 @@ function parse_account_id_single_value_from_gtv(gtv): (
 
     if (utils.is_text(gtv)) { // "*" or "abcdef"
         val input = text.from_gtv(gtv);
-        if (input == "*") {
+        if (input == ANY_REF) {
             allow_all = true;
-        } else if (input == "X") {
+        } else if (input == CURRENT_ACCOUNT_REF) {
             is_x = true;
             allow_all = true;
         } else {
@@ -144,8 +249,9 @@ function parse_account_id_single_value_from_gtv(gtv): (
             require(
                 allowed_value,
                 _CONFIG_ERROR_TEXT +
-                "sender and recipient only allow blockchain RIDs, 'X' and '*'. Received <%s>."
-                    .format(input)
+                // should be account IDs here -> vvv_________vvv
+                "sender and recipient only allow blockchain RIDs, '%s' and '%s'. Received <%s>."
+                    .format(CURRENT_ACCOUNT_REF, ANY_REF, input)
             );
         }
     } else {
@@ -165,6 +271,15 @@ function parse_account_id_single_value_from_gtv(gtv): (
     );
 }
 
+/**
+ * Reads a GTV-encoded moduleArgs field containing blockchain RIDs.
+ * 
+ * Throws `"CONFIG ERROR"` if the config cannot be parsed. Common cases are:
+ * - a list of values is received, alongside which `ANY_REF` are found
+ * - IDs cannot be parsed as hex `byte_array`s
+ * 
+ * @param gtv   the GTV-encoded configuration to parse
+ */
 function parse_blockchains_from_gtv(gtv): allowlist {
     if (utils.is_list(gtv)) {
         val allowed_values = list<byte_array>();
@@ -175,7 +290,8 @@ function parse_blockchains_from_gtv(gtv): allowlist {
             if (parsed_element.allow_all) {
                 require(
                     gtv_list.size() == 1,
-                    _CONFIG_ERROR_TEXT + "using multiple values alongside '*' is not allowed."
+                    _CONFIG_ERROR_TEXT + "using multiple values alongside '%s' is not allowed."
+                        .format(ANY_REF)
                 );
                 return allowlist(true);
             } else allowed_values.add(parsed_element.allowed_value!!);
@@ -190,6 +306,13 @@ function parse_blockchains_from_gtv(gtv): allowlist {
     }
 }
 
+/**
+ * Reads a GTV-encoded moduleArgs field containing a single blockchain RID.
+ * 
+ * Throws `"CONFIG ERROR"` if the RID cannot be parsed as hex `byte_array`
+ * 
+ * @param gtv   the GTV-encoded configuration to parse
+ */
 function parse_blockchain_single_value_from_gtv(gtv): (
     allow_all: boolean,
     allowed_value: byte_array?
@@ -199,7 +322,7 @@ function parse_blockchain_single_value_from_gtv(gtv): (
 
     if (utils.is_text(gtv)) { // "*" or "$" or "abcdef"
         val input = text.from_gtv(gtv);
-        if (input == "*") {
+        if (input == ANY_REF) {
             allow_all = true;
         } else if (input == CURRENT_CHAIN_REF) {
             allowed_value = chain_context.blockchain_rid;
@@ -208,8 +331,8 @@ function parse_blockchain_single_value_from_gtv(gtv): (
             require(
                 allowed_value,
                 _CONFIG_ERROR_TEXT +
-                "sender_blockchain only allows blockchain RIDs, '$' and '*'. Received <%s>."
-                    .format(input)
+                "sender_blockchain only allows blockchain RIDs, '%s' and '%s'. Received <%s>."
+                    .format(CURRENT_CHAIN_REF, ANY_REF, input)
             );
         }
     } else {
@@ -227,6 +350,17 @@ function parse_blockchain_single_value_from_gtv(gtv): (
     );
 }
 
+/**
+ * Reads a GTV-encoded moduleArgs field containing asset limits.
+ * 
+ * Throws `"CONFIG ERROR"` if the asset limits are invalid.
+ * 
+ * Throws if the asset limits are improperly formatted.
+ * 
+ * @see asset_limit for examples of invalid values
+ * 
+ * @param gtv   the GTV-encoded configuration containing asset limits
+ */
 function parse_asset_limits_from_gtv(gtv): list<asset_limit>? {
     if (utils.is_dict(gtv)) {
         val input = map<name, gtv>.from_gtv_pretty(gtv);
@@ -236,13 +370,23 @@ function parse_asset_limits_from_gtv(gtv): list<asset_limit>? {
         return inputs @* {} (parse_asset_limit($));
     } else {
         require(
-            gtv == "*".to_gtv(),
-            _CONFIG_ERROR_TEXT + "asset only accepts '*' and a list of ids and minimum amounts."
+            gtv == ANY_REF.to_gtv(),
+            _CONFIG_ERROR_TEXT + "asset only accepts '%s' and a list of ids and minimum amounts."
+                .format(ANY_REF)
         );
         return null;
     }
 }
 
+/**
+ * Reads a moduleArgs field containing a single asset limit, structured like a dictionary.
+ * 
+ * Throws `"CONFIG ERROR"` if the asset limits are invalid.
+ * 
+ * @see asset_limit for examples of invalid values
+ * 
+ * @param input     the dictionary containing the `asset_limit` values
+ */
 function parse_asset_limit(input: map<name, gtv>): asset_limit {
     require("id" in input or "name" in input, _CONFIG_ERROR_TEXT + "asset limit needs to have either 'id' or 'name'");
     require(not ("id" in input and "name" in input), _CONFIG_ERROR_TEXT + "asset limit cannot have both 'id' and 'name'");
@@ -256,6 +400,11 @@ function parse_asset_limit(input: map<name, gtv>): asset_limit {
     );
 }
 
+/**
+ * Reads a GTV-encoded moduleArgs field containing asset limits.
+ * 
+ * @param input     the value to be parsed
+ */
 function parse_amount(input: gtv): big_integer = if (utils.is_text(input))
     big_integer.from_text(text.from_gtv(input).replace("L", ""))
 else

@@ -1,0 +1,5 @@
+struct account_link_filter {
+    account_ids: list<byte_array>?;
+    secondary_id: byte_array?;
+    type: text?;
+}

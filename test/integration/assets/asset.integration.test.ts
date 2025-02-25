@@ -26,7 +26,7 @@ async function registerAssetWithCustomBlockchainRid(
   const txn = {
     operations: [
       op(
-        "register_asset",
+        "ft4.test.register_asset",
         assetName,
         assetName + "_" + formatter.toString(blockchainRid),
         decimals,
@@ -41,10 +41,12 @@ async function registerAssetWithCustomBlockchainRid(
 
 describe("Asset", () => {
   const getClient = useChromiaNode();
+  let blockchainRid: Buffer;
 
   beforeAll(async () => {
     client = getClient();
     connection = createConnection(client);
+    blockchainRid = Buffer.from(connection.client.config.blockchainRid, "hex");
   });
 
   it("successfully registers an asset", async () => {
@@ -104,10 +106,6 @@ describe("Asset", () => {
   it("returns an asset when queried by symbol", async () => {
     const assetName = "asset_symbol";
     const assetSymbol = "ASSET_SYMBOL";
-    const blockchainRid = Buffer.from(
-      connection.client.config.blockchainRid,
-      "hex",
-    );
     const assetId = gtv.gtvHash([assetName, blockchainRid]);
     const iconUrl = "http://example.com/";
     await getNewAsset(client, assetName, assetSymbol, 3, iconUrl);

@@ -1,8 +1,8 @@
 import { Session } from "@ft4/ft-session";
-import { BufferId } from "@ft4/utils";
 import { LoginConfigRules } from "./rules";
 import { RawRules } from "@ft4/accounts";
 import { LoginKeyStore } from "./stores";
+import { BufferId } from "postchain-client";
 
 export type LoginConfig = {
   flags: string[];
@@ -38,7 +38,9 @@ export type LoginConfigOptions = {
 export type SessionWithLogout = {
   session: Session;
   /**
-   * Deletes the disposable auth descriptor from the account, making the account inaccessible to this key.
+   * Deletes the disposable auth descriptor from the account and the key from memory, making
+   * the account inaccessible to this key and the key inaccessible to this machine unless
+   * stored elsewhere.
    */
   logout: () => Promise<void>;
 };

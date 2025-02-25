@@ -11,6 +11,7 @@ import {
 import {
   AuthDescriptorRules,
   AuthenticatedAccount,
+  AuthFlag,
   createAuthenticatedAccount,
   deleteAllAuthDescriptorsExceptMain,
   lessOrEqual,
@@ -96,15 +97,15 @@ describe("Auth Descriptor Rule", () => {
 
   it("should delete all auth descriptors", async () => {
     const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
-      "A",
-      "T",
+      AuthFlag.Account,
+      AuthFlag.Transfer,
     ]);
     const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor(
-      ["A"],
+      [AuthFlag.Account],
       lessOrEqual(opCount(1)),
     );
     const { keyPair: kp3, authDescriptor: ad3 } = createTestAuthDescriptor(
-      ["A"],
+      [AuthFlag.Account],
       lessOrEqual(opCount(1)),
     );
 
@@ -149,10 +150,13 @@ describe("Auth Descriptor Rule", () => {
 
   it("should fail when deleting an auth descriptor which is not owned by the account", async () => {
     const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
-      "A",
-      "T",
+      AuthFlag.Account,
+      AuthFlag.Transfer,
     ]);
-    const { authDescriptor: ad2 } = createTestAuthDescriptor(["A", "T"]);
+    const { authDescriptor: ad2 } = createTestAuthDescriptor([
+      AuthFlag.Account,
+      AuthFlag.Transfer,
+    ]);
 
     await createAccount(_connection.client, ad1);
     await createAccount(_connection.client, ad2);
@@ -171,12 +175,12 @@ describe("Auth Descriptor Rule", () => {
 
   it("should delete auth descriptor", async () => {
     const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
-      "A",
-      "T",
+      AuthFlag.Account,
+      AuthFlag.Transfer,
     ]);
     const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor([
-      "A",
-      "T",
+      AuthFlag.Account,
+      AuthFlag.Transfer,
     ]);
 
     const accountId = await createAccount(_connection.client, ad1);

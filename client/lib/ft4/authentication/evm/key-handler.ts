@@ -6,12 +6,11 @@ import {
   hasAuthDescriptorFlags,
 } from "@ft4/authentication";
 import {
-  BufferId,
   TxContext,
   deriveNonce,
   getAuthDescriptorCounterIdForTxContext,
 } from "@ft4/utils";
-import { GTX, Operation, formatter } from "postchain-client";
+import { BufferId, GTX, Operation, formatter } from "postchain-client";
 import {
   ACCOUNT_ID_PLACEHOLDER,
   AUTH_DESCRIPTOR_ID_PLACEHOLDER,

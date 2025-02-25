@@ -1,0 +1,16 @@
+function map_subscription(subscription.subscription) {
+    return (
+        subscription_account_id = subscription.account.id,
+        subscription_account_type = subscription.account.type,
+        subscription_asset_id = subscription.asset.id,
+        subscription_asset_name = subscription.asset.name,
+        subscription_asset_symbol = subscription.asset.symbol,
+        subscription_asset_decimals = subscription.asset.decimals,
+        subscription_asset_issuing_blockchain_rid = subscription.asset.issuing_blockchain_rid,
+        subscription_asset_icon_url = subscription.asset.icon_url,
+        subscription_asset_type = subscription.asset.type,
+        subscription_asset_uniqueness_resolver = subscription.asset.uniqueness_resolver,
+        period_millis = subscription.period_millis,
+        last_payment = subscription.last_payment,
+    );
+}

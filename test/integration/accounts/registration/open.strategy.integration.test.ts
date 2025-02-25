@@ -13,6 +13,7 @@ import { useChromiaNode } from "@ft4-test/util";
 import { KeyPair, encryption, gtv } from "postchain-client";
 import {
   AnyAuthDescriptorRegistration,
+  AuthFlag,
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/accounts";
 
@@ -39,11 +40,11 @@ describe("Test open strategy", () => {
     evmKeyStore = createInMemoryEvmKeyStore(keyPair);
 
     ftAuthDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       ftKeyStore.id,
     );
     evmAuthDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       evmKeyStore.id,
     );
     loginKeyStore = createInMemoryLoginKeyStore();

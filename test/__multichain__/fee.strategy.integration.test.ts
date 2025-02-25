@@ -6,7 +6,10 @@ import {
   mapAssetToCrosschainAssetRegistration,
   registerCrosschainAsset,
 } from "@ft4-test/util";
-import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
+import {
+  AuthFlag,
+  createSingleSigAuthDescriptorRegistration,
+} from "@ft4/accounts";
 import {
   mint,
   registerCrosschainAsset as adminRegisterCrosschainAsset,
@@ -35,6 +38,7 @@ import {
   encryption,
   formatter,
   gtv,
+  gtx,
   newSignatureProvider,
 } from "postchain-client";
 import { nop } from "@ft4/utils/index";
@@ -125,7 +129,7 @@ describe("Fee account creation single step", () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -206,7 +210,7 @@ describe("Fee account creation single step", () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -287,7 +291,7 @@ describe("Fee account creation single step", () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -347,7 +351,7 @@ describe("Fee account creation single step", () => {
   it("can resume account registration when transfer is completed but account is not registered yet", async () => {
     const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -406,7 +410,7 @@ describe("Fee account creation single step", () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -481,7 +485,7 @@ describe("Fee account creation single step", () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -518,7 +522,7 @@ describe("Fee account creation single step", () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -548,7 +552,7 @@ describe("Fee account creation single step", () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -594,7 +598,7 @@ describe("Fee account creation single step", () => {
   it("throws error when account is already registered", async () => {
     const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -647,7 +651,7 @@ describe("Fee account creation single step", () => {
   it("can recall completed crosschain transfer if account is not registered after timeout, but not twice", async () => {
     const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
@@ -703,7 +707,6 @@ describe("Fee account creation single step", () => {
       (await recipientConnection.query(pendingTransferStrategies(recipientId)))
         .length,
     ).toBe(0);
-
     await expect(
       transactionBuilder(noopAuthenticator, recipientConnection.client)
         .add(recallUnclaimedTransfer(transferRef.tx, transferRef.opIndex), {
@@ -712,7 +715,7 @@ describe("Fee account creation single step", () => {
         .add(nop())
         .buildAndSend(),
     ).rejects.toThrow(
-      `Transaction <0x${formatter.toString(gtv.gtvHash(transferRef.tx[0])).toLowerCase()}> transfer at index <${transferRef.opIndex}> has already been recalled on this chain.`,
+      `Transaction <0x${formatter.toString(gtx.getDigestToSign(transferRef.tx)).toLowerCase()}> transfer at index <${transferRef.opIndex}> has already been recalled on this chain.`,
     );
   });
 });

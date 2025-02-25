@@ -1,11 +1,7 @@
 import { Amount, Balance } from "@ft4/asset";
 import { Authenticator, KeyStore } from "@ft4/authentication";
-import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
-import {
-  BufferId,
-  PaginatedEntity,
-  TransactionSessionCompletion,
-} from "@ft4/utils";
+import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
+import { PaginatedEntity, TransactionSessionCompletion } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
   TransferHistoryEntry,
@@ -18,11 +14,53 @@ import {
 } from "@ft4/accounts";
 import { PendingTransfer, TransferRef } from "@ft4/crosschain";
 import {
+  BufferId,
   SignedTransaction,
   TransactionReceipt,
-  Web3PromiEvent,
 } from "postchain-client";
-import { TransactionWithReceipt } from "@ft4/transaction-builder/index";
+import { TransactionWithReceipt } from "@ft4/transaction-builder";
+import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
+
+export type AccountFilter = Partial<{
+  ids: Array<Buffer> | null;
+  type: string | null;
+} | null>;
+
+export type AccountAuthDescriptorFilter = Partial<{
+  ids: Array<Buffer> | null;
+  account_id: Buffer | null;
+} | null>;
+
+export type MainAccountAuthDescriptorFilter = Partial<{
+  account_ids: Array<Buffer> | null;
+  account_auth_descriptor_id: Buffer | null;
+} | null>;
+
+export type AuthDescriptorSignerFilter = Partial<{
+  ids: Array<Buffer> | null;
+  auth_descriptor_id: Buffer | null;
+} | null>;
+
+export type RlStateFilter = Partial<{
+  account_ids: Array<Buffer> | null;
+} | null>;
+
+export type AccountCreationTransferFilter = Partial<{
+  rowids: Array<number> | null;
+  transaction_tx_rid: Buffer | null;
+  op_index: number | null;
+  recipient_id: Buffer | null;
+} | null>;
+
+export type AccountLinkFilter = Partial<{
+  account_ids: Array<Buffer> | null;
+  secondary_id: Buffer | null;
+  type: string | null;
+} | null>;
+
+export type SubscriptionFilter = Partial<{
+  account_ids: Array<Buffer> | null;
+} | null>;
 
 export type RateLimit = {
   points: number;
@@ -39,6 +77,132 @@ export type RateLimitResponse = {
   lastUpdate: number;
 };
 
+export type AccountResponse = {
+  id: Buffer;
+  type: string;
+};
+
+export const ACCOUNT_TYPE_USER = "FT4_USER";
+
+export type RateLimitStateResponse = {
+  account_id: Buffer;
+  account_type: string;
+  points: number;
+  lastUpdate: number;
+  recovery_time: number;
+};
+
+export type AuthDescriptorSignerResponse = {
+  id: Buffer;
+  account_auth_descriptor_id: Buffer;
+  account_id: Buffer;
+  account_type: string;
+  account_auth_descriptor_auth_type: string;
+  account_auth_descriptor_args: string;
+  account_auth_descriptor_rules: string;
+  account_auth_descriptor_created: number;
+  account_auth_descriptor_ctr: number;
+};
+
+export type AccountCreationTransferResponse = {
+  transaction_tx_rid: Buffer;
+  sender_blockchain_rid: Buffer;
+  sender_id: Buffer;
+  recipient_id: Buffer;
+  asset_id: Buffer;
+  asset_name: string;
+  asset_symbol: string;
+  asset_decimals: number;
+  asset_issuing_blockchain_rid: Buffer;
+  asset_icon_url: string;
+  asset_type: string;
+  asset_total_supply: bigint;
+  asset_uniqueness_resolver: Buffer;
+  amount: bigint;
+  timestamp: number;
+  state: string;
+  final_tx_rid: Buffer;
+  final_op_index: number;
+};
+
+export type AccountLinkResponse = {
+  account: Buffer;
+  account_type: string;
+  secondary: Buffer;
+  secondary_type: string;
+  type: string;
+};
+
+export type SubscriptionResponse = {
+  subscription_account_id: Buffer;
+  subscription_account_type: string;
+  subscription_asset_id: Buffer;
+  subscription_asset_name: string;
+  subscription_asset_symbol: string;
+  subscription_asset_decimals: number;
+  subscription_asset_issuing_blockchain_rid: Buffer;
+  subscription_asset_icon_url: string;
+  subscription_asset_type: string;
+  subscription_asset_uniqueness_resolver: Buffer;
+  period_millis: number;
+  last_payment: number;
+};
+
+export type Subscription = {
+  subscriptionAccountId: Buffer;
+  subscriptionAccountType: string;
+  subscriptionAssetId: Buffer;
+  subscriptionAssetName: string;
+  subscriptionAssetSymbol: string;
+  subscriptionAssetDecimals: number;
+  subscriptionAssetIssuingBlockchainRid: Buffer;
+  subscriptionAsseticonUrl: string;
+  subscriptionAssetType: string;
+  subscriptionAssetuniquenessResolver: Buffer;
+  periodMillis: number;
+  lastPayment: number;
+};
+
+export type AccountCreationTransfer = {
+  transactionTxRid: Buffer;
+  senderBlockchainRid: Buffer;
+  senderId: Buffer;
+  recipientId: Buffer;
+  assetId: Buffer;
+  assetName: string;
+  assetSymbol: string;
+  assetDecimals: number;
+  assetIssuingBlockchainRid: Buffer;
+  assetIconUrl: string;
+  assetType: string;
+  assetTotalSupply: bigint;
+  assetUniquenessResolver: Buffer;
+  amount: bigint;
+  timestamp: number;
+  state: string;
+  finalTxRid: Buffer;
+  finalOpIndex: number;
+};
+
+export type RlState = {
+  accountId: Buffer;
+  accountType: string;
+  points: number;
+  lastUpdate: number;
+  recoveryTime: number;
+};
+
+export type AuthDescriptorSigner = {
+  id: Buffer;
+  accountAuthDescriptorId: Buffer;
+  accountId: Buffer;
+  accountType: string;
+  accountAuthDescriptorAuthType: string;
+  accountAuthDescriptorArgs: string;
+  accountAuthDescriptorRules: string;
+  accountAuthDescriptorCreated: number;
+  accountAuthDescriptorCtr: number;
+};
 /**
  * Represents a blockchain account which is read only.
  * That is, using this object you can get information about
@@ -49,6 +213,7 @@ export type RateLimitResponse = {
 export interface Account {
   id: Buffer;
   blockchainRid: Buffer;
+  connection: Connection;
   /**
    * Retrieves all the balances of all assets that is available on the account and returns them as
    * a paginated entity.
@@ -177,7 +342,7 @@ export interface AuthenticatedAccount extends Account {
   addAuthDescriptor: (
     authDescriptor: AuthDescriptorRegistration<SingleSig>,
     keyStore: KeyStore,
-  ) => Web3PromiEvent<
+  ) => Web3CustomPromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -197,7 +362,7 @@ export interface AuthenticatedAccount extends Account {
   updateMainAuthDescriptor: (
     authDescriptor: AuthDescriptorRegistration<SingleSig>,
     keyStore: KeyStore,
-  ) => Web3PromiEvent<
+  ) => Web3CustomPromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -209,7 +374,7 @@ export interface AuthenticatedAccount extends Account {
    * to be associated with this account, but the keys stored in this account will be used to sign the operation.
    * @param authDescriptorId - the id of the auth descriptor to delete
    */
-  deleteAuthDescriptor: (authDescriptorId: BufferId) => Web3PromiEvent<
+  deleteAuthDescriptor: (authDescriptorId: BufferId) => Web3CustomPromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -221,7 +386,7 @@ export interface AuthenticatedAccount extends Account {
    * Requires that the user has instantiated this structure with the keystore that holds the private key
    * for the main auth descriptor.
    */
-  deleteAllAuthDescriptorsExceptMain: () => Web3PromiEvent<
+  deleteAllAuthDescriptorsExceptMain: () => Web3CustomPromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -239,7 +404,7 @@ export interface AuthenticatedAccount extends Account {
     receiverId: BufferId,
     assetId: BufferId,
     amount: Amount,
-  ) => Web3PromiEvent<
+  ) => Web3CustomPromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;
@@ -255,7 +420,7 @@ export interface AuthenticatedAccount extends Account {
   recallUnclaimedTransfer: (
     txRid: BufferId,
     opIndex: number,
-  ) => Web3PromiEvent<
+  ) => Web3CustomPromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;
@@ -276,14 +441,17 @@ export interface AuthenticatedAccount extends Account {
    * @param recipientId - ID of the recipient.
    * @param assetId - ID of the asset to be transferred.
    * @param amount - The amount to be transferred.
-   *
+   * @param ttl - timeout of this transfer in milliseconds. If the transfer has not been
+   * completed within this timeout, it can be reverted.
+   * This argument is designed to be combined with one of the time functions, e.g., {@link authentication.days}.
    */
   crosschainTransfer: (
     targetChainRid: BufferId,
     recipientId: BufferId,
     assetId: BufferId,
     amount: Amount,
-  ) => Web3PromiEvent<
+    ttl?: number,
+  ) => Web3CustomPromiEvent<
     TransferRef,
     {
       built: SignedTransaction;
@@ -302,7 +470,9 @@ export interface AuthenticatedAccount extends Account {
    * @param pendingTransfer - The transfer to resume
    *
    */
-  resumeCrosschainTransfer: (pendingTransfer: TransferRef) => Web3PromiEvent<
+  resumeCrosschainTransfer: (
+    pendingTransfer: TransferRef,
+  ) => Web3CustomPromiEvent<
     void,
     {
       hop: Buffer;
@@ -319,7 +489,9 @@ export interface AuthenticatedAccount extends Account {
    * @param pendingTransfer - The transfer to revert
    *
    */
-  revertCrosschainTransfer: (pendingTransfer: TransferRef) => Web3PromiEvent<
+  revertCrosschainTransfer: (
+    pendingTransfer: TransferRef,
+  ) => Web3CustomPromiEvent<
     void,
     {
       hop: Buffer;
@@ -339,7 +511,7 @@ export interface AuthenticatedAccount extends Account {
    */
   recallUnclaimedCrosschainTransfer: (
     pendingTransfer: TransferRef,
-  ) => Web3PromiEvent<
+  ) => Web3CustomPromiEvent<
     void,
     {
       hop: Buffer;
@@ -354,7 +526,7 @@ export interface AuthenticatedAccount extends Account {
   burn: (
     assetId: BufferId,
     amount: Amount,
-  ) => Web3PromiEvent<
+  ) => Web3CustomPromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;

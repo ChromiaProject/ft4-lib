@@ -2,11 +2,10 @@
 module;
 
 import lib.ft4.auth;
-import lib.ft4.test.utils;
-import lib.ft4.test.utils.{create_evm_auth_message};
+import test: lib.ft4.test.core;
+import test_op: lib.ft4.test.operations;
 
-import auth_op: ^^.operations.auth;
-import ops: ^^.operations;
+import auth_test_op: ^^.operations.auth;
 
 /*
  * All tests call `extra_signatures_op` operation that internally calls `auth.verify_signers` function.
@@ -15,21 +14,21 @@ import ops: ^^.operations;
 
 function test_authorizing_operation_with_single_ft_signature_succeeds() {
     val alice = rell.test.keypairs.alice;
-    auth_op.extra_signatures_op([alice.pub])
+    auth_test_op.extra_signatures_op([alice.pub])
         .sign(alice)
         .run();
 }
 
 function test_authorizing_operation_with_single_ft_signer_fails_when_signature_is_missing() {
     val alice = rell.test.keypairs.alice;
-    auth_op.extra_signatures_op([alice.pub])
+    auth_test_op.extra_signatures_op([alice.pub])
         .run_must_fail("Missing signature for public key <%s>".format(alice.pub));
 }
 
 function test_authorizing_operation_with_ft_signature_fails_when_invalid_signature_provided() {
     val alice = rell.test.keypairs.alice;
     val bob = rell.test.keypairs.bob;
-    auth_op.extra_signatures_op([alice.pub])
+    auth_test_op.extra_signatures_op([alice.pub])
         .sign(bob)
         .run_must_fail("Missing signature for public key <%s>".format(alice.pub));    
 }
@@ -37,7 +36,7 @@ function test_authorizing_operation_with_ft_signature_fails_when_invalid_signatu
 function test_authorizing_operation_with_many_ft_signatures_succeeds() {
     val alice = rell.test.keypairs.alice;
     val bob = rell.test.keypairs.bob;
-    auth_op.extra_signatures_op([alice.pub, bob.pub])
+    auth_test_op.extra_signatures_op([alice.pub, bob.pub])
         .sign(alice)
         .sign(bob)
         .run(); 
@@ -46,7 +45,7 @@ function test_authorizing_operation_with_many_ft_signatures_succeeds() {
 function test_authorizing_operation_with_ft_signatures_fails_when_some_signatures_missing() {
     val alice = rell.test.keypairs.alice;
     val bob = rell.test.keypairs.bob;
-    auth_op.extra_signatures_op([alice.pub, bob.pub])
+    auth_test_op.extra_signatures_op([alice.pub, bob.pub])
         .sign(alice)
         .run_must_fail("Missing signature for public key <%s>".format(bob.pub));     
 }
@@ -54,10 +53,10 @@ function test_authorizing_operation_with_ft_signatures_fails_when_some_signature
 function test_authorizing_operation_with_single_evm_signature_succeeds() {
     val address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
 
-    val op = auth_op.extra_signatures_op([address]);
+    val op = auth_test_op.extra_signatures_op([address]);
 
-    val message = create_evm_auth_message(op);
-    val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
+    val message = test.create_evm_auth_message(op);
+    val signature = test.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures([address], [signature]))
@@ -68,7 +67,7 @@ function test_authorizing_operation_with_single_evm_signature_succeeds() {
 function test_authorizing_operation_with_single_evm_signer_fails_when_signature_is_missing() {
     val address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
 
-    auth_op.extra_signatures_op([address])
+    auth_test_op.extra_signatures_op([address])
         .run_must_fail("Missing signature for address <%s>".format(address));
 }
 
@@ -76,10 +75,10 @@ function test_authorizing_operation_with_evm_signature_fails_when_invalid_signat
     val aliceAddress = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
     val bob = rell.test.keypairs.bob;
 
-    val op = auth_op.extra_signatures_op([aliceAddress]);
+    val op = auth_test_op.extra_signatures_op([aliceAddress]);
 
-    val message = create_evm_auth_message(op);
-    val bobSignature = utils.evm_sign(message, bob.priv);
+    val message = test.create_evm_auth_message(op);
+    val bobSignature = test.evm_sign(message, bob.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures([aliceAddress], [bobSignature]))
@@ -91,11 +90,11 @@ function test_authorizing_operation_with_many_evm_signatures_succeeds() {
     val address1 = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
     val address2 = crypto.eth_privkey_to_address(rell.test.keypairs.bob.priv);
 
-    val op = auth_op.extra_signatures_op([address2, address1]);
+    val op = auth_test_op.extra_signatures_op([address2, address1]);
 
-    val message = create_evm_auth_message(op);
-    val signature1 = utils.evm_sign(message, rell.test.keypairs.alice.priv);
-    val signature2 = utils.evm_sign(message, rell.test.keypairs.bob.priv);
+    val message = test.create_evm_auth_message(op);
+    val signature1 = test.evm_sign(message, rell.test.keypairs.alice.priv);
+    val signature2 = test.evm_sign(message, rell.test.keypairs.bob.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures([address1, address2], [signature1, signature2]))
@@ -107,11 +106,11 @@ function test_authorizing_operation_fails_when_evm_signatures_provided_in_wrong_
     val address1 = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
     val address2 = crypto.eth_privkey_to_address(rell.test.keypairs.bob.priv);
 
-    val op = auth_op.extra_signatures_op([address2, address1]);
+    val op = auth_test_op.extra_signatures_op([address2, address1]);
 
-    val message = create_evm_auth_message(op);
-    val signature1 = utils.evm_sign(message, rell.test.keypairs.alice.priv);
-    val signature2 = utils.evm_sign(message, rell.test.keypairs.bob.priv);
+    val message = test.create_evm_auth_message(op);
+    val signature1 = test.evm_sign(message, rell.test.keypairs.alice.priv);
+    val signature2 = test.evm_sign(message, rell.test.keypairs.bob.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures([address1, address2], [signature2, signature1]))
@@ -123,10 +122,10 @@ function test_authorizing_operation_succeeds_with_ft_and_evm_signatures() {
     val aliceAddress = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
     val bobPubkey = rell.test.keypairs.bob.pub;
 
-    val op = auth_op.extra_signatures_op([aliceAddress, bobPubkey]);
+    val op = auth_test_op.extra_signatures_op([aliceAddress, bobPubkey]);
 
-    val message = create_evm_auth_message(op);
-    val aliceSignature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
+    val message = test.create_evm_auth_message(op);
+    val aliceSignature = test.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures([aliceAddress], [aliceSignature]))
@@ -139,7 +138,7 @@ function test_authorizing_operation_with_evm_and_ft_signers_fails_when_evm_signa
     val aliceAddress = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
     val bobPubkey = rell.test.keypairs.bob.pub;
 
-    auth_op.extra_signatures_op([aliceAddress, bobPubkey])
+    auth_test_op.extra_signatures_op([aliceAddress, bobPubkey])
         .sign(rell.test.keypairs.bob)
         .run_must_fail("Missing signature for address <%s>".format(aliceAddress));
 }
@@ -148,10 +147,10 @@ function test_authorizing_operation_with_evm_and_ft_signers_fails_when_ft_signat
     val aliceAddress = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
     val bobPubkey = rell.test.keypairs.bob.pub;
 
-    val op = auth_op.extra_signatures_op([aliceAddress, bobPubkey]);
+    val op = auth_test_op.extra_signatures_op([aliceAddress, bobPubkey]);
 
-    val message = create_evm_auth_message(op);
-    val aliceSignature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
+    val message = test.create_evm_auth_message(op);
+    val aliceSignature = test.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures([aliceAddress], [aliceSignature]))
@@ -162,10 +161,10 @@ function test_authorizing_operation_with_evm_and_ft_signers_fails_when_ft_signat
 function test_authorizing_operation_with_evm_signatures_succeeds_when_ft_auth_operation_is_added() {
     val address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
 
-    val op = auth_op.extra_signatures_op([address]);
+    val op = auth_test_op.extra_signatures_op([address]);
 
-    val message = create_evm_auth_message(op);
-    val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
+    val message = test.create_evm_auth_message(op);
+    val signature = test.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures([address], [signature]))
@@ -177,10 +176,10 @@ function test_authorizing_operation_with_evm_signatures_succeeds_when_ft_auth_op
 function test_authorizing_operation_with_evm_signatures_succeeds_when_evm_auth_operation_is_added() {
     val address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
 
-    val op = auth_op.extra_signatures_op([address]);
+    val op = auth_test_op.extra_signatures_op([address]);
 
-    val message = create_evm_auth_message(op);
-    val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
+    val message = test.create_evm_auth_message(op);
+    val signature = test.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures([address], [signature]))
@@ -193,10 +192,10 @@ function test_authorizing_operation_with_evm_signatures_fails_when_evm_signature
     val address1 = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
     val address2 = crypto.eth_privkey_to_address(rell.test.keypairs.bob.priv);
 
-    val op = auth_op.extra_signatures_op([address2, address1]);
+    val op = auth_test_op.extra_signatures_op([address2, address1]);
 
-    val message = create_evm_auth_message(op);
-    val signature1 = utils.evm_sign(message, rell.test.keypairs.alice.priv);
+    val message = test.create_evm_auth_message(op);
+    val signature1 = test.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures([address1, address2], [signature1, null]))
@@ -210,24 +209,24 @@ function test_authorizing_operation_with_evm_signatures_fails_when_evm_signature
 function test_authorizing_operation_with_evm_signatures_fails_when_invalid_operation_is_inserted() {
     val address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
 
-    val op = auth_op.extra_signatures_op([address]);
+    val op = auth_test_op.extra_signatures_op([address]);
 
-    val message = create_evm_auth_message(op);
-    val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
+    val message = test.create_evm_auth_message(op);
+    val signature = test.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures([address], [signature]))
-        .op(ops.empty_op())
+        .op(test_op.empty_op())
         .op(op)
-        .run_must_fail("Missing signature for address <%s>".format(address));    
+        .run_must_fail("Cannot authorize operation <ft4.test.empty_op> with evm_signatures");    
 }
 
 function test_authorizing_operation_with_evm_signatures_fails_when_operation_is_not_whitelisted() {
     val address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
 
-    val op = auth_op.test_authenticated_operation();
-    val message = create_evm_auth_message(op);
-    val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
+    val op = test_op.authenticated_operation();
+    val message = test.create_evm_auth_message(op);
+    val signature = test.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures([address], [signature]))
@@ -238,9 +237,9 @@ function test_authorizing_operation_with_evm_signatures_fails_when_operation_is_
 function test_evm_signatures_throws_error_when_operation_to_authorize_is_missing() {
     val address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
 
-    val op = auth_op.test_authenticated_operation();
-    val message = create_evm_auth_message(op);
-    val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
+    val op = test_op.authenticated_operation();
+    val message = test.create_evm_auth_message(op);
+    val signature = test.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures([address], [signature]))
@@ -250,9 +249,9 @@ function test_evm_signatures_throws_error_when_operation_to_authorize_is_missing
 function test_evm_signatures_throws_error_when_operation_to_authorize_is_missing_and_ft_auth_is_provided() {
     val address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
 
-    val op = auth_op.test_authenticated_operation();
-    val message = create_evm_auth_message(op);
-    val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
+    val op = test_op.authenticated_operation();
+    val message = test.create_evm_auth_message(op);
+    val signature = test.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures([address], [signature]))
@@ -263,9 +262,9 @@ function test_evm_signatures_throws_error_when_operation_to_authorize_is_missing
 function test_evm_signatures_throws_error_when_operation_to_authorize_is_missing_and_evm_auth_is_provided() {
     val address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
 
-    val op = auth_op.test_authenticated_operation();
-    val message = create_evm_auth_message(op);
-    val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
+    val op = test_op.authenticated_operation();
+    val message = test.create_evm_auth_message(op);
+    val signature = test.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures([address], [signature]))

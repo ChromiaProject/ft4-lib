@@ -1,13 +1,59 @@
+/**
+ * Represents the information in a `core.auth._auth_handler` that can be returned to the client.
+ * 
+ * @see core.auth._auth_handler for more information on auth handlers
+ */
 struct _auth_handler_client {
+    /**
+     * The scope of the `_auth_handler`.
+     * 
+     * @see core.auth.get_auth_handler for more information on auth handler scopes
+     */
     name: text;
+    /** The flags required to call this operation */
     flags: list<text>;
+    /**
+     * If true, a `resolver` field exists. This means that the `flags` field is not enough
+     * to pick the best auth descriptor to call this operation with
+     * 
+     * @see core.auth._auth_handler.resolver to know more about the resolver
+     */
     dynamic: boolean;
 }
 
+/**
+ * Retrieves the `flags` field of the auth handler used to authorize the operation specified.
+ * 
+ * Throws if `op_name` is not valid or no auth handler can be found for it.
+ * 
+ * @see core.auth._auth_handler for more information
+ *
+ * @param op_name   the mount name of the operation
+ */
 query get_auth_flags(op_name: name) = auth.get_auth_handler(op_name).flags;
 
+/**
+ * Retrieves the message template that must be signed by EVM signers.
+ * 
+ * Throws if `op_name` is not valid or no auth handler can be found for it.
+ * 
+ * @see evm_auth for more information on the whole EVM authorization process
+ * 
+ * @param op_name   the mount name of the operation
+ * @param op_args   the parameters with which the operation will be called
+ */
 query get_auth_message_template(op_name: name, op_args: gtv?) = auth.get_auth_message_template(op_name, op_args);
 
+/**
+ * Retrieves the login configuration specified.
+ * 
+ * Throws `"UNKNOWN LOGIN CONFIG"` if name is specified but no matching config exists.
+ * 
+ * @see core.auth._login_config for more information
+ * 
+ * @param name  the name of the configuration to retrieve. If null,
+ *              `core.auth.DEFAULT_LOGIN_CONFIG_NAME`
+ */
 query get_login_config(name? = null) {
     val configs = auth.login_config();
     val config_name = name ?: auth.DEFAULT_LOGIN_CONFIG_NAME;
@@ -24,10 +70,19 @@ query get_login_config(name? = null) {
     
     return require(
         configs.get_or_null(config_name), 
-        "Unknown login configuration <%s>".format(config_name)
+        "UNKNOWN LOGIN CONFIG: Unknown login configuration <%s>".format(config_name)
     );
 }
 
+/**
+ * Retrieves the auth handler that must be used to authorize a certain operation.
+ * 
+ * Throws if `op_name` is not valid or no auth handler can be found for it.
+ * 
+ * @see _auth_handler for more information on auth handlers
+ * 
+ * @param op_name   the mount name of the operation
+ */
 query get_auth_handler_for_operation(op_name: name) {
   val handler = auth.get_auth_handler(op_name);
   return _auth_handler_client(
@@ -37,6 +92,19 @@ query get_auth_handler_for_operation(op_name: name) {
   );
 }
 
+/**
+ * Same as `core.auth.get_first_allowed_auth_descriptor_by_signers`.
+ * 
+ * Throws if the auth handler for this operation is not found or its resolver is a function
+ * that throws.
+ * 
+ * @see core.auth.get_first_allowed_auth_descriptor_by_signers
+ * 
+ * @param op_name       the name of the operation to call
+ * @param args          the arguments for the operation
+ * @param account_id    the account that will call the operation
+ * @param signers       the list of signers that can be used for authenticating
+ */
 query get_first_allowed_auth_descriptor_by_signers(
   op_name: name,
   args: gtv,
@@ -44,6 +112,19 @@ query get_first_allowed_auth_descriptor_by_signers(
   signers: list<byte_array>
 ): byte_array? = auth.get_first_allowed_auth_descriptor_by_signers(op_name, args, account_id, signers);
 
+/**
+ * Same as `core.auth.get_first_allowed_auth_descriptor`.
+ * 
+ * Throws if the auth handler for this operation is not found or its resolver is a function
+ * that throws.
+ * 
+ * @see core.auth.get_first_allowed_auth_descriptor
+ * 
+ * @param op_name       the name of the operation to call
+ * @param args          the arguments for the operation
+ * @param account_id    the account that will call the operation
+ * @param ad_ids        the list of auth descriptors that can be used for authenticating
+ */
 query get_first_allowed_auth_descriptor(
   op_name: name,
   args: gtv,
@@ -51,6 +132,11 @@ query get_first_allowed_auth_descriptor(
   ad_ids: list<byte_array>
 ): byte_array? = auth.get_first_allowed_auth_descriptor(op_name, args, account_id, ad_ids);
 
+/**
+ * Retrieves all registered auth handlers.
+ * 
+ * @see _auth_handler for more information on auth handlers
+ */
 query get_all_auth_handlers() {
   val auth_handlers = auth.auth_handler();
   return auth_handlers @* {}(

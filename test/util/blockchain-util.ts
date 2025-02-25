@@ -5,19 +5,26 @@ import {
   IClient,
   formatter,
   Operation,
+  BufferId,
+  GTX,
+  convertToRellOperation,
 } from "postchain-client";
 import { createConnection } from "@ft4/ft-session";
 import { Asset } from "@ft4/asset/types";
 import { registerAsset } from "@ft4/admin";
-import { BufferId } from "@ft4/utils";
 import { Blockchain } from "./types";
 import { adminUser } from "./util";
+
+const NODE_URL = "http://localhost:7740";
 
 export async function createChromiaClientToMultichain(
   blockchainRid: BufferId,
   nodeUrl?: string,
 ) {
-  const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
+  // const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
+
+  // const url = nodeUrl || "http://thedockerhost:7740";
+  const url = nodeUrl || NODE_URL;
   return createClient({
     directoryNodeUrlPool: url,
     blockchainRid: blockchainRid.toString("hex"),
@@ -25,7 +32,9 @@ export async function createChromiaClientToMultichain(
 }
 
 export async function createChromiaClient(nodeUrl?: string, iid = 0) {
-  const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
+  const url =
+    // nodeUrl || process.env.TEST_NODE_URL || "http://thedockerhost:7740";
+    nodeUrl || process.env.TEST_NODE_URL || NODE_URL;
   return createClient({
     nodeUrlPool: url,
     blockchainIid: iid,
@@ -40,14 +49,20 @@ export async function getNewAsset(
   iconUrl = "",
 ): Promise<Asset> {
   const adminSignatureProvider = adminUser().signatureProvider;
-  await registerAsset(
-    client,
-    adminSignatureProvider,
-    name,
-    symbol,
-    decimals,
-    iconUrl,
-  );
+
+  try {
+    await registerAsset(
+      client,
+      adminSignatureProvider,
+      name,
+      symbol,
+      decimals,
+      iconUrl,
+    );
+  } catch (error) {
+    console.log(`Asset with name ${name} already exists`);
+  }
+
   const id = gtv.gtvHash([
     name,
     formatter.ensureBuffer(client.config.blockchainRid),
@@ -101,19 +116,14 @@ export async function addNewAssetIfNeeded(
 export function anchoredHandlerCallbackParameters(
   client: IClient,
   operations: Operation[],
-  opIndex: number,
 ) {
   return expect.objectContaining({
-    operation: operations[opIndex],
-    opIndex,
-    tx: expect.arrayContaining([
-      [
-        Buffer.from(client.config.blockchainRid, "hex"),
-        operations.map((o) => [o.name, o.args]),
-        expect.any(Array),
-      ],
-      expect.any(Array),
-    ]),
+    tx: expect.objectContaining<GTX>({
+      blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
+      operations: convertToRellOperation(operations),
+      signers: expect.any(Array),
+      signatures: expect.any(Array),
+    }),
   });
 }
 
@@ -132,7 +142,8 @@ export async function fetchBlockchains(
     return blockchainsCache;
   }
   const client = await createClient({
-    nodeUrlPool: "http://127.0.0.1:7740",
+    // nodeUrlPool: "http://thedockerhost:7740",
+    nodeUrlPool: NODE_URL,
     blockchainIid: 0,
   });
 
@@ -142,7 +153,6 @@ export async function fetchBlockchains(
   >("get_blockchains", {
     include_inactive: false,
   });
-
   const blockchains: { [key: string]: Blockchain } = {};
   result.forEach((blockchain) => {
     blockchains[blockchain.name] = blockchain;

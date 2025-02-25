@@ -34,11 +34,11 @@ import {
   IClient,
   MissingNodeUrlError,
   formatter,
+  BufferId,
 } from "postchain-client";
 import { Connection, createConnection } from "@ft4/ft-session";
 import { Asset } from "@ft4/asset/types";
 import { PathfinderError, findPathToChainForAsset } from "@ft4/crosschain";
-import { BufferId } from "@ft4/utils/types";
 
 createClientMock.mockImplementation(
   async () =>

@@ -5,6 +5,23 @@ import ^^^^^.core.accounts;
 import ^^^^^.core.accounts.strategies;
 import transfer: ^;
 
+/**
+ * The operation that defines the transfer-open strategy. The open strategy will allow anybody
+ * to register an account by simply sending a certain amount of tokens to that account, as
+ * long as the tokens sent are more than a certain minimum amount.
+ * 
+ * In most cases, this is not something that is desirable for production dapps, as it will
+ * expose the dapp to spam account creation, since no costs are associated.
+ * 
+ * Throws if the next operation in the transaction is not accepted by
+ * `require_register_account_next_operation`
+ * 
+ * @see core.accounts.strategies._strategy for information on how to register an account
+ * using this strategy
+ * 
+ * @param main          the main auth descriptor for the account that will be registered
+ * @param disposable    optionally, the disposable auth descriptor for the same account
+ */
 operation ras_transfer_open(
     main: accounts.auth_descriptor,
     disposable: accounts.auth_descriptor? = null
@@ -12,6 +29,12 @@ operation ras_transfer_open(
     strategies.require_register_account_next_operation();
 }
 
+/**
+ * Calculates the account details for the account that will be registered using the
+ * `ft4.ras_transfer_open` strategy.
+ * 
+ * @param gtv   the parameters for the `ras_transfer_open` operation, GTV-encoded
+ */
 function account_details(gtv) {
     val params = struct<ras_transfer_open>.from_gtv(gtv);
     val signers = accounts.get_signers(params.main);
@@ -22,6 +45,13 @@ function account_details(gtv) {
     );
 }
 
+/**
+ * The `action` for the transfer-open `_strategy`. Transfers the funds to the account.
+ * 
+ * @param account               the account that was registered
+ * @param strategy_params_gtv   the parameters for the `ras_transfer_open` operation,
+ *                              GTV-encoded
+ */
 function transfer_action(accounts.account, strategy_params_gtv: gtv) {
 	transfer.do_transfer(account, "open");
 }
@@ -30,5 +60,19 @@ function transfer_action(accounts.account, strategy_params_gtv: gtv) {
 function () = strategies.add_strategy(
     op = rell.meta(ras_transfer_open),
     account_details = account_details(*),
-    action = transfer_action(*)
+    action = transfer_action(*),
+    required_signers = required_signers_open(*)
 );
+
+/**
+ * The `required_signers` for the open strategy.
+ * 
+ * @see `transfer.required_signers` for more information.
+ * @see core.accounts.strategies.required_signers
+ *
+ * @param gtv the arguments for `ras_transfer_open`.
+ */
+function required_signers_open(gtv) {
+    val params = struct<ras_transfer_open>.from_gtv(gtv);
+    return transfer.required_signers(params.main, params.disposable);
+}

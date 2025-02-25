@@ -14,10 +14,10 @@ describe("Test strategies", () => {
     const strategies = await connection.getEnabledRegistrationStrategies();
 
     expect(strategies).toEqual([
+      "ft4.ras_transfer_subscription",
       "ft4.ras_open",
       "ft4.ras_transfer_open",
       "ft4.ras_transfer_fee",
-      "ft4.ras_transfer_subscription",
     ]);
   });
 });

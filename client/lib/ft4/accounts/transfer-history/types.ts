@@ -18,6 +18,7 @@ export class TransferHistoryError extends Error {
 }
 
 export type TransferHistoryEntryResponse = {
+  rowid: number;
   id: number;
   delta: bigint;
   asset: AssetResponse;
@@ -43,6 +44,31 @@ export type TransferHistoryEntry = {
   operationName: string;
   opIndex: number;
   isCrosschain: boolean;
+};
+
+export type CrosschainTransferHistoryEntryResponse = {
+  rowid: number;
+  blockchain_rid: Buffer;
+  account_id: Buffer;
+  asset_id: Buffer;
+  delta: bigint;
+  is_input: boolean;
+  op_index: number;
+  transaction_rid: Buffer;
+};
+
+/**
+ * Represents a crosschain transfer history entry
+ */
+export type CrosschainTransferHistoryEntry = {
+  rowid: number;
+  blockchainRid: Buffer;
+  accountId: Buffer;
+  assetId: Buffer;
+  delta: bigint;
+  isInput: boolean;
+  opIndex: number;
+  transactionId: Buffer;
 };
 
 export enum TransferHistoryType {
