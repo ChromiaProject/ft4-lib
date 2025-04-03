@@ -13,5 +13,6 @@
 
 - A backward compatibility issue in the function `getById` to ensure it correctly handles responses from the `accountById` query. Older versions that return a `Buffer` (representing just the account.id),
 are now properly supported alongside the newer `AccountResponse` type
+- The query `accountById` now works with all previous versions of rell.
 
 ### Removed 🗑️
