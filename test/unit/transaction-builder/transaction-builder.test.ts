@@ -44,6 +44,7 @@ import {
   formatter,
   gtx,
 } from "postchain-client";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
@@ -224,6 +225,7 @@ describe("Transaction Builder", () => {
         signers: [keyPair.pubKey!],
       },
       keyPair.privKey,
+      MERKLE_HASH_VERSIONS.ONE,
       keyPair.pubKey,
     );
 

@@ -16,6 +16,7 @@ import {
   AuthFlag,
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/accounts";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 let _connection: Connection;
 
@@ -56,7 +57,9 @@ describe("Test open strategy", () => {
       ftKeyStore,
       registrationStrategy.open(ftAuthDescriptor),
     );
-    expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
+    expect(session.account.id).toEqual(
+      gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE),
+    );
   });
 
   it("emits events during registration", async () => {
@@ -93,7 +96,9 @@ describe("Test open strategy", () => {
         registrationStrategy.open(ftAuthDescriptor, options),
       );
 
-      expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
+      expect(session.account.id).toEqual(
+        gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE),
+      );
 
       const disposableKeyStore = await options.loginKeyStore!.getKeyStore(
         session.account.id,
@@ -138,7 +143,9 @@ describe("Test open strategy", () => {
       registrationStrategy.open(evmAuthDescriptor),
     );
 
-    expect(session.account.id).toEqual(gtv.gtvHash(evmKeyStore.address));
+    expect(session.account.id).toEqual(
+      gtv.gtvHash(evmKeyStore.address, MERKLE_HASH_VERSIONS.ONE),
+    );
   });
 
   it("can add disposable key to account registered with evm key", async () => {

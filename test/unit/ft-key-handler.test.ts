@@ -5,6 +5,7 @@ import {
 import { aggregateSigners } from "@ft4/accounts";
 import { createInMemoryFtKeyStore, ftAuth } from "@ft4/authentication";
 import { op } from "@ft4/utils";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 import { Buffer } from "buffer";
 import { RellOperation, encryption, gtx } from "postchain-client";
 
@@ -46,7 +47,10 @@ describe("FT key handler", () => {
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
     transaction.signatures = [await keyHandler.sign(transaction)];
 
-    const digestToSign = gtx.getDigestToSign(transaction);
+    const digestToSign = gtx.getDigestToSign(
+      transaction,
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     const signature2 = encryption.signDigest(digestToSign, keyPair.privKey);
 
     expect(transaction.signatures).toEqual([signature2]);

@@ -21,8 +21,8 @@ import {
   GTX,
   IClient,
   Operation,
-  ResponseStatus,
   SignedTransaction,
+  TransactionEvent,
   TransactionReceipt,
   convertToRellOperation,
   createIccfProofTx,
@@ -40,6 +40,7 @@ import {
 } from "./types";
 import { EMPTY_SIGNATURE, signOperation } from "./utils";
 import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 /**
  * Creates a new TransactionBuilder instance
@@ -227,9 +228,11 @@ export function transactionBuilder(
           promiEvent.emit("built", tx);
           return Promise.all([
             tx,
-            client.sendTransaction(tx).on("sent", (receipt) => {
-              promiEvent.emit("sent", receipt.transactionRid);
-            }),
+            client
+              .sendTransaction(tx)
+              .on(TransactionEvent.DappReceived, (receipt) => {
+                promiEvent.emit("sent", receipt.transactionRid);
+              }),
           ]);
         })
         .then(([tx, receipt]) => {
@@ -266,15 +269,12 @@ export function transactionBuilder(
               () => {},
               ChainConfirmationLevel.SystemAnchoring,
             )
-            .on("sent", (receipt) => {
-              if (receipt.status === ResponseStatus.Waiting) {
-                promiEvent.emit("sent", receipt.transactionRid);
-              }
-
-              if (receipt.status === ResponseStatus.Confirmed) {
-                promiEvent.emit("confirmed", receipt);
-              }
-            })
+            .on(TransactionEvent.DappReceived, (receipt) =>
+              promiEvent.emit("sent", receipt.transactionRid),
+            )
+            .on(TransactionEvent.DappConfirmed, (receipt) =>
+              promiEvent.emit("confirmed", receipt),
+            )
             .then((receipt) => {
               const decodedTx = gtx.deserialize(tx);
               const systemConfirmationProof = getSystemAnchoringIccfProofOp(
@@ -333,7 +333,7 @@ export function getSystemAnchoringIccfProofOp(
     const proofTx = await createIccfProofTx(
       directoryClient,
       getTransactionRid(txToProve),
-      gtx.getDigest(txToProve),
+      gtx.getDigest(txToProve, MERKLE_HASH_VERSIONS.ONE),
       txToProve.signers,
       client.config.blockchainRid,
       targetChainRid.toString("hex"),

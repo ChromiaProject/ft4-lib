@@ -39,6 +39,7 @@ import {
 import { Connection, createConnection } from "@ft4/ft-session";
 import { Asset } from "@ft4/asset/types";
 import { PathfinderError, findPathToChainForAsset } from "@ft4/crosschain";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 createClientMock.mockImplementation(
   async () =>
@@ -58,6 +59,7 @@ describe("Pathfinder", () => {
     const client = await createClient({
       nodeUrlPool: "",
       blockchainRid: formatter.toString(startingChainRid),
+      merkleHashVersion: MERKLE_HASH_VERSIONS.ONE,
     });
     connection = createConnection(client);
   });

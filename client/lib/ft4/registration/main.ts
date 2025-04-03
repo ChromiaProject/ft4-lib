@@ -15,6 +15,7 @@ import {
   Queryable,
   ResponseStatus,
   SignedTransaction,
+  TransactionEvent,
   gtv,
 } from "postchain-client";
 import { registerAccount as registerAccountOp } from "./operations";
@@ -28,6 +29,7 @@ import {
 } from "@ft4/ft-session";
 import { evmSignatures } from "@ft4/transaction-builder/utils";
 import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 /**
  * Registers an account.
@@ -119,7 +121,7 @@ export function registerAccount(
           keyStores,
           connection.client
             .sendTransaction(transaction)
-            .on("sent", (receipt) => {
+            .on(TransactionEvent.DappReceived, (receipt) => {
               if (receipt.status === ResponseStatus.Waiting) {
                 promiEvent.emit("sent", receipt.transactionRid);
               }
@@ -127,7 +129,10 @@ export function registerAccount(
         ]);
       })
       .then(([loginKeyStore, disposableKeyStore, keyStores, _]) => {
-        const accountId = gtv.gtvHash(masterKeyStore.id);
+        const accountId = gtv.gtvHash(
+          masterKeyStore.id,
+          MERKLE_HASH_VERSIONS.ONE,
+        );
 
         return Promise.all([
           loginKeyStore,

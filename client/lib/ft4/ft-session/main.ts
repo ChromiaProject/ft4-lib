@@ -82,7 +82,7 @@ import {
   getAcceptableAuthDescriptors,
   getConfigFromOptions,
 } from "@ft4/authentication/login";
-import { getApiVersion } from "@ft4/utils/main";
+import { getApiVersion, MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 import {
   AssetFilter,
@@ -148,6 +148,7 @@ export async function createClientToBlockchain(
       typeof blockchainRid == "string"
         ? blockchainRid
         : formatter.toString(blockchainRid),
+    merkleHashVersion: MERKLE_HASH_VERSIONS.ONE,
   });
 }
 

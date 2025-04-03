@@ -9,6 +9,7 @@ import {
 import { AnyAuthDescriptor } from "@ft4/accounts";
 import { FtKeyStore, createFtKeyHandler } from "@ft4/authentication";
 import { isRawGtx } from "@ft4/utils";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 /**
  * Creates an FtKeyStore instance which will only keep the keys in memory. That is,
@@ -20,7 +21,9 @@ export function createInMemoryFtKeyStore(
   keyHolder: KeyPair | SignatureProvider,
 ): FtKeyStore {
   const signatureProvider =
-    "privKey" in keyHolder ? newSignatureProvider(keyHolder) : keyHolder;
+    "privKey" in keyHolder
+      ? newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, keyHolder)
+      : keyHolder;
 
   const keyStore = Object.freeze({
     id: signatureProvider.pubKey,

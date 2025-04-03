@@ -7,6 +7,7 @@ import {
   SingleSig,
 } from "@ft4/accounts";
 import { createInMemoryFtKeyStore, FtKeyStore } from "@ft4/authentication";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 import {
   encryption,
   gtv,
@@ -25,7 +26,10 @@ export function newSingleSigUser(
   keyPair: KeyPair,
   rule: AuthDescriptorRules | null = null,
 ): User {
-  const signatureProvider = gtx.newSignatureProvider(keyPair);
+  const signatureProvider = gtx.newSignatureProvider(
+    MERKLE_HASH_VERSIONS.ONE,
+    keyPair,
+  );
   const singleSigAuthDescriptor = createSingleSigAuthDescriptorRegistration(
     [AuthFlag.Account, AuthFlag.Transfer],
     signatureProvider.pubKey,
@@ -36,7 +40,7 @@ export function newSingleSigUser(
     authDescriptor: {
       ...singleSigAuthDescriptor,
       id: deriveAuthDescriptorId(singleSigAuthDescriptor),
-      accountId: gtv.gtvHash(keyPair.pubKey),
+      accountId: gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE),
       accountType: FT4_USER_TYPE,
       created: new Date(),
     },

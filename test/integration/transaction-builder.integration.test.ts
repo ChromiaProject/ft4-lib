@@ -19,6 +19,7 @@ import {
   SignedTransaction,
   TransactionReceipt,
   TxRejectedError,
+  UnexpectedStatusError,
 } from "postchain-client";
 
 describe("transaction builder", () => {
@@ -126,17 +127,18 @@ describe("transaction builder", () => {
     expect(confirmedEvent!.status).toEqual(ResponseStatus.Confirmed);
   }, 5000);
 
-  it("buildAndSendWithAnchoring() throws exception when system chain not available", async () => {
+  it("buildAndSendWithAnchoring() throws exception when directory chain is not available", async () => {
     const promise = session
       .transactionBuilder()
       .add(deleteAllAuthDescriptorsExceptMain())
       .add(nop())
       .buildAndSendWithAnchoring();
 
-    await expect(promise).rejects.toThrow(TxRejectedError);
-    await expect(promise).rejects.toHaveProperty(
-      "message",
-      expect.stringContaining("Transaction was rejected, failedAnchoring"),
+    await expect(promise).rejects.toThrow(
+      new UnexpectedStatusError(
+        400,
+        "Unknown query: cm_get_blockchain_api_urls",
+      ),
     );
   }, 5000);
 });

@@ -19,6 +19,11 @@ import { Config, ConfigResponse } from "./types";
 import { allAuthHandlers } from "./queries";
 import { AuthHandler, FtKeyStore } from "@ft4/authentication";
 
+export const MERKLE_HASH_VERSIONS = {
+  ONE: 1,
+  TWO: 2,
+};
+
 /**
  * Creates a nop operation that can be included in a transaction
  */
@@ -61,8 +66,8 @@ export async function getConfig(queryable: Queryable): Promise<Config> {
  */
 export function getTransactionRid(tx: RawGtx | GTX): Buffer {
   if (Array.isArray(tx)) {
-    return gtv.gtvHash(tx[0]); //tx body
-  } else return gtv.gtvHash(gtx.gtxToRawGtxBody(tx));
+    return gtv.gtvHash(tx[0], MERKLE_HASH_VERSIONS.ONE); //tx body
+  } else return gtv.gtvHash(gtx.gtxToRawGtxBody(tx), MERKLE_HASH_VERSIONS.ONE);
 }
 
 /**
@@ -212,11 +217,9 @@ export function deriveNonce(
   authDescriptorCounter: number,
 ): string {
   return formatter.toString(
-    gtv.gtvHash([
-      blockchainRid,
-      operation.name,
-      operation.args,
-      authDescriptorCounter,
-    ]),
+    gtv.gtvHash(
+      [blockchainRid, operation.name, operation.args, authDescriptorCounter],
+      MERKLE_HASH_VERSIONS.ONE,
+    ),
   );
 }
