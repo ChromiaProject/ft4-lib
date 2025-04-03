@@ -38,6 +38,8 @@ This also tags the commit with client version.
 
 ## Finalize the release
 
+- push development
+- create a pull request to main branch from development branch
 - push `main` branch and tags (both rell and client)
 - find rell lib hash
   - best way: `chr tools lib-model` should work from the next version of `chr`
