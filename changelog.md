@@ -5,7 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-04-03
+
+### Changed 🪙
+
+- The return type of the `accountById` function's `QueryObject` from `AccountResponse | null` to `AccountResponse | Buffer | null`
+- Updated ft4 to use `postchain-client: 1.22.0`, this change includes support for `MERKLE_HASH_VERSION: 2`
+
+### Fixed 🔧
+
+- A backward compatibility issue in the function `getById` to ensure it correctly handles responses from the `accountById` query. Older versions that return a `Buffer` (representing just the account.id),
+are now properly supported alongside the newer `AccountResponse` type
+- The query `accountById` now works with all previous versions of rell.
+
 ## [1.1.0] - 2025-02-25
+
+### Breaking 💔
 
 ### Changed 🪙
 

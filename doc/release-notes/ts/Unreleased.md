@@ -4,15 +4,8 @@
 
 ### Changed 🪙
 
-- The return type of the `accountById` function's `QueryObject` from `AccountResponse | null` to `AccountResponse | Buffer | null`
-- Updated ft4 to use `postchain-client: 1.22.0`, this change includes support for `MERKLE_HASH_VERSION: 2`
-
 ### Added ✅
 
 ### Fixed 🔧
-
-- A backward compatibility issue in the function `getById` to ensure it correctly handles responses from the `accountById` query. Older versions that return a `Buffer` (representing just the account.id),
-are now properly supported alongside the newer `AccountResponse` type
-- The query `accountById` now works with all previous versions of rell.
 
 ### Removed 🗑️
