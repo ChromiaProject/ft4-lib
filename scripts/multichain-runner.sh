@@ -233,7 +233,6 @@ run_main_logic() {
         JAVA_TOOL_OPTIONS=-XX:UseSVE=0
     fi
 
-
     log "Running node container..."
     mkdir logs
     # $DOCKER -H $DOCKER_HOST network create -d bridge localnet
