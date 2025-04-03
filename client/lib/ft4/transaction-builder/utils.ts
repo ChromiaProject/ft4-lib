@@ -14,16 +14,20 @@ import {
 } from "@ft4/authentication";
 import { deriveNonce } from "@ft4/utils";
 import { BufferId, GTX, Operation, formatter, gtx } from "postchain-client";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 export const EMPTY_SIGNATURE = Buffer.alloc(64);
 export const EVM_SIGNATURES = "ft4.evm_signatures";
 
 export function txDigest(tx: GTX): Buffer {
-  return gtx.getDigestToSign({
-    blockchainRid: tx.blockchainRid,
-    signers: tx.signers,
-    operations: tx.operations,
-  });
+  return gtx.getDigestToSign(
+    {
+      blockchainRid: tx.blockchainRid,
+      signers: tx.signers,
+      operations: tx.operations,
+    },
+    MERKLE_HASH_VERSIONS.ONE,
+  );
 }
 
 export async function signOperation(

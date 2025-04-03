@@ -12,6 +12,7 @@ import { op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { randomBytes } from "crypto";
 import { IClient, formatter, gtv } from "postchain-client";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 let connection: Connection;
 let client: IClient;
@@ -92,7 +93,10 @@ describe("Asset", () => {
       connection.client.config.blockchainRid,
       "hex",
     );
-    const assetId = gtv.gtvHash([assetName, blockchainRid]);
+    const assetId = gtv.gtvHash(
+      [assetName, blockchainRid],
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     await getNewAsset(client, assetName, assetSymbol, 3);
 
     const expectedAsset = await connection.getAssetById(assetId);
@@ -106,7 +110,10 @@ describe("Asset", () => {
   it("returns an asset when queried by symbol", async () => {
     const assetName = "asset_symbol";
     const assetSymbol = "ASSET_SYMBOL";
-    const assetId = gtv.gtvHash([assetName, blockchainRid]);
+    const assetId = gtv.gtvHash(
+      [assetName, blockchainRid],
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     const iconUrl = "http://example.com/";
     await getNewAsset(client, assetName, assetSymbol, 3, iconUrl);
 
@@ -117,10 +124,10 @@ describe("Asset", () => {
     const crosschainBlockchainRid = formatter.ensureBuffer("34".repeat(32));
     const crosschainIconUrl = "";
     const crosschainAssetType = "FT4";
-    const crosschainRes = gtv.gtvHash([
-      crosschainAssetName,
-      crosschainBlockchainRid,
-    ]);
+    const crosschainRes = gtv.gtvHash(
+      [crosschainAssetName, crosschainBlockchainRid],
+      MERKLE_HASH_VERSIONS.ONE,
+    );
 
     await registerCrosschainAsset(
       connection,

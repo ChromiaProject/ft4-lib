@@ -6,6 +6,7 @@ import {
   SystemChainException,
   createClient,
 } from "postchain-client";
+import { MERKLE_HASH_VERSIONS } from "./main";
 
 /**
  * Creates an IClient instance configured to run against the directory chain available
@@ -18,6 +19,7 @@ export async function getDirectoryClient(
   return await createClient({
     nodeUrlPool,
     blockchainIid: 0,
+    merkleHashVersion: MERKLE_HASH_VERSIONS.ONE,
   });
 }
 

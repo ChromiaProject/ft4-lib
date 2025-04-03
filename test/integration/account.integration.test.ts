@@ -43,6 +43,7 @@ import { AuthorizationError } from "@ft4/transaction-builder";
 import { nop, op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import * as pcl from "postchain-client";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 let _connection: Connection;
 const admin = adminUser();
@@ -172,8 +173,8 @@ describe("Test the account", () => {
   });
 
   it("updates account if 2 signatures provided", async () => {
-    const kp1 = pcl.newSignatureProvider();
-    const kp2 = pcl.newSignatureProvider();
+    const kp1 = pcl.newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const kp2 = pcl.newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
     const ad = createMultiSigAuthDescriptorRegistration(
       [AuthFlag.Account],
       [kp1.pubKey, kp2.pubKey],
@@ -254,10 +255,14 @@ describe("Test the account", () => {
 
     await Promise.all([
       AccountBuilder.account(_connection) //owned by keyPair1
-        .withSigner(pcl.newSignatureProvider(keyPair1))
+        .withSigner(
+          pcl.newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, keyPair1),
+        )
         .build(),
       AccountBuilder.account(_connection) //keyPair1 is NOT the manager
-        .withSigner(pcl.newSignatureProvider(keyPair1))
+        .withSigner(
+          pcl.newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, keyPair1),
+        )
         .buildAsNonManager(),
     ]);
 

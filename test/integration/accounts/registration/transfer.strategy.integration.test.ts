@@ -26,6 +26,7 @@ import {
   registrationStrategy,
 } from "@ft4/registration";
 import { KeyPair, TxRejectedError, encryption, gtv } from "postchain-client";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 let connection: Connection;
 let asset: Asset;
@@ -52,7 +53,7 @@ describe("Test transfer strategy", () => {
   let defaultAmount: Amount;
   beforeEach(async () => {
     keyPair = encryption.makeKeyPair();
-    recipientId = gtv.gtvHash(keyPair.pubKey);
+    recipientId = gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE);
     keyStore = createInMemoryFtKeyStore(keyPair);
     senderAccount = await AccountBuilder.account(connection)
       .withBalance(asset, 200)
@@ -230,7 +231,7 @@ describe("Test transfer strategy", () => {
 
       beforeAll(async () => {
         const keyPair = encryption.makeKeyPair();
-        recipientId = gtv.gtvHash(keyPair.pubKey);
+        recipientId = gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE);
 
         const account1 = await AccountBuilder.account(connection)
           .withBalance(asset, 200)
@@ -318,7 +319,7 @@ describe("Test transfer strategy", () => {
         );
 
         const keyPair = encryption.makeKeyPair();
-        recipientId = gtv.gtvHash(keyPair.pubKey);
+        recipientId = gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE);
 
         const account1 = await AccountBuilder.account(connection)
           .withBalance(timeoutAsset, 200)

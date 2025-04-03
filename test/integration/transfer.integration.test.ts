@@ -23,6 +23,7 @@ import {
   createConnection,
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 import { IClient, newSignatureProvider } from "postchain-client";
 
 let asset: Asset;
@@ -157,7 +158,7 @@ describe("Transfer", () => {
   });
 
   it("should succeed burning tokens", async () => {
-    const keyPair = newSignatureProvider();
+    const keyPair = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
 
     const account = await AccountBuilder.account(connection)
       .withSigner(keyPair)

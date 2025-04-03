@@ -34,12 +34,15 @@ import {
   getAccountIdFromAuthDescriptor,
   testAdFromRegistration,
 } from "./util";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 export class AccountBuilder {
   private connection: Connection;
   private balances: Balance[] = [];
   private rules: AuthDescriptorRules | null = null;
-  private signer: SignatureProvider = gtx.newSignatureProvider();
+  private signer: SignatureProvider = gtx.newSignatureProvider(
+    MERKLE_HASH_VERSIONS.ONE,
+  );
   private authDescInfo: {
     authDescriptor: AnyAuthDescriptorRegistration;
     signers: (SignatureProvider | KeyPair)[];
@@ -120,7 +123,7 @@ export class AccountBuilder {
   }
 
   async buildAsNonManager(): Promise<AuthenticatedAccount> {
-    const manager = newSignatureProvider();
+    const manager = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
     const accountManager =
       await this.registerAndBuildManagerAuthenticated(manager);
     const ad = this.getAuthDescriptorRegistration();

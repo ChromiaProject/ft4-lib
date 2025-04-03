@@ -8,7 +8,7 @@ NODE_PORT=9870
 API_PORT=7740
 # API_PORT=80
 
-CHROMIA_NODE_VERSION='3.22.5'
+CHROMIA_NODE_VERSION='3.23.0'
 DIRECTORY_CHAIN_VERSION='1.75.2'
 
 if $GITLAB; then
@@ -227,6 +227,13 @@ run_main_logic() {
         prepare_dapp_folder "$chain_num"
     done
 
+    JAVA_TOOL_OPTIONS=-Xmx16g
+
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        JAVA_TOOL_OPTIONS=-XX:UseSVE=0
+    fi
+
+
     log "Running node container..."
     mkdir logs
     # $DOCKER -H $DOCKER_HOST network create -d bridge localnet
@@ -235,7 +242,7 @@ run_main_logic() {
         --restart unless-stopped \
         -v "$(pwd)/$BASE_CONFIG_DIR:/config" \
         -v "$(pwd)/$DEPENDENCIES_PATH/directory-chain/build:/build" \
-        -e JAVA_TOOL_OPTIONS="-Xmx16g" \
+        -e JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS" \
         -e POSTCHAIN_DEBUG=true \
         -e POSTCHAIN_CONFIG=/config/config.0.properties \
         -e POSTCHAIN_BLOCKCHAIN_CONFIG=/build/manager.xml \

@@ -14,9 +14,10 @@ import {
   RawAnyAuthDescriptorRegistration,
   SingleSig,
 } from "./types";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 function hashAuthDescriptor(ad: RawAnyAuthDescriptorRegistration) {
-  return gtv.gtvHash(ad);
+  return gtv.gtvHash(ad, MERKLE_HASH_VERSIONS.ONE);
 }
 
 /**

@@ -34,6 +34,7 @@ import {
   registerAccount,
   registrationStrategy,
 } from "@ft4/registration";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   assetName: string = "asset-name",
@@ -333,7 +334,7 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
     feeAmount,
   );
 
-  const recipientId = gtv.gtvHash(keyStore.id);
+  const recipientId = gtv.gtvHash(keyStore.id, MERKLE_HASH_VERSIONS.ONE);
 
   const transferRef = await crosschainTransfer(
     testContext.connection0,

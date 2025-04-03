@@ -45,13 +45,14 @@ import {
 import { User, FT4_USER_TYPE } from "./test-user";
 import { transactionBuilder } from "@ft4/transaction-builder";
 import { Amount, Asset } from "@ft4/asset";
+import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 function generateId(n: number): Buffer {
   return encryption.hash256(Buffer.from(`${n}`));
 }
 
 function blockchainAccountId(blockchainRid: Buffer) {
-  return pclGtv.gtvHash(["B", blockchainRid]);
+  return pclGtv.gtvHash(["B", blockchainRid], MERKLE_HASH_VERSIONS.ONE);
 }
 
 class LocalStorageMock implements Storage {
@@ -91,7 +92,10 @@ export function adminUser(): User {
       "00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE",
   );
 
-  const signatureProvider = gtx.newSignatureProvider(keyPair);
+  const signatureProvider = gtx.newSignatureProvider(
+    MERKLE_HASH_VERSIONS.ONE,
+    keyPair,
+  );
   const singleSigAuthDescriptor = createSingleSigAuthDescriptorRegistration(
     [AuthFlag.Account, AuthFlag.Transfer],
     signatureProvider.pubKey,
@@ -121,7 +125,7 @@ export function createTestAuthDescriptor(
   return {
     keyPair,
     authDescriptor: createTestAuthDescriptorWithSigner(
-      pclGtv.gtvHash(keyPair.pubKey),
+      pclGtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE),
       keyPair.pubKey,
       flags,
       rules,
@@ -335,13 +339,13 @@ export function getAccountIdFromAuthDescriptor(
   const signers = aggregateSigners(authDescriptor);
   return pclGtv.gtvHash(
     signers.length === 1 ? signers[0] : signers.sort(Buffer.compare),
+    MERKLE_HASH_VERSIONS.ONE,
   );
 }
 
 export function lockAccountId(accountId: BufferId, lockType: string): Buffer {
-  return pclGtv.gtvHash([
-    formatter.ensureBuffer(accountId),
-    "FT4_LOCK",
-    lockType,
-  ]);
+  return pclGtv.gtvHash(
+    [formatter.ensureBuffer(accountId), "FT4_LOCK", lockType],
+    MERKLE_HASH_VERSIONS.ONE,
+  );
 }
