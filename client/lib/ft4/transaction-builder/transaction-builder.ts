@@ -40,7 +40,6 @@ import {
 } from "./types";
 import { EMPTY_SIGNATURE, signOperation } from "./utils";
 import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 /**
  * Creates a new TransactionBuilder instance
@@ -333,12 +332,13 @@ export function getSystemAnchoringIccfProofOp(
     const proofTx = await createIccfProofTx(
       directoryClient,
       getTransactionRid(txToProve),
-      gtx.getDigest(txToProve, MERKLE_HASH_VERSIONS.ONE),
+      gtx.getDigest(txToProve, client.config.merkleHashVersion),
       txToProve.signers,
       client.config.blockchainRid,
       targetChainRid.toString("hex"),
       undefined,
       true,
+      client.config.merkleHashVersion,
     );
 
     const iccfProofOperation = proofTx.iccfTx.operations[0];
