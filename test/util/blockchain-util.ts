@@ -21,6 +21,7 @@ const NODE_URL = "http://localhost:7740";
 export async function createChromiaClientToMultichain(
   blockchainRid: BufferId,
   nodeUrl?: string,
+  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
 ) {
   // const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
 
@@ -29,18 +30,22 @@ export async function createChromiaClientToMultichain(
   return createClient({
     directoryNodeUrlPool: url,
     blockchainRid: blockchainRid.toString("hex"),
-    merkleHashVersion: MERKLE_HASH_VERSIONS.ONE,
+    merkleHashVersion: merkleHashVersion,
   });
 }
 
-export async function createChromiaClient(nodeUrl?: string, iid = 0) {
+export async function createChromiaClient(
+  nodeUrl?: string,
+  iid = 0,
+  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
+) {
   const url =
     // nodeUrl || process.env.TEST_NODE_URL || "http://thedockerhost:7740";
     nodeUrl || process.env.TEST_NODE_URL || NODE_URL;
   return createClient({
     nodeUrlPool: url,
     blockchainIid: iid,
-    merkleHashVersion: MERKLE_HASH_VERSIONS.ONE,
+    merkleHashVersion: merkleHashVersion,
   });
 }
 

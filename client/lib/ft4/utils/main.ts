@@ -209,17 +209,19 @@ export function loadOperationFromTransaction(
  * @param blockchainRid - the rid of the blockchain where the nonce is used
  * @param operation - what operation the nonce will be used with
  * @param authDescriptorCounter - current counter of the auth descriptor that will be used to authenticate the operation
+ * @param merkleHashVersion - the merkle hash version selection defaults to one
  * @returns the computed nonce value
  */
 export function deriveNonce(
   blockchainRid: BufferId,
   operation: Operation,
   authDescriptorCounter: number,
+  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
 ): string {
   return formatter.toString(
     gtv.gtvHash(
       [blockchainRid, operation.name, operation.args, authDescriptorCounter],
-      MERKLE_HASH_VERSIONS.ONE,
+      merkleHashVersion,
     ),
   );
 }
