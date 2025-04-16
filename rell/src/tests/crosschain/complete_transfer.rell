@@ -6,8 +6,8 @@ import xc: lib.ft4.crosschain;
 import admin_crosschain: ^^^.lib.ft4.admin.crosschain;
 import test_op: lib.ft4.test.operations;
 import test: lib.ft4.test.core;
-import ^^.operations.iccf_op.{ iccf_proof };
 import ^.mocks;
+import common_helpers: ^^.common.helpers;
 
 function test_can_complete_transfer() {
     val alice = test.register_alice();
@@ -50,7 +50,7 @@ function test_can_complete_transfer() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(target_blockchain_rid, apply_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(target_blockchain_rid, apply_tx))
         .op(xc.external.complete_transfer(apply_tx, 0))
         .run();
 }

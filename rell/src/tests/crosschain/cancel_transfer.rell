@@ -7,7 +7,7 @@ import xc: lib.ft4.crosschain;
 import test: lib.ft4.test.core;
 import admin_crosschain: ^^^.lib.ft4.admin.crosschain;
 import test_op: lib.ft4.test.operations;
-import ^^.operations.iccf_op.{ iccf_proof };
+import common_helpers: ^^.common.helpers;
 
 function test_apply_transfer_fails_if_canceled() {
     val sender_account_id = "the sender".hash();
@@ -37,13 +37,13 @@ function test_apply_transfer_fails_if_canceled() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, tx))
         .op(xc.external.cancel_transfer(tx, 1, tx, 1, 0))
         .nop()
         .run();
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, tx))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .nop()
         .run_must_fail(
@@ -80,13 +80,13 @@ function test_cancel_transfer_fails_if_applied() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, tx))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .nop()
         .run();
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, tx))
         .op(xc.external.cancel_transfer(tx, 1, tx, 1, 0))
         .nop()
         .run_must_fail(
@@ -123,13 +123,13 @@ function test_can_cancel_with_proof_of_init_transfer_once_but_not_twice() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, init_tx))
         .op(xc.external.cancel_transfer(init_tx, 1, init_tx, 1, 0))
         .nop()
         .run();
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, init_tx))
         .op(xc.external.cancel_transfer(init_tx, 1, init_tx, 1, 0))
         .nop()
         .run_must_fail(
@@ -183,13 +183,13 @@ function test_can_cancel_with_proof_of_apply_transfer_one_but_not_twice() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(intermediate_blockchain_rid, apply_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(intermediate_blockchain_rid, apply_tx))
         .op(xc.external.cancel_transfer(init_tx, 1, apply_tx, 0, 1))
         .nop()
         .run();
 
     rell.test.tx()
-        .op(iccf_proof(intermediate_blockchain_rid, apply_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(intermediate_blockchain_rid, apply_tx))
         .op(xc.external.cancel_transfer(init_tx, 1, apply_tx, 0, 1))
         .nop()
         .run_must_fail(
@@ -261,7 +261,7 @@ function test_can_not_cancel_before_expiry() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, tx))
         .op(xc.external.cancel_transfer(tx, 1, tx, 1, 0))
         .nop()
         .run_must_fail("This transfer has not yet expired. It can not be reverted before <%s> (evaluated at timestamp <%s>).".format(deadline, rell.test.last_block_time));
@@ -306,7 +306,7 @@ function test_can_not_cancel_with_wrong_op() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, init_tx))
         .op(xc.external.cancel_transfer(init_tx, 1, bogus_tx, 0, 0))
         .nop()
         .run_must_fail("Invalid parameter. Previous hop tx must be equal to init transfer tx");
@@ -357,7 +357,7 @@ function test_can_not_cancel_with_invalid_hop_index() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(intermediate_blockchain_rid, apply_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(intermediate_blockchain_rid, apply_tx))
         .op(xc.external.cancel_transfer(init_tx, 1, apply_tx, 0, 2))
         .nop()
         .run_must_fail("Argument mismatch: init_transfer hops size (2) is greater than hop_index (2)");
@@ -409,7 +409,7 @@ function test_can_noy_cancel_with_proof_of_apply_transfer_on_wrong_chain() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(wrong_blockchain_rid, apply_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(wrong_blockchain_rid, apply_tx))
         .op(xc.external.cancel_transfer(init_tx, 1, apply_tx, 0, 1))
         .nop()
         .run_must_fail(

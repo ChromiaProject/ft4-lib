@@ -46,6 +46,7 @@ install_rell:
     paths:
       - rell/out
       - rell/src/lib/iccf
+      - rell/src/lib/iccf_test
       - bin/
 
 install_js:
