@@ -17,7 +17,7 @@ services:
       retries: 5      
 
   todo-list-example-postchain:
-    image: registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.20.0
+    image: registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.26.0
     container_name: todo-list-example-postchain
     command: sh -c "chr install && chr node start --wipe"
     ports:

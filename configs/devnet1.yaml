@@ -12,14 +12,20 @@ blockchains:
 compile:
   source: ../rell/src
   target: ../rell/out
-  rellVersion: 0.13.5
+  rellVersion: 0.14.5
 
 libs:
   iccf:
     registry: https://gitlab.com/chromaway/core/directory-chain
-    path: src/iccf
-    tagOrBranch: 1.9.1
-    rid: x"593D6EBA650BAC473E105C047B2C43A099164870304B3E5E324F714FF2F3F82F"
+    path: src/lib/iccf
+    tagOrBranch: 1.87.0
+    rid: x"9C359787B75927733034EA1CEE74EEC8829D2907E4FC94790B5E9ABE4396575D"
+
+  iccf_test:
+    registry: https://gitlab.com/chromaway/core/directory-chain
+    path: src/lib/test/iccf
+    tagOrBranch: 1.87.0
+    rid: x"873D71557531E35E453587FA71C2D3CCB674F0EB49D18B30FA838C52C1155EB3"
 
 deployments:
   latest:

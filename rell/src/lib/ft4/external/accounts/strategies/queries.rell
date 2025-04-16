@@ -15,15 +15,15 @@ query get_account_creation_transfers_filtered(
     val before_rowid = utils.before_rowid(page_cursor);
     if (account_creation_transfer_filter?.op_index??)
         require(
-            account_creation_transfer_filter?.transaction_tx_rid??,
+            account_creation_transfer_filter.transaction_tx_rid,
             "MALFORMED FILTER: composite index, transaction required (transaction, op_index)"
         );
     return utils.make_page(
         transfer.account_creation_transfer @* {
-                if (account_creation_transfer_filter?.rowids??) .rowid in account_creation_transfer_filter!!.rowids!! else true,
-                if (account_creation_transfer_filter?.transaction_tx_rid??) .transaction.tx_rid == account_creation_transfer_filter!!.transaction_tx_rid else true,
-                if (account_creation_transfer_filter?.op_index??) .op_index == account_creation_transfer_filter!!.op_index else true,
-                if (account_creation_transfer_filter?.recipient_id??) .recipient_id == account_creation_transfer_filter!!.recipient_id else true,
+                if (account_creation_transfer_filter?.rowids??) .rowid in account_creation_transfer_filter.rowids else true,
+                if (account_creation_transfer_filter?.transaction_tx_rid??) .transaction.tx_rid == account_creation_transfer_filter.transaction_tx_rid else true,
+                if (account_creation_transfer_filter?.op_index??) .op_index == account_creation_transfer_filter.op_index else true,
+                if (account_creation_transfer_filter?.recipient_id??) .recipient_id == account_creation_transfer_filter.recipient_id else true,
                 .rowid > (before_rowid ?: rowid(0))
             } (
                 utils.pagination_result(

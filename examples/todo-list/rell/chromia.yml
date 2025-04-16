@@ -4,7 +4,7 @@ blockchains:
 
 
 compile:
-  rellVersion: 0.13.10
+  rellVersion: 0.14.5
 
 libs:
   ft4:
@@ -13,3 +13,15 @@ libs:
     tagOrBranch: v0.8.0r
     rid: x"B6AE6AC82AC735BFB9E4E412FFB76BF95380E94F371F5F6A14E71A3AA7D5FEF6"
     insecure: false
+
+  iccf:
+    registry: https://gitlab.com/chromaway/core/directory-chain
+    path: src/lib/iccf
+    tagOrBranch: 1.87.0
+    rid: x"9C359787B75927733034EA1CEE74EEC8829D2907E4FC94790B5E9ABE4396575D"
+
+  iccf_test:
+    registry: https://gitlab.com/chromaway/core/directory-chain
+    path: src/lib/test/iccf
+    tagOrBranch: 1.87.0
+    rid: x"873D71557531E35E453587FA71C2D3CCB674F0EB49D18B30FA838C52C1155EB3"
