@@ -40,9 +40,8 @@ export class AccountBuilder {
   private connection: Connection;
   private balances: Balance[] = [];
   private rules: AuthDescriptorRules | null = null;
-  private signer: SignatureProvider = gtx.newSignatureProvider(
-    MERKLE_HASH_VERSIONS.ONE,
-  );
+  private merkleHashVersion: number;
+  private signer: SignatureProvider;
   private authDescInfo: {
     authDescriptor: AnyAuthDescriptorRegistration;
     signers: (SignatureProvider | KeyPair)[];
@@ -50,13 +49,21 @@ export class AccountBuilder {
   private flags: string[] = [AuthFlag.Account, AuthFlag.Transfer];
   private points = 0;
 
-  constructor(connection: Connection) {
+  constructor(
+    connection: Connection,
+    merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
+  ) {
     this.connection = connection;
+    this.merkleHashVersion = merkleHashVersion;
+    this.signer = gtx.newSignatureProvider(this.merkleHashVersion);
   }
 
   /* Public functions */
-  static account(connection: Connection): AccountBuilder {
-    return new AccountBuilder(connection);
+  static account(
+    connection: Connection,
+    merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
+  ): AccountBuilder {
+    return new AccountBuilder(connection, merkleHashVersion);
   }
 
   withAuthFlags(...flags: string[]): AccountBuilder {
@@ -146,7 +153,7 @@ export class AccountBuilder {
     const ad = this.getAccountManagerAuthDescriptor(managerSigProv);
     await registerAccountAdmin(
       this.connection.client,
-      adminUser().signatureProvider,
+      adminUser(this.merkleHashVersion).signatureProvider,
       ad,
     );
     const account = await this.connection.getAccountById(
@@ -171,7 +178,9 @@ export class AccountBuilder {
 
   private async addBalanceIfNeeded(account: Account) {
     if (this.balances.length) {
-      const adminSignatureProvider = adminUser().signatureProvider;
+      const adminSignatureProvider = adminUser(
+        this.merkleHashVersion,
+      ).signatureProvider;
       const tx: { operations: Operation[]; signers: Buffer[] } = {
         operations: [],
         signers: [adminSignatureProvider.pubKey],
@@ -197,7 +206,9 @@ export class AccountBuilder {
 
   private async addPointsIfNeeded(account: Account) {
     if (this.points > 0) {
-      const adminSignatureProvider = adminUser().signatureProvider;
+      const adminSignatureProvider = adminUser(
+        this.merkleHashVersion,
+      ).signatureProvider;
       await addRateLimitPoints(
         this.connection.client,
         adminSignatureProvider,

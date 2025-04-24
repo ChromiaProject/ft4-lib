@@ -86,14 +86,16 @@ class LocalStorageMock implements Storage {
 
 export { LocalStorageMock, blockchainAccountId, generateId };
 
-export function adminUser(): User {
+export function adminUser(
+  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
+): User {
   const keyPair = encryption.makeKeyPair(
     process.env.TEST_ADMIN_1_PRIV ||
       "00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE",
   );
 
   const signatureProvider = gtx.newSignatureProvider(
-    MERKLE_HASH_VERSIONS.ONE,
+    merkleHashVersion,
     keyPair,
   );
   const singleSigAuthDescriptor = createSingleSigAuthDescriptorRegistration(
@@ -231,7 +233,7 @@ export async function createAccount(
       "ft4.test.register_account",
       gtv.authDescriptorRegistrationToGtv(descriptor),
     ),
-    adminUser().signatureProvider,
+    adminUser(client.config.merkleHashVersion).signatureProvider,
   );
   return getAccountIdFromAuthDescriptor(descriptor);
 }

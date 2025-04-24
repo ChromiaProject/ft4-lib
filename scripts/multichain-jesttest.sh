@@ -69,9 +69,9 @@ source ./scripts/multichain-runner.sh
 
 # creating bak is mandatory on some platforms like Mac
 if $GITLAB; then
-    sed -i.bak 's|^const NODE_URL = .*$|const NODE_URL = "http://docker:7740"|' test/util/blockchain-util.ts
+    sed -i.bak 's|^export const NODE_URL = .*$|export const NODE_URL = "http://docker:7740"|' test/util/blockchain-util.ts
 else
-    sed -i.bak 's|^const NODE_URL = .*$|const NODE_URL = "http://localhost:7740"|' test/util/blockchain-util.ts
+    sed -i.bak 's|^export const NODE_URL = .*$|export const NODE_URL = "http://localhost:7740"|' test/util/blockchain-util.ts
 fi
 rm test/util/blockchain-util.ts.bak
 
