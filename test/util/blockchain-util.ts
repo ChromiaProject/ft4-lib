@@ -16,7 +16,7 @@ import { Blockchain } from "./types";
 import { adminUser } from "./util";
 import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
-const NODE_URL = "http://localhost:7740";
+export const NODE_URL = "http://localhost:7740";
 
 export async function createChromiaClientToMultichain(
   blockchainRid: BufferId,
@@ -56,7 +56,9 @@ export async function getNewAsset(
   decimals = 0,
   iconUrl = "",
 ): Promise<Asset> {
-  const adminSignatureProvider = adminUser().signatureProvider;
+  const adminSignatureProvider = adminUser(
+    client.config.merkleHashVersion,
+  ).signatureProvider;
 
   try {
     await registerAsset(
@@ -145,6 +147,7 @@ let blockchainsCache: { [key: string]: Blockchain } | null = null;
  */
 export async function fetchBlockchains(
   force = false,
+  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
 ): Promise<{ [key: string]: Blockchain }> {
   if (blockchainsCache && !force) {
     return blockchainsCache;
@@ -153,7 +156,7 @@ export async function fetchBlockchains(
     // nodeUrlPool: "http://thedockerhost:7740",
     nodeUrlPool: NODE_URL,
     blockchainIid: 0,
-    merkleHashVersion: MERKLE_HASH_VERSIONS.ONE,
+    merkleHashVersion: merkleHashVersion,
   });
 
   const result = await client.query<

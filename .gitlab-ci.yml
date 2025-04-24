@@ -41,7 +41,7 @@ install_rell:
   script:
     - ./scripts/install-chr-and-pmc.sh --gitlab
     - chr install -s chromia.yml
-    - chr build
+    - chr build --hide-lib-warnings
   artifacts:
     paths:
       - rell/out

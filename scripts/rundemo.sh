@@ -21,7 +21,7 @@ docker run --name ft4_demo -e POSTGRES_USER=postchain \
 
 echo "Building and running postchain node..."
 
-chr build -s configs/demo.yml
+chr build -s configs/demo.yml --hide-lib-warnings
 
 chr node start -s configs/demo.yml --wipe \
     -np rell/config/demo/node-config.properties
