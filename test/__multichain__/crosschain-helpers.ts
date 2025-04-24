@@ -19,9 +19,9 @@ export async function initAndApplyCrosschainTransfer(
   receipientAccountId: BufferId,
   assetToTransfer: Asset,
   blockchainsPath: BufferId[],
-  transferDeadline: number,
   initTb: TransactionBuilder,
   applyTb: TransactionBuilder,
+  transferDeadline: number = 10000000000000,
 ): Promise<{
   initTx: GTX;
   initOpIndex: number;
@@ -129,9 +129,9 @@ export async function initApplyCancelUnapplyCrosschainTransfer(
       receipientAccountId,
       assetToTransfer,
       blockchainsPath,
-      transferDeadline,
       initTb,
       applyTb,
+      transferDeadline,
     );
 
   // Force block building to get past deadline

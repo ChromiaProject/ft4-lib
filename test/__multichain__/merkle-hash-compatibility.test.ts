@@ -113,7 +113,6 @@ describe("crosschain transfer compatibility", () => {
           account03.id,
           asset,
           [multichain03.rid],
-          10000000000000,
           sourceTb,
           destinationTb,
         );
@@ -275,7 +274,6 @@ describe("crosschain transfer compatibility", () => {
           unregisteredRecipientAccountId,
           asset,
           [multichain03.rid],
-          10000000000000,
           sourceTb,
           destinationTb,
         );
@@ -466,7 +464,6 @@ describe("crosschain transfer compatibility", () => {
           account00.id,
           asset,
           [multichain00.rid],
-          10000000000000,
           sourceTb,
           destinationTb,
         );
@@ -628,7 +625,6 @@ describe("crosschain transfer compatibility", () => {
           unregisteredRecipientAccountId,
           asset,
           [multichain00.rid],
-          10000000000000,
           sourceTb,
           destinationTb,
         );
@@ -742,6 +738,189 @@ describe("crosschain transfer compatibility", () => {
           connection00,
         );
       });
+    });
+  });
+
+  describe("completes successful crosschain transfers between chains with the same merkleHashVersion", () => {
+    let connection00: Connection;
+    let connection01: Connection;
+    let connection03: Connection;
+    let connection04: Connection;
+
+    beforeAll(async () => {
+      connection00 = createConnection(
+        await createChromiaClientToMultichain(
+          multichain00.rid,
+          NODE_URL,
+          MERKLE_HASH_VERSIONS.ONE,
+        ),
+      );
+
+      connection01 = createConnection(
+        await createChromiaClientToMultichain(
+          multichain01.rid,
+          NODE_URL,
+          MERKLE_HASH_VERSIONS.ONE,
+        ),
+      );
+
+      connection03 = createConnection(
+        await createChromiaClientToMultichain(
+          multichain03.rid,
+          NODE_URL,
+          MERKLE_HASH_VERSIONS.TWO,
+        ),
+      );
+
+      connection04 = createConnection(
+        await createChromiaClientToMultichain(
+          multichain04.rid,
+          NODE_URL,
+          MERKLE_HASH_VERSIONS.TWO,
+        ),
+      );
+    });
+
+    it("multichain00 and multichain01 use merkleHashVersion 1", async () => {
+      const asset = await getNewAsset(
+        connection00.client,
+        "crosschain-transfer-test-asset-compatibility13",
+        "CROSSCHAIN-transfer-test-asset-compatibility13",
+      );
+
+      await registerCrosschainAsset(
+        connection01.client,
+        adminUser(connection01.client.config.merkleHashVersion)
+          .signatureProvider,
+        asset.id,
+        multichain00.rid,
+      );
+
+      const account00 = await AccountBuilder.account(
+        connection00,
+        MERKLE_HASH_VERSIONS.ONE,
+      )
+        .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+        .withBalance(asset, createAmount(100, asset.decimals))
+        .build();
+
+      const account01 = await AccountBuilder.account(
+        connection01,
+        MERKLE_HASH_VERSIONS.ONE,
+      )
+        .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+        .build();
+
+      let balanceOnChain00 = (
+        await account00.getBalanceByAssetId(asset.id)
+      )?.amount.value.toString();
+
+      let balanceOnChain01 = (
+        await account01.getBalanceByAssetId(asset.id)
+      )?.amount.value.toString();
+
+      expect(balanceOnChain00).toEqual("100");
+      expect(balanceOnChain01).toBe(undefined);
+
+      const sourceTb = transactionBuilder(
+        account00.authenticator,
+        connection00.client,
+      );
+
+      const destinationTb = transactionBuilder(
+        noopAuthenticator,
+        connection01.client,
+      );
+
+      await initAndApplyCrosschainTransfer(
+        account01.id,
+        asset,
+        [multichain01.rid],
+        sourceTb,
+        destinationTb,
+      );
+
+      balanceOnChain00 = (
+        await account00.getBalanceByAssetId(asset.id)
+      )?.amount.value.toString();
+
+      balanceOnChain01 = (
+        await account01.getBalanceByAssetId(asset.id)
+      )?.amount.value.toString();
+
+      expect(balanceOnChain00).toBe(undefined);
+      expect(balanceOnChain01).toEqual("100");
+    });
+
+    it("multichain03 and multichain04 use merkleHashVersion 2", async () => {
+      const asset = await getNewAsset(
+        connection03.client,
+        "crosschain-transfer-test-asset-compatibility14",
+        "CROSSCHAIN-transfer-test-asset-compatibility14",
+      );
+
+      await registerCrosschainAsset(
+        connection04.client,
+        adminUser(connection04.client.config.merkleHashVersion)
+          .signatureProvider,
+        asset.id,
+        multichain03.rid,
+      );
+
+      const account03 = await AccountBuilder.account(
+        connection03,
+        MERKLE_HASH_VERSIONS.TWO,
+      )
+        .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+        .withBalance(asset, createAmount(100, asset.decimals))
+        .build();
+
+      const account04 = await AccountBuilder.account(
+        connection04,
+        MERKLE_HASH_VERSIONS.TWO,
+      )
+        .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+        .build();
+
+      let balanceOnChain03 = (
+        await account03.getBalanceByAssetId(asset.id)
+      )?.amount.value.toString();
+
+      let balanceOnChain04 = (
+        await account04.getBalanceByAssetId(asset.id)
+      )?.amount.value.toString();
+
+      expect(balanceOnChain03).toEqual("100");
+      expect(balanceOnChain04).toBe(undefined);
+
+      const sourceTb = transactionBuilder(
+        account03.authenticator,
+        connection03.client,
+      );
+
+      const destinationTb = transactionBuilder(
+        noopAuthenticator,
+        connection04.client,
+      );
+
+      await initAndApplyCrosschainTransfer(
+        account04.id,
+        asset,
+        [multichain04.rid],
+        sourceTb,
+        destinationTb,
+      );
+
+      balanceOnChain03 = (
+        await account03.getBalanceByAssetId(asset.id)
+      )?.amount.value.toString();
+
+      balanceOnChain04 = (
+        await account04.getBalanceByAssetId(asset.id)
+      )?.amount.value.toString();
+
+      expect(balanceOnChain03).toBe(undefined);
+      expect(balanceOnChain04).toEqual("100");
     });
   });
 });
