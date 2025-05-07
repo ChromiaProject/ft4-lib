@@ -21,9 +21,10 @@ import {
   GTX,
   IClient,
   Operation,
-  ResponseStatus,
   SignedTransaction,
+  TransactionEvent,
   TransactionReceipt,
+  Web3PromiEvent,
   convertToRellOperation,
   createIccfProofTx,
   formatter,
@@ -39,7 +40,6 @@ import {
   TransactionWithReceipt,
 } from "./types";
 import { EMPTY_SIGNATURE, signOperation } from "./utils";
-import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 
 /**
  * Creates a new TransactionBuilder instance
@@ -208,14 +208,14 @@ export function transactionBuilder(
     return await _build();
   }
 
-  function buildAndSend(): Web3CustomPromiEvent<
+  function buildAndSend(): Web3PromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;
       sent: Buffer;
     }
   > {
-    const promiEvent = new Web3CustomPromiEvent<
+    const promiEvent = new Web3PromiEvent<
       TransactionWithReceipt,
       {
         built: SignedTransaction;
@@ -227,9 +227,11 @@ export function transactionBuilder(
           promiEvent.emit("built", tx);
           return Promise.all([
             tx,
-            client.sendTransaction(tx).on("sent", (receipt) => {
-              promiEvent.emit("sent", receipt.transactionRid);
-            }),
+            client
+              .sendTransaction(tx)
+              .on(TransactionEvent.DappReceived, (receipt) => {
+                promiEvent.emit("sent", receipt.transactionRid);
+              }),
           ]);
         })
         .then(([tx, receipt]) => {
@@ -240,7 +242,7 @@ export function transactionBuilder(
     return promiEvent;
   }
 
-  function buildAndSendWithAnchoring(): Web3CustomPromiEvent<
+  function buildAndSendWithAnchoring(): Web3PromiEvent<
     AnchoringTransactionWithReceipt,
     {
       built: SignedTransaction;
@@ -248,7 +250,7 @@ export function transactionBuilder(
       confirmed: TransactionReceipt;
     }
   > {
-    const promiEvent = new Web3CustomPromiEvent<
+    const promiEvent = new Web3PromiEvent<
       AnchoringTransactionWithReceipt,
       {
         built: SignedTransaction;
@@ -266,15 +268,12 @@ export function transactionBuilder(
               () => {},
               ChainConfirmationLevel.SystemAnchoring,
             )
-            .on("sent", (receipt) => {
-              if (receipt.status === ResponseStatus.Waiting) {
-                promiEvent.emit("sent", receipt.transactionRid);
-              }
-
-              if (receipt.status === ResponseStatus.Confirmed) {
-                promiEvent.emit("confirmed", receipt);
-              }
-            })
+            .on(TransactionEvent.DappReceived, (receipt) =>
+              promiEvent.emit("sent", receipt.transactionRid),
+            )
+            .on(TransactionEvent.DappConfirmed, (receipt) =>
+              promiEvent.emit("confirmed", receipt),
+            )
             .then((receipt) => {
               const decodedTx = gtx.deserialize(tx);
               const systemConfirmationProof = getSystemAnchoringIccfProofOp(
@@ -333,12 +332,13 @@ export function getSystemAnchoringIccfProofOp(
     const proofTx = await createIccfProofTx(
       directoryClient,
       getTransactionRid(txToProve),
-      gtx.getDigest(txToProve),
+      gtx.getDigest(txToProve, client.config.merkleHashVersion),
       txToProve.signers,
       client.config.blockchainRid,
       targetChainRid.toString("hex"),
       undefined,
       true,
+      client.config.merkleHashVersion,
     );
 
     const iccfProofOperation = proofTx.iccfTx.operations[0];

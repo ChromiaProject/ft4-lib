@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SSO Metamask Example</title>
+  </head>
+  <body>
+    <script src="bundle.js"></script>
+
+    <h1>Provide public key</h1>
+    <form>
+      <input id="inputPubKey" value="" />
+      <button
+        onclick="window.collectPubkey(document.getElementById('inputPubKey').value)"
+        type="button"
+      >
+        Enter
+      </button>
+    </form>
+    <h1>Create account with MetaMask</h1>
+    <button onclick="window.metamaskLogin()">Connect Wallet</button>
+    <br />
+    <br />
+  </body>
+</html>

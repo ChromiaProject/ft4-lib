@@ -11,3 +11,5 @@ for file in $(ls -1 -r doc/release-notes/ts/[0-9]*); do
   echo >> changelog.md
   cat "${file}" >> changelog.md
 done
+
+echo "=== CHANGELOG UPDATED SUCCESSFULLY ==="

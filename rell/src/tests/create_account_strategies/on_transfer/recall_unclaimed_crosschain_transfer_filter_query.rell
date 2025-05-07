@@ -5,7 +5,6 @@ import crosschain_helpers: ^^^.crosschain.helpers;
 import lib.ft4.utils;
 import lib.ft4.auth;
 import test: lib.ft4.test.core;
-import ^^^.operations.iccf_op.{ iccf_proof };
 import ^^^.crosschain.mocks;
 
 function test_get_recall_transfers_filtered_without_filter_no_recall_transfer() {

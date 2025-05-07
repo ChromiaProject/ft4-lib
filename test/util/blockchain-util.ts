@@ -8,6 +8,7 @@ import {
   BufferId,
   GTX,
   convertToRellOperation,
+  MERKLE_HASH_VERSIONS,
 } from "postchain-client";
 import { createConnection } from "@ft4/ft-session";
 import { Asset } from "@ft4/asset/types";
@@ -15,11 +16,12 @@ import { registerAsset } from "@ft4/admin";
 import { Blockchain } from "./types";
 import { adminUser } from "./util";
 
-const NODE_URL = "http://localhost:7740";
+export const NODE_URL = "http://localhost:7740";
 
 export async function createChromiaClientToMultichain(
   blockchainRid: BufferId,
   nodeUrl?: string,
+  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
 ) {
   // const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
 
@@ -28,16 +30,22 @@ export async function createChromiaClientToMultichain(
   return createClient({
     directoryNodeUrlPool: url,
     blockchainRid: blockchainRid.toString("hex"),
+    merkleHashVersion: merkleHashVersion,
   });
 }
 
-export async function createChromiaClient(nodeUrl?: string, iid = 0) {
+export async function createChromiaClient(
+  nodeUrl?: string,
+  iid = 0,
+  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
+) {
   const url =
     // nodeUrl || process.env.TEST_NODE_URL || "http://thedockerhost:7740";
     nodeUrl || process.env.TEST_NODE_URL || NODE_URL;
   return createClient({
     nodeUrlPool: url,
     blockchainIid: iid,
+    merkleHashVersion: merkleHashVersion,
   });
 }
 
@@ -48,7 +56,9 @@ export async function getNewAsset(
   decimals = 0,
   iconUrl = "",
 ): Promise<Asset> {
-  const adminSignatureProvider = adminUser().signatureProvider;
+  const adminSignatureProvider = adminUser(
+    client.config.merkleHashVersion,
+  ).signatureProvider;
 
   try {
     await registerAsset(
@@ -63,10 +73,10 @@ export async function getNewAsset(
     console.log(`Asset with name ${name} already exists`);
   }
 
-  const id = gtv.gtvHash([
-    name,
-    formatter.ensureBuffer(client.config.blockchainRid),
-  ]);
+  const id = gtv.gtvHash(
+    [name, formatter.ensureBuffer(client.config.blockchainRid)],
+    MERKLE_HASH_VERSIONS.ONE,
+  );
   const asset = await createConnection(client).getAssetById(id);
   if (!asset) {
     throw new Error("Unable to fetch the new asset");
@@ -81,10 +91,10 @@ export async function addNewAssetIfNeeded(
   decimals = 0,
   iconUrl = "",
 ): Promise<Asset> {
-  const id = gtv.gtvHash([
-    name,
-    formatter.ensureBuffer(client.config.blockchainRid),
-  ]);
+  const id = gtv.gtvHash(
+    [name, formatter.ensureBuffer(client.config.blockchainRid)],
+    MERKLE_HASH_VERSIONS.ONE,
+  );
   const asset = await createConnection(client).getAssetById(id);
   if (asset) {
     return asset;
@@ -137,6 +147,7 @@ let blockchainsCache: { [key: string]: Blockchain } | null = null;
  */
 export async function fetchBlockchains(
   force = false,
+  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
 ): Promise<{ [key: string]: Blockchain }> {
   if (blockchainsCache && !force) {
     return blockchainsCache;
@@ -145,6 +156,7 @@ export async function fetchBlockchains(
     // nodeUrlPool: "http://thedockerhost:7740",
     nodeUrlPool: NODE_URL,
     blockchainIid: 0,
+    merkleHashVersion: merkleHashVersion,
   });
 
   const result = await client.query<

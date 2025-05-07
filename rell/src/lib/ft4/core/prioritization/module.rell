@@ -41,7 +41,7 @@ struct priority_state_v1 {
  * This is not an actual implementation, it simply calls `priority_check` to allow the
  * implementation of this query to be defined by the end user.
  * 
- * Throws if the implementation defined in `priority_check` throws.
+ * If the implementation defined in `priority_check` throws, the transaction will be rejected.
  * 
  * @see https://gitlab.com/chromaway/postchain/blob/dev/postchain-base/src/main/kotlin/net/postchain/base/BaseTransactionPrioritizer.kt
  * 
@@ -57,11 +57,8 @@ query priority_check_v1(tx_body: gtx_transaction_body, tx_size: integer, tx_ente
  * Extendable function that allows to define custom prioritization strategies.
  * If unimplemented, it will return `no_op_priority_state()`, which means everything will
  * have a priority of zero.
- * 
- * If this function throws, it will be interpreted as a value of `no_op_priority_state()`
- * as well
- * 
- * Throws if any extension of this function throws.
+ *
+ * If any extension of this function throws, the transaction will be rejected.
  * 
  * @param tx_body             the transaction
  * @param tx_size             size of the transaction in bytes

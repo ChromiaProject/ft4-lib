@@ -36,6 +36,7 @@ import { ethers } from "ethers";
 import {
   IClient,
   KeyPair,
+  MERKLE_HASH_VERSIONS,
   Operation,
   SignedTransaction,
   Web3PromiEvent,
@@ -224,6 +225,7 @@ describe("Transaction Builder", () => {
         signers: [keyPair.pubKey!],
       },
       keyPair.privKey,
+      MERKLE_HASH_VERSIONS.ONE,
       keyPair.pubKey,
     );
 

@@ -172,8 +172,8 @@ describe("Test the account", () => {
   });
 
   it("updates account if 2 signatures provided", async () => {
-    const kp1 = pcl.newSignatureProvider();
-    const kp2 = pcl.newSignatureProvider();
+    const kp1 = pcl.newSignatureProvider(pcl.MERKLE_HASH_VERSIONS.ONE);
+    const kp2 = pcl.newSignatureProvider(pcl.MERKLE_HASH_VERSIONS.ONE);
     const ad = createMultiSigAuthDescriptorRegistration(
       [AuthFlag.Account],
       [kp1.pubKey, kp2.pubKey],
@@ -254,10 +254,14 @@ describe("Test the account", () => {
 
     await Promise.all([
       AccountBuilder.account(_connection) //owned by keyPair1
-        .withSigner(pcl.newSignatureProvider(keyPair1))
+        .withSigner(
+          pcl.newSignatureProvider(pcl.MERKLE_HASH_VERSIONS.ONE, keyPair1),
+        )
         .build(),
       AccountBuilder.account(_connection) //keyPair1 is NOT the manager
-        .withSigner(pcl.newSignatureProvider(keyPair1))
+        .withSigner(
+          pcl.newSignatureProvider(pcl.MERKLE_HASH_VERSIONS.ONE, keyPair1),
+        )
         .buildAsNonManager(),
     ]);
 

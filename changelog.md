@@ -5,7 +5,98 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-05-07
+
+### Breaking 💔
+
+- Removed the constant `MERKLE_HASH_VERSIONS` as the same constants is now
+  exported from postchain-client and can be reused
+
+### Changed 🪙
+
+- The `deriveNonce` function has been updated to accept an additional input
+  parameter `merkleHashVersion` that defaults to `1` if not provided
+- The `TransactionBuilder` event type of `buildAndSend` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The `TransactionBuilder` event type of `buildAndSendWithAnchoring` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return types of for the functions `buildAndSend` and
+  `buildAndSendWithAnchoring ` of `transactionBuilder` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of the function `registerAccount` from `Web3CustomPromiEvent`
+  to `Web3PromiEvent`
+- The return type of the function `transferHistoryFromHeight` from
+  `TransferHistoryEntryResponse[]` to
+  `PagedResponse<TransferHistoryEntryResponse>`
+- The return type of the function `addAuthDescriptor` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of the function `updateMainAuthDescriptor` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of the function `deleteAuthDescriptor` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of the function `deleteAllAuthDescriptorsExceptMain` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of the function `transfer` from `Web3CustomPromiEvent` to
+  `Web3PromiEvent`
+- The return type of the function `recallUnclaimedTransfer` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of the function `burn` from `Web3CustomPromiEvent` to
+  `Web3PromiEvent`
+- The return type of the function `crosschainTransfer` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of the function `resumeCrosschainTransfer` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of the function `recallUnclaimedCrosschainTransfer` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of `Session.call` from `Web3CustomPromiEvent` to
+  `Web3PromiEvent`
+- The return type of `Session.callWithoutNop` from `Web3CustomPromiEvent` to
+  `Web3PromiEvent`
+- The return type of `AuthenticatedAccount.addAuthDescriptor` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of `AuthenticatedAccount.updateMainAuthDescriptor` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of `AuthenticatedAccount.deleteAuthDescriptor` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of `AuthenticatedAccount.deleteAllAuthDescriptorsExceptMain`
+  from `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of `AuthenticatedAccount.transfer` from `Web3CustomPromiEvent`
+  to `Web3PromiEvent`
+- The return type of `AuthenticatedAccount.recallUnclaimedTransfer` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of `AuthenticatedAccount.crosschainTransfer` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of `AuthenticatedAccount.resumeCrosschainTransfer` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of `AuthenticatedAccount.revertCrosschainTransfer` from
+  `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of `AuthenticatedAccount.recallUnclaimedCrosschainTransfer`
+  from `Web3CustomPromiEvent` to `Web3PromiEvent`
+- The return type of `AuthenticatedAccount.burn` from `Web3CustomPromiEvent` to
+  `Web3PromiEvent`
+
+### Removed 🗑️
+
+- The implementations of `Web3CustomPromiEvent`, `Web3CustomEventMap`,
+  `PromiseExecutor`, `Web3EventCallback` and `Web3EventKey` as
+  postchain-client's was refactored to generic and can be reused
+
+## [1.1.1] - 2025-04-03
+
+### Changed 🪙
+
+- The return type of the `accountById` function's `QueryObject` from `AccountResponse | null` to `AccountResponse | Buffer | null`
+- Updated ft4 to use `postchain-client: 1.22.0`, this change includes support for `MERKLE_HASH_VERSION: 2`
+
+### Fixed 🔧
+
+- A backward compatibility issue in the function `getById` to ensure it correctly handles responses from the `accountById` query. Older versions that return a `Buffer` (representing just the account.id),
+are now properly supported alongside the newer `AccountResponse` type
+- The query `accountById` now works with all previous versions of rell.
+
 ## [1.1.0] - 2025-02-25
+
+### Breaking 💔
 
 ### Changed 🪙
 

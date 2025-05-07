@@ -5,6 +5,7 @@ import {
   QueryObject,
   SystemChainException,
   createClient,
+  MERKLE_HASH_VERSIONS,
 } from "postchain-client";
 
 /**
@@ -18,6 +19,7 @@ export async function getDirectoryClient(
   return await createClient({
     nodeUrlPool,
     blockchainIid: 0,
+    merkleHashVersion: MERKLE_HASH_VERSIONS.ONE,
   });
 }
 

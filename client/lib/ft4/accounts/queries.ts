@@ -1,6 +1,10 @@
 import { Buffer } from "buffer";
 import { BufferId, QueryObject, formatter } from "postchain-client";
-import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
+import {
+  OptionalLimit,
+  OptionalPageCursor,
+  PagedResponse,
+} from "@ft4/ft-session";
 import {
   RawAnyAuthDescriptor,
   RateLimitResponse,
@@ -40,7 +44,7 @@ export function accountsFiltered(
   pageSize: OptionalLimit,
   pageCursor: OptionalPageCursor,
 ): QueryObject<
-  { accounts: AccountResponse }[],
+  PagedResponse<AccountResponse>,
   {
     account_filter: [ids: Buffer[] | null, type: string | null] | null;
     page_size: OptionalLimit;
@@ -74,7 +78,7 @@ export function accountAuthDescriptorsFiltered(
   pageSize: OptionalLimit,
   pageCursor: OptionalPageCursor,
 ): QueryObject<
-  { accountAuthDescriptors: RawAnyAuthDescriptor }[],
+  PagedResponse<RawAnyAuthDescriptor>,
   {
     account_auth_descriptor_filter:
       | [ids: Buffer[] | null, account_id: Buffer | null]
@@ -113,7 +117,7 @@ export function mainAuthDescriptorsFiltered(
   pageSize: OptionalLimit,
   pageCursor: OptionalPageCursor,
 ): QueryObject<
-  { mainDescriptors: RawAnyAuthDescriptor }[],
+  PagedResponse<RawAnyAuthDescriptor>,
   {
     main_account_auth_descriptor_filter:
       | [ids: Buffer[] | null, account_auth_descriptor_id: Buffer | null]
@@ -152,7 +156,7 @@ export function authDescriptorSignersFiltered(
   pageSize: OptionalLimit,
   pageCursor: OptionalPageCursor,
 ): QueryObject<
-  { authDescriptorSigners: AuthDescriptorSignerResponse }[],
+  PagedResponse<AuthDescriptorSignerResponse>,
   {
     auth_descriptor_signer_filter:
       | [ids: Buffer[] | null, auth_descriptor_id: Buffer | null]
@@ -191,7 +195,7 @@ export function rlStatesFiltered(
   pageSize: OptionalLimit,
   pageCursor: OptionalPageCursor,
 ): QueryObject<
-  { rlStates: RateLimitStateResponse }[],
+  PagedResponse<RateLimitStateResponse>,
   {
     rl_state_filter: [account_ids: Buffer[] | null] | null;
     page_size: OptionalLimit;
@@ -225,7 +229,7 @@ export function accountCreationTransfersFiltered(
   pageSize: OptionalLimit,
   pageCursor: OptionalPageCursor,
 ): QueryObject<
-  { accountCreationTransfers: AccountCreationTransferResponse }[],
+  PagedResponse<AccountCreationTransferResponse>,
   {
     account_creation_transfer_filter:
       | [
@@ -271,7 +275,7 @@ export function accountLinksFiltered(
   pageSize: OptionalLimit,
   pageCursor: OptionalPageCursor,
 ): QueryObject<
-  { accountCreationTransfers: AccountLinkResponse }[],
+  PagedResponse<AccountLinkResponse>,
   {
     account_link_filter:
       | [
@@ -315,7 +319,7 @@ export function subscriptionsFiltered(
   pageSize: OptionalLimit,
   pageCursor: OptionalPageCursor,
 ): QueryObject<
-  { subscriptions: SubscriptionResponse }[],
+  PagedResponse<SubscriptionResponse>,
   {
     subscription_filter: [account_ids: Buffer[] | null] | null;
     page_size: OptionalLimit;
@@ -347,7 +351,7 @@ export function RateLimitQuery(
 
 export function accountById(
   id: BufferId,
-): QueryObject<AccountResponse | null, { id: Buffer }> {
+): QueryObject<AccountResponse | Buffer | null, { id: Buffer }> {
   return {
     name: "ft4.get_account_by_id",
     args: {
@@ -361,7 +365,7 @@ export function accountsBySigner(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  { id: Buffer }[],
+  PagedResponse<{ id: Buffer }>,
   { id: Buffer; page_size: OptionalLimit; page_cursor: OptionalPageCursor }
 > {
   return {
@@ -379,7 +383,7 @@ export function accountsByAuthDescriptorId(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  Buffer[],
+  PagedResponse<Buffer>,
   {
     id: BufferId;
     page_size: OptionalLimit;
@@ -401,7 +405,7 @@ export function accountsByType(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  Buffer[],
+  PagedResponse<Buffer>,
   {
     type: string;
     page_size: OptionalLimit;
@@ -502,7 +506,7 @@ export function transferHistory(
   limit: OptionalLimit,
   cursor: OptionalPageCursor = null,
 ): QueryObject<
-  TransferHistoryEntryResponse[],
+  PagedResponse<TransferHistoryEntryResponse>,
   {
     account_id: Buffer;
     filter: [TransferHistoryType | null];

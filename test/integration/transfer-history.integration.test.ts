@@ -17,7 +17,11 @@ import {
   createConnection,
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
-import { IClient, newSignatureProvider } from "postchain-client";
+import {
+  IClient,
+  MERKLE_HASH_VERSIONS,
+  newSignatureProvider,
+} from "postchain-client";
 
 let asset: Asset;
 let connection: Connection;
@@ -39,7 +43,7 @@ describe("Transfer history", () => {
 
   describe("Transfer history iterator", () => {
     it("should have one transfer history entry when mint is made", async () => {
-      const keyPair = newSignatureProvider();
+      const keyPair = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
 
       const account1 = await AccountBuilder.account(connection)
         .withSigner(keyPair)
@@ -58,7 +62,7 @@ describe("Transfer history", () => {
     });
 
     it("should have two transfer history entry when mint + transfer is made", async () => {
-      const keyPair = newSignatureProvider();
+      const keyPair = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
 
       const account1 = await AccountBuilder.account(connection)
         .withSigner(keyPair)
@@ -122,7 +126,7 @@ describe("Transfer history", () => {
     });
 
     it("includes the name of the operation causing the history entry", async () => {
-      const keyPair = newSignatureProvider();
+      const keyPair = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
 
       const account1 = await AccountBuilder.account(connection)
         .withSigner(keyPair)

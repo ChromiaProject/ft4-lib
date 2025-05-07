@@ -12,7 +12,7 @@ query get_accounts_filtered(account_filter: account_filter, page_size: integer?,
     val before_rowid = utils.before_rowid(page_cursor);
     return utils.make_page(
         accounts.account @* {
-                if (account_filter.ids??) .id in account_filter.ids!! else true,
+                if (account_filter.ids??) .id in account_filter.ids else true,
                 if (account_filter.type??) .type == account_filter.type else true,
                 .rowid > (before_rowid ?: rowid(0))
             } (
@@ -38,8 +38,8 @@ query get_account_auth_descriptors_filtered(account_auth_descriptor_filter?, pag
     val before_rowid = utils.before_rowid(page_cursor);
     return utils.make_page(
         accounts.account_auth_descriptor @* {
-                if (account_auth_descriptor_filter?.ids??) .id in account_auth_descriptor_filter?.ids!! else true,
-                if (account_auth_descriptor_filter?.account_id??) .account.id == account_auth_descriptor_filter!!.account_id else true,
+                if (account_auth_descriptor_filter?.ids??) .id in account_auth_descriptor_filter.ids else true,
+                if (account_auth_descriptor_filter?.account_id??) .account.id == account_auth_descriptor_filter.account_id else true,
                 .rowid > (before_rowid ?: rowid(0))
             } (
                 utils.pagination_result(
@@ -68,8 +68,8 @@ query get_main_auth_descriptors_filtered(
     val before_rowid = utils.before_rowid(page_cursor);
     return utils.make_page(
         accounts.main_auth_descriptor @* {
-                if (main_account_auth_descriptor_filter?.account_ids??) .account.id in main_account_auth_descriptor_filter?.account_ids!! else true,
-                if (main_account_auth_descriptor_filter?.account_auth_descriptor_id??) .auth_descriptor.id == main_account_auth_descriptor_filter!!.account_auth_descriptor_id else true,
+                if (main_account_auth_descriptor_filter?.account_ids??) .account.id in main_account_auth_descriptor_filter.account_ids else true,
+                if (main_account_auth_descriptor_filter?.account_auth_descriptor_id??) .auth_descriptor.id == main_account_auth_descriptor_filter.account_auth_descriptor_id else true,
                 .rowid > (before_rowid ?: rowid(0))
             } (
                 utils.pagination_result(
@@ -94,8 +94,8 @@ query get_auth_descriptor_signers_filtered(auth_descriptor_signer_filter?, page_
     val before_rowid = utils.before_rowid(page_cursor);
     return utils.make_page(
         accounts.auth_descriptor_signer @* {
-                if (auth_descriptor_signer_filter?.ids??) .id in auth_descriptor_signer_filter?.ids!! else true,
-                if (auth_descriptor_signer_filter?.auth_descriptor_id??) .account_auth_descriptor.id == auth_descriptor_signer_filter!!.auth_descriptor_id else true,
+                if (auth_descriptor_signer_filter?.ids??) .id in auth_descriptor_signer_filter.ids else true,
+                if (auth_descriptor_signer_filter?.auth_descriptor_id??) .account_auth_descriptor.id == auth_descriptor_signer_filter.auth_descriptor_id else true,
                 .rowid > (before_rowid ?: rowid(0))
             } (
                 utils.pagination_result(
@@ -120,7 +120,7 @@ query get_rl_states_filtered(rl_state_filter?, page_size: integer?, page_cursor:
     val before_rowid = utils.before_rowid(page_cursor);
     return utils.make_page(
         accounts.rl_state @* {
-                if (rl_state_filter?.account_ids??) .account.id in rl_state_filter?.account_ids!! else true,
+                if (rl_state_filter?.account_ids??) .account.id in rl_state_filter.account_ids else true,
                 .rowid > (before_rowid ?: rowid(0))
             } (
                 utils.pagination_result(

@@ -411,7 +411,11 @@ export async function getById(
 ): Promise<Account | null> {
   const account = await connection.query(accountById(id));
 
-  return account && createAccountObject(connection, account.id);
+  if (!account) return null;
+
+  if (Buffer.isBuffer(account)) return createAccountObject(connection, account);
+
+  return createAccountObject(connection, account.id);
 }
 
 /**

@@ -1,5 +1,8 @@
-import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
-import { PaginatedEntity } from "@ft4/utils";
+import {
+  OptionalLimit,
+  OptionalPageCursor,
+  PagedResponse,
+} from "@ft4/ft-session";
 import { BufferId, QueryObject, formatter } from "postchain-client";
 import {
   LockedBalanceResponse,
@@ -37,7 +40,7 @@ export function lockedAssetBalance(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<LockedAmountResponse>,
+  PagedResponse<LockedAmountResponse>,
   {
     account_id: Buffer;
     asset_id: Buffer;
@@ -86,7 +89,7 @@ export function lockedAssetBalances(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<LockedBalanceResponse>,
+  PagedResponse<LockedBalanceResponse>,
   {
     account_id: Buffer;
     types: string[] | null;
@@ -111,7 +114,7 @@ export function lockedAssetAggregatedBalances(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<LockedAggregatedBalanceResponse>,
+  PagedResponse<LockedAggregatedBalanceResponse>,
   {
     account_id: Buffer;
     types: string[] | null;
