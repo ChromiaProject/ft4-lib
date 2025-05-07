@@ -13,8 +13,14 @@ import {
   toRawSignature,
 } from "@ft4/authentication";
 import { deriveNonce } from "@ft4/utils";
-import { BufferId, GTX, Operation, formatter, gtx } from "postchain-client";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
+import {
+  BufferId,
+  GTX,
+  MERKLE_HASH_VERSIONS,
+  Operation,
+  formatter,
+  gtx,
+} from "postchain-client";
 
 export const EMPTY_SIGNATURE = Buffer.alloc(64);
 export const EVM_SIGNATURES = "ft4.evm_signatures";

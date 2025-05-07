@@ -1,6 +1,11 @@
 import { deriveNonce, loadOperationFromTransaction, op } from "@ft4/utils";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
-import { RawGtx, encryption, formatter, gtv } from "postchain-client";
+import {
+  MERKLE_HASH_VERSIONS,
+  RawGtx,
+  encryption,
+  formatter,
+  gtv,
+} from "postchain-client";
 
 describe("Utils", () => {
   it("loads operation from raw transaction", () => {
@@ -64,7 +69,7 @@ describe("Utils", () => {
           [
             blockchainRid,
             operation.name,
-            operation.args,
+            operation.args || [],
             authDescriptorCounter,
           ],
           MERKLE_HASH_VERSIONS.ONE,

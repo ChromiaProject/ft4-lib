@@ -28,13 +28,17 @@ import {
   AuthFlag,
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/accounts";
-import { encryption, gtv, IClient } from "postchain-client";
+import {
+  encryption,
+  gtv,
+  IClient,
+  MERKLE_HASH_VERSIONS,
+} from "postchain-client";
 import {
   feeAssets,
   registerAccount,
   registrationStrategy,
 } from "@ft4/registration";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   assetName: string = "asset-name",

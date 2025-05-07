@@ -29,8 +29,11 @@ import {
   createConnection,
   createSession,
 } from "@ft4/ft-session";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
-import { IClient, newSignatureProvider } from "postchain-client";
+import {
+  IClient,
+  MERKLE_HASH_VERSIONS,
+  newSignatureProvider,
+} from "postchain-client";
 
 let _connection: Connection;
 let asset: Asset;

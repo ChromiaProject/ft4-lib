@@ -10,13 +10,17 @@ import {
 import { Connection, createConnection } from "@ft4/ft-session";
 import { registrationStrategy, registerAccount } from "@ft4/registration";
 import { useChromiaNode } from "@ft4-test/util";
-import { KeyPair, encryption, gtv } from "postchain-client";
+import {
+  KeyPair,
+  MERKLE_HASH_VERSIONS,
+  encryption,
+  gtv,
+} from "postchain-client";
 import {
   AnyAuthDescriptorRegistration,
   AuthFlag,
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/accounts";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 let _connection: Connection;
 

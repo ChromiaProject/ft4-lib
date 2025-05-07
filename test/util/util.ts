@@ -34,6 +34,7 @@ import {
   BufferId,
   IClient,
   KeyPair,
+  MERKLE_HASH_VERSIONS,
   Operation,
   RellOperation,
   SignatureProvider,
@@ -45,7 +46,6 @@ import {
 import { User, FT4_USER_TYPE } from "./test-user";
 import { transactionBuilder } from "@ft4/transaction-builder";
 import { Amount, Asset } from "@ft4/asset";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 function generateId(n: number): Buffer {
   return encryption.hash256(Buffer.from(`${n}`));
@@ -309,7 +309,7 @@ export function rellError(message: string) {
 export function opToRellOp(operation: Operation): RellOperation {
   return {
     opName: operation.name,
-    args: operation.args ?? [],
+    args: operation.args || [],
   };
 }
 

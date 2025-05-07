@@ -29,8 +29,7 @@ import {
 } from "@ft4/ft-session";
 import { nop, op } from "@ft4/utils";
 import { AuthorizationError } from "@ft4/transaction-builder";
-import { newSignatureProvider } from "postchain-client";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
+import { MERKLE_HASH_VERSIONS, newSignatureProvider } from "postchain-client";
 
 let connection: Connection;
 

@@ -36,6 +36,7 @@ import { ethers } from "ethers";
 import {
   IClient,
   KeyPair,
+  MERKLE_HASH_VERSIONS,
   Operation,
   SignedTransaction,
   Web3PromiEvent,
@@ -44,7 +45,6 @@ import {
   formatter,
   gtx,
 } from "postchain-client";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;

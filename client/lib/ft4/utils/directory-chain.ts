@@ -5,8 +5,8 @@ import {
   QueryObject,
   SystemChainException,
   createClient,
+  MERKLE_HASH_VERSIONS,
 } from "postchain-client";
-import { MERKLE_HASH_VERSIONS } from "./main";
 
 /**
  * Creates an IClient instance configured to run against the directory chain available

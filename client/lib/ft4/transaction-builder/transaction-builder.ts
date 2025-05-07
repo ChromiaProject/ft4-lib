@@ -24,6 +24,7 @@ import {
   SignedTransaction,
   TransactionEvent,
   TransactionReceipt,
+  Web3PromiEvent,
   convertToRellOperation,
   createIccfProofTx,
   formatter,
@@ -39,7 +40,6 @@ import {
   TransactionWithReceipt,
 } from "./types";
 import { EMPTY_SIGNATURE, signOperation } from "./utils";
-import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 
 /**
  * Creates a new TransactionBuilder instance
@@ -208,14 +208,14 @@ export function transactionBuilder(
     return await _build();
   }
 
-  function buildAndSend(): Web3CustomPromiEvent<
+  function buildAndSend(): Web3PromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;
       sent: Buffer;
     }
   > {
-    const promiEvent = new Web3CustomPromiEvent<
+    const promiEvent = new Web3PromiEvent<
       TransactionWithReceipt,
       {
         built: SignedTransaction;
@@ -242,7 +242,7 @@ export function transactionBuilder(
     return promiEvent;
   }
 
-  function buildAndSendWithAnchoring(): Web3CustomPromiEvent<
+  function buildAndSendWithAnchoring(): Web3PromiEvent<
     AnchoringTransactionWithReceipt,
     {
       built: SignedTransaction;
@@ -250,7 +250,7 @@ export function transactionBuilder(
       confirmed: TransactionReceipt;
     }
   > {
-    const promiEvent = new Web3CustomPromiEvent<
+    const promiEvent = new Web3PromiEvent<
       AnchoringTransactionWithReceipt,
       {
         built: SignedTransaction;

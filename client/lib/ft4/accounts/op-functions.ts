@@ -6,7 +6,12 @@ import {
   days,
 } from "@ft4/authentication";
 import { TransactionSessionCompletion } from "@ft4/utils";
-import { BufferId, formatter, SignedTransaction } from "postchain-client";
+import {
+  BufferId,
+  formatter,
+  SignedTransaction,
+  Web3PromiEvent,
+} from "postchain-client";
 import {
   TransactionWithReceipt,
   transactionBuilder,
@@ -39,7 +44,6 @@ import {
 } from "@ft4/crosschain";
 import { Connection, call, createSession } from "@ft4/ft-session";
 import { revertCrosschainTransfer } from "@ft4/crosschain/transfer";
-import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 
 /**
  * Creates an authenticated account instance
@@ -108,14 +112,14 @@ function addAuthDescriptor(
   authenticator: Authenticator,
   authDescriptor: AuthDescriptorRegistration<SingleSig>,
   keyStore: KeyStore,
-): Web3CustomPromiEvent<
+): Web3PromiEvent<
   TransactionSessionCompletion,
   {
     built: SignedTransaction;
     sent: Buffer;
   }
 > {
-  const promiEvent = new Web3CustomPromiEvent<
+  const promiEvent = new Web3PromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -160,14 +164,14 @@ function updateMainAuthDescriptor(
   authenticator: Authenticator,
   authDescriptor: AuthDescriptorRegistration<SingleSig>,
   keyStore: KeyStore,
-): Web3CustomPromiEvent<
+): Web3PromiEvent<
   TransactionSessionCompletion,
   {
     built: SignedTransaction;
     sent: Buffer;
   }
 > {
-  const promiEvent = new Web3CustomPromiEvent<
+  const promiEvent = new Web3PromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -227,14 +231,14 @@ function deleteAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptorId: BufferId,
-): Web3CustomPromiEvent<
+): Web3PromiEvent<
   TransactionSessionCompletion,
   {
     built: SignedTransaction;
     sent: Buffer;
   }
 > {
-  const promiEvent = new Web3CustomPromiEvent<
+  const promiEvent = new Web3PromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -268,14 +272,14 @@ function deleteAuthDescriptor(
 function deleteAllAuthDescriptorsExceptMain(
   connection: Connection,
   authenticator: Authenticator,
-): Web3CustomPromiEvent<
+): Web3PromiEvent<
   TransactionSessionCompletion,
   {
     built: SignedTransaction;
     sent: Buffer;
   }
 > {
-  const promiEvent = new Web3CustomPromiEvent<
+  const promiEvent = new Web3PromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -314,7 +318,7 @@ function transfer(
   receiverId: BufferId,
   assetId: BufferId,
   amount: Amount,
-): Web3CustomPromiEvent<
+): Web3PromiEvent<
   TransactionWithReceipt,
   {
     built: SignedTransaction;
@@ -333,7 +337,7 @@ function recallUnclaimedTransfer(
   authenticator: Authenticator,
   txRid: BufferId,
   opIndex: number,
-): Web3CustomPromiEvent<
+): Web3PromiEvent<
   TransactionWithReceipt,
   {
     built: SignedTransaction;
@@ -352,7 +356,7 @@ function burn(
   authenticator: Authenticator,
   assetId: BufferId,
   amount: Amount,
-): Web3CustomPromiEvent<
+): Web3PromiEvent<
   TransactionWithReceipt,
   {
     built: SignedTransaction;

@@ -47,7 +47,7 @@ export async function getPendingTransfersForAccount(
 ): Promise<PendingTransfer[]> {
   return await connection
     .query(Query.pendingTransfersForAccount(accountId, limit, cursor))
-    .then(mapPendingTransfers);
+    .then((response) => mapPendingTransfers(response.data));
 }
 
 /**
@@ -242,7 +242,7 @@ export async function getRecalledTransfersFiltered(
   return retrievePaginatedEntity<Transfer, TransferResponse>(
     connection,
     Query.recalledTransferFiltered(recalledTransferFilter, limit, cursor),
-    (recalledTransfers) => recalledTransfers.map(createTransferObject),
+    (transfers) => transfers.map(createTransferObject),
   );
 }
 
@@ -292,7 +292,7 @@ export async function getRevertedTransfersFiltered(
   return retrievePaginatedEntity<Transfer, TransferResponse>(
     connection,
     Query.revertedTransferFiltered(revertedTransferFilter, limit, cursor),
-    (pendingTransfers) => pendingTransfers.map(createTransferObject),
+    (transfers) => transfers.map(createTransferObject),
   );
 }
 

@@ -24,6 +24,7 @@ import { nop, op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
   KeyPair,
+  MERKLE_HASH_VERSIONS,
   Operation,
   SignatureProvider,
   gtx,
@@ -34,7 +35,6 @@ import {
   getAccountIdFromAuthDescriptor,
   testAdFromRegistration,
 } from "./util";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 export class AccountBuilder {
   private connection: Connection;

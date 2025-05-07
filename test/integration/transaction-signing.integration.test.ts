@@ -36,8 +36,14 @@ import {
   transactionBuilder,
 } from "@ft4/transaction-builder";
 import { op } from "@ft4/utils";
-import { IClient, KeyPair, encryption, gtv, gtx } from "postchain-client";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
+import {
+  IClient,
+  KeyPair,
+  MERKLE_HASH_VERSIONS,
+  encryption,
+  gtv,
+  gtx,
+} from "postchain-client";
 
 describe("Transaction Signing", () => {
   let connection: Connection;

@@ -7,12 +7,12 @@ import {
   SingleSig,
 } from "@ft4/accounts";
 import { createInMemoryFtKeyStore, FtKeyStore } from "@ft4/authentication";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 import {
   encryption,
   gtv,
   gtx,
   KeyPair,
+  MERKLE_HASH_VERSIONS,
   SignatureProvider,
 } from "postchain-client";
 

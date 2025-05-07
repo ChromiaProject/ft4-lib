@@ -23,8 +23,12 @@ import {
   subscriptionPeriodMillis,
   transferSubscription,
 } from "@ft4/registration";
-import { QueryObject, encryption, gtv } from "postchain-client";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
+import {
+  MERKLE_HASH_VERSIONS,
+  QueryObject,
+  encryption,
+  gtv,
+} from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;

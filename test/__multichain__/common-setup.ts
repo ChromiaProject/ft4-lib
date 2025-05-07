@@ -17,7 +17,7 @@ import {
   createConnection,
   createSession,
 } from "@ft4/ft-session";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
+import { MERKLE_HASH_VERSIONS } from "postchain-client";
 
 export type TestContext = {
   connection0: Connection;

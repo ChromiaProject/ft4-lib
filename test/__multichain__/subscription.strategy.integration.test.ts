@@ -30,8 +30,12 @@ import {
   registrationStrategy,
   subscriptionAssets,
 } from "@ft4/registration";
-import { encryption, gtv, newSignatureProvider } from "postchain-client";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
+import {
+  encryption,
+  gtv,
+  MERKLE_HASH_VERSIONS,
+  newSignatureProvider,
+} from "postchain-client";
 
 let asset: Asset;
 let nonExistentChain00Asset: Asset;

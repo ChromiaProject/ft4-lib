@@ -16,9 +16,9 @@ import {
 } from "@ft4/authentication";
 import { EMPTY_SIGNATURE, transactionBuilder } from "@ft4/transaction-builder";
 import { deriveNonce } from "@ft4/utils";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 import {
   IClient,
+  MERKLE_HASH_VERSIONS,
   RawGtx,
   createStubClient,
   encryption,
