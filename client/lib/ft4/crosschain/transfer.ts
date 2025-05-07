@@ -11,9 +11,9 @@ import {
   formatter,
   SignedTransaction,
   TransactionReceipt,
+  Web3PromiEvent,
 } from "postchain-client";
 import { createRevertOrchestrator } from "@ft4/crosschain/orchestrator";
-import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 
 /**
  * Performs a cross chain transfer
@@ -36,7 +36,7 @@ export function crosschainTransfer(
   assetId: BufferId,
   amount: Amount,
   ttl: number = days(1),
-): Web3CustomPromiEvent<
+): Web3PromiEvent<
   TransferRef,
   {
     built: SignedTransaction;
@@ -44,7 +44,7 @@ export function crosschainTransfer(
     hop: Buffer;
   }
 > {
-  const promiEvent = new Web3CustomPromiEvent<
+  const promiEvent = new Web3PromiEvent<
     TransferRef,
     {
       built: SignedTransaction;
@@ -89,13 +89,13 @@ export function crosschainTransfer(
 export function resumeCrosschainTransfer(
   connection: Connection,
   pendingTransfer: TransferRef,
-): Web3CustomPromiEvent<
+): Web3PromiEvent<
   void,
   {
     hop: Buffer;
   }
 > {
-  const promiEvent = new Web3CustomPromiEvent<
+  const promiEvent = new Web3PromiEvent<
     void,
     {
       hop: Buffer;
@@ -126,13 +126,13 @@ export function resumeCrosschainTransfer(
 export function revertCrosschainTransfer(
   connection: Connection,
   pendingTransfer: TransferRef,
-): Web3CustomPromiEvent<
+): Web3PromiEvent<
   void,
   {
     hop: Buffer;
   }
 > {
-  const promiEvent = new Web3CustomPromiEvent<
+  const promiEvent = new Web3PromiEvent<
     void,
     {
       hop: Buffer;
@@ -163,13 +163,13 @@ export function revertCrosschainTransfer(
 export function recallUnclaimedCrosschainTransfer(
   connection: Connection,
   pendingTransfer: TransferRef,
-): Web3CustomPromiEvent<
+): Web3PromiEvent<
   void,
   {
     hop: Buffer;
   }
 > {
-  const promiEvent = new Web3CustomPromiEvent<
+  const promiEvent = new Web3PromiEvent<
     void,
     {
       hop: Buffer;

@@ -9,7 +9,6 @@ import {
 } from "@ft4-test/util";
 import { Connection, createConnection } from "@ft4/ft-session";
 import { registerCrosschainAsset } from "@ft4/admin";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 import { createAmount } from "@ft4/asset";
 import { AuthFlag } from "@ft4/accounts";
 import { transactionBuilder } from "@ft4/transaction-builder";
@@ -22,7 +21,7 @@ import {
   initAndCancelCrosschainTransfer,
   initApplyCancelUnapplyCrosschainTransfer,
 } from "./crosschain-helpers";
-import { encryption, gtv } from "postchain-client";
+import { encryption, gtv, MERKLE_HASH_VERSIONS } from "postchain-client";
 
 let multichain00: Blockchain;
 let multichain01: Blockchain;

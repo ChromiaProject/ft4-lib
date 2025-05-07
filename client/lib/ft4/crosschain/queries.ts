@@ -1,6 +1,10 @@
 import { BufferId, QueryObject, RawGtx, formatter } from "postchain-client";
 import { Buffer } from "buffer";
-import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
+import {
+  OptionalLimit,
+  OptionalPageCursor,
+  PagedResponse,
+} from "@ft4/ft-session";
 import {
   AppliedTransferResponse,
   AssetOriginFilter,
@@ -10,7 +14,6 @@ import {
   TransferFilter,
   TransferResponse,
 } from "./types";
-import { PaginatedEntity } from "@ft4/utils";
 
 export function assetOriginById(
   assetId: BufferId,
@@ -34,7 +37,7 @@ export function pendingTransfersForAccount(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PendingTransferResponse[],
+  PagedResponse<PendingTransferResponse>,
   {
     account_id: Buffer;
     page_size: OptionalLimit;
@@ -116,7 +119,7 @@ export function assetOriginFiltered(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<AssetOriginResponse>,
+  PagedResponse<AssetOriginResponse>,
   {
     asset_origin_filter: [assetIds: Array<Buffer> | null] | null;
     page_size: OptionalLimit;
@@ -143,7 +146,7 @@ export function appliedTransferFiltered(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<AppliedTransferResponse>,
+  PagedResponse<AppliedTransferResponse>,
   {
     applied_transfers_filter:
       | [initTxRids: Array<Buffer> | null, initOpIndex: number | null]
@@ -175,7 +178,7 @@ export function canceledTransferFiltered(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<TransferResponse>,
+  PagedResponse<TransferResponse>,
   {
     canceled_transfers_filter:
       | [initTxRids: Array<Buffer> | null, initOpIndex: number | null]
@@ -207,7 +210,7 @@ export function unappliedTransferFiltered(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<TransferResponse>,
+  PagedResponse<TransferResponse>,
   {
     unapplied_transfers_filter:
       | [initTxRids: Array<Buffer> | null, initOpIndex: number | null]
@@ -239,7 +242,7 @@ export function recalledTransferFiltered(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<TransferResponse>,
+  PagedResponse<TransferResponse>,
   {
     recalled_transfers_filter:
       | [initTxRids: Array<Buffer> | null, initOpIndex: number | null]
@@ -271,7 +274,7 @@ export function pendingTransferFiltered(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<PendingTransferResponse>,
+  PagedResponse<PendingTransferResponse>,
   {
     pending_transfer_filter:
       | [
@@ -308,7 +311,7 @@ export function revertedTransferFiltered(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<PendingTransferResponse>,
+  PagedResponse<TransferResponse>,
   {
     reverted_transfer_filter:
       | [initTxRids: Array<Buffer> | null, initOpIndex: number | null]

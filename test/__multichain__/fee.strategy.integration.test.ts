@@ -39,12 +39,12 @@ import {
   formatter,
   gtv,
   gtx,
+  MERKLE_HASH_VERSIONS,
   newSignatureProvider,
 } from "postchain-client";
 import { nop } from "@ft4/utils/index";
 import { recallUnclaimedTransfer } from "@ft4/crosschain/operations";
 import { transactionBuilder } from "@ft4/transaction-builder/index";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 let asset: Asset;
 let timeoutAsset: Asset;

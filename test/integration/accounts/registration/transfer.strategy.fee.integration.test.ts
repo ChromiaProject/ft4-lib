@@ -20,8 +20,7 @@ import {
   registerAccount,
   registrationStrategy,
 } from "@ft4/registration";
-import { encryption, gtv } from "postchain-client";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
+import { encryption, gtv, MERKLE_HASH_VERSIONS } from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;

@@ -25,8 +25,13 @@ import {
   registerAccount,
   registrationStrategy,
 } from "@ft4/registration";
-import { KeyPair, TxRejectedError, encryption, gtv } from "postchain-client";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
+import {
+  KeyPair,
+  MERKLE_HASH_VERSIONS,
+  TxRejectedError,
+  encryption,
+  gtv,
+} from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;

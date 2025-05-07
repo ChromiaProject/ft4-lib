@@ -18,6 +18,7 @@ import {
   createClient,
   formatter,
   BufferId,
+  Web3PromiEvent,
 } from "postchain-client";
 import {
   authHandlerForOperation,
@@ -83,7 +84,6 @@ import {
   getConfigFromOptions,
 } from "@ft4/authentication/login";
 import { getApiVersion } from "@ft4/utils/main";
-import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 import {
   AssetFilter,
   BalanceFilter,
@@ -170,7 +170,7 @@ export function createConnection(client: IClient): Connection {
     getApiVersion: () => getApiVersion(client),
 
     getBlockHeight: async () => {
-      const [block] = await client.getBlocksInfo(1);
+      const [block] = await client.getBlocks({ limit: 1 });
       return block.height;
     },
     getAccountsFiltered: (
@@ -435,7 +435,7 @@ export function call(
   connection: Connection,
   authenticator: Authenticator,
   ...operations: Operation[]
-): Web3CustomPromiEvent<
+): Web3PromiEvent<
   TransactionWithReceipt,
   {
     built: SignedTransaction;
@@ -458,7 +458,7 @@ export function callWithoutNop(
   connection: Connection,
   authenticator: Authenticator,
   ...operations: Operation[]
-): Web3CustomPromiEvent<
+): Web3PromiEvent<
   TransactionWithReceipt,
   {
     built: SignedTransaction;
@@ -467,7 +467,7 @@ export function callWithoutNop(
 > {
   const tb = transactionBuilder(authenticator, connection.client);
   operations.forEach((operation: Operation) =>
-    tb.add({ name: operation.name, args: operation.args ?? [] }),
+    tb.add({ name: operation.name, args: operation.args || [] }),
   );
   return tb.buildAndSend();
 }

@@ -1,4 +1,4 @@
-import { gtv } from "postchain-client";
+import { gtv, MERKLE_HASH_VERSIONS } from "postchain-client";
 import { authDescriptorRegistrationToGtv } from "./gtv";
 import { AuthDescriptorRules } from "./rules";
 import {
@@ -14,7 +14,6 @@ import {
   RawAnyAuthDescriptorRegistration,
   SingleSig,
 } from "./types";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 function hashAuthDescriptor(ad: RawAnyAuthDescriptorRegistration) {
   return gtv.gtvHash(ad, MERKLE_HASH_VERSIONS.ONE);

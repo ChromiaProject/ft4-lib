@@ -35,11 +35,11 @@ import {
   MissingNodeUrlError,
   formatter,
   BufferId,
+  MERKLE_HASH_VERSIONS,
 } from "postchain-client";
 import { Connection, createConnection } from "@ft4/ft-session";
 import { Asset } from "@ft4/asset/types";
 import { PathfinderError, findPathToChainForAsset } from "@ft4/crosschain";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 createClientMock.mockImplementation(
   async () =>

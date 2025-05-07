@@ -10,9 +10,8 @@ import {
 } from "@ft4/authentication";
 import { Connection, createAuthDataService } from "@ft4/ft-session";
 import { Buffer } from "buffer";
-import { gtv } from "postchain-client";
+import { gtv, MERKLE_HASH_VERSIONS } from "postchain-client";
 import { LoginDetails } from "./types";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 /**
  * Fetches the login details for an auth descriptor.

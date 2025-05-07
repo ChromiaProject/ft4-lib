@@ -11,8 +11,12 @@ import { Connection, createConnection } from "@ft4/ft-session";
 import { op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { randomBytes } from "crypto";
-import { IClient, formatter, gtv } from "postchain-client";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
+import {
+  IClient,
+  MERKLE_HASH_VERSIONS,
+  formatter,
+  gtv,
+} from "postchain-client";
 
 let connection: Connection;
 let client: IClient;

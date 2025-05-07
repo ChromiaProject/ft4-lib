@@ -8,13 +8,13 @@ import {
   BufferId,
   GTX,
   convertToRellOperation,
+  MERKLE_HASH_VERSIONS,
 } from "postchain-client";
 import { createConnection } from "@ft4/ft-session";
 import { Asset } from "@ft4/asset/types";
 import { registerAsset } from "@ft4/admin";
 import { Blockchain } from "./types";
 import { adminUser } from "./util";
-import { MERKLE_HASH_VERSIONS } from "@ft4/utils/main";
 
 export const NODE_URL = "http://localhost:7740";
 

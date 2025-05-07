@@ -4,6 +4,7 @@ import {
   BufferId,
   GTX,
   IClient,
+  MERKLE_HASH_VERSIONS,
   Operation,
   Queryable,
   RawGtv,
@@ -18,11 +19,6 @@ import {
 import { Config, ConfigResponse } from "./types";
 import { allAuthHandlers } from "./queries";
 import { AuthHandler, FtKeyStore } from "@ft4/authentication";
-
-export const MERKLE_HASH_VERSIONS = {
-  ONE: 1,
-  TWO: 2,
-};
 
 /**
  * Creates a nop operation that can be included in a transaction
@@ -220,7 +216,12 @@ export function deriveNonce(
 ): string {
   return formatter.toString(
     gtv.gtvHash(
-      [blockchainRid, operation.name, operation.args, authDescriptorCounter],
+      [
+        blockchainRid,
+        operation.name,
+        operation.args || [],
+        authDescriptorCounter,
+      ],
       merkleHashVersion,
     ),
   );
