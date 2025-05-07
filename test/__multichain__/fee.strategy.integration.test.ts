@@ -39,6 +39,7 @@ import {
   formatter,
   gtv,
   gtx,
+  MERKLE_HASH_VERSIONS,
   newSignatureProvider,
 } from "postchain-client";
 import { nop } from "@ft4/utils/index";
@@ -82,10 +83,10 @@ describe("Fee account creation single step", () => {
 
     // based on the assumption that asset ID is:
     // (name, blockchain_rid).hash()
-    const missingAssetId = gtv.gtvHash([
-      "fee_strategy_missing_test_asset_00",
-      multichain00.rid,
-    ]);
+    const missingAssetId = gtv.gtvHash(
+      ["fee_strategy_missing_test_asset_00", multichain00.rid],
+      MERKLE_HASH_VERSIONS.ONE,
+    );
 
     nonExistentChain00Asset = {
       id: missingAssetId,
@@ -126,7 +127,7 @@ describe("Fee account creation single step", () => {
   });
 
   it("can register account which receives transferred assets, minus fee", async () => {
-    const sigProv = newSignatureProvider();
+    const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
@@ -150,7 +151,7 @@ describe("Fee account creation single step", () => {
       startingAmount,
     );
 
-    const recipientId = gtv.gtvHash(sigProv.pubKey);
+    const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
     expect(senderAccount.id).toEqual(recipientId);
 
     const _allowedAssets = (await recipientConnection.query(
@@ -207,7 +208,7 @@ describe("Fee account creation single step", () => {
   });
 
   it("can complete pending crosschain transfers when account is registered with direct strategies", async () => {
-    const sigProv = newSignatureProvider();
+    const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
@@ -231,7 +232,7 @@ describe("Fee account creation single step", () => {
       startingAmount,
     );
 
-    const recipientId = gtv.gtvHash(sigProv.pubKey);
+    const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
     expect(senderSession.account.id).toEqual(recipientId);
 
     const _allowedAssets = (await recipientConnection.query(
@@ -288,7 +289,7 @@ describe("Fee account creation single step", () => {
   });
 
   it("can resume account registration when transfer is interrupted", async () => {
-    const sigProv = newSignatureProvider();
+    const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
@@ -318,7 +319,7 @@ describe("Fee account creation single step", () => {
       feeAmount,
     );
 
-    const recipientId = gtv.gtvHash(sigProv.pubKey);
+    const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
     expect(senderAccount.id).toEqual(recipientId);
 
     await senderSession
@@ -378,7 +379,7 @@ describe("Fee account creation single step", () => {
       feeAmount,
     );
 
-    const recipientId = gtv.gtvHash(keyStore.id);
+    const recipientId = gtv.gtvHash(keyStore.id, MERKLE_HASH_VERSIONS.ONE);
     expect(senderAccount.id).toEqual(recipientId);
 
     const transferRef = await senderAccount.crosschainTransfer(
@@ -407,7 +408,7 @@ describe("Fee account creation single step", () => {
   });
 
   it("handles asset coming from wrong chain properly", async () => {
-    const sigProv = newSignatureProvider();
+    const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
@@ -446,7 +447,7 @@ describe("Fee account creation single step", () => {
       startingAmount,
     );
 
-    const recipientId = gtv.gtvHash(sigProv.pubKey);
+    const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
     expect(unrelatedAccount.id).toEqual(recipientId);
 
     const _allowedAssets = (await recipientConnection.query(
@@ -482,7 +483,7 @@ describe("Fee account creation single step", () => {
   });
 
   it("handles asset missing on source chain properly", async () => {
-    const sigProv = newSignatureProvider();
+    const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
@@ -495,7 +496,7 @@ describe("Fee account creation single step", () => {
       registrationStrategy.open(authDescriptor),
     );
 
-    const recipientId = gtv.gtvHash(sigProv.pubKey);
+    const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
 
     const recipientSessionPromise = registerAccount(
       recipientConnection.client,
@@ -519,14 +520,14 @@ describe("Fee account creation single step", () => {
   });
 
   it("handles missing account on source chain properly", async () => {
-    const sigProv = newSignatureProvider();
+    const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
-    const recipientId = gtv.gtvHash(sigProv.pubKey);
+    const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
 
     const recipientSessionPromise = registerAccount(
       recipientConnection.client,
@@ -549,7 +550,7 @@ describe("Fee account creation single step", () => {
   });
 
   it("handles insufficient balance on source chain properly", async () => {
-    const sigProv = newSignatureProvider();
+    const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
@@ -573,7 +574,7 @@ describe("Fee account creation single step", () => {
       startingAmount,
     );
 
-    const recipientId = gtv.gtvHash(sigProv.pubKey);
+    const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
 
     const recipientSessionPromise = registerAccount(
       recipientConnection.client,
@@ -678,7 +679,7 @@ describe("Fee account creation single step", () => {
       feeAmount,
     );
 
-    const recipientId = gtv.gtvHash(keyStore.id);
+    const recipientId = gtv.gtvHash(keyStore.id, MERKLE_HASH_VERSIONS.ONE);
     expect(senderAccount.id).toEqual(recipientId);
 
     const transferRef = await crosschainTransfer(
@@ -715,7 +716,7 @@ describe("Fee account creation single step", () => {
         .add(nop())
         .buildAndSend(),
     ).rejects.toThrow(
-      `Transaction <0x${formatter.toString(gtx.getDigestToSign(transferRef.tx)).toLowerCase()}> transfer at index <${transferRef.opIndex}> has already been recalled on this chain.`,
+      `Transaction <0x${formatter.toString(gtx.getDigestToSign(transferRef.tx, MERKLE_HASH_VERSIONS.ONE)).toLowerCase()}> transfer at index <${transferRef.opIndex}> has already been recalled on this chain.`,
     );
   });
 });

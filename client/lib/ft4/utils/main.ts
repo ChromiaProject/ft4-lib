@@ -4,6 +4,7 @@ import {
   BufferId,
   GTX,
   IClient,
+  MERKLE_HASH_VERSIONS,
   Operation,
   Queryable,
   RawGtv,
@@ -61,8 +62,8 @@ export async function getConfig(queryable: Queryable): Promise<Config> {
  */
 export function getTransactionRid(tx: RawGtx | GTX): Buffer {
   if (Array.isArray(tx)) {
-    return gtv.gtvHash(tx[0]); //tx body
-  } else return gtv.gtvHash(gtx.gtxToRawGtxBody(tx));
+    return gtv.gtvHash(tx[0], MERKLE_HASH_VERSIONS.ONE); //tx body
+  } else return gtv.gtvHash(gtx.gtxToRawGtxBody(tx), MERKLE_HASH_VERSIONS.ONE);
 }
 
 /**
@@ -204,19 +205,24 @@ export function loadOperationFromTransaction(
  * @param blockchainRid - the rid of the blockchain where the nonce is used
  * @param operation - what operation the nonce will be used with
  * @param authDescriptorCounter - current counter of the auth descriptor that will be used to authenticate the operation
+ * @param merkleHashVersion - the merkle hash version selection defaults to one
  * @returns the computed nonce value
  */
 export function deriveNonce(
   blockchainRid: BufferId,
   operation: Operation,
   authDescriptorCounter: number,
+  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
 ): string {
   return formatter.toString(
-    gtv.gtvHash([
-      blockchainRid,
-      operation.name,
-      operation.args,
-      authDescriptorCounter,
-    ]),
+    gtv.gtvHash(
+      [
+        blockchainRid,
+        operation.name,
+        operation.args || [],
+        authDescriptorCounter,
+      ],
+      merkleHashVersion,
+    ),
   );
 }

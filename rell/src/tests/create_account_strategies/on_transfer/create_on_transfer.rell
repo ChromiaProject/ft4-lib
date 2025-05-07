@@ -10,8 +10,8 @@ import create_on_transfer: lib.ft4.accounts.strategies.transfer;
 import lib.ft4.accounts.strategies.transfer.open;
 import xc: lib.ft4.crosschain;
 import test_op: lib.ft4.test.operations;
-import ^^^.operations.iccf_op.{ iccf_proof };
 import ^^^.crosschain.mocks;
+import common_helpers: ^^^.common.helpers;
 
 function test_create_account_on_internal_transfer_success() {
     val alice = test.register_alice();
@@ -240,7 +240,7 @@ function test_create_account_on_crosschain_transfer_success() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(sender_blockchain_rid, tx))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .run();
 
@@ -299,7 +299,7 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transferred() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(sender_blockchain_rid, tx))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .run_must_fail(
             "Recipient account <%s> does not exist, and no rule was found that allows account creation with <1.0> <BOGUS> from account <%s> of chain <%s>"
@@ -338,7 +338,7 @@ function test_crosschain_transfer_fails_if_insufficient_amount_is_transferred() 
     );
 
     rell.test.tx()
-        .op(iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(sender_blockchain_rid, tx))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .run_must_fail(
             "Recipient account <%s> does not exist, and no rule was found that allows account creation with <%s> <TEST> from account <%s> of chain <%s>"
@@ -377,7 +377,7 @@ function test_multiple_crosschain_transfers_success() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(sender_blockchain_rid, tx1.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(sender_blockchain_rid, tx1))
         .op(xc.external.apply_transfer(tx1, 1, tx1, 1, 0))
         .run();
 
@@ -400,7 +400,7 @@ function test_multiple_crosschain_transfers_success() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(sender_blockchain_rid, tx2.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(sender_blockchain_rid, tx2))
         .op(xc.external.apply_transfer(tx2, 1, tx2, 1, 0))
         .run();
 
@@ -531,7 +531,7 @@ function test_crosschain_transfer_from_and_to_the_same_account_requires_no_signa
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, init_tx))
         .op(xc.external.apply_transfer(init_tx, 1, init_tx, 1, 0))
         .run();
 
@@ -569,7 +569,7 @@ function test_crosschain_transfer_from_and_to_different_account_requires_signatu
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, init_tx))
         .op(xc.external.apply_transfer(init_tx, 1, init_tx, 1, 0))
         .run();
 
@@ -613,7 +613,7 @@ function test_ensures_crosschain_transfer_from_and_to_the_same_account_with_disp
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, init_tx))
         .op(xc.external.apply_transfer(init_tx, 1, init_tx, 1, 0))
         .run();
 
@@ -654,7 +654,7 @@ function test_ensures_crosschain_transfer_from_and_to_the_same_account_with_disp
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, init_tx))
         .op(xc.external.apply_transfer(init_tx, 1, init_tx, 1, 0))
         .run();
 

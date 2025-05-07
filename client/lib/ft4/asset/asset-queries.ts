@@ -1,5 +1,9 @@
 import { BufferId, QueryObject, formatter } from "postchain-client";
-import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
+import {
+  OptionalLimit,
+  OptionalPageCursor,
+  PagedResponse,
+} from "@ft4/ft-session";
 import {
   AssetFilter,
   AssetResponse,
@@ -9,7 +13,6 @@ import {
   CrosschainTransferHistoryEntryFilter,
   TransferHistoryEntryFilter,
 } from "./types";
-import { PaginatedEntity } from "@ft4/utils";
 import { TransferHistoryEntryResponse } from "@ft4/accounts";
 import { CrosschainTransferHistoryEntryResponse } from "@ft4/accounts/transfer-history";
 
@@ -29,8 +32,12 @@ export function assetsBySymbol(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  AssetResponse,
-  { symbol: string; page_size: OptionalLimit; page_cursor: OptionalPageCursor }
+  PagedResponse<AssetResponse>,
+  {
+    symbol: string;
+    page_size: OptionalLimit;
+    page_cursor: OptionalPageCursor;
+  }
 > {
   return {
     name: "ft4.get_assets_by_symbol",
@@ -47,7 +54,7 @@ export function assetsByName(
   limit: OptionalLimit,
   cursor: OptionalPageCursor = null,
 ): QueryObject<
-  AssetResponse,
+  PagedResponse<AssetResponse>,
   {
     name: string;
     page_size: OptionalLimit;
@@ -69,7 +76,7 @@ export function assetsByType(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<AssetResponse>,
+  PagedResponse<AssetResponse>,
   { type: string; page_size: OptionalLimit; page_cursor: OptionalPageCursor }
 > {
   return {
@@ -86,7 +93,7 @@ export function allAssets(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<AssetResponse>,
+  PagedResponse<AssetResponse>,
   { page_size: OptionalLimit; page_cursor: OptionalPageCursor }
 > {
   return {
@@ -106,7 +113,7 @@ export function assetsFiltered(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<AssetResponse>,
+  PagedResponse<AssetResponse>,
   {
     asset_filter:
       | [
@@ -155,7 +162,7 @@ export function balancesByAccountId(
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): QueryObject<
-  PaginatedEntity<BalanceResponse>,
+  PagedResponse<BalanceResponse>,
   {
     account_id: Buffer;
     page_size: OptionalLimit;
@@ -180,7 +187,7 @@ export function balancesFiltered(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<BalanceResponse>,
+  PagedResponse<BalanceResponse>,
   {
     balance_filter:
       | [accountIds: Array<Buffer> | null, assetIds: Array<Buffer> | null]
@@ -220,7 +227,7 @@ export function transferHistoryEntriesFiltered(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<TransferHistoryEntryResponse>,
+  PagedResponse<TransferHistoryEntryResponse>,
   {
     transfer_history_entry_filter:
       | [
@@ -259,7 +266,7 @@ export function crossChainTransferHistoryEntriesFiltered(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PaginatedEntity<CrosschainTransferHistoryEntryResponse>,
+  PagedResponse<CrosschainTransferHistoryEntryResponse>,
   {
     crosschain_transfer_history_entry_filter:
       | [

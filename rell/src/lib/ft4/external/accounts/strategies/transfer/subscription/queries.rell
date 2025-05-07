@@ -11,7 +11,7 @@ query get_subscriptions_filtered(subscription_filter?, page_size: integer?, page
     val before_rowid = utils.before_rowid(page_cursor);
     return utils.make_page(
         subscription.subscription @* {
-                if (subscription_filter?.account_ids??) .account.id in subscription_filter?.account_ids!! else true,
+                if (subscription_filter?.account_ids??) .account.id in subscription_filter.account_ids else true,
                 .rowid > (before_rowid ?: rowid(0))
             } (
                 utils.pagination_result(

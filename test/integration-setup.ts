@@ -38,7 +38,7 @@ export default async function () {
 
   // Start a Chromia node container
   const container = await new GenericContainer(
-    "registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.21.4",
+    "registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.26.0",
   )
     .withNetwork(network)
     .withCopyDirectoriesToContainer([
@@ -53,14 +53,9 @@ export default async function () {
       JAVA_TOOL_OPTIONS,
     })
     .withCommand([
-      "chr",
-      "node",
-      "start",
-      "-s",
-      "configs/jest-test.yml",
-      "-np",
-      "rell/config/jest-test-gitlab/node-config.properties",
-      "--wipe",
+      "sh",
+      "-c",
+      "chr install -s configs/jest-test.yml && chr node start -s configs/jest-test.yml -np rell/config/jest-test-gitlab/node-config.properties --wipe",
     ])
     .withWaitStrategy(Wait.forLogMessage("Node is initialized"))
     .withStartupTimeout(60000)
@@ -77,7 +72,6 @@ export default async function () {
 
   // const url = "http://localhost:" + container.getMappedPort(7740);  //bitbucket
   const url = `http://${container.getHost()}:${container.getMappedPort(7740)}`; //gitlab
-
   await writeFile("node-url.txt", url, { encoding: "utf8" });
   console.log(`...started node on ${url}`);
 

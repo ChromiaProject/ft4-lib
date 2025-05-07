@@ -5,6 +5,7 @@ import {
   GTX,
   gtx,
   RawGtx,
+  MERKLE_HASH_VERSIONS,
 } from "postchain-client";
 import { AnyAuthDescriptor } from "@ft4/accounts";
 import { FtKeyStore, createFtKeyHandler } from "@ft4/authentication";
@@ -20,7 +21,9 @@ export function createInMemoryFtKeyStore(
   keyHolder: KeyPair | SignatureProvider,
 ): FtKeyStore {
   const signatureProvider =
-    "privKey" in keyHolder ? newSignatureProvider(keyHolder) : keyHolder;
+    "privKey" in keyHolder
+      ? newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, keyHolder)
+      : keyHolder;
 
   const keyStore = Object.freeze({
     id: signatureProvider.pubKey,

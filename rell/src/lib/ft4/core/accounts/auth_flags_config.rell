@@ -22,7 +22,7 @@ function get_raw_auth_flags_config() {
 function get_auth_flags_config() {
     val flags = chain_context.args.auth_flags;
     val mandatory = parse_auth_flags(flags.mandatory);
-    val default = if (flags.default??) parse_auth_flags(flags.default!!) else mandatory;
+    val default = if (flags.default??) parse_auth_flags(flags.default) else mandatory;
 
     return (
         mandatory = mandatory,

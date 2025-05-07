@@ -17,9 +17,9 @@ import {
   BufferId,
   SignedTransaction,
   TransactionReceipt,
+  Web3PromiEvent,
 } from "postchain-client";
 import { TransactionWithReceipt } from "@ft4/transaction-builder";
-import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 
 export type AccountFilter = Partial<{
   ids: Array<Buffer> | null;
@@ -342,7 +342,7 @@ export interface AuthenticatedAccount extends Account {
   addAuthDescriptor: (
     authDescriptor: AuthDescriptorRegistration<SingleSig>,
     keyStore: KeyStore,
-  ) => Web3CustomPromiEvent<
+  ) => Web3PromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -362,7 +362,7 @@ export interface AuthenticatedAccount extends Account {
   updateMainAuthDescriptor: (
     authDescriptor: AuthDescriptorRegistration<SingleSig>,
     keyStore: KeyStore,
-  ) => Web3CustomPromiEvent<
+  ) => Web3PromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -374,7 +374,7 @@ export interface AuthenticatedAccount extends Account {
    * to be associated with this account, but the keys stored in this account will be used to sign the operation.
    * @param authDescriptorId - the id of the auth descriptor to delete
    */
-  deleteAuthDescriptor: (authDescriptorId: BufferId) => Web3CustomPromiEvent<
+  deleteAuthDescriptor: (authDescriptorId: BufferId) => Web3PromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -386,7 +386,7 @@ export interface AuthenticatedAccount extends Account {
    * Requires that the user has instantiated this structure with the keystore that holds the private key
    * for the main auth descriptor.
    */
-  deleteAllAuthDescriptorsExceptMain: () => Web3CustomPromiEvent<
+  deleteAllAuthDescriptorsExceptMain: () => Web3PromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
@@ -404,7 +404,7 @@ export interface AuthenticatedAccount extends Account {
     receiverId: BufferId,
     assetId: BufferId,
     amount: Amount,
-  ) => Web3CustomPromiEvent<
+  ) => Web3PromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;
@@ -420,7 +420,7 @@ export interface AuthenticatedAccount extends Account {
   recallUnclaimedTransfer: (
     txRid: BufferId,
     opIndex: number,
-  ) => Web3CustomPromiEvent<
+  ) => Web3PromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;
@@ -451,7 +451,7 @@ export interface AuthenticatedAccount extends Account {
     assetId: BufferId,
     amount: Amount,
     ttl?: number,
-  ) => Web3CustomPromiEvent<
+  ) => Web3PromiEvent<
     TransferRef,
     {
       built: SignedTransaction;
@@ -470,9 +470,7 @@ export interface AuthenticatedAccount extends Account {
    * @param pendingTransfer - The transfer to resume
    *
    */
-  resumeCrosschainTransfer: (
-    pendingTransfer: TransferRef,
-  ) => Web3CustomPromiEvent<
+  resumeCrosschainTransfer: (pendingTransfer: TransferRef) => Web3PromiEvent<
     void,
     {
       hop: Buffer;
@@ -489,9 +487,7 @@ export interface AuthenticatedAccount extends Account {
    * @param pendingTransfer - The transfer to revert
    *
    */
-  revertCrosschainTransfer: (
-    pendingTransfer: TransferRef,
-  ) => Web3CustomPromiEvent<
+  revertCrosschainTransfer: (pendingTransfer: TransferRef) => Web3PromiEvent<
     void,
     {
       hop: Buffer;
@@ -511,7 +507,7 @@ export interface AuthenticatedAccount extends Account {
    */
   recallUnclaimedCrosschainTransfer: (
     pendingTransfer: TransferRef,
-  ) => Web3CustomPromiEvent<
+  ) => Web3PromiEvent<
     void,
     {
       hop: Buffer;
@@ -526,7 +522,7 @@ export interface AuthenticatedAccount extends Account {
   burn: (
     assetId: BufferId,
     amount: Amount,
-  ) => Web3CustomPromiEvent<
+  ) => Web3PromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;

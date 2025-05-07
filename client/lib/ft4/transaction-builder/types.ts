@@ -6,8 +6,8 @@ import {
   TransactionReceipt,
   BufferId,
   GTX,
+  Web3PromiEvent,
 } from "postchain-client";
-import { Web3CustomPromiEvent } from "@ft4/utils/promiEvent";
 
 export type TransactionBuilder = {
   /**
@@ -45,7 +45,7 @@ export type TransactionBuilder = {
    *
    * @returns an object containing the signed transaction and its receipt
    */
-  buildAndSend: () => Web3CustomPromiEvent<
+  buildAndSend: () => Web3PromiEvent<
     TransactionWithReceipt,
     {
       built: SignedTransaction;
@@ -65,7 +65,7 @@ export type TransactionBuilder = {
    *
    * @returns an object containing the signed transaction and its receipt
    */
-  buildAndSendWithAnchoring: () => Web3CustomPromiEvent<
+  buildAndSendWithAnchoring: () => Web3PromiEvent<
     AnchoringTransactionWithReceipt,
     {
       built: SignedTransaction;

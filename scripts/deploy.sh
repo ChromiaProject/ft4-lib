@@ -34,7 +34,7 @@ echo "\nBuilding..."
 if [ $which = "stable" ]; then
     printf "// stable" >> rell/src/main/module.rell # makes unique brid
 fi
-chr build -s configs/devnet1.yaml
+chr build -s configs/devnet1.yaml --hide-lib-warnings
 
 echo "\nPausing the old network..."
 sed -E -i 's/x"[0-9A-F]{64}" #'$which'/x"'$OLD_BRID'" #'$which'/' configs/devnet1.yaml

@@ -1,0 +1,50 @@
+blockchains:
+  sso_metamask_example:
+    module: main
+    config:
+      blockstrategy:
+        mininterblockinterval: 25
+    moduleArgs:
+      main:
+        admin_pubkey: x"03CA02C32A37E197D1A208C53AD9553296FEF7B8BB0710187D3E54445B058CF8DE"
+      lib.ft4.core.admin:
+        admin_pubkey: x"023BEE5A479CE5AF31F6F64EDE7BEAD394E92E4D973E1727782DB577A55E878563"
+      lib.ft4.core.accounts.strategies.transfer:
+        rules:
+          - sender_blockchain: "*"
+            sender: "*"
+            recipient: "*"
+            asset: "*"
+            timeout_days: 10
+            strategy:
+              - open
+      lib.ft4.core.auth:
+        evm_signatures_authorized_operations:
+          - register_user
+    config:
+      features:
+        merkle_hash_version: 1
+      gtx:
+        modules:
+          - "net.postchain.d1.iccf.IccfGTXModule"
+
+compile:
+  source: rell/src
+  rellVersion: 0.14.5
+
+libs:
+  ft4:
+    registry: https://gitlab.com/chromaway/ft4-lib
+    path: rell/src/lib/ft4
+    tagOrBranch: v1.1.0r
+    rid: x"FEEB0633698E7650D29DCCFE2996AD57CDC70AA3BDF770365C3D442D9DFC2A5E"
+    insecure: false
+
+database:
+  password: postchain
+  username: postchain
+  database: postchain
+  host: localhost
+  logSqlErrors: true
+  schema: main
+  driver: org.postgresql.Driver

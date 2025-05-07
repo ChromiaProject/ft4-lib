@@ -234,7 +234,7 @@ function _default_signers(account_details: (gtv) -> account_details, gtv) {
     val details = account_details(gtv);
     val default_signers = accounts.get_signers(details.main);
     if (details.disposable??) {
-        default_signers.add_all(accounts.get_signers(details.disposable!!));
+        default_signers.add_all(accounts.get_signers(details.disposable));
     }
 
     return default_signers;
@@ -342,7 +342,7 @@ function register_account(): accounts.account {
 
     val account = accounts.create_account_with_auth(account_details.main, account_id);
     if (account_details.disposable??) {
-        accounts.add_auth_descriptor(account, account_details.disposable!!);
+        accounts.add_auth_descriptor(account, account_details.disposable);
     }
 
     strategy.action(account, strategy_params);

@@ -10,14 +10,14 @@
 query get_account_links_filtered(account_link_filter?, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     if (account_link_filter?.type??) require(
-        account_link_filter?.secondary_id??,
+        account_link_filter.secondary_id,
         "MALFORMED FILTER: composite index (secondary, type) - secondary required"
     );
     return utils.make_page(
         linking.account_link @* {
-                if (account_link_filter?.account_ids??) .account.id in account_link_filter?.account_ids!! else true,
-                if (account_link_filter?.secondary_id??) .secondary.id == account_link_filter!!.secondary_id else true,
-                if (account_link_filter?.type??) .type == account_link_filter!!.type else true,
+                if (account_link_filter?.account_ids??) .account.id in account_link_filter.account_ids else true,
+                if (account_link_filter?.secondary_id??) .secondary.id == account_link_filter.secondary_id else true,
+                if (account_link_filter?.type??) .type == account_link_filter.type else true,
                 .rowid > (before_rowid ?: rowid(0))
             } (
                 utils.pagination_result(

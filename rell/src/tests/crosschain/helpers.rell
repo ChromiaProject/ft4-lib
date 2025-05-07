@@ -6,7 +6,6 @@ import lib.ft4.accounts;
 import test: lib.ft4.test.core;
 import ^.mocks;
 import common_helpers: ^^.common.helpers;
-import ^^.operations.iccf_op.{ iccf_proof };
 import lib.ft4.utils;
 import lib.ft4.auth;
 import test: lib.ft4.test.core;
@@ -64,7 +63,7 @@ function init_cancel_and_retrieve_canceled_transfer_crosschain_transfer(
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, tx))
         .op(crosschain.external.cancel_transfer(tx, 1, tx, 1, 0))
         .nop()
         .run();
@@ -72,7 +71,7 @@ function init_cancel_and_retrieve_canceled_transfer_crosschain_transfer(
     return crosschain.canceled_transfers @ {} (@omit @sort_desc .rowid, $) limit 1;
 }
 
-function cancel_unapply_transfer_and_retrieve_unapplied_transfer(
+function unapply_transfer_and_retrieve_unapplied_transfer(
     asset_name: text = mocks.ASSET_NAME,
     asset_symbol: text = mocks.ASSET_SYMBOL,
     deadline: integer = rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 2,
@@ -90,25 +89,25 @@ function cancel_unapply_transfer_and_retrieve_unapplied_transfer(
         sender_auth_descriptor_id = sender_auth_descriptor_id,
         recipient_account_id = recipient_account_id
     );
-    
+
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, init_transfer_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, init_transfer_tx))
         .op(crosschain.external.apply_transfer(init_transfer_tx, 1, init_transfer_tx, 1, 0))
         .nop()
         .sign(rell.test.keypairs.alice)
         .run();
 
     val apply_tx = gtx_transaction.from_bytes(test.get_last_transaction().tx_data);
-    
-    val cancel_tx = gtx_transaction(
+
+    val unapply_tx = gtx_transaction(
         body = gtx_transaction_body(
             blockchain_rid = target_blockchain_rid,
             operations = [
-                crosschain.external.cancel_transfer(
+                crosschain.external.unapply_transfer(
                     init_transfer_tx = init_transfer_tx,
                     init_tx_op_index = 1,
-                    previous_hop_tx = apply_tx,
-                    op_index = 1,
+                    last_tx = apply_tx,
+                    last_op_index = -1,
                     hop_index = 1
                 ).to_gtx_operation()
             ],
@@ -120,8 +119,8 @@ function cancel_unapply_transfer_and_retrieve_unapplied_transfer(
     run_block_after_timeout();
 
     rell.test.tx()
-        .op(iccf_proof(target_blockchain_rid, cancel_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(crosschain.external.unapply_transfer(init_transfer_tx, 1, cancel_tx, 0, 0))
+        .op(common_helpers.get_iccf_proof(target_blockchain_rid, unapply_tx))
+        .op(crosschain.external.unapply_transfer(init_transfer_tx, 1, unapply_tx, 0, 0))
         .nop()
         .run();
 
@@ -156,7 +155,7 @@ function init_apply_recall_transfer(
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, init_tx))
         .op(crosschain.external.apply_transfer(init_tx, 1, init_tx, 1, 0))
         .nop()
         .run();
@@ -237,7 +236,7 @@ function init_revert_canceled_transfer_and_retrieve_reverted_transfer(
     );
 
     rell.test.tx()
-        .op(iccf_proof(target_blockchain_rid, cancel_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(target_blockchain_rid, cancel_tx))
         .op(crosschain.external.revert_transfer(init_transfer_tx, 1, cancel_tx, 0))
         .nop()
         .run();

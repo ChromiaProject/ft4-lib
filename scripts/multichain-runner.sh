@@ -2,14 +2,14 @@
 
 LOG_LEVEL=${LOG_LEVEL:-"DEBUG"}
 
-NUM_BLOCKCHAINS=3
+NUM_BLOCKCHAINS=5
 POSTGRES_PORT=5432
 NODE_PORT=9870
 API_PORT=7740
 # API_PORT=80
 
-CHROMIA_NODE_VERSION='3.22.5'
-DIRECTORY_CHAIN_VERSION='1.75.2'
+CHROMIA_NODE_VERSION='3.28.1'
+DIRECTORY_CHAIN_VERSION='1.80.2'
 
 if $GITLAB; then
     BASE_CONFIG_DIR="rell/config/jest-test-gitlab/multichain"
@@ -57,8 +57,17 @@ prepare_dapp_folder() {
     rell_filepath="$DEPENDENCIES_PATH/multichain/$module_name.rell"
     mkdir -p $(dirname $rell_filepath)
 
+    case "$chain_num" in
+        00) merkle_hash_version=1 ;;
+        01) merkle_hash_version=1 ;;
+        02) merkle_hash_version=1 ;;
+        03) merkle_hash_version=2 ;;
+        04) merkle_hash_version=2 ;;
+        *) merkle_hash_version=1 ;; # default fallback
+    esac
+
     # Write the YML content to the file
-    sed "s/{module_name}/${module_name}/;s/{chain_number}/${chain_num}/" \
+    sed "s/{module_name}/${module_name}/;s/{chain_number}/${chain_num}/;s/{merkle_hash_version}/${merkle_hash_version}/" \
         configs/multichain-jesttest.yml.template > "${yml_filename}_"
     
     # Insert module args
@@ -113,7 +122,7 @@ include_brids() {
         fi
     done
 
-    chr build -s $yml_filename > /dev/null
+    chr build -s $yml_filename > /dev/null --hide-lib-warnings
 }
 
 run_main_logic() {
@@ -211,7 +220,7 @@ run_main_logic() {
     chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml > /dev/null
 
     log "Building Directory Chain..."
-    chr build --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml
+    chr build --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml --hide-lib-warnings
 
     debug "Copying FT library dependency to source folder..."
 
@@ -227,6 +236,12 @@ run_main_logic() {
         prepare_dapp_folder "$chain_num"
     done
 
+    JAVA_TOOL_OPTIONS=-Xmx16g
+
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        JAVA_TOOL_OPTIONS=-XX:UseSVE=0
+    fi
+
     log "Running node container..."
     mkdir logs
     # $DOCKER -H $DOCKER_HOST network create -d bridge localnet
@@ -235,7 +250,7 @@ run_main_logic() {
         --restart unless-stopped \
         -v "$(pwd)/$BASE_CONFIG_DIR:/config" \
         -v "$(pwd)/$DEPENDENCIES_PATH/directory-chain/build:/build" \
-        -e JAVA_TOOL_OPTIONS="-Xmx16g" \
+        -e JAVA_TOOL_OPTIONS="$JAVA_TOOL_OPTIONS" \
         -e POSTCHAIN_DEBUG=true \
         -e POSTCHAIN_CONFIG=/config/config.0.properties \
         -e POSTCHAIN_BLOCKCHAIN_CONFIG=/build/manager.xml \

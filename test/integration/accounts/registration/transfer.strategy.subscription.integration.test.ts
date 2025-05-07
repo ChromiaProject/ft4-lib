@@ -23,7 +23,12 @@ import {
   subscriptionPeriodMillis,
   transferSubscription,
 } from "@ft4/registration";
-import { QueryObject, encryption, gtv } from "postchain-client";
+import {
+  MERKLE_HASH_VERSIONS,
+  QueryObject,
+  encryption,
+  gtv,
+} from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;
@@ -48,7 +53,7 @@ describe("Test transfer with subscription", () => {
   let authDescriptorToRegister: AnyAuthDescriptorRegistration;
   beforeEach(async () => {
     const keyPair = encryption.makeKeyPair();
-    recipientId = gtv.gtvHash(keyPair.pubKey);
+    recipientId = gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE);
     senderAccount = await AccountBuilder.account(connection)
       .withBalance(asset, 200)
       .withPoints(1)
