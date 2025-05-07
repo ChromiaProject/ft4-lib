@@ -15,12 +15,13 @@ whether it's a rell or ts release.
   - rename new file to new version (Unreleased Copy -> X.X.X.md)
   - update version inside file as well, and set release date
   - ensure it has an ending newline
+  - ensure release notes sections that are empty are removed
   - remove changes from (old) Unreleased.md so that it is clean for new changes
 
 After having updated both Rell and TS changelog, generate change log with
 `./scripts/compile-changelog.sh`
 
-## Rell version
+## Rell version [Can be omitted if a rell version is not released]
 
 You first need to run `npm run version:rell -- [version or flag]` to update
 version in rell. Examples:
