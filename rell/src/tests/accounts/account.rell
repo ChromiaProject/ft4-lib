@@ -190,12 +190,12 @@ function test_get_account_auth_descriptors_filtered() {
   val compare_data = (
     account_id = account1.account.id,
     account_type = account1.account.type,
-    args = gtv.from_bytes(account_ad.args),
+    args = account_ad.args,
     auth_type = account_ad.auth_type,
     created = account_ad.created,
     ctr = account_ad.ctr,
     id = account_ad.id,
-    rules = gtv.from_bytes(account_ad.rules)
+    rules = account_ad.rules
   );
   assert_equals(account_ret.data[0], compare_data.to_gtv_pretty());
 }
@@ -218,22 +218,22 @@ function test_get_account_auth_descriptors_filtered_is_paginated() {
   val compare_data_1 = (
     account_id = account1.account.id,
     account_type = account1.account.type,
-    args = gtv.from_bytes(account_ad_1.args),
+    args = account_ad_1.args,
     auth_type = account_ad_1.auth_type,
     created = account_ad_1.created,
     ctr = account_ad_1.ctr,
     id = account_ad_1.id,
-    rules = gtv.from_bytes(account_ad_1.rules)
+    rules = account_ad_1.rules
   );
   val compare_data_2 = (
     account_id = account2.account.id,
     account_type = account2.account.type,
-    args = gtv.from_bytes(account_ad_2.args),
+    args = account_ad_2.args,
     auth_type = account_ad_2.auth_type,
     created = account_ad_2.created,
     ctr = account_ad_2.ctr,
     id = account_ad_2.id,
-    rules = gtv.from_bytes(account_ad_2.rules)
+    rules = account_ad_2.rules
   );
   assert_equals(page2.data[0], compare_data_1.to_gtv_pretty());
   assert_equals(page3.data[0], compare_data_2.to_gtv_pretty());
@@ -258,12 +258,12 @@ function test_get_main_auth_descriptors_filtered() {
   val compare_data = (
     account_id = account1.account.id,
     account_type = account1.account.type,
-    args = gtv.from_bytes(account_ad.args),
+    args = account_ad.args,
     auth_type = account_ad.auth_type,
     created = account_ad.created,
     ctr = account_ad.ctr,
     id = account_ad.id,
-    rules = gtv.from_bytes(account_ad.rules)
+    rules = account_ad.rules
   );
   assert_equals(account_ret.data[0], compare_data.to_gtv_pretty());
 }
@@ -290,22 +290,22 @@ function test_get_main_auth_descriptors_filtered_is_paginated() {
   val compare_data_1 = (
     account_id = account1.account.id,
     account_type = account1.account.type,
-    args = gtv.from_bytes(account_ad_1.auth_descriptor.args),
+    args = account_ad_1.auth_descriptor.args,
     auth_type = account_ad_1.auth_descriptor.auth_type,
     created = account_ad_1.auth_descriptor.created,
     ctr = account_ad_1.auth_descriptor.ctr,
     id = account_ad_1.auth_descriptor.id,
-    rules = gtv.from_bytes(account_ad_1.auth_descriptor.rules),
+    rules = account_ad_1.auth_descriptor.rules,
   );
   val compare_data_2 = (
     account_id = account2.account.id,
     account_type = account2.account.type,
-    args = gtv.from_bytes(account_ad_2.auth_descriptor.args),
+    args = account_ad_2.auth_descriptor.args,
     auth_type = account_ad_2.auth_descriptor.auth_type,
     created = account_ad_2.auth_descriptor.created,
     ctr = account_ad_2.auth_descriptor.ctr,
     id = account_ad_2.auth_descriptor.id,
-    rules = gtv.from_bytes(account_ad_2.auth_descriptor.rules),
+    rules = account_ad_2.auth_descriptor.rules,
   );
 
   assert_equals(page1.data[0], compare_data_1.to_gtv_pretty());
@@ -331,12 +331,12 @@ function test_get_auth_descriptor_signers_filtered() {
   val account_ad = acc.account_auth_descriptor @* { .account == account1.account }[0];
   val auth_desc_signer = acc.auth_descriptor_signer @? { .account_auth_descriptor == account_ad }!!;
   val compare_data = (
-    account_auth_descriptor_args = gtv.from_bytes(account_ad.args),
+    account_auth_descriptor_args = account_ad.args,
     account_auth_descriptor_auth_type = account_ad.auth_type,
     account_auth_descriptor_created = account_ad.created,
     account_auth_descriptor_ctr = account_ad.ctr,
     account_auth_descriptor_id = account_ad.id,
-    account_auth_descriptor_rules = gtv.from_bytes(account_ad.rules),
+    account_auth_descriptor_rules = account_ad.rules,
     account_id = account1.account.id,
     account_type = account1.account.type,
     id = auth_desc_signer.id,
@@ -358,24 +358,24 @@ function test_get_auth_descriptor_signers_filtered_is_paginated() {
   val auth_desc_signer = acc.auth_descriptor_signer @? { .account_auth_descriptor == account_ads[0] }!!;
   val auth_desc_signer2 = acc.auth_descriptor_signer @? { .account_auth_descriptor == account_ads[1] }!!;
   val compare_data = (
-    account_auth_descriptor_args = gtv.from_bytes(account_ads[0].args),
+    account_auth_descriptor_args = account_ads[0].args,
     account_auth_descriptor_auth_type = account_ads[0].auth_type,
     account_auth_descriptor_created = account_ads[0].created,
     account_auth_descriptor_ctr = account_ads[0].ctr,
     account_auth_descriptor_id = account_ads[0].id,
-    account_auth_descriptor_rules = gtv.from_bytes(account_ads[0].rules),
+    account_auth_descriptor_rules = account_ads[0].rules,
     account_id = account1.account.id,
     account_type = account1.account.type,
     id = auth_desc_signer.id,
   );
 
   val compare_data2 = (
-    account_auth_descriptor_args = gtv.from_bytes(account_ads[1].args),
+    account_auth_descriptor_args = account_ads[1].args,
     account_auth_descriptor_auth_type = account_ads[1].auth_type,
     account_auth_descriptor_created = account_ads[1].created,
     account_auth_descriptor_ctr = account_ads[1].ctr,
     account_auth_descriptor_id = account_ads[1].id,
-    account_auth_descriptor_rules = gtv.from_bytes(account_ads[1].rules),
+    account_auth_descriptor_rules = account_ads[1].rules,
     account_id = account1.account.id,
     account_type = account1.account.type,
     id = auth_desc_signer.id,

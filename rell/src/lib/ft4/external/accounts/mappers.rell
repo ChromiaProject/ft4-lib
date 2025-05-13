@@ -10,8 +10,8 @@ function map_account_auth_descriptor(accounts.account_auth_descriptor) {
         account_id = account_auth_descriptor.account.id,
         account_type = account_auth_descriptor.account.type,
         auth_type = account_auth_descriptor.auth_type,
-        args = gtv.from_bytes(account_auth_descriptor.args),
-        rules = gtv.from_bytes(account_auth_descriptor.rules),
+        args = account_auth_descriptor.args,
+        rules = account_auth_descriptor.rules,
         ctr = account_auth_descriptor.ctr,
         created = account_auth_descriptor.created,
     );
@@ -29,8 +29,8 @@ function map_main_auth_descriptor(accounts.main_auth_descriptor) {
         account_id = main_auth_descriptor.account.id,
         account_type = main_auth_descriptor.account.type,
         auth_type = main_auth_descriptor.auth_descriptor.auth_type,
-        args = gtv.from_bytes(main_auth_descriptor.auth_descriptor.args),
-        rules = gtv.from_bytes(main_auth_descriptor.auth_descriptor.rules),
+        args = main_auth_descriptor.auth_descriptor.args,
+        rules = main_auth_descriptor.auth_descriptor.rules,
         ctr = main_auth_descriptor.auth_descriptor.ctr,
         created = main_auth_descriptor.auth_descriptor.created,
     );
@@ -49,8 +49,8 @@ function map_auth_descriptor_signer(accounts.auth_descriptor_signer) {
         account_id = auth_descriptor_signer.account_auth_descriptor.account.id,
         account_type = auth_descriptor_signer.account_auth_descriptor.account.type,
         account_auth_descriptor_auth_type = auth_descriptor_signer.account_auth_descriptor.auth_type,
-        account_auth_descriptor_args = gtv.from_bytes(auth_descriptor_signer.account_auth_descriptor.args),
-        account_auth_descriptor_rules = gtv.from_bytes(auth_descriptor_signer.account_auth_descriptor.rules),
+        account_auth_descriptor_args = auth_descriptor_signer.account_auth_descriptor.args,
+        account_auth_descriptor_rules = auth_descriptor_signer.account_auth_descriptor.rules,
         account_auth_descriptor_created = auth_descriptor_signer.account_auth_descriptor.created,
         account_auth_descriptor_ctr = auth_descriptor_signer.account_auth_descriptor.ctr,
     );
