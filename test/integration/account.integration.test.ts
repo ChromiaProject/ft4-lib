@@ -324,14 +324,10 @@ describe("Test the account", () => {
       account_ids: [account.id],
     };
 
-    console.log("===mai===>", mainAccountAuthDescriptorFilter);
-
     const filteredMainAuthDescriptors =
       await _connection.getMainAuthDescriptorsFiltered(
         mainAccountAuthDescriptorFilter,
       );
-
-    console.log("===results===>", filteredMainAuthDescriptors);
 
     expect(filteredMainAuthDescriptors.data.length).toBeGreaterThan(0);
     expect(filteredMainAuthDescriptors.data[0].accountId).toStrictEqual(

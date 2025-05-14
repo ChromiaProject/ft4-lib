@@ -15,12 +15,33 @@ import {
   RawMultiSig,
 } from "./types";
 import { authDescriptorRuleMapper, rulesFromGtv, rulesToGtv } from "./rules";
+import { gtv } from "postchain-client";
+
+function parseBufferRules(rules: any) {
+  if (Buffer.isBuffer(rules)) {
+    return gtv.decode(rules);
+  }
+
+  if (rules instanceof Uint8Array) {
+    return gtv.decode(Buffer.from(rules));
+  }
+
+  return rules;
+}
 
 export function mapSingleSigAuthDescriptor(
   ad: RawAuthDescriptor<RawSingleSig>,
 ): AuthDescriptor<SingleSig> {
   const { id, account_id, account_type, auth_type, args, rules, created } = ad;
   const [flags, signer] = args;
+  const signerBuffer = Buffer.isBuffer(signer)
+    ? signer
+    : typeof signer === "string"
+      ? Buffer.from(signer, "hex")
+      : Array.isArray(signer)
+        ? Buffer.from(signer)
+        : signer;
+  const parsedRules = rules ? parseBufferRules(rules) : rules;
   return Object.freeze({
     id,
     accountId: account_id,
@@ -28,9 +49,9 @@ export function mapSingleSigAuthDescriptor(
     authType: enumValueFromString(auth_type, AuthType),
     args: {
       flags,
-      signer,
+      signer: signerBuffer,
     },
-    rules: rules && rulesFromGtv(rules, authDescriptorRuleMapper),
+    rules: parsedRules && rulesFromGtv(parsedRules, authDescriptorRuleMapper),
     created: new Date(created),
   });
 }
@@ -40,6 +61,18 @@ export function mapMultiSigAuthDescriptor(
 ): AuthDescriptor<MultiSig> {
   const { id, account_id, account_type, auth_type, args, rules, created } = ad;
   const [flags, signaturesRequired, signers] = args;
+  const signersBuffer = Array.isArray(signers)
+    ? signers.map((s) =>
+        Buffer.isBuffer(s)
+          ? s
+          : typeof s === "string"
+            ? Buffer.from(s, "hex")
+            : Array.isArray(s)
+              ? Buffer.from(s)
+              : s,
+      )
+    : signers;
+  const parsedRules = rules ? parseBufferRules(rules) : rules;
   return Object.freeze({
     id,
     accountId: account_id,
@@ -48,9 +81,9 @@ export function mapMultiSigAuthDescriptor(
     args: {
       flags,
       signaturesRequired,
-      signers,
+      signers: signersBuffer,
     },
-    rules: rules && rulesFromGtv(rules, authDescriptorRuleMapper),
+    rules: parsedRules && rulesFromGtv(parsedRules, authDescriptorRuleMapper),
     created: new Date(created),
   });
 }
