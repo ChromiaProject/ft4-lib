@@ -22,7 +22,6 @@ export const nullKeyStore: KeyStore = Object.freeze({
 
 export const noopAuthDataService: AuthDataService = Object.freeze({
   connection: {} as Connection,
-  isOperationExposed: (_operationName: string) => Promise.resolve(true),
   getAuthMessageTemplate: (_operation: Operation) => Promise.resolve(""),
   getAuthDescriptorCounter: (
     _accountId: BufferId,

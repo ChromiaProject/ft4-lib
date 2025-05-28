@@ -2,6 +2,9 @@
 
 ### Breaking 💔
 
+- Removed the function `isOperationExposed` from the interface
+  `AuthDataService`.
+
 ### Changed 🪙
 
 ### Added ✅

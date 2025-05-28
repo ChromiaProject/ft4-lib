@@ -22,7 +22,6 @@ import {
 } from "postchain-client";
 import {
   authHandlerForOperation,
-  fetchExposedOperations,
   firstAllowedAuthDescriptor,
   getAllAuthHandlers,
   getConfig,
@@ -486,17 +485,10 @@ export async function signAndSendTransaction(
  * @param connection - connection that the auth data service will use when interacting with the blockchain
  */
 export function createAuthDataService(connection: Connection): AuthDataService {
-  let exposedOperations: Set<string> | null = null;
   let authHandlers: { [key: string]: AuthHandler } | null = null;
 
   return Object.freeze({
     connection,
-    isOperationExposed: async (operationName: string): Promise<boolean> => {
-      if (!exposedOperations) {
-        exposedOperations = await fetchExposedOperations(connection);
-      }
-      return exposedOperations.has(operationName);
-    },
     getAuthHandlerForOperation: async (
       operationName: string,
     ): Promise<AuthHandler | null> => {
