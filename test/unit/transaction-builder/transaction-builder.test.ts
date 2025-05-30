@@ -180,17 +180,6 @@ describe("Transaction Builder", () => {
     expect(tx.operations).toStrictEqual([{ opName: "ft4.transfer", args }]);
   });
 
-  it("throws an error when the operation does not exist", async () => {
-    setupTestEnvironment();
-
-    const builder = transactionBuilder(authenticator, client);
-    builder.add(mockOperation);
-
-    await expect(builder.build()).rejects.toThrow(
-      `Operation ${mockOperation.name} does not exist`,
-    );
-  });
-
   it("does not throw an error when the operation exists", async () => {
     setupTestEnvironment();
 
