@@ -62,10 +62,7 @@ export async function getConfig(queryable: Queryable): Promise<Config> {
  */
 export function getTransactionRid(
   tx: RawGtx | GTX,
-  clientOrMerkleHashVersion:
-    | IClient
-    | Connection
-    | number = MERKLE_HASH_VERSIONS.TWO,
+  clientOrMerkleHashVersion: IClient | Connection | number,
 ): Buffer {
   let merkleHashVersion: number;
   if (typeof clientOrMerkleHashVersion === "number") {

@@ -433,7 +433,10 @@ describe("crosschain queries with filter", () => {
         );
 
       const rawTx = gtxToRawGtx(pendingTransfer.tx);
-      const pendingTransferTxRid = getTransactionRid(rawTx);
+      const pendingTransferTxRid = getTransactionRid(
+        rawTx,
+        testContext.connection0,
+      );
 
       const { data } =
         await testContext.connection0.getPendingTransfersFiltered(
