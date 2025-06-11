@@ -59,6 +59,8 @@ export async function getConfig(queryable: Queryable): Promise<Config> {
 /**
  * Computes the transaction rid of the provided `RawGtx`
  * @param tx - the tx to compute the rid for
+ * @param clientOrMerkleHashVersion - the client or connection to use to get the merkle hash version from,
+ * or the merkle hash version itself
  */
 export function getTransactionRid(
   tx: RawGtx | GTX,
