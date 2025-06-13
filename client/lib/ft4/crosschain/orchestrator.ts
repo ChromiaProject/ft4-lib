@@ -183,7 +183,7 @@ export async function createResumeOrchestrator(
         !(await isAppliedOnBlockchainRid(
           connection,
           formatter.ensureBuffer(path[i]),
-          getTransactionRid(initialData.initialTx),
+          getTransactionRid(initialData.initialTx, connection),
           initialData.initialOpIndex,
         ))
       ) {
@@ -215,7 +215,7 @@ export async function createResumeOrchestrator(
       const res = await getAppliedTx(
         connection,
         lastBlockchainRid,
-        getTransactionRid(initialData.initialTx),
+        getTransactionRid(initialData.initialTx, connection),
         initialData.initialOpIndex,
       );
       transactionToApply = formatter.rawGtxToGtx(res.tx);
@@ -281,7 +281,7 @@ export async function createRevertOrchestrator(
         !(await isAppliedOnBlockchainRid(
           connection,
           formatter.ensureBuffer(path[i]),
-          getTransactionRid(pendingTransfer.tx),
+          getTransactionRid(pendingTransfer.tx, connection),
           pendingTransfer.opIndex,
         ))
       ) {
@@ -309,7 +309,7 @@ export async function createRevertOrchestrator(
       const res = await getAppliedTx(
         connection,
         lastBlockchainRid,
-        getTransactionRid(pendingTransfer.tx),
+        getTransactionRid(pendingTransfer.tx, connection),
         pendingTransfer.opIndex,
       );
       tx = formatter.rawGtxToGtx(res.tx);

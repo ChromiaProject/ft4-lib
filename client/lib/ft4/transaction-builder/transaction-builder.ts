@@ -331,7 +331,7 @@ export function getSystemAnchoringIccfProofOp(
 
     const proofTx = await createIccfProofTx(
       directoryClient,
-      getTransactionRid(txToProve),
+      getTransactionRid(txToProve, client),
       gtx.getDigest(txToProve, client.config.merkleHashVersion),
       txToProve.signers,
       client.config.blockchainRid,

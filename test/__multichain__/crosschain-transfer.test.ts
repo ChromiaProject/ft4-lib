@@ -420,7 +420,7 @@ describe("Crosschain transfer", () => {
           100,
         );
 
-      const transactionRid = getTransactionRid(initState.tx);
+      const transactionRid = getTransactionRid(initState.tx, connection00);
 
       const matchingCrosschainTransferHistoryEntry =
         await connection00.getCrosschainTransferHistoryEntriesFiltered(
@@ -519,7 +519,7 @@ describe("Crosschain transfer", () => {
         )
         .buildAndSendWithAnchoring();
 
-      const transactionRid = getTransactionRid(initState.tx);
+      const transactionRid = getTransactionRid(initState.tx, connection00);
 
       const { data } =
         await connection00.getCrosschainTransferHistoryEntriesFiltered(
