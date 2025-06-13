@@ -59,11 +59,37 @@ export async function getConfig(queryable: Queryable): Promise<Config> {
 /**
  * Computes the transaction rid of the provided `RawGtx`
  * @param tx - the tx to compute the rid for
+ * @param clientOrMerkleHashVersion - the client or connection to use to get the merkle hash version from,
+ * or the merkle hash version itself
  */
-export function getTransactionRid(tx: RawGtx | GTX): Buffer {
+export function getTransactionRid(
+  tx: RawGtx | GTX,
+  clientOrMerkleHashVersion: IClient | Connection | number,
+): Buffer {
+  let merkleHashVersion: number;
+  if (typeof clientOrMerkleHashVersion === "number") {
+    merkleHashVersion = clientOrMerkleHashVersion;
+  } else {
+    merkleHashVersion = getMerkleHashVersion(clientOrMerkleHashVersion);
+  }
   if (Array.isArray(tx)) {
-    return gtv.gtvHash(tx[0], MERKLE_HASH_VERSIONS.ONE); //tx body
-  } else return gtv.gtvHash(gtx.gtxToRawGtxBody(tx), MERKLE_HASH_VERSIONS.ONE);
+    return gtv.gtvHash(tx[0], merkleHashVersion); //tx body
+  } else return gtv.gtvHash(gtx.gtxToRawGtxBody(tx), merkleHashVersion);
+}
+
+/**
+ * Gets the merkle hash version from the provided client or connection
+ * @param clientOrConnection the client or connection to get the merkle hash version from
+ * @returns the merkle hash version
+ */
+export function getMerkleHashVersion(
+  clientOrConnection: IClient | Connection,
+): number {
+  if ("config" in clientOrConnection) {
+    return clientOrConnection.config.merkleHashVersion;
+  } else {
+    return clientOrConnection.client.config.merkleHashVersion;
+  }
 }
 
 /**
