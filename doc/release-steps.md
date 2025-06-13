@@ -2,8 +2,7 @@
 
 ## Prerequisites
 
-- check version in package.json. If it's not equal to last version:
-- merge master to development, if not done already after previous release
+- merge master to development
 
 ## Changelog
 
