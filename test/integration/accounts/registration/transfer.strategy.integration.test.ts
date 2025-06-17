@@ -59,7 +59,7 @@ describe("Test transfer strategy", () => {
   beforeEach(async () => {
     keyPair = encryption.makeKeyPair();
     recipientId = gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE);
-    keyStore = createInMemoryFtKeyStore(keyPair);
+    keyStore = createInMemoryFtKeyStore(keyPair, MERKLE_HASH_VERSIONS.ONE);
     senderAccount = await AccountBuilder.account(connection)
       .withBalance(asset, 200)
       .withPoints(1)

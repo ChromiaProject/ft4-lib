@@ -19,6 +19,7 @@ import {
   evmAuth,
 } from "./main";
 import { EvmKeyStore } from "./types";
+import { getMerkleHashVersion } from "@ft4/utils/main";
 
 /**
  * Creates a new instance of a `KeyHandler` which wraps an Evm key.
@@ -95,7 +96,15 @@ async function authorize(
       formatter.toString(formatter.ensureBuffer(authDescriptor.id)),
     )
     .replace(BLOCKCHAIN_RID_PLACEHOLDER, formatter.toString(blockchainRid))
-    .replace(NONCE_PLACEHOLDER, deriveNonce(blockchainRid, operation, counter));
+    .replace(
+      NONCE_PLACEHOLDER,
+      deriveNonce(
+        blockchainRid,
+        operation,
+        counter,
+        getMerkleHashVersion(authDataService.connection),
+      ),
+    );
 
   const signers = aggregateSigners(authDescriptor);
   const signatures = await Promise.all(

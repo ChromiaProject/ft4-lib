@@ -329,7 +329,10 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
     asset.id,
     testContext.multichain0.rid,
   );
-  const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+  const keyStore = createInMemoryFtKeyStore(
+    encryption.makeKeyPair(),
+    testContext.connection0,
+  );
   const authDescriptor = createSingleSigAuthDescriptorRegistration(
     [AuthFlag.Account, AuthFlag.Transfer],
     keyStore.id,

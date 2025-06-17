@@ -68,7 +68,7 @@ export async function login(
   const config = await getConfigFromOptions(authDataService, loginOptions);
 
   const usedLoginKeyStore =
-    loginOptions.loginKeyStore || createInMemoryLoginKeyStore();
+    loginOptions.loginKeyStore || createInMemoryLoginKeyStore(connection);
   const loginKeyStore = await usedLoginKeyStore.getKeyStore(account.id);
 
   // If disposable key pair exists in login key store for provided account id,

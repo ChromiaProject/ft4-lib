@@ -63,6 +63,7 @@ async function getAuthedAccountsFromAuthDescriptorRule(
 
   const keyHandler = createInMemoryFtKeyStore(
     user2.signatureProvider,
+    MERKLE_HASH_VERSIONS.ONE,
   ).createKeyHandler(user2.authDescriptor);
   const authenticator = createAuthenticator(
     accountAdmin.id,
@@ -132,7 +133,10 @@ describe("Auth Descriptor Rule", () => {
     await addAuthDescriptorTo(_connection.client, accountId, user1, user2);
     await addAuthDescriptorTo(_connection.client, accountId, user1, user3);
 
-    const keyHandler = createInMemoryFtKeyStore(kp1).createKeyHandler(ad1);
+    const keyHandler = createInMemoryFtKeyStore(
+      kp1,
+      MERKLE_HASH_VERSIONS.ONE,
+    ).createKeyHandler(ad1);
 
     const authDataService = createAuthDataService(_connection);
 
@@ -165,7 +169,10 @@ describe("Auth Descriptor Rule", () => {
     await createAccount(_connection.client, ad1);
     await createAccount(_connection.client, ad2);
 
-    const keyHandler = createInMemoryFtKeyStore(kp1).createKeyHandler(ad1);
+    const keyHandler = createInMemoryFtKeyStore(
+      kp1,
+      MERKLE_HASH_VERSIONS.ONE,
+    ).createKeyHandler(ad1);
     const authDataService = createAuthDataService(_connection);
 
     const session = createSession(
@@ -200,7 +207,10 @@ describe("Auth Descriptor Rule", () => {
 
     await addAuthDescriptorTo(_connection.client, accountId, user1, user2);
 
-    const keyHandler = createInMemoryFtKeyStore(kp1).createKeyHandler(ad1);
+    const keyHandler = createInMemoryFtKeyStore(
+      kp1,
+      MERKLE_HASH_VERSIONS.ONE,
+    ).createKeyHandler(ad1);
     const authDataService = createAuthDataService(_connection);
 
     const session = createSession(

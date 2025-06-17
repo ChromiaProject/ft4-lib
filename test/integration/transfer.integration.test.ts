@@ -171,7 +171,7 @@ describe("Transfer", () => {
 
     const session = await createKeyStoreInteractor(
       client,
-      createInMemoryFtKeyStore(keyPair),
+      createInMemoryFtKeyStore(keyPair, MERKLE_HASH_VERSIONS.ONE),
     ).getSession(account.id);
     await session.account.burn(asset.id, createAmount(10, asset.decimals));
     const assetBalance = await session.account.getBalanceByAssetId(asset.id);

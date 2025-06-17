@@ -74,7 +74,7 @@ describe("Transfer history", () => {
 
       const session = await createKeyStoreInteractor(
         connection.client,
-        createInMemoryFtKeyStore(keyPair),
+        createInMemoryFtKeyStore(keyPair, MERKLE_HASH_VERSIONS.ONE),
       ).getSession(account1.id);
 
       const transferTransactionRid = (

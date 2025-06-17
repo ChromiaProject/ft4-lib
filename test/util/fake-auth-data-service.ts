@@ -1,7 +1,7 @@
 import { AuthDataService, LoginConfig } from "@ft4/authentication";
 import { Connection } from "@ft4/ft-session";
 import { Buffer } from "buffer";
-import { BufferId, Operation } from "postchain-client";
+import { BufferId, MERKLE_HASH_VERSIONS, Operation } from "postchain-client";
 import { asyncNumberGenerator } from "./util";
 
 export function createFakeAuthDataService(
@@ -12,6 +12,7 @@ export function createFakeAuthDataService(
   return {
     connection: {
       client: {
+        config: { merkleHashVersion: MERKLE_HASH_VERSIONS.ONE },
         getBlocksInfo: (_limit: number) => generator.next().value,
       },
     } as unknown as Connection,

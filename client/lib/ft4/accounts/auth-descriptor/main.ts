@@ -1,4 +1,4 @@
-import { gtv, MERKLE_HASH_VERSIONS } from "postchain-client";
+import { gtv } from "postchain-client";
 import { authDescriptorRegistrationToGtv } from "./gtv";
 import { AuthDescriptorRules } from "./rules";
 import {
@@ -15,25 +15,36 @@ import {
   SingleSig,
 } from "./types";
 
-function hashAuthDescriptor(ad: RawAnyAuthDescriptorRegistration) {
-  return gtv.gtvHash(ad, MERKLE_HASH_VERSIONS.ONE);
+/**
+ * Hashes an auth descriptor to get its ID
+ * @param ad - the auth descriptor to hash
+ * @param merkleHashVersion - the merkle hash version to use (defaults to 1)
+ * @returns the hash of the auth descriptor
+ */
+function hashAuthDescriptor(
+  ad: RawAnyAuthDescriptorRegistration,
+  merkleHashVersion: number = 1,
+) {
+  return gtv.gtvHash(ad, merkleHashVersion);
 }
 
 /**
  * Computes the resulting auth descriptor id for the data
  * in an auth descriptor registration.
  * @param authDescriptor - registration to compute id for
+ * @param merkleHashVersion - the merkle hash version to use (defaults to 1)
  * @returns auth descriptor id as Buffer
  */
 export function deriveAuthDescriptorId(
   authDescriptor:
     | RawAnyAuthDescriptorRegistration
     | AnyAuthDescriptorRegistration,
+  merkleHashVersion: number = 1,
 ): Buffer {
   const ad = isRawAnyAuthDescriptorRegistration(authDescriptor)
     ? authDescriptor
     : authDescriptorRegistrationToGtv(authDescriptor);
-  return hashAuthDescriptor(ad);
+  return hashAuthDescriptor(ad, merkleHashVersion);
 }
 
 /**

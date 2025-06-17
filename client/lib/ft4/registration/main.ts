@@ -11,7 +11,6 @@ import {
 import { compactArray, createAndSignTransaction } from "@ft4/utils";
 import {
   IClient,
-  MERKLE_HASH_VERSIONS,
   Operation,
   Queryable,
   SignedTransaction,
@@ -29,6 +28,7 @@ import {
   createSession,
 } from "@ft4/ft-session";
 import { evmSignatures } from "@ft4/transaction-builder/utils";
+import { getMerkleHashVersion } from "@ft4/utils/main";
 
 /**
  * Registers an account.
@@ -128,7 +128,7 @@ export function registerAccount(
       .then(([loginKeyStore, disposableKeyStore, keyStores, _]) => {
         const accountId = gtv.gtvHash(
           masterKeyStore.id,
-          MERKLE_HASH_VERSIONS.ONE,
+          getMerkleHashVersion(connection),
         );
 
         return Promise.all([

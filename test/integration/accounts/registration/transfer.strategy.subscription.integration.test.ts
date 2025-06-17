@@ -58,7 +58,7 @@ describe("Test transfer with subscription", () => {
       .withBalance(asset, 200)
       .withPoints(1)
       .build();
-    ftKeyStore = createInMemoryFtKeyStore(keyPair);
+    ftKeyStore = createInMemoryFtKeyStore(keyPair, MERKLE_HASH_VERSIONS.ONE);
     authDescriptorToRegister = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       ftKeyStore.id,

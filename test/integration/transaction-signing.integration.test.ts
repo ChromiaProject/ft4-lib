@@ -75,7 +75,7 @@ describe("Transaction Signing", () => {
     evmKeyStore1 = createInMemoryEvmKeyStore(keyPair1);
     evmKeyStore2 = createInMemoryEvmKeyStore(keyPair2);
     evmKeyStore3 = createInMemoryEvmKeyStore(keyPair3);
-    ftKeyStore = createInMemoryFtKeyStore(keyPair4);
+    ftKeyStore = createInMemoryFtKeyStore(keyPair4, MERKLE_HASH_VERSIONS.ONE);
   });
 
   describe("signTransaction()", () => {
@@ -86,7 +86,10 @@ describe("Transaction Signing", () => {
       ]);
       await registerAccountAdmin(client, adminUser().signatureProvider, ad);
 
-      const keyStore = createInMemoryFtKeyStore(keyPair);
+      const keyStore = createInMemoryFtKeyStore(
+        keyPair,
+        MERKLE_HASH_VERSIONS.ONE,
+      );
       const authenticator = createAuthenticator(
         getAccountIdFromAuthDescriptor(ad),
         [createFtKeyHandler(testAdFromRegistration(ad), keyStore)],
@@ -111,7 +114,10 @@ describe("Transaction Signing", () => {
 
     it("correctly signs a transaction with both GTX and evm signatures", async () => {
       const evmKeyStore = createInMemoryEvmKeyStore(keyPair1);
-      const ftKeyStore = createInMemoryFtKeyStore(keyPair1);
+      const ftKeyStore = createInMemoryFtKeyStore(
+        keyPair1,
+        MERKLE_HASH_VERSIONS.ONE,
+      );
       const ad1 = createTestAuthDescriptorWithSigner(
         gtv.gtvHash(keyPair1.pubKey, MERKLE_HASH_VERSIONS.ONE),
         evmKeyStore.id,
@@ -418,7 +424,10 @@ describe("Transaction Signing", () => {
       ]);
       await registerAccountAdmin(client, adminUser().signatureProvider, ad);
 
-      const keyStore = createInMemoryFtKeyStore(keyPair);
+      const keyStore = createInMemoryFtKeyStore(
+        keyPair,
+        MERKLE_HASH_VERSIONS.ONE,
+      );
       const authenticator = createAuthenticator(
         getAccountIdFromAuthDescriptor(ad),
         [createFtKeyHandler(testAdFromRegistration(ad), keyStore)],
@@ -445,7 +454,10 @@ describe("Transaction Signing", () => {
     it("correctly signs a transaction with both GTX and evm signatures", async () => {
       const keyPair = encryption.makeKeyPair();
       const evmKeyStore = createInMemoryEvmKeyStore(keyPair);
-      const ftKeyStore = createInMemoryFtKeyStore(keyPair);
+      const ftKeyStore = createInMemoryFtKeyStore(
+        keyPair,
+        MERKLE_HASH_VERSIONS.ONE,
+      );
       const ad1 = createTestAuthDescriptorWithSigner(
         gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE),
         evmKeyStore.id,

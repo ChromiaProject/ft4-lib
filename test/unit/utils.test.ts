@@ -62,7 +62,7 @@ describe("Utils", () => {
     const operation = op("foo");
     const authDescriptorCounter = 0;
     expect(
-      deriveNonce(blockchainRid, operation, authDescriptorCounter),
+      deriveNonce(blockchainRid, operation, authDescriptorCounter, 1),
     ).toEqual(
       formatter.toString(
         gtv.gtvHash(

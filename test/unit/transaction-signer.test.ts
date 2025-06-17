@@ -30,7 +30,14 @@ import {
 import { evmSignatures } from "@ft4/transaction-builder/utils";
 import { nop } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { GTX, KeyPair, encryption, formatter, gtx } from "postchain-client";
+import {
+  GTX,
+  KeyPair,
+  MERKLE_HASH_VERSIONS,
+  encryption,
+  formatter,
+  gtx,
+} from "postchain-client";
 
 describe("Transaction Signer", () => {
   const blockchainRid = formatter.toBuffer("ABCD1234");
@@ -47,7 +54,10 @@ describe("Transaction Signer", () => {
     accountId = encryption.randomBytes(32);
     keyPair = encryption.makeKeyPair();
 
-    const ftKeyStore = createInMemoryFtKeyStore(keyPair);
+    const ftKeyStore = createInMemoryFtKeyStore(
+      keyPair,
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     const evmKeyStore = createInMemoryEvmKeyStore(keyPair);
     const ftAd = testAdFromRegistration(
       createSingleSigAuthDescriptorRegistration(
@@ -73,7 +83,10 @@ describe("Transaction Signer", () => {
       [createEvmKeyHandler(ftAd, evmKeyStore)],
       authDataService,
     );
-    ftKeyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(ftAd);
+    ftKeyHandler = createInMemoryFtKeyStore(
+      keyPair,
+      MERKLE_HASH_VERSIONS.ONE,
+    ).createKeyHandler(ftAd);
     evmKeyHandler = createInMemoryEvmKeyStore(keyPair).createKeyHandler(evmAd);
 
     authDataService = createFakeAuthDataService({
@@ -153,8 +166,10 @@ describe("Transaction Signer", () => {
       const initialKeyPair = encryption.makeKeyPair();
 
       gtxTx.signers = [initialKeyPair.pubKey, keyPair.pubKey];
-      const initialSignature =
-        await createInMemoryFtKeyStore(initialKeyPair).sign(gtxTx);
+      const initialSignature = await createInMemoryFtKeyStore(
+        initialKeyPair,
+        MERKLE_HASH_VERSIONS.ONE,
+      ).sign(gtxTx);
       gtxTx.signatures = [initialSignature, EMPTY_SIGNATURE];
 
       expect(
@@ -392,8 +407,10 @@ describe("Transaction Signer", () => {
       const initialKeyPair = encryption.makeKeyPair();
 
       gtxTx.signers = [initialKeyPair.pubKey, keyPair.pubKey];
-      const initialSignature =
-        await createInMemoryFtKeyStore(initialKeyPair).sign(gtxTx);
+      const initialSignature = await createInMemoryFtKeyStore(
+        initialKeyPair,
+        MERKLE_HASH_VERSIONS.ONE,
+      ).sign(gtxTx);
       gtxTx.signatures = [initialSignature, EMPTY_SIGNATURE];
 
       expect(

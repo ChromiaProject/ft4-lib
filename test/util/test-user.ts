@@ -44,7 +44,7 @@ export function newSingleSigUser(
       accountType: FT4_USER_TYPE,
       created: new Date(),
     },
-    keyStore: createInMemoryFtKeyStore(keyPair),
+    keyStore: createInMemoryFtKeyStore(keyPair, MERKLE_HASH_VERSIONS.ONE),
   };
 }
 

@@ -452,7 +452,10 @@ describe("Test the account", () => {
 
   it("has correct format when fetching auth descriptors", async () => {
     const keyPair = pcl.encryption.makeKeyPair();
-    const keyStore = createInMemoryFtKeyStore(keyPair);
+    const keyStore = createInMemoryFtKeyStore(
+      keyPair,
+      pcl.MERKLE_HASH_VERSIONS.ONE,
+    );
     const ad = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.pubKey,
@@ -474,7 +477,7 @@ describe("Test the account", () => {
     );
     await session.account.addAuthDescriptor(
       ad2,
-      createInMemoryFtKeyStore(keyPair2),
+      createInMemoryFtKeyStore(keyPair2, pcl.MERKLE_HASH_VERSIONS.ONE),
     );
 
     const data = await session.account.getAuthDescriptors();

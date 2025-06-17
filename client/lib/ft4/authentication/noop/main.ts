@@ -7,7 +7,12 @@ import {
 } from "@ft4/authentication";
 import { TxContext } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { BufferId, GTX, Operation } from "postchain-client";
+import {
+  BufferId,
+  GTX,
+  MERKLE_HASH_VERSIONS,
+  Operation,
+} from "postchain-client";
 import { nullAuthDescriptor } from "./auth-descriptor";
 import { Connection } from "@ft4/ft-session";
 
@@ -21,7 +26,9 @@ export const nullKeyStore: KeyStore = Object.freeze({
 });
 
 export const noopAuthDataService: AuthDataService = Object.freeze({
-  connection: {} as Connection,
+  connection: {
+    client: { config: { merkleHashVersion: MERKLE_HASH_VERSIONS.ONE } },
+  } as Connection,
   isOperationExposed: (_operationName: string) => Promise.resolve(true),
   getAuthMessageTemplate: (_operation: Operation) => Promise.resolve(""),
   getAuthDescriptorCounter: (

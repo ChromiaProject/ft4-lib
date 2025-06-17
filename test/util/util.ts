@@ -106,7 +106,7 @@ export function adminUser(
   return {
     signatureProvider,
     authDescriptor: testAdFromRegistration(singleSigAuthDescriptor),
-    keyStore: createInMemoryFtKeyStore(keyPair),
+    keyStore: createInMemoryFtKeyStore(keyPair, MERKLE_HASH_VERSIONS.ONE),
   };
 }
 
@@ -132,7 +132,7 @@ export function createTestAuthDescriptor(
       flags,
       rules,
     ),
-    keyStore: createInMemoryFtKeyStore(keyPair),
+    keyStore: createInMemoryFtKeyStore(keyPair, MERKLE_HASH_VERSIONS.ONE),
   };
 }
 
@@ -203,10 +203,12 @@ export async function addAuthDescriptorTo(
 ) {
   const keyHandlerUser1 = createInMemoryFtKeyStore(
     user.signatureProvider,
+    MERKLE_HASH_VERSIONS.ONE,
   ).createKeyHandler(user.authDescriptor);
 
   const keyHandlerUser2 = createInMemoryFtKeyStore(
     newUser.signatureProvider,
+    MERKLE_HASH_VERSIONS.ONE,
   ).createKeyHandler(newUser.authDescriptor);
 
   const authDataService = createAuthDataService(createConnection(client));
@@ -245,7 +247,7 @@ export async function getSessionForAccount(
 ) {
   const { getSession } = createKeyStoreInteractor(
     connection.client,
-    createInMemoryFtKeyStore(signer),
+    createInMemoryFtKeyStore(signer, MERKLE_HASH_VERSIONS.ONE),
   );
 
   return await getSession(accountId);

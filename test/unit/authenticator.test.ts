@@ -25,7 +25,12 @@ import {
 } from "@ft4/ft-session";
 import { op } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { KeyPair, createStubClient, encryption } from "postchain-client";
+import {
+  KeyPair,
+  MERKLE_HASH_VERSIONS,
+  createStubClient,
+  encryption,
+} from "postchain-client";
 
 type ConnectionWithoutQuery = Omit<Connection, "query">;
 type MockedQuery = {
@@ -61,11 +66,11 @@ describe("Authenticator", () => {
     authDescriptor2 = ad2;
     ftKeyHandler1 = createFtKeyHandler(
       authDescriptor1,
-      createInMemoryFtKeyStore(keyPair1),
+      createInMemoryFtKeyStore(keyPair1, MERKLE_HASH_VERSIONS.ONE),
     );
     ftKeyHandler2 = createFtKeyHandler(
       authDescriptor2,
-      createInMemoryFtKeyStore(keyPair2),
+      createInMemoryFtKeyStore(keyPair2, MERKLE_HASH_VERSIONS.ONE),
     );
     authDataService = createAuthDataService(connection);
   });
@@ -219,7 +224,10 @@ describe("Authenticator", () => {
       });
       const keyHandlers = [
         evmKeyHandler,
-        createFtKeyHandler(authDescriptor2, createInMemoryFtKeyStore(keyPair2)),
+        createFtKeyHandler(
+          authDescriptor2,
+          createInMemoryFtKeyStore(keyPair2, MERKLE_HASH_VERSIONS.ONE),
+        ),
       ];
 
       connection.query
@@ -246,7 +254,10 @@ describe("Authenticator", () => {
           authDescriptor1,
           createInMemoryEvmKeyStore(keyPair1),
         ),
-        createFtKeyHandler(authDescriptor1, createInMemoryFtKeyStore(keyPair1)),
+        createFtKeyHandler(
+          authDescriptor1,
+          createInMemoryFtKeyStore(keyPair1, MERKLE_HASH_VERSIONS.ONE),
+        ),
       ];
 
       connection.query

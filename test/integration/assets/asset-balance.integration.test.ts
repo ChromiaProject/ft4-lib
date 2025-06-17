@@ -6,7 +6,7 @@ import {
   createConnection,
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
-import { IClient, encryption } from "postchain-client";
+import { IClient, MERKLE_HASH_VERSIONS, encryption } from "postchain-client";
 
 let connection: Connection;
 let client: IClient;
@@ -131,7 +131,10 @@ describe("Asset balance", () => {
     );
 
     const keyPair = encryption.makeKeyPair();
-    const keyStore = createInMemoryFtKeyStore(keyPair);
+    const keyStore = createInMemoryFtKeyStore(
+      keyPair,
+      MERKLE_HASH_VERSIONS.ONE,
+    );
 
     const account = await AccountBuilder.account(connection)
       .withBalances([

@@ -50,7 +50,7 @@ describe("Key store interactor", () => {
 
     const accounts = await createKeyStoreInteractor(
       connection.client,
-      createInMemoryFtKeyStore(keyPair1),
+      createInMemoryFtKeyStore(keyPair1, MERKLE_HASH_VERSIONS.ONE),
     ).getAccounts();
 
     expect(accounts.length).toEqual(1);
@@ -59,7 +59,10 @@ describe("Key store interactor", () => {
   it("returns two accounts if corresponding key is used in two accounts", async () => {
     const keyPair1 = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
     const keyPair2 = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
-    const keyStore2 = createInMemoryFtKeyStore(keyPair2);
+    const keyStore2 = createInMemoryFtKeyStore(
+      keyPair2,
+      MERKLE_HASH_VERSIONS.ONE,
+    );
 
     const account1 = await AccountBuilder.account(connection)
       .withSigner(keyPair1)
@@ -90,7 +93,7 @@ describe("Key store interactor", () => {
 
     const { getAccounts, getSession } = createKeyStoreInteractor(
       connection.client,
-      createInMemoryFtKeyStore(keyPair1),
+      createInMemoryFtKeyStore(keyPair1, MERKLE_HASH_VERSIONS.ONE),
     );
     const accounts = await getAccounts();
     expect(accounts.length).toEqual(1);
@@ -117,7 +120,7 @@ describe("Key store interactor", () => {
 
     const session = await createKeyStoreInteractor(
       connection.client,
-      createInMemoryFtKeyStore(keyPair1),
+      createInMemoryFtKeyStore(keyPair1, MERKLE_HASH_VERSIONS.ONE),
     ).getSession(account.id);
 
     expect(session.account.authenticator.keyHandlers.length).toEqual(2);
@@ -136,29 +139,38 @@ describe("Key store interactor", () => {
       keyPair2.pubKey,
       lessThan(opCount(2)),
     );
-    await account.addAuthDescriptor(ad2, createInMemoryFtKeyStore(keyPair2));
+    await account.addAuthDescriptor(
+      ad2,
+      createInMemoryFtKeyStore(keyPair2, MERKLE_HASH_VERSIONS.ONE),
+    );
 
     const ad2Session = await createKeyStoreInteractor(
       connection.client,
-      createInMemoryFtKeyStore(keyPair2),
+      createInMemoryFtKeyStore(keyPair2, MERKLE_HASH_VERSIONS.ONE),
     ).getSession(account.id);
     const ad3 = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account],
       keyPair2.pubKey,
       greaterThan(blockTime(Date.now() + 10000)),
     );
-    await account.addAuthDescriptor(ad3, createInMemoryFtKeyStore(keyPair2));
+    await account.addAuthDescriptor(
+      ad3,
+      createInMemoryFtKeyStore(keyPair2, MERKLE_HASH_VERSIONS.ONE),
+    );
 
     const ad4 = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account],
       keyPair2.pubKey,
       greaterThan(blockTime(Date.now())),
     );
-    await account.addAuthDescriptor(ad4, createInMemoryFtKeyStore(keyPair2));
+    await account.addAuthDescriptor(
+      ad4,
+      createInMemoryFtKeyStore(keyPair2, MERKLE_HASH_VERSIONS.ONE),
+    );
 
     const session = await createKeyStoreInteractor(
       connection.client,
-      createInMemoryFtKeyStore(keyPair2),
+      createInMemoryFtKeyStore(keyPair2, MERKLE_HASH_VERSIONS.ONE),
     ).getSession(account.id);
 
     expect(ad2Session.account.authenticator.keyHandlers.length).toEqual(1);
@@ -202,11 +214,14 @@ describe("Key store interactor", () => {
       keyPair2.pubKey,
       lessThan(opCount(2)),
     );
-    await account.addAuthDescriptor(ad2, createInMemoryFtKeyStore(keyPair2));
+    await account.addAuthDescriptor(
+      ad2,
+      createInMemoryFtKeyStore(keyPair2, MERKLE_HASH_VERSIONS.ONE),
+    );
 
     const ad2Session = await createKeyStoreInteractor(
       connection.client,
-      createInMemoryFtKeyStore(keyPair2),
+      createInMemoryFtKeyStore(keyPair2, MERKLE_HASH_VERSIONS.ONE),
     ).getSession(account.id);
 
     const ad3 = createSingleSigAuthDescriptorRegistration(
@@ -214,11 +229,14 @@ describe("Key store interactor", () => {
       keyPair2.pubKey,
       greaterThan(blockTime(Date.now() + 10000)),
     );
-    await account.addAuthDescriptor(ad3, createInMemoryFtKeyStore(keyPair2));
+    await account.addAuthDescriptor(
+      ad3,
+      createInMemoryFtKeyStore(keyPair2, MERKLE_HASH_VERSIONS.ONE),
+    );
 
     const session = await createKeyStoreInteractor(
       connection.client,
-      createInMemoryFtKeyStore(keyPair2),
+      createInMemoryFtKeyStore(keyPair2, MERKLE_HASH_VERSIONS.ONE),
     ).getSession(account.id);
 
     expect(ad2Session.account.authenticator.keyHandlers.length).toEqual(1);

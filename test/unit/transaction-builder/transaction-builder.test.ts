@@ -69,8 +69,10 @@ describe("Transaction Builder", () => {
     authDescriptor = ad;
     keyPair = pair;
 
-    keyHandler =
-      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
+    keyHandler = createInMemoryFtKeyStore(
+      keyPair,
+      MERKLE_HASH_VERSIONS.ONE,
+    ).createKeyHandler(authDescriptor);
 
     authDataService = createFakeAuthDataService(
       {
@@ -280,7 +282,7 @@ describe("Transaction Builder", () => {
 
   it("throw SigningError if user rejects FT signature", async () => {
     const keyPair = encryption.makeKeyPair();
-    let keyStore = createInMemoryFtKeyStore(keyPair);
+    let keyStore = createInMemoryFtKeyStore(keyPair, MERKLE_HASH_VERSIONS.ONE);
     const ad = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Transfer],
       keyStore.pubKey,

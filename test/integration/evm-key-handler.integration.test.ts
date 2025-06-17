@@ -45,7 +45,7 @@ describe("EVM key handler", () => {
     );
     await session.account.addAuthDescriptor(
       ad2,
-      createInMemoryFtKeyStore(keyPair2),
+      createInMemoryFtKeyStore(keyPair2, session.client),
     );
 
     const authDescriptors = await session.account.getAuthDescriptors();

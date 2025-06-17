@@ -55,6 +55,7 @@ import {
   BlockAnchoringException,
   IClient,
   KeyPair,
+  MERKLE_HASH_VERSIONS,
   NetworkSettings,
   Operation,
   Web3PromiEvent,
@@ -91,8 +92,10 @@ describe("block anchored handling", () => {
     authDescriptor = ad;
     keyPair = pair;
 
-    keyHandler =
-      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
+    keyHandler = createInMemoryFtKeyStore(
+      keyPair,
+      MERKLE_HASH_VERSIONS.ONE,
+    ).createKeyHandler(authDescriptor);
 
     authDataService = createFakeAuthDataService({
       ["ft4.transfer"]: { flags: [AuthFlag.Transfer], message: "" },

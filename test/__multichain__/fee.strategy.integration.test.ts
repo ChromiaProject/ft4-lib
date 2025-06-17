@@ -128,7 +128,10 @@ describe("Fee account creation single step", () => {
 
   it("can register account which receives transferred assets, minus fee", async () => {
     const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
-    const keyStore = createInMemoryFtKeyStore(sigProv);
+    const keyStore = createInMemoryFtKeyStore(
+      sigProv,
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
@@ -209,7 +212,10 @@ describe("Fee account creation single step", () => {
 
   it("can complete pending crosschain transfers when account is registered with direct strategies", async () => {
     const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
-    const keyStore = createInMemoryFtKeyStore(sigProv);
+    const keyStore = createInMemoryFtKeyStore(
+      sigProv,
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
@@ -290,7 +296,10 @@ describe("Fee account creation single step", () => {
 
   it("can resume account registration when transfer is interrupted", async () => {
     const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
-    const keyStore = createInMemoryFtKeyStore(sigProv);
+    const keyStore = createInMemoryFtKeyStore(
+      sigProv,
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
@@ -350,7 +359,10 @@ describe("Fee account creation single step", () => {
   });
 
   it("can resume account registration when transfer is completed but account is not registered yet", async () => {
-    const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const keyStore = createInMemoryFtKeyStore(
+      encryption.makeKeyPair(),
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
@@ -409,7 +421,10 @@ describe("Fee account creation single step", () => {
 
   it("handles asset coming from wrong chain properly", async () => {
     const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
-    const keyStore = createInMemoryFtKeyStore(sigProv);
+    const keyStore = createInMemoryFtKeyStore(
+      sigProv,
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
@@ -484,7 +499,10 @@ describe("Fee account creation single step", () => {
 
   it("handles asset missing on source chain properly", async () => {
     const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
-    const keyStore = createInMemoryFtKeyStore(sigProv);
+    const keyStore = createInMemoryFtKeyStore(
+      sigProv,
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
@@ -521,7 +539,10 @@ describe("Fee account creation single step", () => {
 
   it("handles missing account on source chain properly", async () => {
     const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
-    const keyStore = createInMemoryFtKeyStore(sigProv);
+    const keyStore = createInMemoryFtKeyStore(
+      sigProv,
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
@@ -551,7 +572,10 @@ describe("Fee account creation single step", () => {
 
   it("handles insufficient balance on source chain properly", async () => {
     const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
-    const keyStore = createInMemoryFtKeyStore(sigProv);
+    const keyStore = createInMemoryFtKeyStore(
+      sigProv,
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
@@ -597,7 +621,10 @@ describe("Fee account creation single step", () => {
   });
 
   it("throws error when account is already registered", async () => {
-    const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const keyStore = createInMemoryFtKeyStore(
+      encryption.makeKeyPair(),
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
@@ -650,7 +677,10 @@ describe("Fee account creation single step", () => {
   });
 
   it("can recall completed crosschain transfer if account is not registered after timeout, but not twice", async () => {
-    const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const keyStore = createInMemoryFtKeyStore(
+      encryption.makeKeyPair(),
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,

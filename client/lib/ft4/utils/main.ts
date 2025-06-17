@@ -4,7 +4,6 @@ import {
   BufferId,
   GTX,
   IClient,
-  MERKLE_HASH_VERSIONS,
   Operation,
   Queryable,
   RawGtv,
@@ -78,17 +77,22 @@ export function getTransactionRid(
 }
 
 /**
- * Gets the merkle hash version from the provided client or connection
- * @param clientOrConnection the client or connection to get the merkle hash version from
+ * Gets the merkle hash version from the provided number, client or connection
+ * @param versionOrClientOrConnection the version number, client or connection to get the merkle hash version from
  * @returns the merkle hash version
  */
 export function getMerkleHashVersion(
-  clientOrConnection: IClient | Connection,
+  versionOrClientOrConnection: IClient | Connection | number,
 ): number {
-  if ("config" in clientOrConnection) {
-    return clientOrConnection.config.merkleHashVersion;
+  if (!versionOrClientOrConnection)
+    console.log("BBBBBB", versionOrClientOrConnection);
+  if (typeof versionOrClientOrConnection === "number") {
+    return versionOrClientOrConnection;
+  }
+  if ("config" in versionOrClientOrConnection) {
+    return versionOrClientOrConnection.config.merkleHashVersion;
   } else {
-    return clientOrConnection.client.config.merkleHashVersion;
+    return versionOrClientOrConnection.client.config.merkleHashVersion;
   }
 }
 
@@ -238,7 +242,7 @@ export function deriveNonce(
   blockchainRid: BufferId,
   operation: Operation,
   authDescriptorCounter: number,
-  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
+  merkleHashVersion: number,
 ): string {
   return formatter.toString(
     gtv.gtvHash(

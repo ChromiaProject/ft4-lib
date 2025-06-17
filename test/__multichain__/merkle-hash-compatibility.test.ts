@@ -263,7 +263,10 @@ describe("crosschain transfer compatibility", () => {
           connection03.client,
         );
 
-        const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+        const keyStore = createInMemoryFtKeyStore(
+          encryption.makeKeyPair(),
+          MERKLE_HASH_VERSIONS.ONE,
+        );
         const unregisteredRecipientAccountId = gtv.gtvHash(
           keyStore.id,
           MERKLE_HASH_VERSIONS.TWO,
@@ -311,7 +314,10 @@ describe("crosschain transfer compatibility", () => {
           connection03.client,
         );
 
-        const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+        const keyStore = createInMemoryFtKeyStore(
+          encryption.makeKeyPair(),
+          MERKLE_HASH_VERSIONS.ONE,
+        );
         const unregisteredRecipientAccountId = gtv.gtvHash(
           keyStore.id,
           MERKLE_HASH_VERSIONS.TWO,
@@ -369,7 +375,10 @@ describe("crosschain transfer compatibility", () => {
           connection03.client,
         );
 
-        const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+        const keyStore = createInMemoryFtKeyStore(
+          encryption.makeKeyPair(),
+          MERKLE_HASH_VERSIONS.ONE,
+        );
         const unregisteredRecipientAccountId = gtv.gtvHash(
           keyStore.id,
           MERKLE_HASH_VERSIONS.TWO,
@@ -614,7 +623,10 @@ describe("crosschain transfer compatibility", () => {
           connection00.client,
         );
 
-        const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+        const keyStore = createInMemoryFtKeyStore(
+          encryption.makeKeyPair(),
+          MERKLE_HASH_VERSIONS.ONE,
+        );
         const unregisteredRecipientAccountId = gtv.gtvHash(
           keyStore.id,
           MERKLE_HASH_VERSIONS.ONE,
@@ -662,7 +674,10 @@ describe("crosschain transfer compatibility", () => {
           connection00.client,
         );
 
-        const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+        const keyStore = createInMemoryFtKeyStore(
+          encryption.makeKeyPair(),
+          MERKLE_HASH_VERSIONS.ONE,
+        );
         const unregisteredRecipientAccountId = gtv.gtvHash(
           keyStore.id,
           MERKLE_HASH_VERSIONS.ONE,
@@ -720,7 +735,10 @@ describe("crosschain transfer compatibility", () => {
           connection00.client,
         );
 
-        const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+        const keyStore = createInMemoryFtKeyStore(
+          encryption.makeKeyPair(),
+          MERKLE_HASH_VERSIONS.ONE,
+        );
         const unregisteredRecipientAccountId = gtv.gtvHash(
           keyStore.id,
           MERKLE_HASH_VERSIONS.ONE,

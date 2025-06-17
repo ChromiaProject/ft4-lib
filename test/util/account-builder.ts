@@ -130,11 +130,14 @@ export class AccountBuilder {
   }
 
   async buildAsNonManager(): Promise<AuthenticatedAccount> {
-    const manager = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const manager = newSignatureProvider(this.merkleHashVersion);
     const accountManager =
       await this.registerAndBuildManagerAuthenticated(manager);
     const ad = this.getAuthDescriptorRegistration();
-    const keyStore = createInMemoryFtKeyStore(this.signer);
+    const keyStore = createInMemoryFtKeyStore(
+      this.signer,
+      this.merkleHashVersion,
+    );
     await accountManager.addAuthDescriptor(ad, keyStore);
 
     const keyHandler = keyStore.createKeyHandler(testAdFromRegistration(ad));
@@ -161,6 +164,7 @@ export class AccountBuilder {
     );
     const keyHandler = createInMemoryFtKeyStore(
       managerSigProv,
+      this.merkleHashVersion,
     ).createKeyHandler(testAdFromRegistration(ad));
 
     const authenticator = createAuthenticator(

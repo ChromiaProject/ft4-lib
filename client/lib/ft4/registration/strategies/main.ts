@@ -10,8 +10,9 @@ import {
 } from "@ft4/authentication";
 import { Connection, createAuthDataService } from "@ft4/ft-session";
 import { Buffer } from "buffer";
-import { gtv, MERKLE_HASH_VERSIONS } from "postchain-client";
+import { gtv } from "postchain-client";
 import { LoginDetails } from "./types";
+import { getMerkleHashVersion } from "@ft4/utils/main";
 
 /**
  * Fetches the login details for an auth descriptor.
@@ -35,7 +36,10 @@ export async function fetchLoginDetails(
   accountId: Buffer;
   loginDetails: LoginDetails | null;
 }> {
-  const accountId = getAccountIdFromSigners(aggregateSigners(authDescriptor));
+  const accountId = getAccountIdFromSigners(
+    aggregateSigners(authDescriptor),
+    getMerkleHashVersion(connection),
+  );
 
   return {
     accountId,
@@ -45,13 +49,16 @@ export async function fetchLoginDetails(
   };
 }
 
-function getAccountIdFromSigners(signers: Buffer[]): Buffer {
+function getAccountIdFromSigners(
+  signers: Buffer[],
+  merkleHashVersion: number,
+): Buffer {
   if (!signers.length)
     throw new Error("Cannot derive account id. Signers list is empty");
 
   return gtv.gtvHash(
     signers.length === 1 ? signers[0] : signers,
-    MERKLE_HASH_VERSIONS.ONE,
+    merkleHashVersion,
   );
 }
 
@@ -69,7 +76,7 @@ export async function getLoginDetails(
   const authDataService = createAuthDataService(connection);
   const config = await getConfigFromOptions(authDataService, loginConfig);
   const loginKeyStore =
-    loginConfig.loginKeyStore || createInMemoryLoginKeyStore();
+    loginConfig.loginKeyStore || createInMemoryLoginKeyStore(connection);
   const disposableKeyStore = await loginKeyStore.generateKey(accountId);
   const authDescriptor = createSingleSigAuthDescriptorRegistration(
     config.flags,

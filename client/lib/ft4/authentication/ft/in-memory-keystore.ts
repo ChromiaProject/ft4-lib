@@ -5,11 +5,13 @@ import {
   GTX,
   gtx,
   RawGtx,
-  MERKLE_HASH_VERSIONS,
+  IClient,
 } from "postchain-client";
 import { AnyAuthDescriptor } from "@ft4/accounts";
 import { FtKeyStore, createFtKeyHandler } from "@ft4/authentication";
 import { isRawGtx } from "@ft4/utils";
+import { getMerkleHashVersion } from "@ft4/utils/main";
+import { Connection } from "@ft4/ft-session";
 
 /**
  * Creates an FtKeyStore instance which will only keep the keys in memory. That is,
@@ -19,10 +21,11 @@ import { isRawGtx } from "@ft4/utils";
  */
 export function createInMemoryFtKeyStore(
   keyHolder: KeyPair | SignatureProvider,
+  merkleHashVersion: IClient | Connection | number,
 ): FtKeyStore {
   const signatureProvider =
     "privKey" in keyHolder
-      ? newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, keyHolder)
+      ? newSignatureProvider(getMerkleHashVersion(merkleHashVersion), keyHolder)
       : keyHolder;
 
   const keyStore = Object.freeze({

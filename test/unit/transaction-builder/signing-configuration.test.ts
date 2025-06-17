@@ -53,9 +53,15 @@ describe("Transaction builder signing", () => {
 
   it("adds signers and signatures when FtSigners and FtKeyStores provided as signers", async () => {
     const blockchainRid = Buffer.alloc(32);
-    const ftKeyStore1 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const ftKeyStore1 = createInMemoryFtKeyStore(
+      encryption.makeKeyPair(),
+      client,
+    );
     const signer2 = ftSigner(encryption.makeKeyPair().pubKey);
-    const ftKeyStore3 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const ftKeyStore3 = createInMemoryFtKeyStore(
+      encryption.makeKeyPair(),
+      client,
+    );
     const signer4 = ftSigner(encryption.makeKeyPair().pubKey);
 
     const tx = await transactionBuilder(noopAuthenticator, client)
@@ -89,7 +95,10 @@ describe("Transaction builder signing", () => {
 
   it("adds signer and signature when FtKeyStore provided as a signer", async () => {
     const blockchainRid = Buffer.alloc(32);
-    const ftKeyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const ftKeyStore = createInMemoryFtKeyStore(
+      encryption.makeKeyPair(),
+      client,
+    );
 
     const tx = await transactionBuilder(noopAuthenticator, client)
       .add(emptyOp(), {
@@ -237,7 +246,10 @@ describe("Transaction builder signing", () => {
     const blockchainRid = Buffer.alloc(32);
     const evmKeyStore1 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
     const evmKeyStore2 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
-    const ftKeyStore3 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const ftKeyStore3 = createInMemoryFtKeyStore(
+      encryption.makeKeyPair(),
+      client,
+    );
     const ftSigner4 = ftSigner(encryption.makeKeyPair().pubKey);
     const evmSigner2 = evmSigner(evmKeyStore2.id);
 
@@ -377,7 +389,10 @@ describe("Transaction builder signing", () => {
   });
 
   it("skips ft signing only on the specified operations", async () => {
-    const ftKeyStore1 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const ftKeyStore1 = createInMemoryFtKeyStore(
+      encryption.makeKeyPair(),
+      client,
+    );
     const { keyStore: ftKeyStore2, authDescriptor: authDescriptor2 } =
       createTestAuthDescriptor();
     const accountId = encryption.randomBytes(32);
@@ -411,8 +426,14 @@ describe("Transaction builder signing", () => {
   });
 
   it("skips ft signing on all the specified operations", async () => {
-    const ftKeyStore1 = createInMemoryFtKeyStore(encryption.makeKeyPair());
-    const ftKeyStore2 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const ftKeyStore1 = createInMemoryFtKeyStore(
+      encryption.makeKeyPair(),
+      client,
+    );
+    const ftKeyStore2 = createInMemoryFtKeyStore(
+      encryption.makeKeyPair(),
+      client,
+    );
     const accountId = encryption.randomBytes(32);
     const { keyStore, authDescriptor } = createTestAuthDescriptor();
     const authenticator = createAuthenticator(
@@ -673,7 +694,9 @@ describe("Transaction builder signing", () => {
       })
       .build();
 
-    const message = `auth message with ${formatter.toString(blockchainRid)} ${deriveNonce(blockchainRid, emptyOp(), 0)}`;
+    const message = `auth message with ${formatter.toString(
+      blockchainRid,
+    )} ${deriveNonce(blockchainRid, emptyOp(), 0, MERKLE_HASH_VERSIONS.ONE)}`;
 
     const expectedTx = gtv.encode([
       [

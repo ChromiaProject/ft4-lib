@@ -1,10 +1,14 @@
 import { LoginKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
+import { Connection } from "@ft4/ft-session";
 import { Buffer } from "buffer";
-import { BufferId, encryption } from "postchain-client";
+import { BufferId, encryption, IClient } from "postchain-client";
 
 const STORAGE_KEY = "FT_LOGIN_KEY_STORE";
 
-export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
+export function createBrowserLoginKeyStore(
+  storage: Storage,
+  merkleHashVersion: number | IClient | Connection,
+): LoginKeyStore {
   function loadData(): { [key: string]: string } {
     const loadedData = storage.getItem(STORAGE_KEY);
     if (!loadedData) {
@@ -35,7 +39,10 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
       const privateKey = loadData()[ensureString(accountId)];
       if (!privateKey) return Promise.resolve(null);
       return Promise.resolve(
-        createInMemoryFtKeyStore(encryption.makeKeyPair(privateKey)),
+        createInMemoryFtKeyStore(
+          encryption.makeKeyPair(privateKey),
+          merkleHashVersion,
+        ),
       );
     },
     generateKey: async (accountId: Buffer) => {
@@ -51,7 +58,9 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
       const keyPair = encryption.makeKeyPair();
       values[accountIdString] = ensureString(keyPair.privKey);
       saveData(values);
-      return Promise.resolve(createInMemoryFtKeyStore(keyPair));
+      return Promise.resolve(
+        createInMemoryFtKeyStore(keyPair, merkleHashVersion),
+      );
     },
   });
 }

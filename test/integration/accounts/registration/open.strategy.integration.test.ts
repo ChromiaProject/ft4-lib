@@ -41,7 +41,7 @@ describe("Test open strategy", () => {
 
   beforeEach(async () => {
     keyPair = encryption.makeKeyPair();
-    ftKeyStore = createInMemoryFtKeyStore(keyPair);
+    ftKeyStore = createInMemoryFtKeyStore(keyPair, _connection);
     evmKeyStore = createInMemoryEvmKeyStore(keyPair);
 
     ftAuthDescriptor = createSingleSigAuthDescriptorRegistration(
@@ -52,7 +52,7 @@ describe("Test open strategy", () => {
       [AuthFlag.Account, AuthFlag.Transfer],
       evmKeyStore.id,
     );
-    loginKeyStore = createInMemoryLoginKeyStore();
+    loginKeyStore = createInMemoryLoginKeyStore(_connection);
   });
 
   it("can register account using open account strategy", async () => {
@@ -84,11 +84,11 @@ describe("Test open strategy", () => {
 
   const configs: LoginConfigOptions[] = [
     {
-      loginKeyStore: createInMemoryLoginKeyStore(),
+      loginKeyStore: createInMemoryLoginKeyStore(MERKLE_HASH_VERSIONS.ONE),
       config: { flags: [], rules: null },
     },
     {
-      loginKeyStore: createInMemoryLoginKeyStore(),
+      loginKeyStore: createInMemoryLoginKeyStore(MERKLE_HASH_VERSIONS.ONE),
     },
   ];
   it.each(configs)(

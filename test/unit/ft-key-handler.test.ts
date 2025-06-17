@@ -18,8 +18,10 @@ describe("FT key handler", () => {
     const accountId = encryption.randomBytes(32);
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
-    const keyHandler =
-      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
+    const keyHandler = createInMemoryFtKeyStore(
+      keyPair,
+      MERKLE_HASH_VERSIONS.ONE,
+    ).createKeyHandler(authDescriptor);
     const operations = await keyHandler.authorize(
       accountId,
       op("foo"),
@@ -47,8 +49,10 @@ describe("FT key handler", () => {
     };
     transaction.operations.push({ opName: "foo", args: [] });
 
-    const keyHandler =
-      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
+    const keyHandler = createInMemoryFtKeyStore(
+      keyPair,
+      MERKLE_HASH_VERSIONS.ONE,
+    ).createKeyHandler(authDescriptor);
     transaction.signatures = [await keyHandler.sign(transaction)];
 
     const digestToSign = gtx.getDigestToSign(

@@ -13,26 +13,20 @@ import {
   toRawSignature,
 } from "@ft4/authentication";
 import { deriveNonce } from "@ft4/utils";
-import {
-  BufferId,
-  GTX,
-  MERKLE_HASH_VERSIONS,
-  Operation,
-  formatter,
-  gtx,
-} from "postchain-client";
+import { BufferId, GTX, Operation, formatter, gtx } from "postchain-client";
+import { getMerkleHashVersion } from "@ft4/utils/main";
 
 export const EMPTY_SIGNATURE = Buffer.alloc(64);
 export const EVM_SIGNATURES = "ft4.evm_signatures";
 
-export function txDigest(tx: GTX): Buffer {
+export function txDigest(tx: GTX, merkleHashVersion: number): Buffer {
   return gtx.getDigestToSign(
     {
       blockchainRid: tx.blockchainRid,
       signers: tx.signers,
       operations: tx.operations,
     },
-    MERKLE_HASH_VERSIONS.ONE,
+    merkleHashVersion,
   );
 }
 
@@ -73,7 +67,12 @@ export async function signOperation(
     .replace(BLOCKCHAIN_RID_PLACEHOLDER, formatter.toString(blockchainRid))
     .replace(
       NONCE_PLACEHOLDER,
-      deriveNonce(blockchainRid, operationToAuthorize, 0),
+      deriveNonce(
+        blockchainRid,
+        operationToAuthorize,
+        0,
+        getMerkleHashVersion(authDataService.connection),
+      ),
     );
 
   if (

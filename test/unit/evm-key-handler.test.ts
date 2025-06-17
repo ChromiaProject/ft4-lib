@@ -93,10 +93,16 @@ describe("EVM key handler", () => {
     );
 
     const signature1 = await keyStore.signMessage(
-      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 0)),
+      message.replace(
+        "{nonce}",
+        deriveNonce(Buffer.alloc(32), op("foo"), 0, 1),
+      ),
     );
     const signature2 = await keyStore.signMessage(
-      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 1)),
+      message.replace(
+        "{nonce}",
+        deriveNonce(Buffer.alloc(32), op("foo"), 1, 1),
+      ),
     );
 
     const tx = await transactionBuilder(authenticator, client)
@@ -141,10 +147,16 @@ describe("EVM key handler", () => {
     );
 
     const signature1 = await keyStore.signMessage(
-      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 0)),
+      message.replace(
+        "{nonce}",
+        deriveNonce(Buffer.alloc(32), op("foo"), 0, 1),
+      ),
     );
     const signature2 = await keyStore.signMessage(
-      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 1)),
+      message.replace(
+        "{nonce}",
+        deriveNonce(Buffer.alloc(32), op("foo"), 1, 1),
+      ),
     );
 
     await transactionBuilder(authenticator, client)
@@ -206,10 +218,16 @@ describe("EVM key handler", () => {
     ).rejects.toThrow(Error);
 
     const signature1 = await mockKeyStore.signMessage(
-      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 0)),
+      message.replace(
+        "{nonce}",
+        deriveNonce(Buffer.alloc(32), op("foo"), 0, 1),
+      ),
     );
     const signature2 = await mockKeyStore.signMessage(
-      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 1)),
+      message.replace(
+        "{nonce}",
+        deriveNonce(Buffer.alloc(32), op("foo"), 1, 1),
+      ),
     );
 
     const tx2 = await transactionBuilder(authenticator, client)

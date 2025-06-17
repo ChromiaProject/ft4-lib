@@ -28,7 +28,13 @@ import {
   createConnection,
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
-import { IClient, KeyPair, encryption, gtx } from "postchain-client";
+import {
+  IClient,
+  KeyPair,
+  MERKLE_HASH_VERSIONS,
+  encryption,
+  gtx,
+} from "postchain-client";
 
 describe("Login", () => {
   const getClient = useChromiaNode();
@@ -171,7 +177,10 @@ describe("Login", () => {
     ).getSession(account.id);
 
     const keyPair2 = encryption.makeKeyPair();
-    const keyStore2 = createInMemoryFtKeyStore(keyPair2);
+    const keyStore2 = createInMemoryFtKeyStore(
+      keyPair2,
+      MERKLE_HASH_VERSIONS.ONE,
+    );
     const ad2 = createSingleSigAuthDescriptorRegistration(
       ["X"],
       keyPair2.pubKey,
@@ -198,7 +207,7 @@ describe("Login", () => {
     );
     const session1 = await keyStoreInteractor.getSession(account.id);
 
-    const loginKeyStore = createInMemoryLoginKeyStore();
+    const loginKeyStore = createInMemoryLoginKeyStore(MERKLE_HASH_VERSIONS.ONE);
     const keyStore2 = await loginKeyStore.generateKey(account.id);
     const ad2 = createSingleSigAuthDescriptorRegistration(
       ["X"],
@@ -248,7 +257,7 @@ describe("Login", () => {
     );
     const session1 = await keyStoreInteractor.getSession(account.id);
 
-    const loginKeyStore = createInMemoryLoginKeyStore();
+    const loginKeyStore = createInMemoryLoginKeyStore(MERKLE_HASH_VERSIONS.ONE);
     const keyStore2 = await loginKeyStore.generateKey(account.id);
     const ad2 = createSingleSigAuthDescriptorRegistration(
       ["X"],
@@ -279,7 +288,7 @@ describe("Login", () => {
     expect(authDescriptorsBeforeLogin.length).toBe(1);
 
     const interactor = createKeyStoreInteractor(connection.client, evmKeyStore);
-    const loginKeyStore = createInMemoryLoginKeyStore();
+    const loginKeyStore = createInMemoryLoginKeyStore(MERKLE_HASH_VERSIONS.ONE);
     const loginOptions = {
       accountId: account.id,
       loginKeyStore,
@@ -299,7 +308,7 @@ describe("Login", () => {
     );
     const session1 = await keyStoreInteractor.getSession(account.id);
 
-    const loginKeyStore = createInMemoryLoginKeyStore();
+    const loginKeyStore = createInMemoryLoginKeyStore(MERKLE_HASH_VERSIONS.ONE);
     const keyStore2 = await loginKeyStore.generateKey(account.id);
     const ad2 = createSingleSigAuthDescriptorRegistration(
       ["X", "Y"],

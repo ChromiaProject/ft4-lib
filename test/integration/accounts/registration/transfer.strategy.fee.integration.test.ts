@@ -49,7 +49,7 @@ describe("Test transfer with fee", () => {
     // Create a recipient
     const keyPair = encryption.makeKeyPair();
     recipientId = gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE);
-    keyStore = createInMemoryFtKeyStore(keyPair);
+    keyStore = createInMemoryFtKeyStore(keyPair, MERKLE_HASH_VERSIONS.ONE);
     authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
