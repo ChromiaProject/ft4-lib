@@ -524,6 +524,8 @@ async function getOrRegisterCrosschainAsset(
       originMultichainRid,
     );
   } catch (error) {
-    console.log(`Crosschain asset with id ${assetId} already exists`);
+    console.log(
+      `Crosschain asset with id ${assetId.toString("hex")} already exists`,
+    );
   }
 }
