@@ -2,8 +2,7 @@
 
 ## Prerequisites
 
-- check version in package.json. If it's not equal to last version:
-- merge master to development, if not done already after previous release
+- merge master to development
 
 ## Changelog
 
@@ -46,8 +45,8 @@ with client version.
 
 - push development
 - create a pull request to main branch from development branch
-- push `main` branch and tags (both rell and client)
-- find rell lib hash
+ 
+- if it was a rell release, find rell lib hash
   - best way: `chr tools lib-model` should work from the next version of `chr`
   - alternative:
     - create a new folder on your machine
@@ -55,5 +54,6 @@ with client version.
     - update chromia.yml with new rell lib version
     - run `chr install`
     - get hash from error message
+
 - publish release notes in zulip streams
 - merge master to development
