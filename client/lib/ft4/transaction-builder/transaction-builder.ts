@@ -8,7 +8,6 @@ import {
   ftSigner,
 } from "@ft4/authentication";
 import {
-  OperationNotExistError,
   TxContext,
   compactArray,
   getAuthDescriptorCounterIdForTxContext,
@@ -103,15 +102,6 @@ export function transactionBuilder(
 
     for (const opContext of opContexts) {
       const { operation, authenticator, signers, skipFtSigning } = opContext;
-      if (
-        !(await authenticator.authDataService.isOperationExposed(
-          operation.name,
-        ))
-      ) {
-        throw new OperationNotExistError(
-          `Operation ${operation.name} does not exist`,
-        );
-      }
 
       if (operation.name === "nop") {
         processedOperations.push(operation);

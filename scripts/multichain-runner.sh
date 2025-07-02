@@ -8,8 +8,10 @@ NODE_PORT=9870
 API_PORT=7740
 # API_PORT=80
 
+# from https://gitlab.com/chromaway/postchain-chromia/container_registry/3630587
 CHROMIA_NODE_VERSION='3.32.2'
-DIRECTORY_CHAIN_VERSION='1.80.2'
+# from https://gitlab.com/chromaway/core/directory-chain
+DIRECTORY_CHAIN_VERSION='1.95.1'
 
 if $GITLAB; then
     BASE_CONFIG_DIR="rell/config/jest-test-gitlab/multichain"

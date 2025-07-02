@@ -13,3 +13,5 @@
 ### Fixed 🔧
 
 ### Removed 🗑️
+
+- Removed the checks for exposed operations, now allowing users to call operations that don't exist. This was done to prevent failure when an operation was exposed but not part of the app structure, as it commonly is in operations defined in GTV modules

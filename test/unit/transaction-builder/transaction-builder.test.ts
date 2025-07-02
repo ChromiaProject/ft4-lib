@@ -60,9 +60,7 @@ describe("Transaction Builder", () => {
   };
   const accountId = encryption.randomBytes(32);
 
-  function setupTestEnvironment(
-    exposureLogicFn?: (operationName: string) => Promise<boolean>,
-  ) {
+  function setupTestEnvironment() {
     const { keyPair: pair, authDescriptor: ad } = createTestAuthDescriptor([
       AuthFlag.Transfer,
     ]);
@@ -72,17 +70,14 @@ describe("Transaction Builder", () => {
     keyHandler =
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
 
-    authDataService = createFakeAuthDataService(
-      {
-        ["ft4.transfer"]: { flags: [AuthFlag.Transfer], message: "" },
-        ["ft4.admin.register_account"]: {
-          flags: [AuthFlag.Account],
-          message: "",
-        },
-        ["testOperation"]: { flags: [], message: "" },
+    authDataService = createFakeAuthDataService({
+      ["ft4.transfer"]: { flags: [AuthFlag.Transfer], message: "" },
+      ["ft4.admin.register_account"]: {
+        flags: [AuthFlag.Account],
+        message: "",
       },
-      exposureLogicFn,
-    );
+      ["testOperation"]: { flags: [], message: "" },
+    });
 
     authenticator = createAuthenticator(
       accountId,
@@ -185,32 +180,8 @@ describe("Transaction Builder", () => {
     expect(tx.operations).toStrictEqual([{ opName: "ft4.transfer", args }]);
   });
 
-  it("throws an error when the operation does not exist", async () => {
-    setupTestEnvironment(() => Promise.resolve(false));
-
-    const builder = transactionBuilder(authenticator, client);
-    builder.add(mockOperation);
-
-    await expect(builder.build()).rejects.toThrow(
-      `Operation ${mockOperation.name} does not exist`,
-    );
-  });
-
-  it("does not throw an error when the operation exists", async () => {
-    setupTestEnvironment((operationName) =>
-      Promise.resolve(operationName === mockOperation.name),
-    );
-
-    const builder = transactionBuilder(authenticator, client);
-    builder.add(mockOperation);
-
-    await expect(builder.build()).resolves.not.toThrow();
-  });
-
   it("builds correct transaction", async () => {
-    setupTestEnvironment((operationName) =>
-      Promise.resolve(operationName === mockOperation.name),
-    );
+    setupTestEnvironment();
 
     const expectedTx = await gtx.sign(
       {

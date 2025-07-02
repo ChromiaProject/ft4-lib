@@ -59,3 +59,21 @@ operation register_player2(name) {
 operation function__create_account_with_auth(accounts.auth_descriptor, account_id: byte_array? = null) {
     accounts.create_account_with_auth(auth_descriptor, account_id);
 }
+
+function test_optional_params_message(gtv) {
+    return "Optional params message";
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = rell.meta(test_optional_params).mount_name,
+    flags = [],
+    message = test_optional_params_message(*)
+);
+
+operation test_optional_params(
+  amount: integer = 100,
+  to: text = "alice"
+) {
+  auth.authenticate();
+}

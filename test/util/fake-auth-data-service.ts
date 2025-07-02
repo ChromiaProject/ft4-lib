@@ -4,10 +4,9 @@ import { Buffer } from "buffer";
 import { BufferId, Operation } from "postchain-client";
 import { asyncNumberGenerator } from "./util";
 
-export function createFakeAuthDataService(
-  data: { [operation: string]: AuthData },
-  isOperationExposedFn?: (operationName: string) => Promise<boolean>,
-): AuthDataService {
+export function createFakeAuthDataService(data: {
+  [operation: string]: AuthData;
+}): AuthDataService {
   const generator = asyncNumberGenerator();
   return {
     connection: {
@@ -15,7 +14,6 @@ export function createFakeAuthDataService(
         getBlocksInfo: (_limit: number) => generator.next().value,
       },
     } as unknown as Connection,
-    isOperationExposed: isOperationExposedFn ?? (() => Promise.resolve(true)),
     getAuthMessageTemplate: (operation: Operation) =>
       Promise.resolve(data[operation.name].message),
     getAuthDescriptorCounter: (
