@@ -339,6 +339,7 @@ export function getSystemAnchoringIccfProofOp(
       undefined,
       true,
       client.config.merkleHashVersion,
+      client.config.nodeManager.lastUsedNode?.url,
     );
 
     const iccfProofOperation = proofTx.iccfTx.operations[0];
