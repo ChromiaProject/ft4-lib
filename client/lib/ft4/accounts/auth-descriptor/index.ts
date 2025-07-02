@@ -2,7 +2,7 @@ import {
   authDescriptorFromGtv,
   authDescriptorRegistrationToGtv,
   mapAuthDescriptorsFromGtv,
-} from "./gtv";
+} from "./auth-descriptor-mapper";
 import {
   ComplexRule,
   RawRules,
