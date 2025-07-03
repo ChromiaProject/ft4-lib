@@ -1,0 +1,275 @@
+@test module;
+
+import lib.ft4.crosschain;
+import lib.ft4.assets;
+import lib.ft4.accounts;
+import test: lib.ft4.test.core;
+import ^.mocks;
+import common_helpers: ^^.common.helpers;
+import lib.ft4.utils;
+import lib.ft4.auth;
+import test: lib.ft4.test.core;
+
+function create_and_retrieve_crosschain_asset_and_asset_origin(
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL
+) {
+    val asset = test.create_crosschain_asset(
+        asset_name,
+        asset_symbol,
+        6,
+        mocks.BLOCKCHAIN_RID_ONE,
+        mocks.ICON_URL,
+        mocks.BLOCKCHAIN_RID_TWO
+    );
+
+    val asset_origin = crosschain.asset_origin @ {} (@omit @sort_desc .rowid, $) limit 1;
+
+    return (asset, asset_origin);
+}
+
+function create_crosschain_transfer_and_retrieve_applied_transfer(
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL,
+    sender_account_id: byte_array = rell.test.keypairs.alice.pub,
+    recipient_account_id: byte_array = rell.test.keypairs.bob.pub,
+    sender_auth_descriptor_id: byte_array
+) {
+    common_helpers.mock_crosschain_transfer(
+        asset_name,
+        asset_symbol,
+        sender_account_id,
+        recipient_account_id,
+        sender_auth_descriptor_id
+    );
+
+    return crosschain.applied_transfers @ {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function init_cancel_and_retrieve_canceled_transfer_crosschain_transfer(
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL,
+    sender_account_id: byte_array,
+    sender_auth_descriptor_id: byte_array,
+    recipient_account_id: byte_array
+) {
+    val (tx, source_blockchain_rid) = common_helpers.create_crosschain_init_transfer_with_auth_operations(
+        rell.test.DEFAULT_FIRST_BLOCK_TIME - 1,
+        asset_name,
+        asset_symbol,
+        sender_account_id = sender_account_id,
+        recipient_account_id = recipient_account_id,
+        sender_auth_descriptor_id = sender_auth_descriptor_id
+    );
+
+    rell.test.tx()
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, tx))
+        .op(crosschain.external.cancel_transfer(tx, 1, tx, 1, 0))
+        .nop()
+        .run();
+
+    return crosschain.canceled_transfers @ {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function unapply_transfer_and_retrieve_unapplied_transfer(
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL,
+    deadline: integer = rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 2,
+    sender_account_id: byte_array,
+    sender_auth_descriptor_id: byte_array,
+    recipient_account_id: byte_array
+) {
+    val target_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
+    val (init_transfer_tx, source_blockchain_rid) = common_helpers.create_crosschain_init_transfer_with_auth_operations(
+        deadline = deadline,
+        asset_name = asset_name,
+        asset_symbol = asset_symbol,
+        target_blockchain_rid = target_blockchain_rid,
+        sender_account_id = sender_account_id,
+        sender_auth_descriptor_id = sender_auth_descriptor_id,
+        recipient_account_id = recipient_account_id
+    );
+
+    rell.test.tx()
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, init_transfer_tx))
+        .op(crosschain.external.apply_transfer(init_transfer_tx, 1, init_transfer_tx, 1, 0))
+        .nop()
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val apply_tx = gtx_transaction.from_bytes(test.get_last_transaction().tx_data);
+
+    val unapply_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = target_blockchain_rid,
+            operations = [
+                crosschain.external.unapply_transfer(
+                    init_transfer_tx = init_transfer_tx,
+                    init_tx_op_index = 1,
+                    last_tx = apply_tx,
+                    last_op_index = -1,
+                    hop_index = 1
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    run_block_after_timeout();
+
+    rell.test.tx()
+        .op(common_helpers.get_iccf_proof(target_blockchain_rid, unapply_tx))
+        .op(crosschain.external.unapply_transfer(init_transfer_tx, 1, unapply_tx, 0, 0))
+        .nop()
+        .run();
+
+    return crosschain.unapplied_transfers @ {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function init_apply_recall_transfer(
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL
+) {
+    val sender_account_id = rell.test.keypairs.alice.pub;
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val source_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
+    val recipient_id = rell.test.keypairs.alice.pub;
+    val asset = test.create_crosschain_asset(asset_name, asset_symbol, 10, source_blockchain_rid, "", source_blockchain_rid);
+    val init_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                crosschain.external.init_transfer(
+                    rell.test.keypairs.alice.pub,
+                    asset.id,
+                    5L,
+                    [chain_context.blockchain_rid],
+                    deadline = rell.test.last_block_time + rell.test.DEFAULT_BLOCK_INTERVAL * 2
+                ).to_gtx_operation()
+            ],
+            signers = [rell.test.pubkeys.alice.to_gtv()]
+        ),
+        signatures = [x"".to_gtv()]
+    );
+
+    rell.test.tx()
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, init_tx))
+        .op(crosschain.external.apply_transfer(init_tx, 1, init_tx, 1, 0))
+        .nop()
+        .run();
+    
+    run_block_after_timeout();
+    rell.test.tx()
+        .op(crosschain.external.recall_unclaimed_transfer(init_tx, 1))
+        .nop()
+        .run();
+
+    return crosschain.recalled_transfers @ {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function run_block_after_timeout() {
+    rell.test.set_next_block_time(rell.test.last_block_time + (utils.MILLISECONDS_PER_DAY * 10) + 1);
+    rell.test.block().run();
+}
+
+function init_transfer_and_get_pending_transfer(
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL,
+    sender_account_data: test.ft_account_data = test.register_alice(),
+    recipient_account_data: test.ft_account_data = test.register_bob()
+) {
+    val asset = test.create_asset(asset_name, asset_symbol, 1);
+    test.mint(sender_account_data.account, asset, 1);
+   
+    rell.test.tx()
+        .op(auth.external.ft_auth(sender_account_data.account.id, sender_account_data.auth_descriptor_id))
+        .op(crosschain.external.init_transfer(recipient_account_data.account.id, asset.id, 1, [mocks.BLOCKCHAIN_RID_ONE], 10000000000000))
+        .nop()
+        .sign(sender_account_data.keypair)
+        .run();
+
+    return crosschain.pending_transfer @ {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function init_revert_canceled_transfer_and_retrieve_reverted_transfer(
+    asset_name: text = mocks.ASSET_NAME,
+    asset_symbol: text = mocks.ASSET_SYMBOL,
+    sender_account_data: test.ft_account_data = test.register_alice(),
+    recipient_account_data: test.ft_account_data = test.register_bob()
+) {
+    val asset_valid = test.create_asset(asset_name, asset_symbol, 1);
+
+    val target_blockchain_rid = mocks.BLOCKCHAIN_RID_ONE;
+    test.mint(sender_account_data.account, asset_valid, 10L);
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(sender_account_data.account.id, sender_account_data.auth_descriptor_id))
+        .op(crosschain.external.init_transfer(
+            sender_account_data.account.id,
+            asset_valid.id,
+            5L,
+            [target_blockchain_rid],
+            deadline = rell.test.last_block_time+1
+        ))
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val init_transfer_tx = gtx_transaction.from_bytes(test.get_last_transaction().tx_data);
+
+    val cancel_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = target_blockchain_rid,
+            operations = [
+                crosschain.external.cancel_transfer(
+                    init_transfer_tx = init_transfer_tx,
+                    init_tx_op_index = 1,
+                    previous_hop_tx = init_transfer_tx,
+                    op_index = 1,
+                    hop_index = 0
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(common_helpers.get_iccf_proof(target_blockchain_rid, cancel_tx))
+        .op(crosschain.external.revert_transfer(init_transfer_tx, 1, cancel_tx, 0))
+        .nop()
+        .run();
+
+    return crosschain.reverted_transfer @ {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function set_asset_origin_filter(
+    asset_ids: list<byte_array>? = null
+) {
+    return crosschain.asset_origin_filter(
+        asset_ids
+    );
+}
+
+function set_transfer_filter(
+    init_tx_rids: list<byte_array>? = null,
+    init_op_index: integer? = null
+) {
+    return crosschain.transfers_filter(
+        init_tx_rids,
+        init_op_index
+    );
+}
+
+function set_pending_transfer_filter(
+    transaction_rids: list<byte_array>? = null,
+    op_index: integer? = null,
+    sender_account_id: byte_array? = null
+) {
+    return crosschain.pending_transfer_filter(
+        transaction_rids,
+        op_index,
+        sender_account_id
+    );
+}

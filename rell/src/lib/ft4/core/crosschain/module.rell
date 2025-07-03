@@ -3,6 +3,7 @@ module;
 
 import ^^.utils;
 import ^^.core.assets;
+import ^^.core.accounts;
 
 val MAX_PATH_LENGTH = 100;
 
@@ -33,11 +34,11 @@ function is_create_on_crosschain_transfer_enabled(): boolean = false;
  */
 @extendable
 function create_on_crosschain_transfer(
-   sender_blockchain_rid: byte_array,
-   sender_id: byte_array,
-   recipient_id: byte_array,
-   assets.asset,
-   amount: big_integer
+    sender_blockchain_rid: byte_array,
+    sender_id: byte_array,
+    recipient_id: byte_array,
+    assets.asset,
+    amount: big_integer
 );
 
 /**
@@ -59,6 +60,7 @@ function recall_on_crosschain_transfer(
     transfer_tx_rid: byte_array,
     transfer_op_index: integer
 );
+
 
 /**
  * Retrieves all transfers that were not yet completed, paginated.
@@ -86,9 +88,7 @@ function get_paginated_pending_transfers(
     } (
         utils.pagination_result(
             data = (
-                tx_data = .transaction.tx_data,
-                op_index = .op_index,
-                account_id = .sender.id
+                map_pending_transfer($)
             ).to_gtv_pretty(),
             rowid = .rowid
         )
@@ -110,13 +110,13 @@ function get_paginated_pending_transfers(
  * @param amount                    the amount that was being transferred
  */
 function get_last_pending_transfer_for_account(
-    sender_id: byte_array, 
-    target_blockchain_rid: byte_array, 
-    recipient_id: byte_array, 
-    asset_id: byte_array, 
+    sender_id: byte_array,
+    target_blockchain_rid: byte_array,
+    recipient_id: byte_array,
+    asset_id: byte_array,
     amount: big_integer
 ) = (
-    pt: pending_transfer, 
+    pt: pending_transfer,
     cth: assets.crosschain_transfer_history_entry
 ) @? {
     cth.blockchain_rid == target_blockchain_rid,
@@ -124,13 +124,10 @@ function get_last_pending_transfer_for_account(
     cth.asset.id == asset_id,
     cth.delta == amount,
     cth.is_input == false,
-
     pt.sender.id == sender_id,
     pt.transaction == cth.transaction,
     pt.op_index == cth.op_index
 } (
     @omit @sort_desc pt.rowid,
-    tx_data = pt.transaction.tx_data,
-    op_index = pt.op_index,
-    account_id = pt.sender.id
+    map_pending_transfer(pt),
 ) limit 1;

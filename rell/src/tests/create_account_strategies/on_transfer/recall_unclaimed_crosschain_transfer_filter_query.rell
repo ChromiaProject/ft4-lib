@@ -1,0 +1,117 @@
+@test module;
+
+import lib.ft4.crosschain;
+import crosschain_helpers: ^^^.crosschain.helpers;
+import lib.ft4.utils;
+import lib.ft4.auth;
+import test: lib.ft4.test.core;
+import ^^^.crosschain.mocks;
+
+function test_get_recall_transfers_filtered_without_filter_no_recall_transfer() {
+    val fetched_recalled_transfers = crosschain.external.get_recalled_transfers_filtered(null, 1, null);
+    assert_equals(fetched_recalled_transfers, utils.paged_result(
+        next_cursor = null,
+        data = []
+    ));
+}
+
+function test_get_recalled_transfers_filtered_without_filter() {
+    val recalled_transfer = crosschain_helpers.init_apply_recall_transfer();
+    val found_recalled_transfer = crosschain.external.get_recalled_transfers_filtered(null, 1, null);
+    assert_equals(found_recalled_transfer, utils.paged_result(
+        next_cursor = null,
+        data = [
+            crosschain.map_transfer(
+                recalled_transfer.init_tx_rid,
+                recalled_transfer.init_op_index
+            ).to_gtv_pretty()
+        ]
+    ));
+}
+
+function test_get_recalled_transfers_filtered_by_init_tx_rid_requires_composite_indexes() {
+    val recalled_transfer = crosschain_helpers.init_apply_recall_transfer();
+    assert_fails(
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_op_index filter is required",
+        crosschain.external.get_recalled_transfers_filtered(
+            crosschain_helpers.set_transfer_filter(init_tx_rids = [recalled_transfer.init_tx_rid]),
+            1,
+            null, *
+        )
+    );
+}
+
+function test_get_recalled_transfers_filtered_by_op_index_requires_composite_indexes() {
+    val recalled_transfer = crosschain_helpers.init_apply_recall_transfer();
+    assert_fails(
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_tx_rids filter cannot be empty",
+        crosschain.external.get_recalled_transfers_filtered(
+            crosschain_helpers.set_transfer_filter(init_op_index = recalled_transfer.init_op_index), 
+            1,
+            null, *
+        )
+    );
+}
+
+function test_get_recalled_transfers_filtered_by_op_index_and_init_tx_rid() {
+    val recalled_transfer = crosschain_helpers.init_apply_recall_transfer();
+    val found_recalled_transfer = crosschain.external.get_recalled_transfers_filtered(
+        crosschain_helpers.set_transfer_filter(
+            init_tx_rids = [recalled_transfer.init_tx_rid],
+            init_op_index = recalled_transfer.init_op_index
+        ), 
+        1,
+        null
+    );
+    assert_equals(found_recalled_transfer, utils.paged_result(
+        next_cursor = null,
+        data = [
+            crosschain.map_transfer(
+                recalled_transfer.init_tx_rid,
+                recalled_transfer.init_op_index
+            ).to_gtv_pretty()
+        ]
+    ));
+}
+
+function test_get_recalled_transfers_using_all_filter_no_recalled_transfers() {
+    crosschain_helpers.init_apply_recall_transfer();
+    val found_recalled_transfer = crosschain.external.get_recalled_transfers_filtered(
+        crosschain_helpers.set_transfer_filter(
+            init_tx_rids = [x"0000"],
+            init_op_index = 1
+        ), 
+        1,
+        null
+    );
+    assert_equals(found_recalled_transfer, utils.paged_result(
+        next_cursor = null,
+        data = []
+    ));
+}
+
+function test_get_recalled_transfers_using_all_filter() {
+    val recalled_transfer_one = crosschain_helpers.init_apply_recall_transfer();
+    val recalled_transfer_two = crosschain_helpers.init_apply_recall_transfer(mocks.ASSET_NAME + 1, mocks.ASSET_SYMBOL + 1);
+    val found_recalled_transfer = crosschain.external.get_recalled_transfers_filtered(
+        crosschain_helpers.set_transfer_filter(
+            init_tx_rids = [recalled_transfer_one.init_tx_rid, recalled_transfer_two.init_tx_rid],
+            init_op_index = recalled_transfer_one.init_op_index
+        ), 
+        2,
+        null
+    );
+    assert_equals(found_recalled_transfer, utils.paged_result(
+        next_cursor = null,
+        data = [
+            crosschain.map_transfer(
+                recalled_transfer_one.init_tx_rid,
+                recalled_transfer_one.init_op_index
+            ).to_gtv_pretty(),
+            crosschain.map_transfer(
+                recalled_transfer_two.init_tx_rid,
+                recalled_transfer_two.init_op_index
+            ).to_gtv_pretty()
+        ]
+    ));
+}

@@ -14,11 +14,12 @@ import { Session, createConnection } from "@ft4/ft-session";
 import { AuthorizationError } from "@ft4/transaction-builder";
 import { nop, op } from "@ft4/utils";
 import {
+  gtx,
   ResponseStatus,
   SignedTransaction,
-  SystemChainException,
   TransactionReceipt,
   TxRejectedError,
+  UnexpectedStatusError,
 } from "postchain-client";
 
 describe("transaction builder", () => {
@@ -94,7 +95,7 @@ describe("transaction builder", () => {
         sentEvent = txRid;
       });
 
-    expect(builtEvent!.equals(tx));
+    expect(builtEvent!.equals(gtx.serialize(tx)));
     expect(sentEvent!.equals(receipt.transactionRid));
   }, 5000);
 
@@ -126,13 +127,18 @@ describe("transaction builder", () => {
     expect(confirmedEvent!.status).toEqual(ResponseStatus.Confirmed);
   }, 5000);
 
-  it("buildAndSendWithAnchoring() throws exception when system chain not available", async () => {
+  it("buildAndSendWithAnchoring() throws exception when directory chain is not available", async () => {
     const promise = session
       .transactionBuilder()
       .add(deleteAllAuthDescriptorsExceptMain())
       .add(nop())
       .buildAndSendWithAnchoring();
 
-    await expect(promise).rejects.toThrow(SystemChainException);
+    await expect(promise).rejects.toThrow(
+      new UnexpectedStatusError(
+        400,
+        "Unknown query: cm_get_blockchain_api_urls",
+      ),
+    );
   }, 5000);
 });

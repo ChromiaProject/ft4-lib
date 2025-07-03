@@ -1,7 +1,6 @@
-import { OptionalPageCursor } from "@ft4/ft-session";
-import { BufferId } from "@ft4/utils";
+import { OptionalPageCursor, PagedResponse } from "@ft4/ft-session";
 import { Buffer } from "buffer";
-import { QueryObject, formatter } from "postchain-client";
+import { BufferId, QueryObject, formatter } from "postchain-client";
 import { RawTransferDetail, TransferHistoryEntryResponse } from "./types";
 
 /**
@@ -66,7 +65,7 @@ export function transferHistoryFromHeight(
   limit: number,
   cursor: OptionalPageCursor = null,
 ): QueryObject<
-  TransferHistoryEntryResponse[],
+  PagedResponse<TransferHistoryEntryResponse>,
   {
     height: number;
     asset_id: Buffer | null;

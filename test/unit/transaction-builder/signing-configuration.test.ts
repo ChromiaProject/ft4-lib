@@ -19,6 +19,7 @@ import { EMPTY_SIGNATURE, transactionBuilder } from "@ft4/transaction-builder";
 import { deriveNonce } from "@ft4/utils";
 import {
   IClient,
+  MERKLE_HASH_VERSIONS,
   RawGtx,
   createStubClient,
   encryption,
@@ -458,7 +459,7 @@ describe("Transaction builder signing", () => {
     const evmKeyStore1 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
     const evmKeyStore2 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
 
-    const accountId = gtv.gtvHash(evmKeyStore1.id);
+    const accountId = gtv.gtvHash(evmKeyStore1.id, MERKLE_HASH_VERSIONS.ONE);
     const authDescriptor = createTestAuthDescriptorWithSigner(
       accountId,
       evmKeyStore1.id,

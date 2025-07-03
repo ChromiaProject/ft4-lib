@@ -13,6 +13,7 @@ import {
   applyTransfer,
   findPathToChainForAsset,
   initTransfer,
+  TransferRef,
 } from "@ft4/crosschain";
 import {
   Connection,
@@ -21,11 +22,8 @@ import {
   createSession,
 } from "@ft4/ft-session";
 import { Buffer } from "buffer";
-import { setupTestEnvironment } from "./common-setup";
-import {
-  OnAnchoredHandlerData,
-  transactionBuilder,
-} from "@ft4/transaction-builder";
+import { setupTestEnvironment } from "@ft4-test/__multichain__/common-setup";
+import { transactionBuilder } from "@ft4/transaction-builder";
 import { noopAuthenticator } from "@ft4/authentication/index";
 import { nop } from "@ft4/utils/index";
 
@@ -102,7 +100,11 @@ describe("Orchestrator", () => {
       .buildAndSend();
 
     const pendingTransfers = await account0.getPendingCrosschainTransfers();
-    await account0.revertCrosschainTransfer(pendingTransfers.data[0]);
+    const transferRef: TransferRef = {
+      tx: pendingTransfers.data[0].tx,
+      opIndex: pendingTransfers.data[0].opIndex,
+    };
+    await account0.revertCrosschainTransfer(transferRef);
 
     const balance0 = await account0.getBalanceByAssetId(asset.id);
     expect(balance0!.amount.value).toStrictEqual(mintAmount.value);
@@ -144,29 +146,23 @@ describe("Orchestrator", () => {
           testContext.sampleAsset.id,
           transferAmount,
           path,
-          Date.now() + 10000,
+          Date.now() + 5000,
         ),
-        {
-          targetBlockchainRid: path[0],
-          onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
-            state.tx = data?.tx;
-            state.initialOpIndex = data?.opIndex;
-            state.initialTx = data?.tx;
-            state.opIndex = data?.opIndex;
-            state.proof = data?.createProof(path[0]);
-          },
-        },
       )
-      .buildAndSendWithAnchoring();
+      .buildAndSendWithAnchoring()
+      .then((data) => {
+        state.tx = data.tx;
+        state.initialOpIndex = 1;
+        state.initialTx = data.tx;
+        state.opIndex = 1;
+        state.proof = data.systemConfirmationProof(path[0]);
+      });
 
     state.proof = await state.proof;
 
     // Perform apply transfer on intermediary
-    await transactionBuilder(
-      testContext.account0.authenticator,
-      testContext.connection2.client,
-    )
-      .add(state.proof, { authenticator: noopAuthenticator })
+    await transactionBuilder(noopAuthenticator, testContext.connection2.client)
+      .add(state.proof)
       .add(
         applyTransfer(
           state.initialTx!,
@@ -175,11 +171,6 @@ describe("Orchestrator", () => {
           state.opIndex!,
           0,
         ),
-        {
-          authenticator: noopAuthenticator,
-          targetBlockchainRid: connection0.blockchainRid,
-          onAnchoredHandler: () => {},
-        },
       )
       .buildAndSendWithAnchoring();
 
@@ -192,9 +183,11 @@ describe("Orchestrator", () => {
 
     const pendingTransfers =
       await testContext.account0.getPendingCrosschainTransfers();
-    await testContext.account0.revertCrosschainTransfer(
-      pendingTransfers.data[0],
-    );
+    const transferRef: TransferRef = {
+      tx: pendingTransfers.data[0].tx,
+      opIndex: pendingTransfers.data[0].opIndex,
+    };
+    await testContext.account0.revertCrosschainTransfer(transferRef);
 
     const balance0 = await account0.getBalanceByAssetId(asset.id);
     expect(balance0!.amount.value).toEqual(mintAmount.value);

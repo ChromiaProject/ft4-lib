@@ -22,7 +22,7 @@ val ACCOUNT_TYPE_BLOCKCHAIN = "FT4_BLOCKCHAIN";
  * An asset can be issued on this chain, or a different one. If it is issued on a different
  * chain, it's considered a crosschain asset, and it will have an `asset_origin` linked to it.
  * 
- * An asset has an `asset_origin` iff it is a crosschain asset.
+ * An asset has an `asset_origin` if it is a crosschain asset and vice versa.
  * 
  * The origin of the asset might be different from the issuing chain, although in many cases it
  * will be the same. The origin chain represents a chain that is providing the assets to this

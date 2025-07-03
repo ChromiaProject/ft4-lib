@@ -1,5 +1,8 @@
 import { createAmount } from "@ft4/asset";
-import { TestContext, setupTestEnvironment } from "./common-setup";
+import {
+  TestContext,
+  setupTestEnvironment,
+} from "@ft4-test/__multichain__/common-setup";
 import { adminUser } from "@ft4-test/util";
 import { registerCrosschainAsset } from "@ft4/admin";
 
@@ -27,7 +30,9 @@ describe("Basic Functionality", () => {
       .on("init", initListener)
       .on("hop", hopListener);
 
-    expect(transferRef.tx[0][0]).toEqual(testContext.account0.blockchainRid);
+    expect(transferRef.tx.blockchainRid).toEqual(
+      testContext.account0.blockchainRid,
+    );
     expect(transferRef.opIndex).toBe(1);
 
     expect(builtListener).toHaveBeenCalledTimes(1);
@@ -59,7 +64,9 @@ describe("Basic Functionality", () => {
       .on("init", initListener)
       .on("hop", hopListener);
 
-    expect(transferRef.tx[0][0]).toEqual(testContext.account0.blockchainRid);
+    expect(transferRef.tx.blockchainRid).toEqual(
+      testContext.account0.blockchainRid,
+    );
     expect(transferRef.opIndex).toBe(1);
 
     expect(builtListener).toHaveBeenCalledTimes(1);

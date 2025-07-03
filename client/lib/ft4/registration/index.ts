@@ -134,7 +134,7 @@ import { Strategy } from "./types";
 import { AnyAuthDescriptorRegistration } from "@ft4/accounts";
 import { LoginConfigOptions } from "@ft4/authentication";
 import { Asset } from "@ft4/asset";
-import { BufferId } from "@ft4/utils";
+import { BufferId } from "postchain-client";
 
 export { Strategy, RegistrationDetails, StrategyError } from "./types";
 

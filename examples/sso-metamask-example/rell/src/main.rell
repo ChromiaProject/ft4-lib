@@ -1,0 +1,9 @@
+@mount("sso_marketplace_example")
+module;
+
+import lib.ft4.external.accounts.strategies;
+import lib.ft4.core.accounts.strategies.open;
+
+struct module_args {
+  admin_pubkey: pubkey;
+}

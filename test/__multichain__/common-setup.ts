@@ -1,6 +1,7 @@
 import {
   AccountBuilder,
   Blockchain,
+  NODE_URL,
   adminUser,
   createChromiaClientToMultichain,
   fetchBlockchains,
@@ -16,6 +17,7 @@ import {
   createConnection,
   createSession,
 } from "@ft4/ft-session";
+import { MERKLE_HASH_VERSIONS } from "postchain-client";
 
 export type TestContext = {
   connection0: Connection;
@@ -38,17 +40,33 @@ const gen = numberGenerator();
 export async function setupTestEnvironment(
   testName: string,
   mintAmount?: Amount,
+  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
 ) {
-  const { multichain00, multichain01, multichain02 } = await fetchBlockchains();
+  const { multichain00, multichain01, multichain02 } = await fetchBlockchains(
+    false,
+    merkleHashVersion,
+  );
 
   const connection0 = createConnection(
-    await createChromiaClientToMultichain(multichain00.rid),
+    await createChromiaClientToMultichain(
+      multichain00.rid,
+      NODE_URL,
+      merkleHashVersion,
+    ),
   );
   const connection1 = createConnection(
-    await createChromiaClientToMultichain(multichain01.rid),
+    await createChromiaClientToMultichain(
+      multichain01.rid,
+      NODE_URL,
+      merkleHashVersion,
+    ),
   );
   const connection2 = createConnection(
-    await createChromiaClientToMultichain(multichain02.rid),
+    await createChromiaClientToMultichain(
+      multichain02.rid,
+      NODE_URL,
+      merkleHashVersion,
+    ),
   );
 
   const num = gen.next().value;
@@ -59,10 +77,10 @@ export async function setupTestEnvironment(
     "ORCHESTRATOR-test-" + testName + "-asset" + num,
   );
   await registerCrosschainAsset(
-    connection2.client,
-    adminUser().signatureProvider,
+    connection2.client, // Leaf
+    adminUser(merkleHashVersion).signatureProvider,
     asset.id,
-    multichain00.rid,
+    multichain00.rid, // Branch
   );
 
   const account0 = await AccountBuilder.account(connection0)
@@ -85,7 +103,7 @@ export async function setupTestEnvironment(
 
   await mint(
     connection0.client,
-    adminUser().signatureProvider,
+    adminUser(merkleHashVersion).signatureProvider,
     account0.id,
     asset.id,
     amountToMint,

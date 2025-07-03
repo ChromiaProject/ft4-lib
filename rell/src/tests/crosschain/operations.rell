@@ -7,8 +7,8 @@ import ^^.extensions;
 import test: lib.ft4.test.core;
 import admin_crosschain: lib.ft4.admin.crosschain;
 import test_op: lib.ft4.test.operations;
-import ^^.operations.iccf_op.{ iccf_proof };
 import ^.mocks;
+import common_helpers: ^^.common.helpers;
 
 function test_register_crosschain_asset_works() {
     val id = ("name", x"BBE58F50E00C733113F8E0647D53FD4BFAD1D85AB831B1719BAF20F1A3336C8F").hash();
@@ -72,7 +72,7 @@ function test_init_transfer_fails_when_amount_is_zero() {
             bob.account.id,
             asset_valid.id,
             0L,
-            [mocks.MOCK_BLOCKCHAIN_RID],
+            [mocks.BLOCKCHAIN_RID_ONE],
             10000000000000
         ))
         .sign(rell.test.keypairs.alice)
@@ -135,7 +135,7 @@ function test_init_transfer_succeeds_under_valid_conditions() {
             bob.account.id,
             asset_valid.id,
             5L,
-            [mocks.MOCK_BLOCKCHAIN_RID],
+            [mocks.BLOCKCHAIN_RID_ONE],
             10000000000000
         ))
         .sign(rell.test.keypairs.alice)
@@ -165,7 +165,7 @@ function test_init_transfer_succeeds_under_valid_conditions_with_evm_auth() {
         recipient_id = bob.account.id,
         asset_id = asset_valid.id,
         amount = 5L,
-        hops = [mocks.MOCK_BLOCKCHAIN_RID],
+        hops = [mocks.BLOCKCHAIN_RID_ONE],
         deadline = 10000000000000
     );
 
@@ -181,7 +181,7 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = test.register_bob();
 
-    val source_blockchain_rid = x"aa".repeat(32);
+    val source_blockchain_rid: byte_array? = x"aa".repeat(32);
     val asset_valid = test.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     // Simulate a valid transaction and operation index
@@ -204,7 +204,7 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, tx))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
@@ -217,6 +217,14 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     assert_equals(extensions.crosschain_extensions_state.before_apply_transfer_amount, 5L);
     assert_true(extensions.crosschain_extensions_state.before_apply_transfer_is_final);
 
+    assert_true(extensions.crosschain_extensions_state.is_before_crosschain_balance_change_called);
+    assert_equals(extensions.crosschain_extensions_state.before_crosschain_balance_change_sender, source_blockchain_rid);
+    assert_equals(extensions.crosschain_extensions_state.before_crosschain_balance_change_recipient, bob.account.id);
+    assert_equals(extensions.crosschain_extensions_state.before_crosschain_balance_change_asset, asset_valid.id);
+    assert_equals(extensions.crosschain_extensions_state.before_crosschain_balance_change_amount, 5L);
+    assert_equals(extensions.crosschain_extensions_state.before_crosschain_balance_change_will_change_sender, false);
+    assert_equals(extensions.crosschain_extensions_state.before_crosschain_balance_change_will_change_recipient, true);
+
     assert_true(extensions.crosschain_extensions_state.is_after_apply_transfer_called);
     assert_equals(extensions.crosschain_extensions_state.after_apply_transfer_sender_blockchain_rid, source_blockchain_rid);
     assert_equals(extensions.crosschain_extensions_state.after_apply_transfer_sender, sender_account_id);
@@ -224,6 +232,15 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     assert_equals(extensions.crosschain_extensions_state.after_apply_transfer_asset, asset_valid.id);
     assert_equals(extensions.crosschain_extensions_state.after_apply_transfer_amount, 5L);
     assert_true(extensions.crosschain_extensions_state.after_apply_transfer_is_final);
+
+    assert_true(extensions.crosschain_extensions_state.is_after_crosschain_balance_change_called);
+    assert_equals(extensions.crosschain_extensions_state.after_crosschain_balance_change_sender, source_blockchain_rid);
+    assert_equals(extensions.crosschain_extensions_state.after_crosschain_balance_change_recipient, bob.account.id);
+    assert_equals(extensions.crosschain_extensions_state.after_crosschain_balance_change_asset, asset_valid.id);
+    assert_equals(extensions.crosschain_extensions_state.after_crosschain_balance_change_amount, 5L);
+    assert_equals(extensions.crosschain_extensions_state.after_crosschain_balance_change_will_change_sender, false);
+    assert_equals(extensions.crosschain_extensions_state.after_crosschain_balance_change_will_change_recipient, true);
+    
 }
 
 function test_apply_transfer_fails_if_expired() {
@@ -254,7 +271,7 @@ function test_apply_transfer_fails_if_expired() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, tx))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run_must_fail("This transfer has expired at timestamp <1> (evaluated at timestamp <%s>).".format(rell.test.last_block_time));
@@ -288,14 +305,14 @@ function test_apply_transfer_fails_when_applied_twice() {
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, tx))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .nop()
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, tx))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .nop()
         .sign(rell.test.keypairs.alice)
@@ -304,7 +321,7 @@ function test_apply_transfer_fails_when_applied_twice() {
             .format(
                 tx.body.to_gtv().hash()
             )
-        ); // Should fail
+        );
 }
 
 function test_apply_transfer_fails_with_mismatched_init_transfer_args() {
@@ -430,7 +447,7 @@ function test_apply_transfer_fails_when_recipient_id_does_not_exists_and_create_
     );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, tx))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run_must_fail("Account <%s> does not exist and creating accounts on transfer is not enabled".format(bogus_recipient_id));

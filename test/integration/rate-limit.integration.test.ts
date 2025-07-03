@@ -6,8 +6,8 @@ import {
 } from "@ft4-test/util";
 import { ftAuth } from "@ft4/authentication";
 import { Connection, createConnection } from "@ft4/ft-session";
-import { BufferId, op } from "@ft4/utils";
-import { IClient, Transaction } from "postchain-client";
+import { op } from "@ft4/utils";
+import { BufferId, IClient, Transaction } from "postchain-client";
 
 jest.setTimeout(2000000);
 

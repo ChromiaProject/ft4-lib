@@ -1,5 +1,11 @@
 import { deriveNonce, loadOperationFromTransaction, op } from "@ft4/utils";
-import { RawGtx, encryption, formatter, gtv } from "postchain-client";
+import {
+  MERKLE_HASH_VERSIONS,
+  RawGtx,
+  encryption,
+  formatter,
+  gtv,
+} from "postchain-client";
 
 describe("Utils", () => {
   it("loads operation from raw transaction", () => {
@@ -59,13 +65,39 @@ describe("Utils", () => {
       deriveNonce(blockchainRid, operation, authDescriptorCounter),
     ).toEqual(
       formatter.toString(
-        gtv.gtvHash([
-          blockchainRid,
-          operation.name,
-          operation.args,
-          authDescriptorCounter,
-        ]),
+        gtv.gtvHash(
+          [
+            blockchainRid,
+            operation.name,
+            operation.args || [],
+            authDescriptorCounter,
+          ],
+          MERKLE_HASH_VERSIONS.ONE,
+        ),
       ),
     );
+  });
+
+  // In order to reproduce different hashes the args must be contain Array e.g. args: [ [1] ]
+  it("derives nonce for merkleHashVersion 1 and 2 and ensures they differ", () => {
+    const blockchainRid = encryption.randomBytes(32);
+    const operation = op("foo", [[1]]);
+    const authDescriptorCounter = 0;
+
+    const deriveNonceVersionOne = deriveNonce(
+      blockchainRid,
+      operation,
+      authDescriptorCounter,
+      MERKLE_HASH_VERSIONS.ONE,
+    );
+
+    const deriveNonceVersionTwo = deriveNonce(
+      blockchainRid,
+      operation,
+      authDescriptorCounter,
+      MERKLE_HASH_VERSIONS.TWO,
+    );
+
+    expect(deriveNonceVersionOne).not.toEqual(deriveNonceVersionTwo);
   });
 });

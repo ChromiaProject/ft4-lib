@@ -9,7 +9,7 @@ import {
   useChromiaNode,
   lockAccountId,
 } from "@ft4-test/util";
-import { AuthenticatedAccount } from "@ft4/accounts";
+import { AuthenticatedAccount, AccountLinkFilter } from "@ft4/accounts";
 import {
   Asset,
   createAmount,
@@ -73,6 +73,42 @@ describe("Asset locking", () => {
       ),
     );
   }
+
+  it("returns filtered account links", async () => {
+    await lockAmounts(account, asset1, [40, 30, 30]);
+    const lockAccounts = await getLockAccounts(connection, account.id);
+    const accountLinkFilter: AccountLinkFilter = {
+      account_ids: null,
+      secondary_id: lockAccounts[0].account.id,
+      type: null,
+    };
+    const filteredAccountLinks =
+      await connection.getAccountLinksFiltered(accountLinkFilter);
+    expect(filteredAccountLinks.data.length).toBeGreaterThan(0);
+    expect(filteredAccountLinks.data[0].secondary.id).toEqual(
+      lockAccounts[0].account.id,
+    );
+  });
+
+  it("can fetch lock accounts for specific account", async () => {
+    await lockAmounts(account, asset1, [40, 30, 30]);
+
+    const lockAccounts = await getLockAccounts(connection, account.id);
+
+    expect(lockAccounts.length).toBe(3);
+    expect(lockAccounts[0].type).toEqual("LOCK1");
+    expect(lockAccounts[0].account.id).toEqual(
+      lockAccountId(account.id, "LOCK1"),
+    );
+    expect(lockAccounts[1].type).toEqual("LOCK2");
+    expect(lockAccounts[1].account.id).toEqual(
+      lockAccountId(account.id, "LOCK2"),
+    );
+    expect(lockAccounts[2].type).toEqual("LOCK3");
+    expect(lockAccounts[2].account.id).toEqual(
+      lockAccountId(account.id, "LOCK3"),
+    );
+  });
 
   it("can fetch lock accounts for specific account", async () => {
     await lockAmounts(account, asset1, [40, 30, 30]);

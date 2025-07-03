@@ -1,8 +1,11 @@
 import { Asset } from "@ft4/asset";
 import { Connection, createConnectionToBlockchainRid } from "@ft4/ft-session";
-import { BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { BlockchainUrlUndefinedException, formatter } from "postchain-client";
+import {
+  BlockchainUrlUndefinedException,
+  BufferId,
+  formatter,
+} from "postchain-client";
 import { getAssetOriginById } from "./query-functions";
 
 /**

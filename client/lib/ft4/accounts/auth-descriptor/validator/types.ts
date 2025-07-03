@@ -1,5 +1,5 @@
 import { AnyAuthDescriptor } from "@ft4/accounts";
-import { BufferId } from "@ft4/utils";
+import { BufferId } from "postchain-client";
 
 export type AuthDescriptorValidator = {
   /**

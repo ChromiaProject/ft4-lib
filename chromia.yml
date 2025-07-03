@@ -174,13 +174,19 @@ blockchains:
 libs:
   iccf:
     registry: https://gitlab.com/chromaway/core/directory-chain
-    path: src/iccf
-    tagOrBranch: 1.32.2
-    rid: x"1D567580C717B91D2F188A4D786DB1D41501086B155A68303661D25364314A4D"
+    path: src/lib/iccf
+    tagOrBranch: 1.87.0
+    rid: x"9C359787B75927733034EA1CEE74EEC8829D2907E4FC94790B5E9ABE4396575D"
+
+  iccf_test:
+    registry: https://gitlab.com/chromaway/core/directory-chain
+    path: src/lib/test/iccf
+    tagOrBranch: 1.87.0
+    rid: x"873D71557531E35E453587FA71C2D3CCB674F0EB49D18B30FA838C52C1155EB3"
 
 compile:
   source: rell/src
-  rellVersion: 0.13.14
+  rellVersion: 0.14.5
 
 test:
   failOnError: false
@@ -189,7 +195,8 @@ database:
   password: postchain
   username: postchain
   database: postchain
-  host: postgres:5432
+  # To run tests locally using chromia cli
+  host: localhost
   logSqlErrors: true
   schema: ft4_tests
   driver: org.postgresql.Driver

@@ -54,6 +54,9 @@ export type Balance = {
   amount: Amount;
 };
 
+/**
+ * Response object for balance queries
+ */
 export type BalanceResponse = {
   asset: AssetResponse;
   amount: bigint;
@@ -68,6 +71,44 @@ export enum DecimalFormat {
 export type SupportedNumber = string | number | Amount;
 
 export type AnyAssetAmount = RawAmount | Amount;
+
+/**
+ * Filter criteria for asset queries
+ */
+export type AssetFilter = Partial<{
+  ids: Array<Buffer> | null;
+  name: string | null;
+  symbol: string | null;
+  type: string | null;
+}> | null;
+
+/**
+ * Filter criteria for balance queries
+ */
+export type BalanceFilter = Partial<{
+  accountIds?: Array<Buffer> | null;
+  assetIds?: Array<Buffer> | null;
+}> | null;
+
+/**
+ * Filter criteria for transfer history entries
+ */
+export type TransferHistoryEntryFilter = Partial<{
+  accountIds?: Array<Buffer> | null;
+  assetIds?: Array<Buffer> | null;
+  transactionRids?: Array<Buffer> | null;
+  opIndex?: number | null;
+}> | null;
+
+/**
+ * Filter criteria for crosschain transfer history entries
+ */
+export type CrosschainTransferHistoryEntryFilter = Partial<{
+  accountIds?: Array<Buffer> | null;
+  assetIds?: Array<Buffer> | null;
+  transactionRids?: Array<Buffer> | null;
+  opIndex?: number | null;
+}> | null;
 
 /**
  * An amount consists of a value and number of decimals. It wraps a

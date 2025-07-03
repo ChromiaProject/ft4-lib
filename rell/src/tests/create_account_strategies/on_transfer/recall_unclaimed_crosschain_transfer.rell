@@ -9,7 +9,7 @@ import test: lib.ft4.test.core;
 import test_op: lib.ft4.test.operations;
 import xc: lib.ft4.crosschain;
 import transfer_strategy: ^^^^.lib.ft4.accounts.strategies.transfer;
-import ^^^.operations.iccf_op.{ iccf_proof };
+import common_helpers: ^^^.common.helpers;
 
 function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout_or_without_apply() {
     val sender_account_id = rell.test.keypairs.alice.pub;
@@ -45,7 +45,7 @@ function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout_or_
         );
 
     rell.test.tx()
-        .op(iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(common_helpers.get_iccf_proof(source_blockchain_rid, init_tx))
         .op(xc.external.apply_transfer(init_tx, 1, init_tx, 1, 0))
         .nop()
         .run();

@@ -1,5 +1,5 @@
-import { gtv } from "postchain-client";
-import { authDescriptorRegistrationToGtv } from "./gtv";
+import { gtv, MERKLE_HASH_VERSIONS } from "postchain-client";
+import { authDescriptorRegistrationToGtv } from "./auth-descriptor-mapper";
 import { AuthDescriptorRules } from "./rules";
 import {
   isRawAnyAuthDescriptorRegistration,
@@ -16,7 +16,7 @@ import {
 } from "./types";
 
 function hashAuthDescriptor(ad: RawAnyAuthDescriptorRegistration) {
-  return gtv.gtvHash(ad);
+  return gtv.gtvHash(ad, MERKLE_HASH_VERSIONS.ONE);
 }
 
 /**

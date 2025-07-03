@@ -5,8 +5,13 @@ import {
   createAuthenticator,
   days,
 } from "@ft4/authentication";
-import { BufferId, TransactionSessionCompletion } from "@ft4/utils";
-import { formatter, SignedTransaction, Web3PromiEvent } from "postchain-client";
+import { TransactionSessionCompletion } from "@ft4/utils";
+import {
+  BufferId,
+  formatter,
+  SignedTransaction,
+  Web3PromiEvent,
+} from "postchain-client";
 import {
   TransactionWithReceipt,
   transactionBuilder,
@@ -45,6 +50,7 @@ import { revertCrosschainTransfer } from "@ft4/crosschain/transfer";
  * @param connection - the connection to the blockchain where this account is registered
  * @param authenticator - authenticator which holds the keys for this account
  */
+
 export function createAuthenticatedAccount(
   connection: Connection,
   authenticator: Authenticator,
@@ -90,15 +96,11 @@ export function createAuthenticatedAccount(
         ttl,
       ),
     resumeCrosschainTransfer: (pendingTransfer: TransferRef) =>
-      resumeCrosschainTransfer(connection, authenticator, pendingTransfer),
+      resumeCrosschainTransfer(connection, pendingTransfer),
     revertCrosschainTransfer: (pendingTransfer: TransferRef) =>
-      revertCrosschainTransfer(connection, authenticator, pendingTransfer),
+      revertCrosschainTransfer(connection, pendingTransfer),
     recallUnclaimedCrosschainTransfer: (pendingTransfer: TransferRef) =>
-      recallUnclaimedCrosschainTransfer(
-        connection,
-        authenticator,
-        pendingTransfer,
-      ),
+      recallUnclaimedCrosschainTransfer(connection, pendingTransfer),
     burn: (assetId: BufferId, amount: Amount) =>
       burn(connection, authenticator, assetId, amount),
     ...createAccountObject(connection, authenticator.accountId),

@@ -29,7 +29,11 @@ import {
   createConnection,
   createSession,
 } from "@ft4/ft-session";
-import { IClient, newSignatureProvider } from "postchain-client";
+import {
+  IClient,
+  MERKLE_HASH_VERSIONS,
+  newSignatureProvider,
+} from "postchain-client";
 
 let _connection: Connection;
 let asset: Asset;
@@ -114,15 +118,15 @@ describe("Auth Descriptor Rule", () => {
     addRateLimitPoints(client, adminUser().signatureProvider, accountId, 1);
 
     const user1 = {
-      signatureProvider: newSignatureProvider(kp1),
+      signatureProvider: newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, kp1),
       authDescriptor: ad1,
     };
     const user2 = {
-      signatureProvider: newSignatureProvider(kp2),
+      signatureProvider: newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, kp2),
       authDescriptor: ad2,
     };
     const user3 = {
-      signatureProvider: newSignatureProvider(kp3),
+      signatureProvider: newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, kp3),
       authDescriptor: ad3,
     };
 
@@ -192,11 +196,11 @@ describe("Auth Descriptor Rule", () => {
     const accountId = await createAccount(_connection.client, ad1);
 
     const user1 = {
-      signatureProvider: newSignatureProvider(kp1),
+      signatureProvider: newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, kp1),
       authDescriptor: ad1,
     };
     const user2 = {
-      signatureProvider: newSignatureProvider(kp2),
+      signatureProvider: newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, kp2),
       authDescriptor: ad2,
     };
 

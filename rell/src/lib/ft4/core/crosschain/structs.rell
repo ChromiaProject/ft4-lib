@@ -1,0 +1,25 @@
+/**
+ * Filter used for the query get_asset_origin_filtered to fetch asset origins based on selected criteria
+ */
+struct asset_origin_filter {
+    asset_ids: list<byte_array>?;
+}
+
+/**
+ * Filter used for the queries get_applied_transfers_filtered, get_canceled_transfers_filtered,
+ * get_unapplied_transfers_filtered, get_recalled_transfers_filtered and get_reverted_transfers_filtered
+ * to fetch crosschain transfers of several states based on selected criteria
+ */
+struct transfers_filter {
+    init_tx_rids: list<byte_array>?;
+    init_op_index: integer?;
+}
+
+/**
+ * Filter used for the query get_pending_transfers_filtered to fetch pending transfers based on selected criteria
+ */
+struct pending_transfer_filter {
+    transaction_rids: list<byte_array>?;
+    op_index: integer?;
+    sender_account_id: byte_array?;
+}

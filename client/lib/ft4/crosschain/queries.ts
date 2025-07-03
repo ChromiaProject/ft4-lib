@@ -1,8 +1,19 @@
-import { QueryObject, RawGtx, formatter } from "postchain-client";
+import { BufferId, QueryObject, RawGtx, formatter } from "postchain-client";
 import { Buffer } from "buffer";
-import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
-import { PendingTransferResponse } from "./types";
-import { BufferId } from "@ft4/utils";
+import {
+  OptionalLimit,
+  OptionalPageCursor,
+  PagedResponse,
+} from "@ft4/ft-session";
+import {
+  AppliedTransferResponse,
+  AssetOriginFilter,
+  AssetOriginResponse,
+  PendingTransferFilter,
+  PendingTransferResponse,
+  TransferFilter,
+  TransferResponse,
+} from "./types";
 
 export function assetOriginById(
   assetId: BufferId,
@@ -26,7 +37,7 @@ export function pendingTransfersForAccount(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PendingTransferResponse[],
+  PagedResponse<PendingTransferResponse>,
   {
     account_id: Buffer;
     page_size: OptionalLimit;
@@ -96,6 +107,230 @@ export function applyTransferTx(
     args: {
       init_tx_rid: initTxRid,
       init_op_index: initOpIndex,
+    },
+  };
+}
+
+/**
+ * Available since ApiVersion 1
+ */
+export function assetOriginFiltered(
+  assetOriginFilter: AssetOriginFilter,
+  limit: OptionalLimit,
+  cursor: OptionalPageCursor,
+): QueryObject<
+  PagedResponse<AssetOriginResponse>,
+  {
+    asset_origin_filter: [assetIds: Array<Buffer> | null] | null;
+    page_size: OptionalLimit;
+    page_cursor: OptionalPageCursor;
+  }
+> {
+  return {
+    name: "ft4.crosschain.get_asset_origin_filtered",
+    args: {
+      asset_origin_filter: assetOriginFilter
+        ? [assetOriginFilter.assetIds ?? null]
+        : null,
+      page_size: limit,
+      page_cursor: cursor,
+    },
+  };
+}
+
+/**
+ * Available since ApiVersion 1
+ */
+export function appliedTransferFiltered(
+  appliedTransferFilter: TransferFilter,
+  limit: OptionalLimit,
+  cursor: OptionalPageCursor,
+): QueryObject<
+  PagedResponse<AppliedTransferResponse>,
+  {
+    applied_transfers_filter:
+      | [initTxRids: Array<Buffer> | null, initOpIndex: number | null]
+      | null;
+    page_size: OptionalLimit;
+    page_cursor: OptionalPageCursor;
+  }
+> {
+  return {
+    name: "ft4.crosschain.get_applied_transfers_filtered",
+    args: {
+      applied_transfers_filter: appliedTransferFilter
+        ? [
+            appliedTransferFilter.initTxRids ?? null,
+            appliedTransferFilter.initOpIndex ?? null,
+          ]
+        : null,
+      page_size: limit,
+      page_cursor: cursor,
+    },
+  };
+}
+
+/**
+ * Available since ApiVersion 1
+ */
+export function canceledTransferFiltered(
+  canceledTransferFilter: TransferFilter,
+  limit: OptionalLimit,
+  cursor: OptionalPageCursor,
+): QueryObject<
+  PagedResponse<TransferResponse>,
+  {
+    canceled_transfers_filter:
+      | [initTxRids: Array<Buffer> | null, initOpIndex: number | null]
+      | null;
+    page_size: OptionalLimit;
+    page_cursor: OptionalPageCursor;
+  }
+> {
+  return {
+    name: "ft4.crosschain.get_canceled_transfers_filtered",
+    args: {
+      canceled_transfers_filter: canceledTransferFilter
+        ? [
+            canceledTransferFilter.initTxRids ?? null,
+            canceledTransferFilter.initOpIndex ?? null,
+          ]
+        : null,
+      page_size: limit,
+      page_cursor: cursor,
+    },
+  };
+}
+
+/**
+ * Available since ApiVersion 1
+ */
+export function unappliedTransferFiltered(
+  unappliedTransferFilter: TransferFilter,
+  limit: OptionalLimit,
+  cursor: OptionalPageCursor,
+): QueryObject<
+  PagedResponse<TransferResponse>,
+  {
+    unapplied_transfers_filter:
+      | [initTxRids: Array<Buffer> | null, initOpIndex: number | null]
+      | null;
+    page_size: OptionalLimit;
+    page_cursor: OptionalPageCursor;
+  }
+> {
+  return {
+    name: "ft4.crosschain.get_unapplied_transfers_filtered",
+    args: {
+      unapplied_transfers_filter: unappliedTransferFilter
+        ? [
+            unappliedTransferFilter.initTxRids ?? null,
+            unappliedTransferFilter.initOpIndex ?? null,
+          ]
+        : null,
+      page_size: limit,
+      page_cursor: cursor,
+    },
+  };
+}
+
+/**
+ * Available since ApiVersion 1
+ */
+export function recalledTransferFiltered(
+  recalledTransferFilter: TransferFilter,
+  limit: OptionalLimit,
+  cursor: OptionalPageCursor,
+): QueryObject<
+  PagedResponse<TransferResponse>,
+  {
+    recalled_transfers_filter:
+      | [initTxRids: Array<Buffer> | null, initOpIndex: number | null]
+      | null;
+    page_size: OptionalLimit;
+    page_cursor: OptionalPageCursor;
+  }
+> {
+  return {
+    name: "ft4.crosschain.get_recalled_transfers_filtered",
+    args: {
+      recalled_transfers_filter: recalledTransferFilter
+        ? [
+            recalledTransferFilter.initTxRids ?? null,
+            recalledTransferFilter.initOpIndex ?? null,
+          ]
+        : null,
+      page_size: limit,
+      page_cursor: cursor,
+    },
+  };
+}
+
+/**
+ * Available since ApiVersion 1
+ */
+export function pendingTransferFiltered(
+  pendingTransferFilter: PendingTransferFilter,
+  limit: OptionalLimit,
+  cursor: OptionalPageCursor,
+): QueryObject<
+  PagedResponse<PendingTransferResponse>,
+  {
+    pending_transfer_filter:
+      | [
+          transactionIds: Array<Buffer> | null,
+          initOpIndex: number | null,
+          senderAccountId: Buffer | null,
+        ]
+      | null;
+    page_size: OptionalLimit;
+    page_cursor: OptionalPageCursor;
+  }
+> {
+  return {
+    name: "ft4.crosschain.get_pending_transfers_filtered",
+    args: {
+      pending_transfer_filter: pendingTransferFilter
+        ? [
+            pendingTransferFilter.transactionIds ?? null,
+            pendingTransferFilter.initOpIndex ?? null,
+            pendingTransferFilter.senderAccountId ?? null,
+          ]
+        : null,
+      page_size: limit,
+      page_cursor: cursor,
+    },
+  };
+}
+
+/**
+ * Available since ApiVersion 1
+ */
+export function revertedTransferFiltered(
+  revertedTransferFilter: TransferFilter,
+  limit: OptionalLimit,
+  cursor: OptionalPageCursor,
+): QueryObject<
+  PagedResponse<TransferResponse>,
+  {
+    reverted_transfer_filter:
+      | [initTxRids: Array<Buffer> | null, initOpIndex: number | null]
+      | null;
+    page_size: OptionalLimit;
+    page_cursor: OptionalPageCursor;
+  }
+> {
+  return {
+    name: "ft4.crosschain.get_reverted_transfers_filtered",
+    args: {
+      reverted_transfer_filter: revertedTransferFilter
+        ? [
+            revertedTransferFilter.initTxRids ?? null,
+            revertedTransferFilter.initOpIndex ?? null,
+          ]
+        : null,
+      page_size: limit,
+      page_cursor: cursor,
     },
   };
 }

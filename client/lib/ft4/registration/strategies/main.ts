@@ -10,7 +10,7 @@ import {
 } from "@ft4/authentication";
 import { Connection, createAuthDataService } from "@ft4/ft-session";
 import { Buffer } from "buffer";
-import { gtv } from "postchain-client";
+import { gtv, MERKLE_HASH_VERSIONS } from "postchain-client";
 import { LoginDetails } from "./types";
 
 /**
@@ -49,7 +49,10 @@ function getAccountIdFromSigners(signers: Buffer[]): Buffer {
   if (!signers.length)
     throw new Error("Cannot derive account id. Signers list is empty");
 
-  return gtv.gtvHash(signers.length === 1 ? signers[0] : signers);
+  return gtv.gtvHash(
+    signers.length === 1 ? signers[0] : signers,
+    MERKLE_HASH_VERSIONS.ONE,
+  );
 }
 
 /**

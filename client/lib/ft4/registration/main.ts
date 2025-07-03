@@ -1,4 +1,3 @@
-import { Buffer } from "buffer";
 import {
   EvmKeyStore,
   FtKeyStore,
@@ -12,11 +11,13 @@ import {
 import { compactArray, createAndSignTransaction } from "@ft4/utils";
 import {
   IClient,
+  MERKLE_HASH_VERSIONS,
   Operation,
   Queryable,
-  gtv,
   SignedTransaction,
+  TransactionEvent,
   Web3PromiEvent,
+  gtv,
 } from "postchain-client";
 import { registerAccount as registerAccountOp } from "./operations";
 import { registerAccountMessage } from "./queries";
@@ -119,13 +120,16 @@ export function registerAccount(
           keyStores,
           connection.client
             .sendTransaction(transaction)
-            .on("sent", (receipt) => {
+            .on(TransactionEvent.DappReceived, (receipt) => {
               promiEvent.emit("sent", receipt.transactionRid);
             }),
         ]);
       })
       .then(([loginKeyStore, disposableKeyStore, keyStores, _]) => {
-        const accountId = gtv.gtvHash(masterKeyStore.id);
+        const accountId = gtv.gtvHash(
+          masterKeyStore.id,
+          MERKLE_HASH_VERSIONS.ONE,
+        );
 
         return Promise.all([
           loginKeyStore,

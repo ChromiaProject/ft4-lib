@@ -1,16 +1,13 @@
 import { AuthDataService, LoginConfig } from "@ft4/authentication";
-import { BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { Operation } from "postchain-client";
+import { BufferId, Operation } from "postchain-client";
 import { asyncNumberGenerator } from "./util";
 
-export function createFakeAuthDataService(
-  data: { [operation: string]: AuthData },
-  isOperationExposedFn?: (operationName: string) => Promise<boolean>,
-): AuthDataService {
+export function createFakeAuthDataService(data: {
+  [operation: string]: AuthData;
+}): AuthDataService {
   const generator = asyncNumberGenerator();
   return {
-    isOperationExposed: isOperationExposedFn ?? (() => Promise.resolve(true)),
     getAuthMessageTemplate: (operation: Operation) =>
       Promise.resolve(data[operation.name].message),
     getAuthDescriptorCounter: (

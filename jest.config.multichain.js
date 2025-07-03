@@ -17,7 +17,6 @@ export default {
     "testEnvironment": "<rootDir>/jest.test-environment.ts",
     "setupFilesAfterEnv": [
         "<rootDir>/jest.setup.ts",
-        "<rootDir>/test/setupMocks.ts"
     ],
     'moduleNameMapper': {
         '^@ft4/(.*)$': ['<rootDir>/client/lib/ft4/$1'],

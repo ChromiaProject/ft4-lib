@@ -1,0 +1,62 @@
+@test module;
+import lib.ft4.assets;
+
+function format_expected_asset_assertion(assets.asset) {
+    return (
+        id = asset.id,
+        name = asset.name,
+        symbol = asset.symbol,
+        decimals = asset.decimals,
+        blockchain_rid = asset.issuing_blockchain_rid,
+        icon_url = asset.icon_url,
+        type = asset.type,
+        supply = asset.total_supply
+    );
+}
+
+function format_expected_balance_assertion(assets.balance) {
+    val account = balance.account;
+    return (
+        asset = format_expected_asset_assertion(balance.asset),
+        account = (
+            rowid = account.rowid,
+            id = account.id,
+            type = account.type
+        ),
+        amount = balance.amount
+    );
+}
+
+function format_expected_transfer_history_entry_assertion(
+    assets.transfer_history_entry,
+    operation_name: text = "ft4.admin.mint",
+    is_crosschain: boolean = false
+) {
+    return (
+        id = transfer_history_entry.rowid,
+        delta = transfer_history_entry.delta,
+        decimals = transfer_history_entry.asset.decimals,
+        asset = format_expected_asset_assertion(transfer_history_entry.asset),
+        is_input = transfer_history_entry.is_input,
+        timestamp = transfer_history_entry.transaction.block.timestamp,
+        block_height = transfer_history_entry.transaction.block.block_height,
+        tx_rid = transfer_history_entry.transaction.tx_rid,
+        tx_data = transfer_history_entry.transaction.tx_data,
+        operation_name = operation_name,
+        op_index = transfer_history_entry.op_index,
+        is_crosschain = is_crosschain
+    );
+}
+
+function format_expected_crosschain_transfer_history_entry_assertion(assets.crosschain_transfer_history_entry) {
+    return assets.transfer_detail(
+        rowid = crosschain_transfer_history_entry.rowid,
+        blockchain_rid = crosschain_transfer_history_entry.blockchain_rid,
+        account_id = crosschain_transfer_history_entry.account_id,
+        asset_id = crosschain_transfer_history_entry.asset.id,
+        delta = crosschain_transfer_history_entry.delta,
+        is_input = crosschain_transfer_history_entry.is_input,
+        op_index = crosschain_transfer_history_entry.op_index,
+        transaction_rid = crosschain_transfer_history_entry.transaction.tx_rid
+    );
+}

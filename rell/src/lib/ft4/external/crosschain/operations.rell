@@ -304,7 +304,8 @@ operation apply_transfer(
                 init_transfer_details.sender_account_id,
                 init_transfer_details.args.recipient_id,
                 asset,
-                init_transfer_details.args.amount);
+                init_transfer_details.args.amount
+            );
         }
         create assets.crosschain_transfer_history_entry(
             .blockchain_rid = init_transfer_tx.body.blockchain_rid,

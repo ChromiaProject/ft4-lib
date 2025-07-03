@@ -10,7 +10,12 @@ import {
 import { Connection, createConnection } from "@ft4/ft-session";
 import { registrationStrategy, registerAccount } from "@ft4/registration";
 import { useChromiaNode } from "@ft4-test/util";
-import { KeyPair, encryption, gtv } from "postchain-client";
+import {
+  KeyPair,
+  MERKLE_HASH_VERSIONS,
+  encryption,
+  gtv,
+} from "postchain-client";
 import {
   AnyAuthDescriptorRegistration,
   AuthFlag,
@@ -56,7 +61,9 @@ describe("Test open strategy", () => {
       ftKeyStore,
       registrationStrategy.open(ftAuthDescriptor),
     );
-    expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
+    expect(session.account.id).toEqual(
+      gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE),
+    );
   });
 
   it("emits events during registration", async () => {
@@ -93,7 +100,9 @@ describe("Test open strategy", () => {
         registrationStrategy.open(ftAuthDescriptor, options),
       );
 
-      expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
+      expect(session.account.id).toEqual(
+        gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE),
+      );
 
       const disposableKeyStore = await options.loginKeyStore!.getKeyStore(
         session.account.id,
@@ -138,7 +147,9 @@ describe("Test open strategy", () => {
       registrationStrategy.open(evmAuthDescriptor),
     );
 
-    expect(session.account.id).toEqual(gtv.gtvHash(evmKeyStore.address));
+    expect(session.account.id).toEqual(
+      gtv.gtvHash(evmKeyStore.address, MERKLE_HASH_VERSIONS.ONE),
+    );
   });
 
   it("can add disposable key to account registered with evm key", async () => {

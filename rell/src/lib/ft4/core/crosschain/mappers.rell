@@ -1,0 +1,51 @@
+/**
+ * Maps an asset_origin into a readable format for the frontend.
+ * 
+ * @param asset_origin  the asset_origin to retrieve
+ */
+function map_asset_origin(asset_origin) {
+    return (
+        asset = assets.map_asset(asset_origin.asset),
+        origin_blockchain_rid = asset_origin.origin_blockchain_rid
+    );
+}
+
+/**
+ * Maps an applied_transfers into a readable format for the frontend.
+ * 
+ * @param applied_transfers  the applied_transfers to retrieve
+ */
+function map_applied_transfer(applied_transfers) {
+    return (
+        init_tx_rid = applied_transfers.init_tx_rid,
+        init_op_index = applied_transfers.init_op_index,
+        transaction_rid = applied_transfers.transaction.tx_rid,
+        op_index = applied_transfers.op_index
+    );
+}
+
+/**
+ * Maps a transfer's init_tx_rid and init_op_index into a readable format for the frontend.
+ * 
+ * @param init_tx_rid    the init_tx_rid to retrieve
+ * @param init_op_index  the init_op_index to retrieve
+ */
+function map_transfer(init_tx_rid: byte_array, init_op_index: integer) {
+    return (
+        init_tx_rid = init_tx_rid,
+        init_op_index = init_op_index
+    );
+}
+
+/**
+ * Maps a pending_transfer into a readable format for the frontend.
+ * 
+ * @param pending_transfer  the pending_transfer to retrieve
+ */
+function map_pending_transfer(pending_transfer) {
+    return (
+        tx_data = pending_transfer.transaction.tx_data,
+        op_index = pending_transfer.op_index,
+        sender_account = pending_transfer.sender.to_struct()
+    );
+}

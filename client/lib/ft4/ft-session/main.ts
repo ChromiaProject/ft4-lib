@@ -1,6 +1,5 @@
 import {
   TransactionWithReceipt,
-  TransactionBuilderConfig,
   signTransaction,
   transactionBuilder,
 } from "@ft4/transaction-builder";
@@ -18,12 +17,11 @@ import {
   TransactionReceipt,
   createClient,
   formatter,
+  BufferId,
   Web3PromiEvent,
 } from "postchain-client";
 import {
-  BufferId,
   authHandlerForOperation,
-  fetchExposedOperations,
   firstAllowedAuthDescriptor,
   getAllAuthHandlers,
   getConfig,
@@ -40,6 +38,14 @@ import {
   getBySigner,
   getTransferDetails,
   getTransferDetailsByAsset,
+  AccountFilter,
+  AccountAuthDescriptorFilter,
+  MainAccountAuthDescriptorFilter,
+  AuthDescriptorSignerFilter,
+  RlStateFilter,
+  AccountCreationTransferFilter,
+  AccountLinkFilter,
+  SubscriptionFilter,
 } from "@ft4/accounts";
 import {
   getAllAssets,
@@ -47,6 +53,10 @@ import {
   getAssetsBySymbol,
   getAssetsByName,
   getAssetsByType,
+  getAssetsFiltered,
+  getBalancesFiltered,
+  getTransferHistoryEntriesFiltered,
+  getCrosschainTransferHistoryEntriesFiltered,
 } from "@ft4/asset";
 import {
   AuthDataService,
@@ -73,6 +83,36 @@ import {
   getConfigFromOptions,
 } from "@ft4/authentication/login";
 import { getApiVersion } from "@ft4/utils/main";
+import {
+  AssetFilter,
+  BalanceFilter,
+  CrosschainTransferHistoryEntryFilter,
+  TransferHistoryEntryFilter,
+} from "@ft4/asset/types";
+import {
+  getAppliedTransfersFiltered,
+  getAssetOriginFiltered,
+  getCanceledTransfersFiltered,
+  getPendingTransfersFiltered,
+  getRecalledTransfersFiltered,
+  getRevertedTransfersFiltered,
+  getUnappliedTransfersFiltered,
+} from "@ft4/crosschain/query-functions";
+import {
+  AssetOriginFilter,
+  PendingTransferFilter,
+  TransferFilter,
+} from "@ft4/crosschain/types";
+import {
+  getAccountsFiltered,
+  getAccountAuthDescriptorsFiltered,
+  getMainAuthDescriptorsFiltered,
+  getAuthDescriptorSignersFiltered,
+  getRlStatesFiltered,
+  getAccountCreationTransfersFiltered,
+  getAccountLinksFiltered,
+  getSubscriptionsFiltered,
+} from "@ft4/accounts/query-functions";
 
 /**
  * Uses the provided connection to create a new connection to the specified blockchain rid.
@@ -107,6 +147,7 @@ export async function createClientToBlockchain(
       typeof blockchainRid == "string"
         ? blockchainRid
         : formatter.toString(blockchainRid),
+    merkleHashVersion: client.config.merkleHashVersion,
   });
 }
 
@@ -128,10 +169,75 @@ export function createConnection(client: IClient): Connection {
     getApiVersion: () => getApiVersion(client),
 
     getBlockHeight: async () => {
-      const [block] = await client.getBlocksInfo(1);
+      const [block] = await client.getBlocks({ limit: 1 });
       return block.height;
     },
+    getAccountsFiltered: (
+      accountFilter?: AccountFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) => getAccountsFiltered(connection, accountFilter, limit, cursor),
+    getAccountAuthDescriptorsFiltered: (
+      accountAuthDescriptorFilter?: AccountAuthDescriptorFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getAccountAuthDescriptorsFiltered(
+        connection,
+        accountAuthDescriptorFilter,
+        limit,
+        cursor,
+      ),
+    getMainAuthDescriptorsFiltered: (
+      mainAccountAuthDescriptorFilter?: MainAccountAuthDescriptorFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getMainAuthDescriptorsFiltered(
+        connection,
+        mainAccountAuthDescriptorFilter,
+        limit,
+        cursor,
+      ),
+    getAuthDescriptorSignersFiltered: (
+      authDescriptorSignerFilter?: AuthDescriptorSignerFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getAuthDescriptorSignersFiltered(
+        connection,
+        authDescriptorSignerFilter,
+        limit,
+        cursor,
+      ),
 
+    getRlStatesFiltered: (
+      rlStateFilter?: RlStateFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) => getRlStatesFiltered(connection, rlStateFilter, limit, cursor),
+    getAccountCreationTransfersFiltered: (
+      accountCreationTransferFilter?: AccountCreationTransferFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getAccountCreationTransfersFiltered(
+        connection,
+        accountCreationTransferFilter,
+        limit,
+        cursor,
+      ),
+    getAccountLinksFiltered: (
+      accountLinkFilter?: AccountLinkFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) => getAccountLinksFiltered(connection, accountLinkFilter, limit, cursor),
+    getSubscriptionsFiltered: (
+      subscriptionFilter?: SubscriptionFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getSubscriptionsFiltered(connection, subscriptionFilter, limit, cursor),
     getAccountById: (id: BufferId) => getById(connection, id),
     getAccountsBySigner: (
       id: BufferId,
@@ -156,7 +262,6 @@ export function createConnection(client: IClient): Connection {
       ),
     getEnabledRegistrationStrategies: () =>
       getEnabledRegistrationStrategies(connection),
-
     getAssetById: (id: BufferId) => getAssetById(connection, id),
     getAssetsBySymbol: (
       symbol: string,
@@ -175,6 +280,38 @@ export function createConnection(client: IClient): Connection {
     ) => getAssetsByType(connection, type, limit, cursor),
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
       getAllAssets(connection, limit, cursor),
+    getAssetsFiltered: (
+      assetFilter?: AssetFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) => getAssetsFiltered(connection, assetFilter, limit, cursor),
+    getBalancesFiltered: (
+      balanceFilter?: BalanceFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) => getBalancesFiltered(connection, balanceFilter, limit, cursor),
+    getTransferHistoryEntriesFiltered: (
+      transferHistoryEntryFilter?: TransferHistoryEntryFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getTransferHistoryEntriesFiltered(
+        connection,
+        transferHistoryEntryFilter,
+        limit,
+        cursor,
+      ),
+    getCrosschainTransferHistoryEntriesFiltered: (
+      crosschainTransferHistoryEntryFilter?: CrosschainTransferHistoryEntryFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getCrosschainTransferHistoryEntriesFiltered(
+        connection,
+        crosschainTransferHistoryEntryFilter,
+        limit,
+        cursor,
+      ),
     getTransferDetails: (txRid: BufferId, opIndex: number) =>
       getTransferDetails(connection, txRid, opIndex),
     getTransferDetailsByAsset: (
@@ -182,6 +319,77 @@ export function createConnection(client: IClient): Connection {
       opIndex: number,
       assetId: BufferId,
     ) => getTransferDetailsByAsset(connection, txRid, opIndex, assetId),
+    getAssetOriginFiltered: (
+      assetOriginFilter?: AssetOriginFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) => getAssetOriginFiltered(connection, assetOriginFilter, limit, cursor),
+    getAppliedTransfersFiltered: (
+      appliedTransferFilter?: TransferFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getAppliedTransfersFiltered(
+        connection,
+        appliedTransferFilter,
+        limit,
+        cursor,
+      ),
+    getCanceledTransfersFiltered: (
+      canceledTransferFilter?: TransferFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getCanceledTransfersFiltered(
+        connection,
+        canceledTransferFilter,
+        limit,
+        cursor,
+      ),
+    getUnappliedTransfersFiltered: (
+      unappliedTransferFilter?: TransferFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getUnappliedTransfersFiltered(
+        connection,
+        unappliedTransferFilter,
+        limit,
+        cursor,
+      ),
+    getRecalledTransfersFiltered: (
+      recalledTransferFilter?: TransferFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getRecalledTransfersFiltered(
+        connection,
+        recalledTransferFilter,
+        limit,
+        cursor,
+      ),
+    getPendingTransfersFiltered: (
+      pendingTransferFilter?: PendingTransferFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getPendingTransfersFiltered(
+        connection,
+        pendingTransferFilter,
+        limit,
+        cursor,
+      ),
+    getRevertedTransfersFiltered: (
+      evertedTransferFilter?: TransferFilter,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) =>
+      getRevertedTransfersFiltered(
+        connection,
+        evertedTransferFilter,
+        limit,
+        cursor,
+      ),
   });
 
   return connection;
@@ -198,9 +406,8 @@ export function createSession(
 ): Session {
   return Object.freeze({
     account: createAuthenticatedAccount(connection, authenticator),
-    transactionBuilder: (
-      config: TransactionBuilderConfig | undefined = undefined,
-    ) => transactionBuilder(authenticator, connection.client, config),
+    transactionBuilder: () =>
+      transactionBuilder(authenticator, connection.client),
     call: (...operations: Operation[]) =>
       call(connection, authenticator, ...operations),
     callWithoutNop: (...operations: Operation[]) =>
@@ -259,7 +466,9 @@ export function callWithoutNop(
   }
 > {
   const tb = transactionBuilder(authenticator, connection.client);
-  operations.forEach((operation: Operation) => tb.add(operation));
+  operations.forEach((operation: Operation) =>
+    tb.add({ name: operation.name, args: operation.args || [] }),
+  );
   return tb.buildAndSend();
 }
 
@@ -277,16 +486,9 @@ export async function signAndSendTransaction(
  * @param connection - connection that the auth data service will use when interacting with the blockchain
  */
 export function createAuthDataService(connection: Connection): AuthDataService {
-  let exposedOperations: Set<string> | null = null;
   let authHandlers: { [key: string]: AuthHandler } | null = null;
 
   return Object.freeze({
-    isOperationExposed: async (operationName: string): Promise<boolean> => {
-      if (!exposedOperations) {
-        exposedOperations = await fetchExposedOperations(connection);
-      }
-      return exposedOperations.has(operationName);
-    },
     getAuthHandlerForOperation: async (
       operationName: string,
     ): Promise<AuthHandler | null> => {

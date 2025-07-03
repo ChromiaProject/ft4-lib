@@ -1,7 +1,7 @@
 import { AnyAuthDescriptor } from "@ft4/accounts";
-import { BufferId, TxContext } from "@ft4/utils";
+import { TxContext } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { GTX, Operation, RellOperation } from "postchain-client";
+import { BufferId, GTX, Operation, RellOperation } from "postchain-client";
 import { LoginConfig } from "./login";
 import { EvmSigner } from "./evm";
 import { FtSigner } from "./ft";
@@ -141,13 +141,6 @@ export interface KeyStore {
  * correct auth descriptor for authorizing an operation.
  */
 export interface AuthDataService {
-  // connection: Connection;
-  /**
-   * Checks if an operation with the specified name exists on the blockchain.
-   * @param operationName - the operation name to check
-   * @returns true if the operation exists, else false.
-   */
-  isOperationExposed(operationName: string): Promise<boolean>;
   /**
    * Returns the auth message template to use when signing a specified operation.
    * @param operation - the operation to get the message for

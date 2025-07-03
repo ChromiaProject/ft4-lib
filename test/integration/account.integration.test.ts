@@ -13,6 +13,7 @@ import {
   getSessionForAccount,
   singleSigUser as testUser,
   useChromiaNode,
+  FT4_USER_TYPE,
 } from "@ft4-test/util";
 import {
   AuthDescriptorRegistration,
@@ -25,6 +26,12 @@ import {
   getAccountMainAuthDescriptor,
   deriveAuthDescriptorId,
   gtv,
+  AccountFilter,
+  AccountAuthDescriptorFilter,
+  MainAccountAuthDescriptorFilter,
+  AuthDescriptorSignerFilter,
+  RlStateFilter,
+  AccountCreationTransferFilter,
 } from "@ft4/accounts";
 import { registerAccountAdmin } from "@ft4/admin";
 import {
@@ -33,7 +40,7 @@ import {
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
 import { AuthorizationError } from "@ft4/transaction-builder";
-import { BufferId, nop, op } from "@ft4/utils";
+import { nop, op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import * as pcl from "postchain-client";
 
@@ -41,7 +48,7 @@ let _connection: Connection;
 const admin = adminUser();
 
 async function multiSigCall(
-  accountId: BufferId,
+  accountId: pcl.BufferId,
   multiSigAuthDescriptor: AuthDescriptorRegistration<MultiSig>,
   signers: (pcl.SignatureProvider | pcl.KeyPair)[],
   ...ops: pcl.Operation[]
@@ -165,8 +172,8 @@ describe("Test the account", () => {
   });
 
   it("updates account if 2 signatures provided", async () => {
-    const kp1 = pcl.newSignatureProvider();
-    const kp2 = pcl.newSignatureProvider();
+    const kp1 = pcl.newSignatureProvider(pcl.MERKLE_HASH_VERSIONS.ONE);
+    const kp2 = pcl.newSignatureProvider(pcl.MERKLE_HASH_VERSIONS.ONE);
     const ad = createMultiSigAuthDescriptorRegistration(
       [AuthFlag.Account],
       [kp1.pubKey, kp2.pubKey],
@@ -203,6 +210,7 @@ describe("Test the account", () => {
         ...registration,
         id: deriveAuthDescriptorId(registration),
         accountId: deriveAuthDescriptorId(registration),
+        accountType: FT4_USER_TYPE,
         created: new Date(),
       },
       signatureProvider: user1.signatureProvider,
@@ -246,10 +254,14 @@ describe("Test the account", () => {
 
     await Promise.all([
       AccountBuilder.account(_connection) //owned by keyPair1
-        .withSigner(pcl.newSignatureProvider(keyPair1))
+        .withSigner(
+          pcl.newSignatureProvider(pcl.MERKLE_HASH_VERSIONS.ONE, keyPair1),
+        )
         .build(),
       AccountBuilder.account(_connection) //keyPair1 is NOT the manager
-        .withSigner(pcl.newSignatureProvider(keyPair1))
+        .withSigner(
+          pcl.newSignatureProvider(pcl.MERKLE_HASH_VERSIONS.ONE, keyPair1),
+        )
         .buildAsNonManager(),
     ]);
 
@@ -264,6 +276,107 @@ describe("Test the account", () => {
     const foundAccount = await _connection.getAccountById(account.id);
 
     expect(account.id).toEqual(foundAccount!.id);
+  });
+
+  it("returns filtered accounts", async () => {
+    const account = await AccountBuilder.account(_connection).build();
+    const accountFilter: AccountFilter = {
+      ids: [account.id],
+      type: "FT4_USER",
+    };
+    const filteredAccounts =
+      await _connection.getAccountsFiltered(accountFilter);
+
+    expect(filteredAccounts.data.length).toBeGreaterThan(0);
+    expect(filteredAccounts.data[0].id).toStrictEqual(account.id);
+  });
+
+  it("returns filtered accounts partial filter", async () => {
+    const account = await AccountBuilder.account(_connection).build();
+    const accountFilter: AccountFilter = { ids: [account.id] };
+
+    const filteredAccounts =
+      await _connection.getAccountsFiltered(accountFilter);
+
+    expect(filteredAccounts.data.length).toBeGreaterThan(0);
+    expect(filteredAccounts.data[0].id).toStrictEqual(account.id);
+  });
+
+  it("returns filtered account auth descriptors", async () => {
+    const account = await AccountBuilder.account(_connection).build();
+    const accountAuthDescriptorFilter: AccountAuthDescriptorFilter = {
+      ids: null,
+      account_id: account.id,
+    };
+
+    const filteredAccountAuthDescriptors =
+      await _connection.getAccountAuthDescriptorsFiltered(
+        accountAuthDescriptorFilter,
+      );
+
+    expect(filteredAccountAuthDescriptors.data.length).toBeGreaterThan(0);
+  });
+
+  it("returns filtered main auth descriptors", async () => {
+    const account = await AccountBuilder.account(_connection).build();
+    const mainAccountAuthDescriptorFilter: MainAccountAuthDescriptorFilter = {
+      account_auth_descriptor_id: null,
+      account_ids: [account.id],
+    };
+
+    const filteredMainAuthDescriptors =
+      await _connection.getMainAuthDescriptorsFiltered(
+        mainAccountAuthDescriptorFilter,
+      );
+
+    expect(filteredMainAuthDescriptors.data.length).toBeGreaterThan(0);
+    expect(filteredMainAuthDescriptors.data[0].accountId).toStrictEqual(
+      account.id,
+    );
+  });
+
+  it("returns filtered auth descriptor signers", async () => {
+    await AccountBuilder.account(_connection).build();
+    const authDescriptorSignerFilter: AuthDescriptorSignerFilter = {
+      ids: null,
+      auth_descriptor_id: null,
+    };
+
+    const filteredAuthDescriptorSigners =
+      await _connection.getAuthDescriptorSignersFiltered(
+        authDescriptorSignerFilter,
+      );
+
+    expect(filteredAuthDescriptorSigners.data.length).toBeGreaterThan(0);
+  });
+
+  it("returns filtered rate limit states", async () => {
+    const account = await AccountBuilder.account(_connection).build();
+    const rlStateFilter: RlStateFilter = {
+      account_ids: [account.id] as Buffer[],
+    };
+
+    const filteredRlStates =
+      await _connection.getRlStatesFiltered(rlStateFilter);
+
+    expect(filteredRlStates.data.length).toBeGreaterThan(0);
+  });
+
+  it("returns filtered account creation transfers", async () => {
+    await AccountBuilder.account(_connection).build();
+    const accountCreationTransferFilter: AccountCreationTransferFilter = {
+      rowids: null,
+      transaction_tx_rid: null,
+      op_index: null,
+      recipient_id: null,
+    };
+
+    const filteredAccountCreationTransfers =
+      await _connection.getAccountCreationTransfersFiltered(
+        accountCreationTransferFilter,
+      );
+
+    expect(filteredAccountCreationTransfers.data.length).toBeGreaterThan(0);
   });
 
   it("Returns account by auth descriptor id", async () => {

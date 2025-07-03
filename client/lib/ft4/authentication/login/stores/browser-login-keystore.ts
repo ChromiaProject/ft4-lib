@@ -1,7 +1,6 @@
 import { LoginKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
-import { BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { encryption } from "postchain-client";
+import { BufferId, encryption } from "postchain-client";
 
 const STORAGE_KEY = "FT_LOGIN_KEY_STORE";
 

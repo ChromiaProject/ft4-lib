@@ -80,5 +80,19 @@ function transfer_action(accounts.account, strategy_params_gtv: gtv) {
 function () = strategies.add_strategy(
     op = rell.meta(ras_transfer_fee),
     account_details = account_details(*),
-    action = transfer_action(*)
+    action = transfer_action(*),
+    required_signers = required_signers_fee(*)
 );
+
+/**
+ * The `required_signers` for the fee strategy.
+ * 
+ * @see `transfer.required_signers` for more information.
+ * @see core.accounts.strategies.required_signers
+ *
+ * @param gtv the arguments for `ras_transfer_fee`.
+ */
+function required_signers_fee(gtv) {
+    val params = struct<ras_transfer_fee>.from_gtv(gtv);
+    return transfer.required_signers(params.main, params.disposable);
+}

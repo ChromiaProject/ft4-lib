@@ -1,0 +1,68 @@
+/**
+ * Filter used for the query get_assets_filtered to fetch assets based on selected criteria
+ */
+struct asset_filter {
+    ids: list<byte_array>?;
+    name: text?;
+    symbol: text?;
+    type: text?;
+}
+
+/**
+ * Filter used for the query get_balances_filtered to fetch balances based on selected criteria
+ */
+struct balance_filter {
+    account_ids: list<byte_array>?;
+    asset_ids: list<byte_array>?;
+}
+
+/**
+ * Filter used for the query get_transfer_history_entries_filtered to fetch entries based on selected criteria
+ */
+struct transfer_history_entry_filter {
+    account_ids: list<byte_array>?;
+    asset_ids: list<byte_array>?;
+    transaction_rids: list<byte_array>?;
+    op_index: integer?;
+}
+
+/**
+ * Filter used for the query get_crosschain_transfer_history_entries_filtered to fetch balances entries on selected criteria
+ */
+struct crosschain_transfer_history_entry_filter {
+    account_ids: list<byte_array>?;
+    asset_ids: list<byte_array>?;
+    transaction_rids: list<byte_array>?;
+    op_index: integer?;
+}
+
+/** Filter used in queries, which allows to fetch only one direction of transfer */
+struct filter {
+    /**
+     * Whether you want to fetch outgoing or incoming transfers, or both if null.
+     */
+    transfer_type?;
+}
+
+/**
+ * Details about a transfer. It contains a limited set of information that can be used to
+ * describe a `transfer_history_entry` and a `crosschain_transfer_history_entry`.
+ */
+struct transfer_detail {
+    /** The rowid of the entity associated with the transfer history entry */
+    rowid: rowid;
+    /** The blockchain on which the transfer happened */
+    blockchain_rid: byte_array;
+    /** The account whose balance was affected */
+    account_id: byte_array;
+    /** The asset that was moved */
+    asset_id: byte_array;
+    /** The amount that was moved */
+    delta: big_integer;
+    /** If true, this movement of tokens went into a transfer (and out of this account) */
+    is_input: boolean;
+    /** The index of the operation in the transaction */
+    op_index: integer;
+    /** The transaction RID of the transaction containing the transfer details */
+    transaction_rid: byte_array;
+}

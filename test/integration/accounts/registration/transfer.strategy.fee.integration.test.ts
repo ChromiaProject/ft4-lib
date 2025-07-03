@@ -8,6 +8,7 @@ import {
   AuthenticatedAccount,
   AuthFlag,
   createSingleSigAuthDescriptorRegistration,
+  AccountCreationTransferFilter,
 } from "@ft4/accounts";
 import { Amount, Asset, createAmountFromBalance } from "@ft4/asset";
 import { FtKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
@@ -19,7 +20,7 @@ import {
   registerAccount,
   registrationStrategy,
 } from "@ft4/registration";
-import { encryption, gtv } from "postchain-client";
+import { encryption, gtv, MERKLE_HASH_VERSIONS } from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;
@@ -47,7 +48,7 @@ describe("Test transfer with fee", () => {
   beforeEach(async () => {
     // Create a recipient
     const keyPair = encryption.makeKeyPair();
-    recipientId = gtv.gtvHash(keyPair.pubKey);
+    recipientId = gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE);
     keyStore = createInMemoryFtKeyStore(keyPair);
     authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
@@ -123,5 +124,21 @@ describe("Test transfer with fee", () => {
     expect(
       await connection.query(pendingTransferStrategies(recipientId)),
     ).toStrictEqual([]);
+  });
+
+  it("returns filtered account creation transfers", async () => {
+    await account1.transfer(recipientId, asset.id, amount);
+    const accountCreationTransferFilter: AccountCreationTransferFilter = {
+      rowids: null,
+      transaction_tx_rid: null,
+      op_index: null,
+      recipient_id: null,
+    };
+
+    const filteredAccountCreationTransfers =
+      await connection.getAccountCreationTransfersFiltered(
+        accountCreationTransferFilter,
+      );
+    expect(filteredAccountCreationTransfers.data.length).toBeGreaterThan(0);
   });
 });

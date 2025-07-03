@@ -8,6 +8,7 @@ import {
   AuthenticatedAccount,
   AuthFlag,
   createSingleSigAuthDescriptorRegistration,
+  SubscriptionFilter,
 } from "@ft4/accounts";
 import { Asset, createAmountFromBalance } from "@ft4/asset";
 import { FtKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
@@ -22,7 +23,12 @@ import {
   subscriptionPeriodMillis,
   transferSubscription,
 } from "@ft4/registration";
-import { QueryObject, encryption, gtv } from "postchain-client";
+import {
+  MERKLE_HASH_VERSIONS,
+  QueryObject,
+  encryption,
+  gtv,
+} from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;
@@ -47,7 +53,7 @@ describe("Test transfer with subscription", () => {
   let authDescriptorToRegister: AnyAuthDescriptorRegistration;
   beforeEach(async () => {
     const keyPair = encryption.makeKeyPair();
-    recipientId = gtv.gtvHash(keyPair.pubKey);
+    recipientId = gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE);
     senderAccount = await AccountBuilder.account(connection)
       .withBalance(asset, 200)
       .withPoints(1)
@@ -84,6 +90,30 @@ describe("Test transfer with subscription", () => {
     );
 
     expect(session.account.id).toEqual(recipientId);
+  });
+
+  it("returns filtered subscriptions", async () => {
+    const amount = await getDynamicAmount(
+      asset,
+      allowedAssets(connection.blockchainRid, senderAccount.id, recipientId),
+    );
+    await senderAccount.transfer(recipientId, asset.id, amount);
+
+    await registerAccount(
+      connection.client,
+      ftKeyStore,
+      transferSubscription(asset, authDescriptorToRegister),
+    );
+
+    const subscriptionFilter: SubscriptionFilter = {
+      account_ids: [recipientId],
+    };
+
+    const filteredSubscriptions =
+      await connection.getSubscriptionsFiltered(subscriptionFilter);
+    expect(filteredSubscriptions.data[0].subscriptionAccountId).toStrictEqual(
+      recipientId,
+    );
   });
 
   it("receives transferred assets, minus subscription fee when account is created", async () => {

@@ -1,16 +1,17 @@
-## [Unreleased] - 2024-xx-xx
+## [Unreleased] - 2025-xx-xx
 
 ### Breaking 💔
 
 ### Changed 🪙
 
+- Update `postchain-client` to `2.0.2`
+
 ### Added ✅
 
-- Added `hasActiveLogin` to the `KeyStoreInteractor` interface, which returns whether a previous login that could be reused is found
-- Added `connection` to `Account` and `AuthenticatedAccount` interface
-- Added `get_api_version`. While version looks like "1.0.3", and it's difficult to parse, api version is an integer that is increased by one every time the API (queries and operations) changes. It will start at 1 for version 1.0.1, and it will return 0 for 1.0.0.
-- Added optional parameter `ttl` to `AuthenticatedAccount.crosschainTransfer`
+- `getSystemAnchoringIccfProofOp` now sets the last used node from the node manager while calling `createIccfProofTx`
 
 ### Fixed 🔧
 
-- added the `transferSubscription` strategy to `TransferStrategies`
+### Removed 🗑️
+
+- Removed the checks for exposed operations, now allowing users to call operations that don't exist. This was done to prevent failure when an operation was exposed but not part of the app structure, as it commonly is in operations defined in GTV modules

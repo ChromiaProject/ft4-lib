@@ -114,3 +114,59 @@
     is_final: boolean,
     applied_transfers
 );
+
+/**
+ * Extendable function that allows the developer to add more functionality to the
+ * `update_balances_if_needed` function, before the balance change is applied.
+ * 
+ * This allows, for example, to check that any condition is met before the balance change is
+ * applied. Or to modify the balance or amount before it is changed.
+ * 
+ * If this function throws, the balance change will not be applied.
+ * 
+ * Throws when any extension of this function throws.
+ * 
+ * @param sender        the account that has transferred the tokens
+ * @param recipient     the account that will receive the tokens
+ * @param asset         the asset that was transferred
+ * @param amount        the amount that was transferred
+ * @param will_change_sender    whether the sender's balance will change
+ * @param will_change_recipient whether the recipient's balance will change
+ */
+@extendable
+function before_crosschain_balance_change(
+    sender: accounts.account,
+    recipient: accounts.account,
+    assets.asset,
+    amount: big_integer,
+    will_change_sender: boolean,
+    will_change_recipient: boolean
+);
+
+/**
+ * Extendable function that allows the developer to add more functionality to the
+ * `update_balances_if_needed` function, after the balance change is applied.
+ * 
+ * This allows, for example, to check that any condition is met after the balance change is
+ * applied. Or to modify the balance or amount after it is changed.
+ * 
+ * If this function throws, the balance change will not be applied.
+ * 
+ * Throws when any extension of this function throws.
+ * 
+ * @param sender        the account that has transferred the tokens
+ * @param recipient     the account that will receive the tokens
+ * @param asset         the asset that was transferred
+ * @param amount        the amount that was transferred
+ * @param has_changed_sender    whether the sender's balance has changed
+ * @param has_changed_recipient whether the recipient's balance has changed
+ */
+@extendable
+function after_crosschain_balance_change(
+    sender: accounts.account,
+    recipient: accounts.account,
+    assets.asset,
+    amount: big_integer,
+    has_changed_sender: boolean,
+    has_changed_recipient: boolean
+);

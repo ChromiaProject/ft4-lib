@@ -1,7 +1,7 @@
-import { Operation, formatter } from "postchain-client";
+import { BufferId, Operation, formatter } from "postchain-client";
 import { gtv, AnyAuthDescriptorRegistration } from "@ft4/accounts";
 import { Amount, CrosschainAssetRegistration } from "@ft4/asset";
-import { BufferId, op } from "@ft4/utils";
+import { op } from "@ft4/utils";
 
 /**
  * Creates an operation object for the `ft4.admin.register_account`-operation

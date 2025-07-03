@@ -19,11 +19,12 @@ import { authDescriptorRuleMapper, rulesFromGtv, rulesToGtv } from "./rules";
 export function mapSingleSigAuthDescriptor(
   ad: RawAuthDescriptor<RawSingleSig>,
 ): AuthDescriptor<SingleSig> {
-  const { id, account_id, auth_type, args, rules, created } = ad;
+  const { id, account_id, account_type, auth_type, args, rules, created } = ad;
   const [flags, signer] = args;
   return Object.freeze({
     id,
     accountId: account_id,
+    accountType: account_type,
     authType: enumValueFromString(auth_type, AuthType),
     args: {
       flags,
@@ -37,11 +38,12 @@ export function mapSingleSigAuthDescriptor(
 export function mapMultiSigAuthDescriptor(
   ad: RawAuthDescriptor<RawMultiSig>,
 ): AuthDescriptor<MultiSig> {
-  const { id, account_id, auth_type, args, rules, created } = ad;
+  const { id, account_id, account_type, auth_type, args, rules, created } = ad;
   const [flags, signaturesRequired, signers] = args;
   return Object.freeze({
     id,
     accountId: account_id,
+    accountType: account_type,
     authType: enumValueFromString(auth_type, AuthType),
     args: {
       flags,

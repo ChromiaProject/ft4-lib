@@ -1,8 +1,8 @@
 import { Session } from "@ft4/ft-session";
-import { BufferId } from "@ft4/utils";
 import { LoginConfigRules } from "./rules";
 import { RawRules } from "@ft4/accounts";
 import { LoginKeyStore } from "./stores";
+import { BufferId } from "postchain-client";
 
 export type LoginConfig = {
   flags: string[];

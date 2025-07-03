@@ -6,13 +6,12 @@ import {
   createResumeOrchestrator,
 } from "@ft4/crosschain";
 import { Connection } from "@ft4/ft-session";
-import { BufferId } from "@ft4/utils";
-import { Buffer } from "buffer";
 import {
+  BufferId,
+  formatter,
   SignedTransaction,
   TransactionReceipt,
   Web3PromiEvent,
-  formatter,
 } from "postchain-client";
 import { createRevertOrchestrator } from "@ft4/crosschain/orchestrator";
 
@@ -84,13 +83,11 @@ export function crosschainTransfer(
  * Resumes a cross chain transfer that was started but not applied to the target chain yet. Which could happen
  * if for example one intermediary were down or the client were disrupted before the transfer was completed.
  * @param connection - connection to the source chain
- * @param authenticator - authenticator that will be used when continuing the transfer. Should likely be the same authenticator which was used to initiate the transfer
  * @param pendingTransfer - the transfer to resume. Can be acquired using {@link accounts.Account.getPendingCrosschainTransfers | getPendingCrosschainTransfers}
  * @returns a promi-event that will emit once for each hop during the transfer. It will resolve once the transfer is completed.
  */
 export function resumeCrosschainTransfer(
   connection: Connection,
-  authenticator: Authenticator,
   pendingTransfer: TransferRef,
 ): Web3PromiEvent<
   void,
@@ -104,7 +101,7 @@ export function resumeCrosschainTransfer(
       hop: Buffer;
     }
   >((resolve, reject) => {
-    return createResumeOrchestrator(connection, authenticator, pendingTransfer)
+    return createResumeOrchestrator(connection, pendingTransfer)
       .then((orchestrator) => {
         orchestrator.onTransferHop((blockchainRid) => {
           promiEvent.emit("hop", formatter.ensureBuffer(blockchainRid));
@@ -123,13 +120,11 @@ export function resumeCrosschainTransfer(
  * use {@link crosschain.recallUnclaimedCrosschainTransfer | recallUnclaimedCrosschainTransfer}
  * @remarks If this function is called before the transfer has timed out, the promise will be rejected
  * @param connection - connection to the source chain. I.e., the chain where the account that originally sent the assets are registered.
- * @param authenticator - authenticator that will be used when reverting the transfer. Should likely be the same authenticator which was used to initiate the transfer
  * @param pendingTransfer - the transfer to revert. Can be acquired using {@link accounts.Account.getPendingCrosschainTransfers | getPendingCrosschainTransfers}
  * @returns a promi-event that will emit once for each hop during the revert. It will resolve once the transfer is completely reverted.
  */
 export function revertCrosschainTransfer(
   connection: Connection,
-  authenticator: Authenticator,
   pendingTransfer: TransferRef,
 ): Web3PromiEvent<
   void,
@@ -143,7 +138,7 @@ export function revertCrosschainTransfer(
       hop: Buffer;
     }
   >((resolve, reject) => {
-    return createRevertOrchestrator(connection, authenticator, pendingTransfer)
+    return createRevertOrchestrator(connection, pendingTransfer)
       .then((orchestrator) => {
         orchestrator.onTransferHop((blockchainRid) => {
           promiEvent.emit("hop", formatter.ensureBuffer(blockchainRid));
@@ -162,13 +157,11 @@ export function revertCrosschainTransfer(
  * chain has create on transfer account registration strategy enabled and no one claims the target account in time.
  * @remarks If this function is called before the transfer has timed out, the promise will be rejected
  * @param connection - connection to the source chain. I.e., the chain where the account that originally sent the assets are registered.
- * @param authenticator - authenticator that will be used when recalling the transfer. Should likely be the same authenticator which was used to initiate the transfer
  * @param pendingTransfer - the transfer to recall. Can be acquired using {@link accounts.Account.getPendingCrosschainTransfers | getPendingCrosschainTransfers}
  * @returns a promi-event that will emit once for each hop during the recall. It will resolve once the transfer is completely recalled.
  */
 export function recallUnclaimedCrosschainTransfer(
   connection: Connection,
-  authenticator: Authenticator,
   pendingTransfer: TransferRef,
 ): Web3PromiEvent<
   void,
@@ -182,7 +175,7 @@ export function recallUnclaimedCrosschainTransfer(
       hop: Buffer;
     }
   >((resolve, reject) => {
-    return createRevertOrchestrator(connection, authenticator, pendingTransfer)
+    return createRevertOrchestrator(connection, pendingTransfer)
       .then((orchestrator) => {
         orchestrator.onTransferHop((blockchainRid) => {
           promiEvent.emit("hop", formatter.ensureBuffer(blockchainRid));

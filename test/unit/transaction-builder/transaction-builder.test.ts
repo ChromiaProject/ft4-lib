@@ -36,6 +36,7 @@ import { ethers } from "ethers";
 import {
   IClient,
   KeyPair,
+  MERKLE_HASH_VERSIONS,
   Operation,
   SignedTransaction,
   Web3PromiEvent,
@@ -60,9 +61,7 @@ describe("Transaction Builder", () => {
   };
   const accountId = encryption.randomBytes(32);
 
-  function setupTestEnvironment(
-    exposureLogicFn?: (operationName: string) => Promise<boolean>,
-  ) {
+  function setupTestEnvironment() {
     const { keyPair: pair, authDescriptor: ad } = createTestAuthDescriptor([
       AuthFlag.Transfer,
     ]);
@@ -72,17 +71,14 @@ describe("Transaction Builder", () => {
     keyHandler =
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
 
-    authDataService = createFakeAuthDataService(
-      {
-        ["ft4.transfer"]: { flags: [AuthFlag.Transfer], message: "" },
-        ["ft4.admin.register_account"]: {
-          flags: [AuthFlag.Account],
-          message: "",
-        },
-        ["testOperation"]: { flags: [], message: "" },
+    authDataService = createFakeAuthDataService({
+      ["ft4.transfer"]: { flags: [AuthFlag.Transfer], message: "" },
+      ["ft4.admin.register_account"]: {
+        flags: [AuthFlag.Account],
+        message: "",
       },
-      exposureLogicFn,
-    );
+      ["testOperation"]: { flags: [], message: "" },
+    });
 
     authenticator = createAuthenticator(
       accountId,
@@ -188,36 +184,8 @@ describe("Transaction Builder", () => {
     expect(tx.operations).toStrictEqual([{ opName: "ft4.transfer", args }]);
   });
 
-  it("throws an error when the operation does not exist", async () => {
-    setupTestEnvironment(() => Promise.resolve(false));
-
-    const builder = transactionBuilder(authenticator, client);
-    const tempMockOp: Operation = {
-      name: "testOperation2",
-      args: [],
-    };
-    builder.add(tempMockOp);
-
-    await expect(builder.build()).rejects.toThrow(
-      `Operation ${tempMockOp.name} does not exist`,
-    );
-  });
-
-  it("does not throw an error when the operation exists", async () => {
-    setupTestEnvironment((operationName) =>
-      Promise.resolve(operationName === mockOperation.name),
-    );
-
-    const builder = transactionBuilder(authenticator, client);
-    builder.add(mockOperation);
-
-    await expect(builder.build()).resolves.not.toThrow();
-  });
-
   it("builds correct transaction", async () => {
-    setupTestEnvironment((operationName) =>
-      Promise.resolve(operationName === mockOperation.name),
-    );
+    setupTestEnvironment();
 
     const expectedTx = await gtx.sign(
       {
@@ -232,6 +200,7 @@ describe("Transaction Builder", () => {
         signers: [keyPair.pubKey!],
       },
       keyPair.privKey,
+      MERKLE_HASH_VERSIONS.ONE,
       keyPair.pubKey,
     );
 
@@ -258,14 +227,14 @@ describe("Transaction Builder", () => {
   it("can build and submit a transaction, and emits 'built' event while doing so", async () => {
     const { authenticatorMock, keyPair } = getMocks();
     const operation = nop();
-    const expectedTx = gtx.serialize({
+    const expectedTx = {
       blockchainRid: formatter.ensureBuffer(client.config.blockchainRid),
       operations: [
         { opName: emptyOp().name, args: [] },
         { opName: operation.name, args: operation.args! },
       ],
       signers: [keyPair.pubKey],
-    });
+    };
 
     let builtEvent: SignedTransaction | undefined = undefined;
     const { tx } = await transactionBuilder(authenticatorMock, client)
@@ -276,12 +245,12 @@ describe("Transaction Builder", () => {
         builtEvent = tx;
       });
 
-    expect(gtx.deserialize(tx)).toMatchObject({
-      ...gtx.deserialize(expectedTx),
+    expect(tx).toMatchObject({
+      ...expectedTx,
       signatures: expect.arrayContaining([]),
     });
 
-    expect(builtEvent!.equals(tx));
+    expect(builtEvent!.equals(gtx.serialize(tx)));
   }, 5000);
 
   it("throw SigningError if user rejects FT signature", async () => {

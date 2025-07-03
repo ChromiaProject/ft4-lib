@@ -7,19 +7,36 @@ import {
   assetsByName,
   assetsByType,
   assetDetailsForCrosschainRegistration,
+  assetsFiltered,
+  balancesFiltered,
+  transferHistoryEntriesFiltered,
+  crossChainTransferHistoryEntriesFiltered,
 } from "./asset-queries";
 import {
   Asset,
+  AssetFilter,
   AssetResponse,
   Balance,
+  BalanceFilter,
   BalanceResponse,
   CrosschainAssetRegistration,
   CrosschainAssetRegistrationResponse,
+  CrosschainTransferHistoryEntryFilter,
+  TransferHistoryEntryFilter,
 } from "./types";
 import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
-import { BufferId, PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
+import { PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
 import { createAmountFromBalance } from "./amount";
-import { Queryable } from "postchain-client";
+import { BufferId, Queryable } from "postchain-client";
+import {
+  TransferHistoryEntry,
+  TransferHistoryEntryResponse,
+} from "@ft4/accounts";
+import {
+  createTransferHistoryEntryFromResponse,
+  CrosschainTransferHistoryEntry,
+  CrosschainTransferHistoryEntryResponse,
+} from "@ft4/accounts/transfer-history";
 
 /**
  * Retrieves asset information using its id
@@ -167,6 +184,123 @@ export async function getBalancesByAccountId(
   );
 }
 
+/**
+ * Retrieves all assets based on the filtering options provided in AssetFilter and
+ * that are registered on a blockchain as a paginated entity
+ *
+ * @param queryable - object to use when querying the blockchain
+ * @param assetFilter - object of AssetFilter that can be list of id, name, symbol and type
+ * @param limit - maximum page size
+ * @param cursor - where the page should start
+ *
+ * Available since ApiVersion 1
+ */
+export async function getAssetsFiltered(
+  queryable: Queryable,
+  assetFilter: AssetFilter | null = null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<Asset>> {
+  return retrievePaginatedEntity<Asset, AssetResponse>(
+    queryable,
+    assetsFiltered(assetFilter, limit, cursor),
+    (assets) => assets.map(createAssetObject),
+  );
+}
+
+/**
+ * Retrieves all balances based on the filtering options provided in BalanceFilter and
+ * that are registered on a blockchain as a paginated entity
+ *
+ * @param queryable - object to use when querying the blockchain
+ * @param balanceFilter - object of BalanceFilter that can be list of account_id and asset_id
+ * @param limit - maximum page size
+ * @param cursor - where the page should start
+ *
+ * Available since ApiVersion 1
+ */
+export async function getBalancesFiltered(
+  queryable: Queryable,
+  balanceFilter: BalanceFilter | null = null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<Balance>> {
+  return retrievePaginatedEntity<Balance, BalanceResponse>(
+    queryable,
+    balancesFiltered(balanceFilter, limit, cursor),
+    (balances) => balances.map(createBalanceObject),
+  );
+}
+
+/**
+ * Retrieves all transfer history entries based on the filtering options provided in TransferHistoryEntryFilter
+ * as a paginated entity
+ *
+ * @param queryable - object to use when querying the blockchain
+ * @param transferHistoryEntryFilter - object of TransferHistoryEntryFilter that can be list of,
+ * account_id, asset_id, transaction_rid and op_index
+ * @param limit - maximum page size
+ * @param cursor - where the page should start
+ *
+ * Available since ApiVersion 1
+ */
+export async function getTransferHistoryEntriesFiltered(
+  queryable: Queryable,
+  transferHistoryEntryFilter: TransferHistoryEntryFilter | null = null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<TransferHistoryEntry>> {
+  return retrievePaginatedEntity<
+    TransferHistoryEntry,
+    TransferHistoryEntryResponse
+  >(
+    queryable,
+    transferHistoryEntriesFiltered(transferHistoryEntryFilter, limit, cursor),
+    (transferHistoryEntries) =>
+      transferHistoryEntries.map(createTransferHistoryEntryFromResponse),
+  );
+}
+
+/**
+ * Retrieves all crosschain transfer history entries based on the filtering options provided in CrosschainTransferHistoryEntryFilter
+ * as a paginated entity
+ *
+ * @param queryable - object to use when querying the blockchain
+ * @param crosschainTransferHistoryEntryFilter - object of CrosschainTransferHistoryEntryFilter that can be
+ * list of, account_id, asset_id, transaction_rid and op_index
+ * @param limit - maximum page size
+ * @param cursor - where the page should start
+ *
+ * Available since ApiVersion 1
+ */
+export async function getCrosschainTransferHistoryEntriesFiltered(
+  queryable: Queryable,
+  crosschainTransferHistoryEntryFilter: CrosschainTransferHistoryEntryFilter | null = null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<CrosschainTransferHistoryEntry>> {
+  return retrievePaginatedEntity<
+    CrosschainTransferHistoryEntry,
+    CrosschainTransferHistoryEntryResponse
+  >(
+    queryable,
+    crossChainTransferHistoryEntriesFiltered(
+      crosschainTransferHistoryEntryFilter,
+      limit,
+      cursor,
+    ),
+    (crosschainHistoryTransferEntries) =>
+      crosschainHistoryTransferEntries.map(
+        createCrosschainTransferHistoryEntryObject,
+      ),
+  );
+}
+
+/**
+ * Creates a Balance object from a BalanceResponse
+ * @param balance - The balance response from the blockchain
+ * @returns A frozen Balance object
+ */
 export function createBalanceObject(balance: BalanceResponse): Balance {
   return Object.freeze({
     asset: createAssetObject(balance.asset),
@@ -204,5 +338,25 @@ function createCrosschainAssetRegistrationObject(
     iconUrl: asset.icon_url,
     type: asset.type,
     uniquenessResolver: asset.uniqueness_resolver,
+  });
+}
+
+/**
+ * Converts a `CrosschainTransferHistoryEntryResponse` object, returned from the blockchain to a `CrosschainTransferHistoryEntry` object
+ * which can be used in the dApp
+ * @param crosschainTransferHistoryEntry - the object to convert
+ */
+export function createCrosschainTransferHistoryEntryObject(
+  crosschainTransferHistoryEntry: CrosschainTransferHistoryEntryResponse,
+): CrosschainTransferHistoryEntry {
+  return Object.freeze({
+    rowid: crosschainTransferHistoryEntry.rowid,
+    blockchainRid: crosschainTransferHistoryEntry.blockchain_rid,
+    accountId: crosschainTransferHistoryEntry.account_id,
+    assetId: crosschainTransferHistoryEntry.asset_id,
+    delta: crosschainTransferHistoryEntry.delta,
+    isInput: crosschainTransferHistoryEntry.is_input,
+    opIndex: crosschainTransferHistoryEntry.op_index,
+    transactionId: crosschainTransferHistoryEntry.transaction_rid,
   });
 }

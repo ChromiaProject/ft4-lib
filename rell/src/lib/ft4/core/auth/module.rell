@@ -458,7 +458,7 @@ function is_evm_signatures_authorized_operation(name): boolean {
 
     if (chain_context.args.evm_signatures_authorized_operations??) {
         whitelisted_operations.add_all(require(
-            try_call(set<text>.from_gtv(chain_context.args.evm_signatures_authorized_operations!!, *)),
+            try_call(set<text>.from_gtv(chain_context.args.evm_signatures_authorized_operations, *)),
             "EVM SIG PARSING ERROR: Cannot parse 'evm_signatures_authorized_operations' config parameter"
         ));
     }
@@ -550,7 +550,7 @@ function is_auth_blacklisted_operation(name): boolean {
 
     if (chain_context.args.auth_op_blacklisted_operations??) {
         blacklisted_operations.add_all(require(
-            try_call(set<text>.from_gtv(chain_context.args.auth_op_blacklisted_operations!!, *)),
+            try_call(set<text>.from_gtv(chain_context.args.auth_op_blacklisted_operations, *)),
             "AUTH OP PARSING ERROR: Cannot parse 'auth_op_blacklisted_operations' config parameter"
         ));
     }

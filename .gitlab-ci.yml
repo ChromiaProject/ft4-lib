@@ -41,11 +41,12 @@ install_rell:
   script:
     - ./scripts/install-chr-and-pmc.sh --gitlab
     - chr install -s chromia.yml
-    - chr build
+    - chr build --hide-lib-warnings
   artifacts:
     paths:
       - rell/out
       - rell/src/lib/iccf
+      - rell/src/lib/iccf_test
       - bin/
 
 install_js:
@@ -75,7 +76,7 @@ unit_rell_tests:
   needs: ["install_rell"]
   script:
     - ./scripts/install-chr-and-pmc.sh --link-only
-    - chr test
+    - npm run test:rell -- --gitlab
   artifacts:
     paths:
       - logs/**
