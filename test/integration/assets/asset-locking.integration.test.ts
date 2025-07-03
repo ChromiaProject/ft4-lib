@@ -5,7 +5,6 @@ import {
   comparableObjectWithAssetAndAmount,
   comparableObjectWithAmount,
   getNewAsset,
-  // getSessionForAuthenticatedAccount,
   useChromiaNode,
   lockAccountId,
 } from "@ft4-test/util";
@@ -52,7 +51,6 @@ describe("Asset locking", () => {
       .withPoints(5)
       .build();
 
-    // session = getSessionForAuthenticatedAccount(account);
     session = createSession(connection, account.authenticator);
   });
 
