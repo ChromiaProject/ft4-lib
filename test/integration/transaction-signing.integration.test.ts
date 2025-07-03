@@ -190,12 +190,14 @@ describe("Transaction Signing", () => {
         accountId1,
         [createEvmKeyHandler(testAdFromRegistration(ad1), evmKeyStore)],
         authDataService,
+        connection,
       );
 
       const ftAuthenticator = createAuthenticator(
         accountId2,
         [createFtKeyHandler(testAdFromRegistration(ad2), ftKeyStore)],
         authDataService,
+        connection,
       );
 
       const tx = await transactionBuilder(evmAuthenticator, client)
