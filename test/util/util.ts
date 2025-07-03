@@ -249,15 +249,6 @@ export async function getSessionForAccount(
   return await getSession(accountId);
 }
 
-// export function getSessionForAuthenticatedAccount(
-//   account: AuthenticatedAccount,
-// ): Session {
-//   return createSession(
-//     account.authenticator.authDataService.connection,
-//     account.authenticator,
-//   );
-// }
-
 /**
  * Converts amount bigint to string so it can be used to compare Amount with jest
  */
