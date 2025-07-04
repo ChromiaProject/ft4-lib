@@ -8,7 +8,6 @@ import {
   ftSigner,
 } from "@ft4/authentication";
 import {
-  OperationNotExistError,
   TxContext,
   compactArray,
   getAuthDescriptorCounterIdForTxContext,
@@ -103,15 +102,6 @@ export function transactionBuilder(
 
     for (const opContext of opContexts) {
       const { operation, authenticator, signers, skipFtSigning } = opContext;
-      if (
-        !(await authenticator.authDataService.isOperationExposed(
-          operation.name,
-        ))
-      ) {
-        throw new OperationNotExistError(
-          `Operation ${operation.name} does not exist`,
-        );
-      }
 
       if (operation.name === "nop") {
         processedOperations.push(operation);
@@ -331,7 +321,7 @@ export function getSystemAnchoringIccfProofOp(
 
     const proofTx = await createIccfProofTx(
       directoryClient,
-      getTransactionRid(txToProve),
+      getTransactionRid(txToProve, client),
       gtx.getDigest(txToProve, client.config.merkleHashVersion),
       txToProve.signers,
       client.config.blockchainRid,
@@ -339,6 +329,7 @@ export function getSystemAnchoringIccfProofOp(
       undefined,
       true,
       client.config.merkleHashVersion,
+      client.config.nodeManager.lastUsedNode?.url,
     );
 
     const iccfProofOperation = proofTx.iccfTx.operations[0];

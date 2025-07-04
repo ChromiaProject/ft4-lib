@@ -16,7 +16,6 @@ export default {
     ],
     "setupFilesAfterEnv": [
         "<rootDir>/jest.setup.ts",
-        "<rootDir>/test/setupMocks.ts"
     ],
     "testEnvironment": "<rootDir>/jest.test-environment.ts",
     "testPathIgnorePatterns": [

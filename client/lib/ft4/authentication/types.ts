@@ -144,12 +144,6 @@ export interface KeyStore {
 export interface AuthDataService {
   connection: Connection;
   /**
-   * Checks if an operation with the specified name exists on the blockchain.
-   * @param operationName - the operation name to check
-   * @returns true if the operation exists, else false.
-   */
-  isOperationExposed(operationName: string): Promise<boolean>;
-  /**
    * Returns the auth message template to use when signing a specified operation.
    * @param operation - the operation to get the message for
    */

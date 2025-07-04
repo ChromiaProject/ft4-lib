@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2] - 2025-07-04
+
+### Changed 🪙
+
+- Update `postchain-client` to `2.0.2`
+
+### Added ✅
+
+- `getSystemAnchoringIccfProofOp` now sets the last used node from the node manager while calling `createIccfProofTx`
+
+### Removed 🗑️
+
+- Removed the checks for exposed operations, now allowing users to call operations that don't exist. This was done to prevent failure when an operation was exposed but not part of the app structure, as it commonly is in operations defined in GTV modules
+
+## [2.0.1] - 2025-06-13
+
+### Fixed 🔧
+
+- `getTransactionRid` now takes a second mandatory parameter for MerkleHash version. It can be a number, taken from `MERKLE_HASH_VERSIONS`, or a `client`/`connection` 
+
+
 ## [2.0.0] - 2025-05-07
 
 ### Breaking 💔
