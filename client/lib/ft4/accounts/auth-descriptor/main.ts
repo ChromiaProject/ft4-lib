@@ -1,5 +1,5 @@
 import { gtv, MERKLE_HASH_VERSIONS } from "postchain-client";
-import { authDescriptorRegistrationToGtv } from "./gtv";
+import { authDescriptorRegistrationToGtv } from "./auth-descriptor-mapper";
 import { AuthDescriptorRules } from "./rules";
 import {
   isRawAnyAuthDescriptorRegistration,

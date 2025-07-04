@@ -10,8 +10,6 @@ export {
   Filter,
 } from "./types";
 
-export { OperationNotExistError } from "./errors";
-
 export {
   createAndSignTransaction,
   getAuthDescriptorCounterIdForTxContext,
@@ -29,8 +27,6 @@ export {
 } from "./main";
 
 export { firstAllowedAuthDescriptor, authHandlerForOperation } from "./queries";
-
-export { fetchExposedOperations } from "./exposed-operations";
 
 export { enumValueFromString } from "./enum-parser";
 

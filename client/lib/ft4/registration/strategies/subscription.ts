@@ -14,7 +14,7 @@ import {
 import { hasPendingCreateAccountTransferForStrategy } from "./queries";
 import { fetchLoginDetails } from "./main";
 import { LoginDetails } from "./types";
-import { authDescriptorRegistrationToGtv } from "@ft4/accounts/auth-descriptor/gtv";
+import { authDescriptorRegistrationToGtv } from "@ft4/accounts/auth-descriptor/auth-descriptor-mapper";
 import { getTransferStrategyRulesGroupedByStrategy } from "./transfer-rules";
 import { BufferId, formatter } from "postchain-client";
 import { TransferRef } from "@ft4/crosschain";

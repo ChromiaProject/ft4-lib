@@ -161,6 +161,77 @@ describe("Transaction Signing", () => {
       expect(receipt.status).toBe("confirmed");
     });
 
+    it("correctly signs a transaction with optional parameters", async () => {
+      const evmKeyStore = createInMemoryEvmKeyStore(keyPair1);
+      const ftKeyStore = createInMemoryFtKeyStore(keyPair1);
+      const ad1 = createTestAuthDescriptorWithSigner(
+        gtv.gtvHash(keyPair1.pubKey, MERKLE_HASH_VERSIONS.ONE),
+        evmKeyStore.id,
+        [...Object.values(AuthFlag)],
+        null,
+      );
+      const ad2 = createTestAuthDescriptorWithSigner(
+        gtv.gtvHash(keyPair1.pubKey, MERKLE_HASH_VERSIONS.ONE),
+        ftKeyStore.id,
+        [...Object.values(AuthFlag)],
+        null,
+      );
+
+      const accountId1 = getAccountIdFromAuthDescriptor(ad1);
+      const accountId2 = getAccountIdFromAuthDescriptor(ad2);
+
+      await registerAccountAdmin(client, adminUser().signatureProvider, ad1);
+      await registerAccountAdmin(client, adminUser().signatureProvider, ad2);
+
+      const evmAuthenticator = createAuthenticator(
+        accountId1,
+        [createEvmKeyHandler(testAdFromRegistration(ad1), evmKeyStore)],
+        authDataService,
+      );
+
+      const ftAuthenticator = createAuthenticator(
+        accountId2,
+        [createFtKeyHandler(testAdFromRegistration(ad2), ftKeyStore)],
+        authDataService,
+      );
+
+      const tx = await transactionBuilder(evmAuthenticator, client)
+        .add(op("test_optional_params", 100, "alice"))
+        .add(op("test_optional_params", 100, "alice"), {
+          authenticator: ftAuthenticator,
+          skipFtSigning: true,
+        })
+        .build();
+
+      const ftSignedTx = await signTransaction(
+        ftAuthenticator,
+        gtx.deserialize(tx),
+      );
+      expect(ftSignedTx).not.toEqual(tx);
+
+      const receipt = await client.sendTransaction(ftSignedTx);
+      expect(receipt.status).toBe("confirmed");
+
+      const optionalParamsTx = await transactionBuilder(
+        evmAuthenticator,
+        client,
+      )
+        .add(op("test_optional_params", 100))
+        .add(op("test_optional_params", 100), {
+          authenticator: ftAuthenticator,
+          skipFtSigning: true,
+        })
+        .build();
+      const optionalParamsSignedTx = await signTransaction(
+        ftAuthenticator,
+        gtx.deserialize(optionalParamsTx),
+      );
+
+      expect(optionalParamsSignedTx).not.toEqual(optionalParamsTx);
+      const receipt2 = await client.sendTransaction(optionalParamsSignedTx);
+      expect(receipt2.status).toBe("confirmed");
+    });
+
     it("correctly signs an evm multisig operation", async () => {
       const originalAd = createMultiSigAuthDescriptorRegistration(
         [...Object.values(AuthFlag)],
