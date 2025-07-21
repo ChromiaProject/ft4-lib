@@ -1,0 +1,28 @@
+
+/** the name of this module, for more readable errors */
+val MODULE_NAME = "lib.ft4.core.accounts.strategy.import";
+
+/** The configuration for this module, to be defined in the `chromia.yml` */
+struct module_args {
+
+    /**
+     * The chains that are trusted to import accounts.
+     * 
+     * @see utils.rid for more info on RIDs
+     */
+    trusted_chains: gtv;
+    /**
+     * The time in milliseconds after which the iccf proof expires.
+     */
+    import_account_timeout: integer;
+    /**
+     * Whether to allow imported accounts to have modified main auth descriptors.
+     */
+    allow_modified_main_auth_descriptors: boolean;
+}
+
+function trusted_chains(): list<text> = list<text>.from_gtv(chain_context.args.trusted_chains);
+
+function import_account_timeout(): integer = chain_context.args.import_account_timeout;
+
+function allow_modified_main_auth_descriptors(): boolean = chain_context.args.allow_modified_main_auth_descriptors;
