@@ -3,6 +3,7 @@ module;
 
 import ^^^.core.accounts;
 import ^^^.core.auth;
+import ^^^.utils;
 
 /**
  * Extendable function that allows the developer to add more functionality to the

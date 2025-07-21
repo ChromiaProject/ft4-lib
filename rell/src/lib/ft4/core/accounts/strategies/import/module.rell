@@ -7,8 +7,9 @@ import ^^^^.core.accounts;
 import ^^^^.core.accounts.strategies;
 import external_auth: ^^^^.external.auth;
 import ^^^^.utils;
-import transfer: ^.transfer;
 import ^^^^^.iccf;
+import module_args_utils: ^;
+
 /**
  * The operation that defines the open strategy. The open strategy will allow anybody to
  * register an account by simply sending a transaction that uses it.
@@ -36,7 +37,7 @@ operation ras_import(
     require(
         iccf_proof_transaction
             .body
-            .blockchain_rid.to_hex() in trusted_chains(),
+            .blockchain_rid in trusted_chains().allowed_values,
         "INVALID ORIGIN CHAIN: The account cannot be imported from an untrusted chain"
     );
 
@@ -67,32 +68,31 @@ operation ras_import(
     );
 
     val signatures = list<auth.signature?>.from_gtv(preceding_auth.args[2]);
-     require(
-            signatures
-                .size() == signers
-                .size(),
-            "INVALID_SIGNATURES: The number of signatures does not match the number of signers"
-        );
+    require(
+        signatures
+            .size() == signers
+            .size(),
+        "INVALID_SIGNATURES: The number of signatures does not match the number of signers"
+    );
     auth.verify_signers(signers);
 
     if (signers[0].size() == auth.EVM_ADDRESS_SIZE) {
-       
+
         require(
             preceding_auth
                 .name == auth
                 .EVM_AUTH_OP,
             "INVALID_PRECEDING_AUTH: The preceding auth is not evm_auth"
         );
-
-        } else if (signers[0].size() == auth.FT_PUBKEY_SIZE) {
+    } else if (signers[0].size() == auth.FT_PUBKEY_SIZE) {
         require(
             preceding_auth
                 .name == auth
                 .FT_AUTH_OP,
             "INVALID_PRECEDING_AUTH: The preceding auth is not ft_auth"
         );
-        }
-    
+    }
+
     strategies.require_register_account_next_operation();
 }
 
