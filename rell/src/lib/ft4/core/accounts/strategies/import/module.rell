@@ -11,10 +11,11 @@ import ^^^^^.iccf;
 import module_args_utils: ^;
 
 /**
- * The operation that defines the open strategy. The open strategy will allow anybody to
- * register an account by simply sending a transaction that uses it.
- * In most cases, this is not something that is desirable for production dapps, as it will
- * expose the dapp to spam account creation.
+ * The operation that defines the import strategy. The import strategy allows importing
+ * an existing account from a trusted chain by providing ICCF proof of the account's
+ * existence and authentication on the origin chain.
+ * This strategy requires verification of signatures and proof anchoring to ensure
+ * the account being imported is legitimate.
  * 
  * Throws if the next operation in the transaction is not accepted by
  * `require_register_account_next_operation`
@@ -22,11 +23,11 @@ import module_args_utils: ^;
  * @see core.accounts.strategies._strategy for information on how to register an account
  * using this strategy
  * 
- * @param main          the main auth descriptor for the account that will be registered
- * @param disposable    optionally, the disposable auth descriptor for the same account
+ * @param iccf_proof_transaction the ICCF proof transaction containing the account verification
+ * @param main                  the main auth descriptor for the account that will be registered
+ * @param disposable            optionally, the disposable auth descriptor for the same account
  */
 operation ras_import(
-    op_index: integer,
     iccf_proof_transaction: gtx_transaction,
     main: accounts.auth_descriptor,
     disposable: accounts.auth_descriptor? = null
@@ -48,13 +49,19 @@ operation ras_import(
         min_timestamp = op_context.last_block_time - import_account_timeout()
     );
 
-    val verify_account_op = iccf_operations[op_index];
-    require(
-        verify_account_op.name == rell.meta(verify_account).mount_name,
-        "INVALID_VERIFY_ACCOUNT: The verify_account operation is not at the correct op_index"
-    );
+    //iterate and check if an operation called verify_account is among the operations
+    var verify_account_op: gtx_operation? = null;
+    var op_index: integer? = null;
+    for (op in iccf_operations) {
+        if (op.name == rell.meta(verify_account).mount_name) {
+            verify_account_op = op;
+            op_index = iccf_operations.index_of(op);
+        }
+    }
+    require(verify_account_op != null, "INVALID_VERIFY_ACCOUNT: The verify_account operation is not among the operations");
+   
 
-    val preceding_auth = iccf_operations[op_index - 1];
+    val preceding_auth = iccf_operations[op_index!! - 1]; //TODO check if this is true
     require(
         auth.is_auth_op(preceding_auth),
         "INVALID_PRECEDING_AUTH: The preceding auth is not a ft_auth or evm_auth"
@@ -110,9 +117,9 @@ function verify_account_resolver(args: gtv, account_id: byte_array, auth_descrip
 }
 /**
  * Calculates the account details for the account that will be registered using the
- * `ft4.ras_open` strategy.
+ * `ft4.ras_import` strategy.
  * 
- * @param gtv   the parameters for the `ras_open` operation, GTV-encoded
+ * @param gtv   the parameters for the `ras_import` operation, GTV-encoded
  */
 function account_details(gtv) {
     val params = struct<ras_import>.from_gtv(gtv);

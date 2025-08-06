@@ -19,6 +19,7 @@ export interface Strategy {
 
 export type RegistrationDetails = {
   strategyOperation: Operation;
+  additionalOperations?: Operation[];
   loginKeyStore: LoginKeyStore | null;
   disposableKeyStore: FtKeyStore | null;
 };

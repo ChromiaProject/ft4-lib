@@ -5,11 +5,13 @@ import {
   feeAssets,
   fee,
   open,
+  importStrategy,
   subscription,
   transferFee,
   transferOpen,
   subscriptionAssets,
   renewSubscription,
+  verifyAccount,
   subscriptionPeriodMillis,
   transferSubscription,
   subscriptionDetails,
@@ -38,6 +40,21 @@ import {
  * Functions that can be used to register an account
  */
 export interface RegistrationStrategy {
+  /**
+   * Creates an account using the import strategy
+   *
+   * @param opIndex - the index of the operation in the transaction that will be used to import the account
+   * @param iccfProofTransaction - the proof transaction used to prove that an account exists on a trusted blockchain
+   * @param mainAuthDescriptor - the main auth descriptor of the new account
+   * @param loginConfig - the config if the account should be created with an active session, otherwise `null`
+   * @returns Strategy instance that can be used to retrieve registration details
+   */
+  importStrategy: (
+    originBrid: BufferId,
+    iccfProofTransaction: GTX,
+    mainAuthDescriptor: AnyAuthDescriptorRegistration,
+    loginConfig?: LoginConfigOptions | null,
+  ) => Strategy;
   /**
    * Registers an account using the open strategy
    *
@@ -119,6 +136,7 @@ export interface RegistrationStrategy {
 }
 
 const registrationStrategy: RegistrationStrategy = {
+  importStrategy,
   open,
   fee,
   subscription,
@@ -134,7 +152,7 @@ import { Strategy } from "./types";
 import { AnyAuthDescriptorRegistration } from "@ft4/accounts";
 import { LoginConfigOptions } from "@ft4/authentication";
 import { Asset } from "@ft4/asset";
-import { BufferId } from "postchain-client";
+import { BufferId, GTX } from "postchain-client";
 
 export { Strategy, RegistrationDetails, StrategyError } from "./types";
 
@@ -142,6 +160,7 @@ export {
   LoginDetails,
   allowedAssets,
   renewSubscription,
+  verifyAccount,
   subscriptionDetails,
   transferSubscription,
   feeAssets,

@@ -58,40 +58,49 @@ export function registerAccount(
     const connection = createConnection(client);
     return strategy
       .getRegistrationDetails(connection, masterKeyStore)
-      .then(({ strategyOperation, loginKeyStore, disposableKeyStore }) => {
-        const ftKeyStores: FtKeyStore[] = [];
-        let evmKeyStore: EvmKeyStore | null = null;
-
-        if (isFtKeyStore(masterKeyStore)) {
-          ftKeyStores.push(masterKeyStore);
-        } else {
-          evmKeyStore = masterKeyStore;
-        }
-
-        if (disposableKeyStore) {
-          ftKeyStores.push(disposableKeyStore);
-        }
-
-        return Promise.all([
+      .then(
+        ({
+          strategyOperation,
+          additionalOperations,
           loginKeyStore,
           disposableKeyStore,
-          strategyOperation,
-          evmKeyStore,
-          ftKeyStores,
-          evmKeyStore &&
-            evmSignaturesOperation(
-              connection,
-              evmKeyStore,
-              strategyOperation,
-              registerAccountOperation,
-            ),
-        ]);
-      })
+        }) => {
+          const ftKeyStores: FtKeyStore[] = [];
+          let evmKeyStore: EvmKeyStore | null = null;
+
+          if (isFtKeyStore(masterKeyStore)) {
+            ftKeyStores.push(masterKeyStore);
+          } else {
+            evmKeyStore = masterKeyStore;
+          }
+
+          if (disposableKeyStore) {
+            ftKeyStores.push(disposableKeyStore);
+          }
+
+          return Promise.all([
+            loginKeyStore,
+            disposableKeyStore,
+            strategyOperation,
+            additionalOperations,
+            evmKeyStore,
+            ftKeyStores,
+            evmKeyStore &&
+              evmSignaturesOperation(
+                connection,
+                evmKeyStore,
+                strategyOperation,
+                registerAccountOperation,
+              ),
+          ]);
+        },
+      )
       .then(
         ([
           loginKeyStore,
           disposableKeyStore,
           strategyOperation,
+          additionalOperations,
           evmKeyStore,
           ftKeyStores,
           signaturesOperation,
@@ -103,6 +112,7 @@ export function registerAccount(
             createAndSignTransaction(
               connection,
               compactArray([
+                ...(additionalOperations || []),
                 signaturesOperation,
                 strategyOperation,
                 registerAccountOperation,
