@@ -49,19 +49,17 @@ operation ras_import(
         min_timestamp = op_context.last_block_time - import_account_timeout()
     );
 
-    //iterate and check if an operation called verify_account is among the operations
-    var verify_account_op: gtx_operation? = null;
+    
     var op_index: integer? = null;
     for (op in iccf_operations) {
         if (op.name == rell.meta(verify_account).mount_name) {
-            verify_account_op = op;
             op_index = iccf_operations.index_of(op);
         }
     }
-    require(verify_account_op != null, "INVALID_VERIFY_ACCOUNT: The verify_account operation is not among the operations");
+    require(op_index != null, "INVALID_VERIFY_ACCOUNT: The verify_account operation is not among the operations");
    
 
-    val preceding_auth = iccf_operations[op_index!! - 1]; //TODO check if this is true
+    val preceding_auth = iccf_operations[op_index - 1];
     require(
         auth.is_auth_op(preceding_auth),
         "INVALID_PRECEDING_AUTH: The preceding auth is not a ft_auth or evm_auth"
