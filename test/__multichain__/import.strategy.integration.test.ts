@@ -2,34 +2,17 @@ import {
   AccountBuilder,
   createChromiaClientToMultichain,
   fetchBlockchains,
-  getAccountIdFromAuthDescriptor,
 } from "@ft4-test/util";
-import {
-  AuthFlag,
-  createSingleSigAuthDescriptorRegistration,
-  getAccountMainAuthDescriptor,
-} from "@ft4/accounts";
+import { AuthFlag, getAccountMainAuthDescriptor } from "@ft4/accounts";
 
-import { createInMemoryFtKeyStore } from "@ft4/authentication";
+import { FtKeyStore } from "@ft4/authentication";
 import { createConnection } from "@ft4/ft-session";
-import {
-  registerAccount,
-  registrationStrategy,
-  verifyAccount,
-} from "@ft4/registration";
-import { transactionBuilder } from "@ft4/transaction-builder";
-import { MERKLE_HASH_VERSIONS, newSignatureProvider } from "postchain-client";
+import { registerAccount, registrationStrategy } from "@ft4/registration";
 
 describe("import strategy account creation single step", () => {
   beforeAll(async () => {});
 
   it("can register account if registered on another trusted chain", async () => {
-    const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
-    const keyStore = createInMemoryFtKeyStore(sigProv);
-    const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account, AuthFlag.Transfer],
-      keyStore.id,
-    );
     const { multichain00, multichain01 } = await fetchBlockchains();
 
     const connection00 = createConnection(
@@ -43,52 +26,30 @@ describe("import strategy account creation single step", () => {
       .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
-    // Create the transaction with ft_auth and verify_account operations on origin chain
-    const originTransaction = await transactionBuilder(
-      account00.authenticator,
-      connection00.client,
-    )
-      .add(verifyAccount())
-      .buildAndSendWithAnchoring();
-
-    // Create ICCF proof operation from the origin transaction
-    const iccfProofOperation = await originTransaction.systemConfirmationProof(
-      multichain00.rid,
-    );
-
-    const iccfProofTransaction = await transactionBuilder(
-      account00.authenticator,
-      connection00.client,
-    )
-      .add(iccfProofOperation)
-      .buildAndSendWithAnchoring();
-
+    const mainAuthDescriptor00 = await account00.getMainAuthDescriptor();
     // Create import strategy and register account on destination chain
     const importStrategy = registrationStrategy.importStrategy(
-      multichain01.rid,
-      iccfProofTransaction.tx,
-      authDescriptor,
+      multichain00.rid,
+      mainAuthDescriptor00,
     );
 
-    const registeredAccount = await registerAccount(
+    const registeredAccount01 = await registerAccount(
       connection01.client,
-      keyStore,
+      account00.authenticator.keyHandlers[0].keyStore as FtKeyStore,
       importStrategy,
     );
 
-    // Verify the account has been successfully created on the destination chain
-    const expectedAccountId = getAccountIdFromAuthDescriptor(authDescriptor);
-
-    // Verify the session is valid and the account ID matches
-    expect(registeredAccount.session.account.id).toEqual(expectedAccountId);
+    expect(registeredAccount01.session.account.id).toEqual(account00.id);
 
     // Verify the account exists and has the correct main auth descriptor
-    const mainAuthDescriptor = await getAccountMainAuthDescriptor(
+    const mainAuthDescriptor01 = await getAccountMainAuthDescriptor(
       connection01,
-      expectedAccountId,
+      account00.id,
     );
-    // expect(mainAuthDescriptor.id).toEqual(authDescriptor.id);
-    expect(mainAuthDescriptor.args.flags).toEqual([
+
+    expect(mainAuthDescriptor01.id).toEqual(mainAuthDescriptor00.id);
+
+    expect(mainAuthDescriptor01.args.flags).toEqual([
       AuthFlag.Account,
       AuthFlag.Transfer,
     ]);

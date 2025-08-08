@@ -42,16 +42,13 @@ import {
 export interface RegistrationStrategy {
   /**
    * Creates an account using the import strategy
-   *
-   * @param opIndex - the index of the operation in the transaction that will be used to import the account
-   * @param iccfProofTransaction - the proof transaction used to prove that an account exists on a trusted blockchain
+   * @param originBrid - the blockchain rid where the original account was created
    * @param mainAuthDescriptor - the main auth descriptor of the new account
    * @param loginConfig - the config if the account should be created with an active session, otherwise `null`
    * @returns Strategy instance that can be used to retrieve registration details
    */
   importStrategy: (
     originBrid: BufferId,
-    iccfProofTransaction: GTX,
     mainAuthDescriptor: AnyAuthDescriptorRegistration,
     loginConfig?: LoginConfigOptions | null,
   ) => Strategy;
@@ -152,7 +149,7 @@ import { Strategy } from "./types";
 import { AnyAuthDescriptorRegistration } from "@ft4/accounts";
 import { LoginConfigOptions } from "@ft4/authentication";
 import { Asset } from "@ft4/asset";
-import { BufferId, GTX } from "postchain-client";
+import { BufferId } from "postchain-client";
 
 export { Strategy, RegistrationDetails, StrategyError } from "./types";
 

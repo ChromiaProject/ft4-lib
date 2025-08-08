@@ -6,15 +6,15 @@ struct module_args {
      * 
      * @see utils.rid for more info on RIDs
      */
-    trusted_chains: gtv;
+    trusted_chains: gtv = module_args_utils.allowlist().to_gtv();
     /**
      * The time in milliseconds after which the iccf proof expires.
      */
-    import_account_timeout: integer;
+    import_account_timeout: integer = 0;
     /**
      * Whether to allow imported accounts to have modified main auth descriptors.
      */
-    allow_modified_main_auth_descriptors: boolean;
+    allow_modified_main_auth_descriptors: boolean = false;
 }
 
 // function trusted_chains(): list<text> = list<text>.from_gtv(chain_context.args.trusted_chains);

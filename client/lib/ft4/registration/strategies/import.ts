@@ -12,12 +12,10 @@ import {
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
 import { fetchLoginDetails } from "./main";
-import { BufferId, gtx, GTX } from "postchain-client";
-import { getSystemAnchoringIccfProofOp } from "@ft4/transaction-builder";
+import { BufferId, gtx } from "postchain-client";
 
 export function importStrategy(
   originBrid: BufferId,
-  iccfProofTransaction: GTX,
   mainAuthDescriptor: AnyAuthDescriptorRegistration,
   loginConfig: LoginConfigOptions | null = null,
 ): Strategy {
@@ -48,23 +46,20 @@ export function importStrategy(
         keyStore,
       ).getSession(accountId);
 
-      const verifyAccountTransactionWithReceipt =
-        await originSession.call(verifyAccount);
+      const verifyAccountTransactionWithReceipt = await originSession
+        .transactionBuilder()
+        .add(verifyAccount())
+        .buildAndSendWithAnchoring();
 
-      const iccfProofFunction = getSystemAnchoringIccfProofOp(
-        originSession.client,
-        verifyAccountTransactionWithReceipt.tx,
-      );
-
-      const iccfProofOperation = await iccfProofFunction(
-        targetChainConnection.blockchainRid,
-      );
+      const iccfProofOperation =
+        await verifyAccountTransactionWithReceipt.systemConfirmationProof(
+          targetChainConnection.blockchainRid,
+        );
 
       const operation = {
         name: "ft4.ras_import",
         args: [
-          1,
-          gtx.gtxToRawGtx(iccfProofTransaction),
+          gtx.gtxToRawGtx(verifyAccountTransactionWithReceipt.tx),
           gtv.authDescriptorRegistrationToGtv(mainAuthDescriptor),
           loginDetails &&
             gtv.authDescriptorRegistrationToGtv(loginDetails.authDescriptor),
