@@ -66,3 +66,59 @@ export enum PendingTransferExpirationState {
   Expired,
   Valid,
 }
+
+/**
+ * options for the import strategy
+ * forceSignature - Whether the user should sign. If null, the function will try not to use
+ * a signature if possible, reverting to signing if needed.
+ * originAccountId - The account id of the account to import. If null, the function will infer
+ * the account id from the signers of the main auth descriptor.
+ */
+export type ImportStrategyOptions =
+  | {
+      forceSignature?: true;
+      originAccountId?: Buffer;
+    }
+  | {
+      forceSignature: false;
+      originAccountId?: never;
+    };
+
+/**
+ * The configuration for the import strategy
+ */
+export type ImportConfig = {
+  /**
+   * The chains that are trusted to import accounts.
+   */
+  trustedChains: Buffer[];
+  /**
+   * The time in milliseconds after which the iccf proof expires.
+   */
+  importAccountTimeout: number;
+  /**
+   * Whether it allows any operation to import an account, rather than just the `ft4.ras_import` operation.
+   */
+  allowAnyOperation: boolean;
+};
+
+/**
+ * The result of the canImportAccount function
+ */
+export type CanImportAccountResult = {
+  /**
+   * The chain of the account that is being imported
+   */
+  originChain: Buffer;
+  /**
+   * The id of the account that is being imported
+   */
+  originAccountId: Buffer;
+  /**
+   * Whether the account requires a signature to import. If false, the account can
+   * be imported without a signature, provided that a recent enough transaction is
+   * found on the origin chain. This means that, even if this is false, the account
+   * may still require a signature to import.
+   */
+  requiresSignature: boolean;
+};

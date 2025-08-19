@@ -1,0 +1,9 @@
+query get_import_config() {
+    return (
+        trusted_chains = trusted_chains(),
+        import_account_timeout = import_account_timeout(),
+        allow_any_operation = allow_any_operation()
+    );
+}
+
+

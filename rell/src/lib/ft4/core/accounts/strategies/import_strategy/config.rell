@@ -6,20 +6,19 @@ struct module_args {
      * 
      * @see utils.rid for more info on RIDs
      */
-    trusted_chains: gtv = module_args_utils.allowlist().to_gtv();
+    trusted_chains: gtv = list<byte_array>().to_gtv();
     /**
      * The time in milliseconds after which the iccf proof expires.
      */
     import_account_timeout: integer = 0;
     /**
-     * Whether to allow imported accounts to have modified main auth descriptors.
+     * Whether to allow any operation to import an account, rather than just the `ft4.ras_import` operation.
      */
-    allow_modified_main_auth_descriptors: boolean = false;
+    allow_any_operation: boolean = false;
 }
 
-// function trusted_chains(): list<text> = list<text>.from_gtv(chain_context.args.trusted_chains);
-function trusted_chains(): module_args_utils.allowlist = module_args_utils.parse_blockchains_from_gtv(chain_context.args.trusted_chains);
+function trusted_chains(): list<byte_array> = list<byte_array>.from_gtv(chain_context.args.trusted_chains);
 
 function import_account_timeout(): integer = chain_context.args.import_account_timeout;
 
-function allow_modified_main_auth_descriptors(): boolean = chain_context.args.allow_modified_main_auth_descriptors;
+function allow_any_operation(): boolean = chain_context.args.allow_any_operation;

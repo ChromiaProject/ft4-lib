@@ -14,7 +14,7 @@ import module_args_utils: ^;
  * The operation that defines the import strategy. The import strategy allows importing
  * an existing account from a trusted chain by providing ICCF proof of the account's
  * existence and authentication on the origin chain.
- * This strategy requires verification of signatures and proof anchoring to ensure
+ * This strategy requires verification of signatures and an ICCF proof to ensure
  * the account being imported is legitimate.
  * 
  * Throws if the next operation in the transaction is not accepted by
@@ -24,22 +24,25 @@ import module_args_utils: ^;
  * using this strategy
  * 
  * @param iccf_proof_transaction the ICCF proof transaction containing the account verification
- * @param main                  the main auth descriptor for the account that will be registered
- * @param disposable            optionally, the disposable auth descriptor for the same account
+ * @param main                   the main auth descriptor for the account that will be registered
+ * @param disposable             optionally, the disposable auth descriptor for the same account
+ * @param flags_on_other_chain   the flags that are set on the auth descriptor on the other chain
  */
 operation ras_import(
     iccf_proof_transaction: gtx_transaction,
     main: accounts.auth_descriptor,
-    disposable: accounts.auth_descriptor? = null
+    disposable: accounts.auth_descriptor? = null,
+    flags_on_other_chain: list<text> = accounts.get_auth_flags_config().mandatory
 ) {
     val signers = accounts.get_signers(main);
+    val expected_account_id = accounts.get_account_id_from_signers(signers);
     val operations = op_context.get_all_operations();
 
+    val sender_chain_rid = iccf_proof_transaction.body.blockchain_rid;
+
     require(
-        iccf_proof_transaction
-            .body
-            .blockchain_rid in trusted_chains().allowed_values,
-        "INVALID ORIGIN CHAIN: The account cannot be imported from an untrusted chain"
+        sender_chain_rid in trusted_chains(),
+        "INVALID ORIGIN CHAIN: The proof comes from an untrusted chain"
     );
 
     var iccf_operations = iccf.require_valid_proof(
@@ -49,74 +52,61 @@ operation ras_import(
         min_timestamp = op_context.last_block_time - import_account_timeout()
     );
 
-    var op_index: integer? = null;
-    for (op in iccf_operations) {
-        if (op.name == rell.meta(verify_account).mount_name) {
-            op_index = iccf_operations.index_of(op);
-            break;
-        }
-    }
+    var auth_operation: gtx_operation? = extract_auth_op_for_verify_account(iccf_operations);
 
-    var auth_operation: gtx_operation? = null;
-    //modified auth descriptors allowed - there are no sigunatures and verify account is not called
-    if (op_index == null and allow_modified_main_auth_descriptors()) {
+    // any operation allowed, and verify account is not called
+    if (auth_operation == null and allow_any_operation()) {
         for (op in iccf_operations) {
-            if (auth.is_auth_op(op) and is_signers_account_equal_to_account(signers, auth.extract_account_id(op))) {
+            if (auth.is_auth_op(op) and auth.extract_account_id(op) == expected_account_id) {
                 auth_operation = op;
                 break;
             }
         }
         require(
             auth_operation != null,
-            "INVALID AUTH: The auth operation is not among the operations or no signers account matches the auth operation account"
+            "INVALID AUTH: At least one operation in the proof must be authorized by the signers that created the account. Did you use the original main auth descriptor?"
+        );
+        require(
+            disposable == null,
+            "INVALID DISPOSABLE AUTH: The disposable auth descriptor is not allowed when verify_account is not used"
         );
     }
-    //modified auth descriptors not allowed - verify account has to be called first and the transaction is signed
+    // verify_account was used
     else {
-        require(op_index != null, "INVALID_VERIFY_ACCOUNT: The verify_account operation is not among the operations");
-        val preceding_auth = iccf_operations[op_index - 1];
-
         require(
-            auth.is_auth_op(preceding_auth),
-            "INVALID_PRECEDING_AUTH: The preceding auth is not a ft_auth or evm_auth"
+            auth_operation,
+            "INVALID VERIFY ACCOUNT: The proof does not contain a verify_account operation"
         );
 
-        val account_id = auth.extract_account_id(preceding_auth);
-        val account_details = account_details((iccf_proof_transaction, main, disposable).to_gtv());
         require(
-            account_details.account_id == account_id,
-            "INVALID_PRECEDING_AUTH: The preceding auth does not contain the account ID as specified"
+            auth.is_auth_op(auth_operation),
+            "INVALID PRECEDING AUTH: The preceding auth is not a valid auth operation"
         );
+        
+        // verify that signers are the same in main and preceding auth
+        val (account_id, auth_descriptor_id) = auth.extract_account_and_auth_descriptor(auth_operation.args);
+        
+        if (accounts.get_flags(main) == set<text>(flags_on_other_chain)) {
+            require(
+                main.hash() == auth_descriptor_id,
+                "INVALID MAIN AUTH DESCRIPTOR: The main auth descriptor does not match the main auth descriptor in verify_account"
+            );
+        } else {
+            val other_args: list<gtv> = [flags_on_other_chain.to_gtv()];
+            other_args.add_all(main.args.sub(1));
 
-        auth.verify_signers(signers);
-        auth_operation = preceding_auth;
-        //require (auth_operation != null); //TODO - check if the new compiler can be made to understand that auth_operation cannot be null in the lines below
+            val other_main = accounts.auth_descriptor(
+                auth_type = main.auth_type,
+                args = other_args,
+                rules = main.rules
+            );
+
+            require(
+                other_main.hash() == auth_descriptor_id,
+                "INVALID MAIN AUTH DESCRIPTOR: The main auth descriptor does not match the main auth descriptor in verify_account"
+            );
+        }
     }
-
-    var signatures: list<gtv>? = null;
-    if (signers[0].size() == auth.EVM_ADDRESS_SIZE) {
-        signatures = list<gtv>.from_gtv(auth_operation!!.args[2]);
-
-        require(
-            auth_operation
-                .name == auth
-                .EVM_AUTH_OP,
-            "INVALID_PRECEDING_AUTH: The preceding auth is not evm_auth"
-        );
-    } else if (signers[0].size() == auth.FT_PUBKEY_SIZE) {
-        signatures = iccf_proof_transaction.signatures;
-        require(
-            auth_operation!!
-                .name == auth
-                .FT_AUTH_OP,
-            "INVALID_PRECEDING_AUTH: The preceding auth is not ft_auth"
-        );
-    }
-    require(signatures != null, "INVALID_SIGNATURES: The signatures are not found");
-    require(
-        signatures.size() == signers.size(),
-        "INVALID_SIGNATURES: The number of signatures does not match the number of signers"
-    );
 
     strategies.require_register_account_next_operation();
 }
@@ -179,5 +169,21 @@ function verify_account_message(gtv) {
 
 function is_signers_account_equal_to_account(signers: list<byte_array>, account: byte_array): boolean {
     val account_id = accounts.get_account_id_from_signers(signers);
-    if (account_id == account) return true; else return false;
+    return account_id == account;
+}
+
+function extract_auth_op_for_verify_account(tx_operations: list<gtx_operation>) {
+    // find the verify_account operation in the transaction
+    var op_index: integer? = null;
+    for (op in tx_operations) {
+        if (op.name == rell.meta(verify_account).mount_name) {
+            op_index = tx_operations.index_of(op);
+            break;
+        }
+    }
+    if (op_index != null) {
+        require(op_index > 0, "INVALID VERIFY ACCOUNT: The proof does not contain a preceding auth operation");
+        return tx_operations[op_index - 1];
+    }
+    return null;
 }

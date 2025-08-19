@@ -51,14 +51,6 @@ blockchains:
           amount: 2L
         subscription_period_days: 30
 
-      lib.ft4.core.accounts.strategies.import_strategy:  
-        trusted_chains:
-          - x"1399802DE4738134DAF9962B3BFB02EB2FF8EC9BCBCA31A0E586C174C92263C7"
-          - x"75E018CDBB597CC212533CBD90B4433195AE0421FAD0E7CF8BF6C7F4829C99B9"
-          - x"93866CB5A7769EFC7EE052B8EB06CEE44CC23957377B35C256FA7384ACE0FBA3"
-        import_account_timeout: 30
-        allow_modified_main_auth_descriptors: false  
-
 # database:
 #   password: postchain
 #   username: postchain

@@ -167,12 +167,6 @@ blockchains:
         free_operations:
           - free_operation
         subscription_account: x"032c0b7cf95324a07d05398b240174dc0c2be444d96b159aa6c7f7b1e668680991" # Charlie
-      lib.ft4.core.accounts.strategies.import:  
-        trusted_chains:
-          - x"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-          - x"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-        import_account_timeout: 30
-        allow_modified_main_auth_descriptors: false
 
     test:
       modules:

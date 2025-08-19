@@ -335,7 +335,11 @@ function register_account(): accounts.account {
     val signers = strategy.required_signers(strategy_params);
 
     val message = get_register_account_message(strategy_op, op_context.get_current_operation());
-    auth.verify_signers_with_message(signers, message);
+    auth.verify_signers_with_message(
+        signers,
+        message,
+        gtx_transaction.from_bytes(op_context.transaction.tx_data)
+    );
 
     val account_id = account_details.account_id;
 

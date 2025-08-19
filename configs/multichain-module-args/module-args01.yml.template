@@ -60,5 +60,4 @@
       lib.ft4.core.accounts.strategies.import_strategy:  
         trusted_chains:
           - {chain00_rid}
-        import_account_timeout: 30000
-        allow_modified_main_auth_descriptors: false      
+        import_account_timeout: 30000  

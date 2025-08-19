@@ -34,6 +34,7 @@ import {
   TransferParticipants,
   TransferParticipantSingle,
   PendingTransferExpirationState,
+  ImportStrategyOptions,
 } from "./strategies";
 
 /**
@@ -42,15 +43,18 @@ import {
 export interface RegistrationStrategy {
   /**
    * Creates an account using the import strategy
-   * @param originBrid - the blockchain rid where the original account was created
-   * @param mainAuthDescriptor - the main auth descriptor of the new account
+   *
+   * @param originBrid - the blockchain rid where the original account exists
+   * @param mainAuthDescriptor - The main auth descriptor of the account to import
    * @param loginConfig - the config if the account should be created with an active session, otherwise `null`
+   * @param options - the options for the import strategy
    * @returns Strategy instance that can be used to retrieve registration details
    */
   importStrategy: (
     originBrid: BufferId,
     mainAuthDescriptor: AnyAuthDescriptorRegistration,
     loginConfig?: LoginConfigOptions | null,
+    options?: ImportStrategyOptions | undefined,
   ) => Strategy;
   /**
    * Registers an account using the open strategy
