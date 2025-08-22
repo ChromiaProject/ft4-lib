@@ -12,6 +12,7 @@ import {
   subscriptionAssets,
   renewSubscription,
   verifyAccount,
+  canImportAccount,
   subscriptionPeriodMillis,
   transferSubscription,
   subscriptionDetails,
@@ -30,11 +31,16 @@ import {
   AssetLimitRaw,
   TransferStrategyRulePartial,
   AssetLimit,
+  ImportConfigRaw,
+  ImportConfig,
   TransferSenderBlockchains,
   TransferParticipants,
   TransferParticipantSingle,
   PendingTransferExpirationState,
   ImportStrategyOptions,
+  CanImportAccountResult,
+  getImportConfig,
+  importConfig,
 } from "./strategies";
 
 /**
@@ -162,6 +168,8 @@ export {
   allowedAssets,
   renewSubscription,
   verifyAccount,
+  canImportAccount,
+  importStrategy,
   subscriptionDetails,
   transferSubscription,
   feeAssets,
@@ -191,4 +199,9 @@ export {
   TransferParticipants,
   TransferParticipantSingle,
   PendingTransferExpirationState,
+  ImportConfigRaw,
+  ImportConfig,
+  CanImportAccountResult,
+  getImportConfig,
+  importConfig,
 };
