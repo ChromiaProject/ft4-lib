@@ -1,6 +1,7 @@
 import {
   AccountBuilder,
   createChromiaClientToMultichain,
+  addNewAssetIfNeeded,
   fetchBlockchains,
 } from "@ft4-test/util";
 import {
@@ -8,6 +9,7 @@ import {
   createSingleSigAuthDescriptorRegistration,
   getAccountMainAuthDescriptor,
 } from "@ft4/accounts";
+import { Amount, Asset, createAmount } from "@ft4/asset";
 
 import { FtKeyStore } from "@ft4/authentication";
 import { createConnection } from "@ft4/ft-session";
@@ -110,10 +112,65 @@ describe("import strategy account creation single step", () => {
   });
 
   it("can register account without signature from chain 2 if it has a recent enough transaction on chain 0", async () => {
-    // Create 2 acocunts on chain 0
-    // make a transfer on chain 0
-    // register the sender on chain 2, it should not require a signature
+    const { multichain00, multichain02 } = await fetchBlockchains();
+
+    const connection00 = createConnection(
+      await createChromiaClientToMultichain(multichain00.rid),
+    );
+    const connection02 = createConnection(
+      await createChromiaClientToMultichain(multichain02.rid),
+    );
+
+    const asset: Asset = await addNewAssetIfNeeded(
+      connection00.client,
+      "import_strategy_asset",
+      "IMPORT_STRATEGY_ASSET",
+      5,
+    );
+
+    const defaultAmount: Amount = createAmount(10, asset.decimals);
+
+    const originAccount00 = await AccountBuilder.account(connection00)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+      .withBalance(asset, 100)
+      .build();
+
+    const originAccount01 = await AccountBuilder.account(connection00)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+      .build();
+
+    const mainAuthDescriptor = await originAccount00.getMainAuthDescriptor();
+
+    await originAccount00.transfer(originAccount01.id, asset.id, defaultAmount);
+
+    const importStrategy = registrationStrategy.importStrategy(
+      multichain00.rid,
+      mainAuthDescriptor,
+      null,
+      {
+        forceSignature: false,
+      },
+    );
+
+    const registeredAccount02 = await registerAccount(
+      connection02.client,
+      originAccount00.authenticator.keyHandlers[0].keyStore as FtKeyStore,
+      importStrategy,
+    );
+
+    expect(registeredAccount02.session.account.id).toEqual(originAccount00.id);
+
+    // Verify the account exists and has the correct main auth descriptor
+    const mainAuthDescriptor02 = await getAccountMainAuthDescriptor(
+      connection02,
+      originAccount00.id,
+    );
+
+    expect(mainAuthDescriptor02.args.flags).toEqual([
+      AuthFlag.Account,
+      AuthFlag.Transfer,
+    ]);
   });
 
-  // TODO test that it can require a signature from chain 2 if it has a recent enough transaction on chain 0
+  // TODO test that it can require a signature from chain 2 if it has no recent enough transaction on chain 0
 });

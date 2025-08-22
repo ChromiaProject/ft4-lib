@@ -76,11 +76,11 @@ export enum PendingTransferExpirationState {
  */
 export type ImportStrategyOptions =
   | {
-      forceSignature?: true;
+      forceSignature: true;
       originAccountId?: Buffer;
     }
   | {
-      forceSignature: false;
+      forceSignature?: false;
       originAccountId?: never;
     };
 
@@ -100,6 +100,24 @@ export type ImportConfig = {
    * Whether it allows any operation to import an account, rather than just the `ft4.ras_import` operation.
    */
   allowAnyOperation: boolean;
+};
+
+/**
+ * The configuration for the import strategy
+ */
+export type ImportConfigRaw = {
+  /**
+   * The chains that are trusted to import accounts.
+   */
+  trusted_chains: Buffer[];
+  /**
+   * The time in milliseconds after which the iccf proof expires.
+   */
+  import_account_timeout: number;
+  /**
+   * Whether it allows any operation to import an account, rather than just the `ft4.ras_import` operation.
+   */
+  allow_any_operation: boolean;
 };
 
 /**

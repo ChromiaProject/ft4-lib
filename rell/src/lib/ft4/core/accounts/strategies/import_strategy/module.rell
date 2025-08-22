@@ -11,6 +11,20 @@ import ^^^^^.iccf;
 import module_args_utils: ^;
 
 /**
+ * When an account is imported using the `ft4.ras_import` strategy, the original account and source chain are stored in 
+ * the `imported_account` entity.
+ * This allows the system to track the origin of the account and its associated chain, ensuring no additional accounts can be created
+ *  on the target chain in case one of the signers changes.
+ */
+entity imported_account {
+    chain: byte_array;
+    account_id: byte_array;
+    created_account_id: byte_array;
+    transaction_rid: byte_array;
+    key chain, account_id;
+}
+
+/**
  * The operation that defines the import strategy. The import strategy allows importing
  * an existing account from a trusted chain by providing ICCF proof of the account's
  * existence and authentication on the origin chain.
@@ -85,7 +99,7 @@ operation ras_import(
         
         // verify that signers are the same in main and preceding auth
         val (account_id, auth_descriptor_id) = auth.extract_account_and_auth_descriptor(auth_operation.args);
-        
+
         if (accounts.get_flags(main) == set<text>(flags_on_other_chain)) {
             require(
                 main.hash() == auth_descriptor_id,
@@ -109,6 +123,29 @@ operation ras_import(
     }
 
     strategies.require_register_account_next_operation();
+
+    //TODO:  check if this is the right place, since the account is not registered yet
+
+    val extracted_account_id = auth.extract_account_id(auth_operation!!);
+    val previously_imported: list<imported_account> = imported_account @* {
+        .account_id == extracted_account_id,
+        .chain == sender_chain_rid
+    };
+
+    require(
+        previously_imported.size() == 0,
+        "INVALID IMPORT: The account <%s> has already been imported from chain <%s>".format(
+            extracted_account_id,
+            sender_chain_rid
+        )
+    );
+
+    create imported_account (
+        chain = sender_chain_rid,
+        account_id = extracted_account_id,
+        created_account_id = expected_account_id,
+        transaction_rid = op_context.transaction.tx_rid
+    );
 }
 
 operation verify_account() {

@@ -17,7 +17,7 @@ import {
   Session,
 } from "@ft4/ft-session";
 import { fetchLoginDetails } from "./main";
-import { BufferId, GTX, gtx, gtv } from "postchain-client";
+import { BufferId, GTX, gtx, gtv, formatter } from "postchain-client";
 import { getSystemAnchoringIccfProofOp } from "@ft4/transaction-builder";
 import { CanImportAccountResult, ImportStrategyOptions } from "./types";
 import { getImportConfig } from "./query-functions";
@@ -51,9 +51,32 @@ export function importStrategy(
         originBrid,
       );
 
+      const targetChainConfig = await getImportConfig(targetChainConnection);
+
       if (
-        options.forceSignature === undefined ||
+        !targetChainConfig.trustedChains.find(
+          (chain) =>
+            formatter.toString(chain) === formatter.ensureString(originBrid),
+        )
+      ) {
+        throw new StrategyError(
+          `Blockchain <${originBrid.toString("hex")}> is not trusted for the import strategy`,
+        );
+      }
+
+      if (
+        !targetChainConfig.allowAnyOperation &&
         options.forceSignature === false
+      ) {
+        throw new StrategyError(
+          `Blockchain <${targetChainConnection.blockchainRid.toString("hex")}> does not allow importing an account without a signature`,
+        );
+      }
+
+      if (
+        targetChainConfig.allowAnyOperation &&
+        (options.forceSignature === undefined ||
+          options.forceSignature === false)
       ) {
         try {
           const originSession = await createKeyStoreInteractor(
@@ -149,9 +172,11 @@ async function importStrategyWithoutSignature(
     if (
       tx.operations.find((op) => {
         const validEvmAuth =
-          op.opName === "ft4.evm_auth" && op.args[0] === expectedAccountId;
+          op.opName === "ft4.evm_auth" &&
+          expectedAccountId.equals(op.args[0] as Buffer);
         const validFtAuth =
-          op.opName === "ft4.ft_auth" && op.args[0] === expectedAccountId;
+          op.opName === "ft4.ft_auth" &&
+          expectedAccountId.equals(op.args[0] as Buffer);
         return validEvmAuth || validFtAuth;
       })
     ) {

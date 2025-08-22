@@ -3,8 +3,8 @@ import { Buffer } from "buffer";
 import { BufferId, QueryObject, formatter } from "postchain-client";
 import {
   PendingTransferExpirationState,
-  ImportConfig,
   TransferStrategyRuleRaw,
+  ImportConfigRaw,
 } from "./types";
 
 /**
@@ -174,7 +174,7 @@ export function transferRules(): QueryObject<TransferStrategyRuleRaw[]> {
 /**
  * Creates a query object for the `ft4.get_import_config` query
  */
-export function importConfig(): QueryObject<ImportConfig> {
+export function importConfig(): QueryObject<ImportConfigRaw> {
   return {
     name: "ft4.get_import_config",
     args: {},
