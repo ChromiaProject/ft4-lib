@@ -89,6 +89,7 @@ export function importStrategy(
             targetChainConnection,
             accountId,
             mainAuthDescriptor,
+            targetChainConfig.importAccountTimeout,
             loginDetails,
           );
         } catch (e) {
@@ -158,7 +159,7 @@ async function importStrategyWithoutSignature(
   targetChainConnection: Connection,
   expectedAccountId: Buffer,
   mainAuthDescriptor: AnyAuthDescriptorRegistration,
-  // TODO min timestamp
+  minTimestamp: number,
   loginDetails: LoginDetails | null = null,
 ): Promise<RegistrationDetails> {
   const transfers = await originSession.account.getTransferHistory();
@@ -167,7 +168,9 @@ async function importStrategyWithoutSignature(
     const txId = transfer.transactionId;
     const tx = gtx.deserialize(await originSession.client.getTransaction(txId));
 
-    // TODO if timestamp is too old, break
+    if (transfer.timestamp.getTime() < Date.now() - minTimestamp) {
+      break;
+    }
 
     if (
       tx.operations.find((op) => {
