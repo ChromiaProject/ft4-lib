@@ -31,6 +31,9 @@
               - name: crosschain-transfer-original-sender-test-asset
                 issuing_blockchain_rid: {chain00_rid}
                 min_amount: 10L
+              - name: solve-orchestrator-test-asset
+                issuing_blockchain_rid: {chain00_rid}
+                min_amount: 10L
             strategy:
               - fee
             sender_blockchain: {chain00_rid}

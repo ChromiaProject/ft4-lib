@@ -13,6 +13,8 @@ import {
   Transfer,
   TransferFilter,
   TransferResponse,
+  NO_OP_INDEX,
+  NO_TRANSACTION_RID,
 } from "./types";
 import { BufferId, Queryable, gtx } from "postchain-client";
 import { PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
@@ -326,8 +328,18 @@ function createAppliedTransferObject(
 }
 
 function createTransferObject(transfer: TransferResponse): Transfer {
+  let transactionRid = transfer.transaction_rid ?? undefined;
+  let opIndex = transfer.op_index ?? undefined;
+
+  if (transactionRid === NO_TRANSACTION_RID || opIndex === NO_OP_INDEX) {
+    transactionRid = undefined;
+    opIndex = undefined;
+  }
+
   return Object.freeze({
     initTxRid: transfer.init_tx_rid,
     initOpIndex: transfer.init_op_index,
+    transactionRid,
+    opIndex,
   });
 }

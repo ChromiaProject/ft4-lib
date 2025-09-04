@@ -8,12 +8,14 @@ import {
 import { Connection } from "@ft4/ft-session";
 import {
   BufferId,
-  formatter,
   SignedTransaction,
   TransactionReceipt,
   Web3PromiEvent,
 } from "postchain-client";
 import { createRevertOrchestrator } from "@ft4/crosschain/orchestrator";
+import { HopData, SolveTransferEvents, UnclaimedTransferStatus } from "./types";
+import { getTransactionRid } from "@ft4/utils";
+import { evaluatePendingTransfer, isUnclaimedTransfer } from "./utils";
 
 /**
  * Performs a cross chain transfer
@@ -41,7 +43,7 @@ export function crosschainTransfer(
   {
     built: SignedTransaction;
     init: TransactionReceipt;
-    hop: Buffer;
+    hop: HopData;
   }
 > {
   const promiEvent = new Web3PromiEvent<
@@ -49,7 +51,7 @@ export function crosschainTransfer(
     {
       built: SignedTransaction;
       init: TransactionReceipt;
-      hop: Buffer;
+      hop: HopData;
     }
   >((resolve, reject) => {
     return createOrchestrator(
@@ -68,8 +70,8 @@ export function crosschainTransfer(
         orchestrator.onTransferInit((receipt) => {
           promiEvent.emit("init", receipt);
         });
-        orchestrator.onTransferHop((blockchainRid) => {
-          promiEvent.emit("hop", formatter.ensureBuffer(blockchainRid));
+        orchestrator.onTransferHop((hopData) => {
+          promiEvent.emit("hop", hopData);
         });
         return orchestrator.transfer();
       })
@@ -92,19 +94,19 @@ export function resumeCrosschainTransfer(
 ): Web3PromiEvent<
   void,
   {
-    hop: Buffer;
+    hop: HopData;
   }
 > {
   const promiEvent = new Web3PromiEvent<
     void,
     {
-      hop: Buffer;
+      hop: HopData;
     }
   >((resolve, reject) => {
     return createResumeOrchestrator(connection, pendingTransfer)
       .then((orchestrator) => {
-        orchestrator.onTransferHop((blockchainRid) => {
-          promiEvent.emit("hop", formatter.ensureBuffer(blockchainRid));
+        orchestrator.onTransferHop((hopData) => {
+          promiEvent.emit("hop", hopData);
         });
         return orchestrator.resumeTransfer();
       })
@@ -129,19 +131,19 @@ export function revertCrosschainTransfer(
 ): Web3PromiEvent<
   void,
   {
-    hop: Buffer;
+    hop: HopData;
   }
 > {
   const promiEvent = new Web3PromiEvent<
     void,
     {
-      hop: Buffer;
+      hop: HopData;
     }
   >((resolve, reject) => {
     return createRevertOrchestrator(connection, pendingTransfer)
       .then((orchestrator) => {
-        orchestrator.onTransferHop((blockchainRid) => {
-          promiEvent.emit("hop", formatter.ensureBuffer(blockchainRid));
+        orchestrator.onTransferHop((hopData) => {
+          promiEvent.emit("hop", hopData);
         });
         return orchestrator.revertTransfer();
       })
@@ -156,7 +158,7 @@ export function revertCrosschainTransfer(
  * the target chain, this function is used if the assets were successfully delivered to the target chain but not claimed by an account. This will only happen when the target
  * chain has create on transfer account registration strategy enabled and no one claims the target account in time.
  * @remarks If this function is called before the transfer has timed out, the promise will be rejected
- * @param connection - connection to the source chain. I.e., the chain where the account that originally sent the assets are registered.
+ * @param connection - connection to the source chain. I.e., the chain where the account that originally sent the assets is registered.
  * @param pendingTransfer - the transfer to recall. Can be acquired using {@link accounts.Account.getPendingCrosschainTransfers | getPendingCrosschainTransfers}
  * @returns a promi-event that will emit once for each hop during the recall. It will resolve once the transfer is completely recalled.
  */
@@ -166,24 +168,123 @@ export function recallUnclaimedCrosschainTransfer(
 ): Web3PromiEvent<
   void,
   {
-    hop: Buffer;
+    hop: HopData;
   }
 > {
   const promiEvent = new Web3PromiEvent<
     void,
     {
-      hop: Buffer;
+      hop: HopData;
     }
   >((resolve, reject) => {
     return createRevertOrchestrator(connection, pendingTransfer)
       .then((orchestrator) => {
-        orchestrator.onTransferHop((blockchainRid) => {
-          promiEvent.emit("hop", formatter.ensureBuffer(blockchainRid));
+        orchestrator.onTransferHop((hopData) => {
+          promiEvent.emit("hop", hopData);
         });
         return orchestrator.recallUnclaimedTransfer();
       })
       .then(() => resolve())
       .catch((reason) => reject(reason));
   });
+  return promiEvent;
+}
+
+/**
+ * Solves a pending transfer. This is useful if the transfer is stuck in a pending state and you want to solve it.
+ * It will automatically complete it, revert it, recall it, based on the current state of the transfer.
+ * @param connection - connection to the source chain. I.e., the chain where the account that originally sent the assets is registered.
+ * @param pendingTransfer - the transfer to solve. Can be acquired using {@link accounts.Account.getPendingCrosschainTransfers | getPendingCrosschainTransfers}
+ * @returns a promi-event that will emit once for each hop during the solve. It will resolve once the transfer is completely solved.
+ */
+export function solvePendingCrosschainTransfer(
+  connection: Connection,
+  pendingTransfer: TransferRef,
+): Web3PromiEvent<void, SolveTransferEvents> {
+  const promiEvent = new Web3PromiEvent<void, SolveTransferEvents>(
+    async (resolve, reject) => {
+      const txRid = getTransactionRid(pendingTransfer.tx, connection);
+      const info = await connection.getPendingTransfersFiltered({
+        transactionIds: [txRid],
+        initOpIndex: pendingTransfer.opIndex,
+      });
+      if (info.data.length !== 1) {
+        return reject(
+          new Error("Expected 1 transfer, got " + info.data.length),
+        );
+      }
+      const transfer = info.data[0];
+
+      promiEvent.emit("found", txRid);
+
+      const evaluation = await evaluatePendingTransfer(transfer, connection);
+
+      promiEvent.emit("evaluated", evaluation);
+
+      // if not expired, push it through
+      if (!evaluation.expired) {
+        try {
+          await resumeCrosschainTransfer(connection, pendingTransfer).on(
+            "hop",
+            (hop) => promiEvent.emit("hop", hop),
+          );
+
+          const isUnclaimed = await isUnclaimedTransfer(
+            txRid,
+            pendingTransfer.opIndex,
+            connection,
+          );
+          if (isUnclaimed === UnclaimedTransferStatus.MustBeRecalled) {
+            await recallUnclaimedCrosschainTransfer(
+              connection,
+              pendingTransfer,
+            ).on("hop", (hopData) => promiEvent.emit("hop", hopData));
+          }
+          return resolve();
+        } catch (reason) {
+          return reject(reason);
+        }
+      }
+
+      // if it's expired but it reached the target chain
+      if (evaluation.reachedTargetChain) {
+        // it just needs to be completed
+        await resumeCrosschainTransfer(connection, pendingTransfer).on(
+          "hop",
+          (hopData) => promiEvent.emit("hop", hopData),
+        );
+        // ... and if the end account does not exist, it's unclaimed and uncompleted.
+        if (!evaluation.claimed) {
+          try {
+            const isUnclaimed = await isUnclaimedTransfer(
+              txRid,
+              pendingTransfer.opIndex,
+              connection,
+            );
+            if (isUnclaimed === UnclaimedTransferStatus.MustBeRecalled) {
+              await recallUnclaimedCrosschainTransfer(
+                connection,
+                pendingTransfer,
+              ).on("hop", (hopData) => promiEvent.emit("hop", hopData));
+            }
+            return resolve();
+          } catch (reason) {
+            return reject(reason);
+          }
+        }
+      }
+
+      // if it's expired and it did not reach the target chain, it must be reverted
+      try {
+        await revertCrosschainTransfer(connection, pendingTransfer).on(
+          "hop",
+          (hopData) => promiEvent.emit("hop", hopData),
+        );
+        return resolve();
+      } catch (reason) {
+        return reject(reason);
+      }
+    },
+  );
   return promiEvent;
 }

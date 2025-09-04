@@ -32,7 +32,12 @@ export { findPathToChainForAsset, PathfinderError } from "./pathfinder";
 
 export { pendingTransfersForAccount } from "./queries";
 
-export { hasCrosschainTransferExpired, gtxToRawGtx } from "./utils";
+export {
+  hasCrosschainTransferExpired,
+  gtxToRawGtx,
+  evaluatePendingTransfer,
+  isUnclaimedTransfer,
+} from "./utils";
 
 export {
   Orchestrator,
@@ -53,6 +58,12 @@ export {
   TransferFilter,
   AssetOriginFilter,
   PendingTransferFilter,
+  NO_TRANSACTION_RID,
+  NO_OP_INDEX,
+  HopData,
+  UnclaimedTransferStatus,
+  SolveTransferEvents,
+  EvaluationResult,
 } from "./types";
 
 export {
@@ -68,4 +79,5 @@ export {
   resumeCrosschainTransfer,
   revertCrosschainTransfer,
   recallUnclaimedCrosschainTransfer,
+  solvePendingCrosschainTransfer,
 } from "./transfer";

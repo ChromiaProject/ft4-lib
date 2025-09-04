@@ -16,7 +16,7 @@ import { GtvInitTransferArgs } from "./types";
  * @param assetId - the id of the asset that will be transferred
  * @param amount - how much of the specified asset that will be transferred
  * @param hops - a list containing rids of the blockchains that are on the path from the source to the target chain, including the target chain
- * @param deadline - after how many days this transfer can be reverted if not claimed
+ * @param deadline - on what timestamp this transfer can be reverted if not claimed
  */
 export function initTransfer(
   recipientId: BufferId,

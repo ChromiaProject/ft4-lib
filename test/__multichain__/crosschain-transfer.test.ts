@@ -45,7 +45,7 @@ describe("Crosschain transfer", () => {
     );
     await registerCrosschainAsset(
       connection01.client,
-      adminUser().signatureProvider,
+      adminUser(connection01.client.config.merkleHashVersion).signatureProvider,
       asset00.id,
       multichain00.rid,
     );
@@ -267,7 +267,7 @@ describe("Crosschain transfer", () => {
     // Register asset on chain B
     await registerCrosschainAsset(
       connection01.client,
-      adminUser().signatureProvider,
+      adminUser(connection01.client.config.merkleHashVersion).signatureProvider,
       asset00.id,
       multichain00.rid,
     );
@@ -362,7 +362,8 @@ describe("Crosschain transfer", () => {
       );
       await registerCrosschainAsset(
         connection01.client,
-        adminUser().signatureProvider,
+        adminUser(connection01.client.config.merkleHashVersion)
+          .signatureProvider,
         asset00.id,
         multichain00.rid,
       );
@@ -467,7 +468,8 @@ describe("Crosschain transfer", () => {
       );
       await registerCrosschainAsset(
         connection01.client,
-        adminUser().signatureProvider,
+        adminUser(connection01.client.config.merkleHashVersion)
+          .signatureProvider,
         asset00.id,
         multichain00.rid,
       );

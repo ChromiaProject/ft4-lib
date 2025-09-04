@@ -20,21 +20,20 @@ import {
   createAuthDataService,
   createConnection,
 } from "@ft4/ft-session";
-import { nop, op } from "@ft4/utils";
+import {
+  getExpectedAccountIdFromMainAuthDescriptor,
+  nop,
+  op,
+} from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
   KeyPair,
-  MERKLE_HASH_VERSIONS,
   Operation,
   SignatureProvider,
   gtx,
   newSignatureProvider,
 } from "postchain-client";
-import {
-  adminUser,
-  getAccountIdFromAuthDescriptor,
-  testAdFromRegistration,
-} from "./util";
+import { adminUser, testAdFromRegistration } from "./util";
 
 export class AccountBuilder {
   private connection: Connection;
@@ -49,19 +48,17 @@ export class AccountBuilder {
   private flags: string[] = [AuthFlag.Account, AuthFlag.Transfer];
   private points = 0;
 
-  constructor(
-    connection: Connection,
-    merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
-  ) {
+  constructor(connection: Connection, merkleHashVersion?: number) {
     this.connection = connection;
-    this.merkleHashVersion = merkleHashVersion;
+    this.merkleHashVersion =
+      merkleHashVersion ?? connection.client.config.merkleHashVersion;
     this.signer = gtx.newSignatureProvider(this.merkleHashVersion);
   }
 
   /* Public functions */
   static account(
     connection: Connection,
-    merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
+    merkleHashVersion?: number,
   ): AccountBuilder {
     return new AccountBuilder(connection, merkleHashVersion);
   }
@@ -123,14 +120,13 @@ export class AccountBuilder {
       throw "You cannot add rules to manager auth descriptors.";
 
     const account = await this.registerAndBuildManagerAuthenticated();
-
     await this.addBalanceIfNeeded(account);
     await this.addPointsIfNeeded(account);
     return account;
   }
 
   async buildAsNonManager(): Promise<AuthenticatedAccount> {
-    const manager = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const manager = newSignatureProvider(this.merkleHashVersion);
     const accountManager =
       await this.registerAndBuildManagerAuthenticated(manager);
     const ad = this.getAuthDescriptorRegistration();
@@ -157,7 +153,7 @@ export class AccountBuilder {
       ad,
     );
     const account = await this.connection.getAccountById(
-      getAccountIdFromAuthDescriptor(ad),
+      getExpectedAccountIdFromMainAuthDescriptor(ad, this.connection),
     );
     const keyHandler = createInMemoryFtKeyStore(
       managerSigProv,

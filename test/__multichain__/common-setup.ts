@@ -17,7 +17,7 @@ import {
   createConnection,
   createSession,
 } from "@ft4/ft-session";
-import { MERKLE_HASH_VERSIONS } from "postchain-client";
+import { IClient, MERKLE_HASH_VERSIONS } from "postchain-client";
 
 export type TestContext = {
   connection0: Connection;
@@ -34,6 +34,21 @@ export type TestContext = {
   multichain2: Blockchain;
   sampleAsset: Asset;
 };
+export type TestContextWithOptionalAccounts = {
+  connection0: Connection;
+  connection1: Connection;
+  connection2: Connection;
+  account0: AuthenticatedAccount;
+  account1?: AuthenticatedAccount;
+  account2?: AuthenticatedAccount;
+  session0: Session;
+  session1?: Session;
+  session2?: Session;
+  multichain0: Blockchain;
+  multichain1: Blockchain;
+  multichain2: Blockchain;
+  sampleAsset: Asset;
+};
 
 const gen = numberGenerator();
 
@@ -41,7 +56,29 @@ export async function setupTestEnvironment(
   testName: string,
   mintAmount?: Amount,
   merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
-) {
+): Promise<TestContext> {
+  const num = gen.next().value;
+
+  const name = "orchestrator-test-" + testName + "-asset" + num;
+  const symbol = "ORCHESTRATOR-test-" + testName + "-asset" + num;
+
+  return (await setupTestEnvironmentWithAssetInfo(
+    name,
+    symbol,
+    0,
+    mintAmount,
+    merkleHashVersion,
+  )) as TestContext;
+}
+
+export async function setupTestEnvironmentWithAssetInfo(
+  assetName: string,
+  assetSymbol: string,
+  assetDecimals: number,
+  mintAmount?: Amount,
+  merkleHashVersion?: number,
+  skipAccounts: [chain1: boolean, chain2: boolean] = [false, false],
+): Promise<TestContextWithOptionalAccounts> {
   const { multichain00, multichain01, multichain02 } = await fetchBlockchains(
     false,
     merkleHashVersion,
@@ -69,47 +106,53 @@ export async function setupTestEnvironment(
     ),
   );
 
-  const num = gen.next().value;
-
   const asset = await getNewAsset(
     connection0.client,
-    "orchestrator-test-" + testName + "-asset" + num,
-    "ORCHESTRATOR-test-" + testName + "-asset" + num,
+    assetName,
+    assetSymbol,
+    assetDecimals,
   );
-  await registerCrosschainAsset(
+
+  await getOrRegisterCrosschainAsset(
     connection2.client, // Leaf
-    adminUser(merkleHashVersion).signatureProvider,
     asset.id,
     multichain00.rid, // Branch
   );
 
+  let account1: AuthenticatedAccount | undefined;
+  let account2: AuthenticatedAccount | undefined;
+  let session1: Session | undefined;
+  let session2: Session | undefined;
+
   const account0 = await AccountBuilder.account(connection0)
     .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
     .build();
-
-  const account1 = await AccountBuilder.account(connection1)
-    .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
-    .build();
-
-  const account2 = await AccountBuilder.account(connection2)
-    .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
-    .build();
-
   const session0 = createSession(connection0, account0.authenticator);
-  const session1 = createSession(connection1, account1.authenticator);
-  const session2 = createSession(connection2, account2.authenticator);
+
+  if (!skipAccounts[0]) {
+    account1 = await AccountBuilder.account(connection1)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+      .build();
+    session1 = createSession(connection1, account1.authenticator);
+  }
+  if (!skipAccounts[1]) {
+    account2 = await AccountBuilder.account(connection2)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+      .build();
+    session2 = createSession(connection2, account2.authenticator);
+  }
 
   const amountToMint = mintAmount ?? createAmount(100, asset.decimals);
 
   await mint(
     connection0.client,
-    adminUser(merkleHashVersion).signatureProvider,
-    account0.id,
+    adminUser(connection0.client.config.merkleHashVersion).signatureProvider,
+    account0!.id,
     asset.id,
     amountToMint,
   );
 
-  const testContext: TestContext = {
+  const testContext: TestContextWithOptionalAccounts = {
     connection0,
     connection1,
     connection2,
@@ -126,4 +169,23 @@ export async function setupTestEnvironment(
   };
 
   return testContext;
+}
+
+async function getOrRegisterCrosschainAsset(
+  client: IClient,
+  assetId: Buffer,
+  originMultichainRid: Buffer,
+): Promise<void> {
+  try {
+    await registerCrosschainAsset(
+      client,
+      adminUser(client.config.merkleHashVersion).signatureProvider,
+      assetId,
+      originMultichainRid,
+    );
+  } catch (error) {
+    console.log(
+      `Crosschain asset with id ${assetId.toString("hex")} already exists`,
+    );
+  }
 }

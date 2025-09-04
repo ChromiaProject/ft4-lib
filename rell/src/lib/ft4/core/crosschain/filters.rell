@@ -73,7 +73,7 @@ function get_canceled_transfers_filtered(canceled_transfers_filter: transfers_fi
     } (
         utils.pagination_result(
             data = (
-                map_transfer($.init_tx_rid, $.init_op_index)
+                map_transfer($.init_tx_rid, $.init_op_index, $.transaction_rid, $.op_index)
             ).to_gtv_pretty(),
             rowid = .rowid
         )
@@ -102,7 +102,7 @@ function get_unapplied_transfers_filtered(unapplied_transfers_filter: transfers_
     } (
         utils.pagination_result(
             data = (
-                map_transfer($.init_tx_rid, $.init_op_index)
+                map_transfer($.init_tx_rid, $.init_op_index, $.transaction_rid, $.op_index)
             ).to_gtv_pretty(),
             rowid = .rowid
         )
@@ -131,7 +131,7 @@ function get_recalled_transfers_filtered(recalled_transfers_filter: transfers_fi
     } (
         utils.pagination_result(
             data = (
-                map_transfer($.init_tx_rid, $.init_op_index)
+                map_transfer($.init_tx_rid, $.init_op_index, $.transaction_rid, $.op_index)
             ).to_gtv_pretty(),
             rowid = .rowid
         )
@@ -190,7 +190,7 @@ function get_reverted_transfers_filtered(reverted_transfer_filter: transfers_fil
     } (
         utils.pagination_result(
             data = (
-                map_transfer($.init_tx_rid, $.init_op_index)
+                map_transfer($.init_tx_rid, $.init_op_index, $.transaction_rid, $.op_index)
             ).to_gtv_pretty(),
             rowid = .rowid
         )

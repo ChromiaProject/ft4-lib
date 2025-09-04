@@ -56,7 +56,7 @@ describe("Orchestrator", () => {
     counter++;
     await registerCrosschainAsset(
       connection2.client,
-      adminUser().signatureProvider,
+      adminUser(connection2.client.config.merkleHashVersion).signatureProvider,
       asset.id,
       multichain00.rid,
     );
@@ -73,7 +73,7 @@ describe("Orchestrator", () => {
 
     await mint(
       connection0.client,
-      adminUser().signatureProvider,
+      adminUser(connection0.client.config.merkleHashVersion).signatureProvider,
       account0.id,
       asset.id,
       createAmount(100, asset.decimals),
@@ -113,7 +113,8 @@ describe("Orchestrator", () => {
     // Register a crosschain asset
     await registerCrosschainAsset(
       testContext.connection1.client, // Leaf
-      adminUser().signatureProvider,
+      adminUser(testContext.connection1.client.config.merkleHashVersion)
+        .signatureProvider,
       testContext.sampleAsset.id,
       testContext.multichain2.rid, // Branch
     );

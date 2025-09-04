@@ -24,6 +24,7 @@ export {
   loadOperationFromTransaction,
   isRellOperation,
   deriveNonce,
+  getExpectedAccountIdFromMainAuthDescriptor,
 } from "./main";
 
 export { firstAllowedAuthDescriptor, authHandlerForOperation } from "./queries";

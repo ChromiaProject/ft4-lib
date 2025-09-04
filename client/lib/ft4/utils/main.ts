@@ -19,6 +19,7 @@ import {
 import { Config, ConfigResponse } from "./types";
 import { allAuthHandlers } from "./queries";
 import { AuthHandler, FtKeyStore } from "@ft4/authentication";
+import { aggregateSigners, AnyAuthDescriptorRegistration } from "@ft4/accounts";
 
 /**
  * Creates a nop operation that can be included in a transaction
@@ -66,12 +67,7 @@ export function getTransactionRid(
   tx: RawGtx | GTX,
   clientOrMerkleHashVersion: IClient | Connection | number,
 ): Buffer {
-  let merkleHashVersion: number;
-  if (typeof clientOrMerkleHashVersion === "number") {
-    merkleHashVersion = clientOrMerkleHashVersion;
-  } else {
-    merkleHashVersion = getMerkleHashVersion(clientOrMerkleHashVersion);
-  }
+  const merkleHashVersion = getMerkleHashVersion(clientOrMerkleHashVersion);
   if (Array.isArray(tx)) {
     return gtv.gtvHash(tx[0], merkleHashVersion); //tx body
   } else return gtv.gtvHash(gtx.gtxToRawGtxBody(tx), merkleHashVersion);
@@ -83,12 +79,15 @@ export function getTransactionRid(
  * @returns the merkle hash version
  */
 export function getMerkleHashVersion(
-  clientOrConnection: IClient | Connection,
+  merkleHashVersionSource: IClient | Connection | number,
 ): number {
-  if ("config" in clientOrConnection) {
-    return clientOrConnection.config.merkleHashVersion;
+  if (typeof merkleHashVersionSource === "number") {
+    return merkleHashVersionSource;
+  }
+  if ("config" in merkleHashVersionSource) {
+    return merkleHashVersionSource.config.merkleHashVersion;
   } else {
-    return clientOrConnection.client.config.merkleHashVersion;
+    return merkleHashVersionSource.client.config.merkleHashVersion;
   }
 }
 
@@ -250,5 +249,16 @@ export function deriveNonce(
       ],
       merkleHashVersion,
     ),
+  );
+}
+
+export function getExpectedAccountIdFromMainAuthDescriptor(
+  authDescriptor: AnyAuthDescriptorRegistration,
+  clientOrMerkleHashVersion: IClient | Connection | number,
+) {
+  const signers = aggregateSigners(authDescriptor);
+  return gtv.gtvHash(
+    signers.length === 1 ? signers[0] : signers.sort(Buffer.compare),
+    getMerkleHashVersion(clientOrMerkleHashVersion),
   );
 }

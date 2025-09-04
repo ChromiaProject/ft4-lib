@@ -8,7 +8,6 @@ import {
   BufferId,
   GTX,
   convertToRellOperation,
-  MERKLE_HASH_VERSIONS,
 } from "postchain-client";
 import { createConnection } from "@ft4/ft-session";
 import { Asset } from "@ft4/asset/types";
@@ -21,7 +20,7 @@ export const NODE_URL = "http://localhost:7740";
 export async function createChromiaClientToMultichain(
   blockchainRid: BufferId,
   nodeUrl?: string,
-  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
+  merkleHashVersion?: number,
 ) {
   // const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
 
@@ -37,7 +36,7 @@ export async function createChromiaClientToMultichain(
 export async function createChromiaClient(
   nodeUrl?: string,
   iid = 0,
-  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
+  merkleHashVersion?: number,
 ) {
   const url =
     // nodeUrl || process.env.TEST_NODE_URL || "http://thedockerhost:7740";
@@ -75,7 +74,7 @@ export async function getNewAsset(
 
   const id = gtv.gtvHash(
     [name, formatter.ensureBuffer(client.config.blockchainRid)],
-    MERKLE_HASH_VERSIONS.ONE,
+    client.config.merkleHashVersion,
   );
   const asset = await createConnection(client).getAssetById(id);
   if (!asset) {
@@ -93,7 +92,7 @@ export async function addNewAssetIfNeeded(
 ): Promise<Asset> {
   const id = gtv.gtvHash(
     [name, formatter.ensureBuffer(client.config.blockchainRid)],
-    MERKLE_HASH_VERSIONS.ONE,
+    client.config.merkleHashVersion,
   );
   const asset = await createConnection(client).getAssetById(id);
   if (asset) {
@@ -147,7 +146,7 @@ let blockchainsCache: { [key: string]: Blockchain } | null = null;
  */
 export async function fetchBlockchains(
   force = false,
-  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
+  merkleHashVersion?: number,
 ): Promise<{ [key: string]: Blockchain }> {
   if (blockchainsCache && !force) {
     return blockchainsCache;
