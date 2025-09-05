@@ -60,6 +60,7 @@ export async function initAndCancelCrosschainTransfer(
     assetToTransfer,
     0,
     true,
+    2000,
   );
 
   const pe = revertCrosschainTransfer(initAccount.connection, {
@@ -83,7 +84,7 @@ export async function initApplyCancelUnapplyCrosschainTransfer(
     targetChainRid,
     initAccount,
     true,
-    2000,
+    5000,
   );
 
   //cancel on recipient chain and unapply on intermediate chain
@@ -114,7 +115,7 @@ export async function createTransferAndStopIt(
   assetToTransfer: Asset,
   stopAfterBlockchainRidOrHops: BufferId | number,
   forceExpiration: boolean,
-  expirationTime: number = 2000,
+  expirationTime: number = 5000,
 ): Promise<{
   initTxReceipt: TransactionReceipt;
   initTx: GTX;

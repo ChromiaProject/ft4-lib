@@ -21,7 +21,7 @@ import {
 } from "@ft4/crosschain";
 import { Asset } from "@ft4/asset";
 import { AuthenticatedAccount } from "@ft4/accounts";
-import { minutes } from "@ft4/authentication";
+import { days } from "@ft4/authentication";
 import { getTransactionRid } from "@ft4/utils";
 
 let multichain00: Blockchain;
@@ -69,14 +69,14 @@ describe("solve crosschain transfer", () => {
   describe("Can solve expired crosschain transfers", () => {
     it("inited transfer", async () => {
       const event = (s, r, a) =>
-        createTransferAndStopIt(s, r.id, multichain02.rid, a, 0, true);
+        createTransferAndStopIt(s, r.id, multichain02.rid, a, 0, true, 1000);
 
       await testExpiredTransfer(event);
     });
 
     it("inited and applied transfer", async () => {
       const event = (s, r, a) =>
-        createTransferAndStopIt(s, r.id, multichain02.rid, a, 1, true);
+        createTransferAndStopIt(s, r.id, multichain02.rid, a, 1, true, 2000);
 
       await testExpiredTransfer(event);
     });
@@ -115,7 +115,6 @@ describe("solve crosschain transfer", () => {
         asset,
         1, // prevent confirmation
         true,
-        2000,
       );
 
       expect(
@@ -152,7 +151,6 @@ describe("solve crosschain transfer", () => {
         asset,
         2, // make it go through all hops
         true,
-        2000,
       );
 
       expect(
@@ -188,7 +186,7 @@ async function testTransfer(stopAfterHops: number) {
     asset,
     stopAfterHops,
     false,
-    minutes(1),
+    days(1),
   );
 
   await solvePendingCrosschainTransfer(connection00, {
