@@ -8,6 +8,7 @@ export {
   TransactionCompletion,
   TransactionSessionCompletion,
   Filter,
+  MerkleHashVersionSource,
 } from "./types";
 
 export {
@@ -25,6 +26,7 @@ export {
   isRellOperation,
   deriveNonce,
   getExpectedAccountIdFromMainAuthDescriptor,
+  getMerkleHashVersion,
 } from "./main";
 
 export { firstAllowedAuthDescriptor, authHandlerForOperation } from "./queries";

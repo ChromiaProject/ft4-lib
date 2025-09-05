@@ -16,11 +16,10 @@ import {
   gtv,
   gtx,
 } from "postchain-client";
-import { Config, ConfigResponse } from "./types";
+import { Config, ConfigResponse, MerkleHashVersionSource } from "./types";
 import { allAuthHandlers } from "./queries";
 import { AuthHandler, FtKeyStore } from "@ft4/authentication";
 import { aggregateSigners, AnyAuthDescriptorRegistration } from "@ft4/accounts";
-
 /**
  * Creates a nop operation that can be included in a transaction
  */
@@ -60,34 +59,35 @@ export async function getConfig(queryable: Queryable): Promise<Config> {
 /**
  * Computes the transaction rid of the provided `RawGtx`
  * @param tx - the tx to compute the rid for
- * @param clientOrMerkleHashVersion - the client or connection to use to get the merkle hash version from,
- * or the merkle hash version itself
+ * @param merkleHashVersionSource - the source to use to get the merkle hash version from, or the merkle hash version itself
  */
 export function getTransactionRid(
   tx: RawGtx | GTX,
-  clientOrMerkleHashVersion: IClient | Connection | number,
+  merkleHashVersionSource: MerkleHashVersionSource,
 ): Buffer {
-  const merkleHashVersion = getMerkleHashVersion(clientOrMerkleHashVersion);
+  const merkleHashVersion = getMerkleHashVersion(merkleHashVersionSource);
   if (Array.isArray(tx)) {
     return gtv.gtvHash(tx[0], merkleHashVersion); //tx body
   } else return gtv.gtvHash(gtx.gtxToRawGtxBody(tx), merkleHashVersion);
 }
 
 /**
- * Gets the merkle hash version from the provided client or connection
- * @param clientOrConnection the client or connection to get the merkle hash version from
+ * Gets the merkle hash version from the provided source
+ * @param merkleHashVersionSource the source to get the merkle hash version from, or the merkle hash version itself
  * @returns the merkle hash version
  */
 export function getMerkleHashVersion(
-  merkleHashVersionSource: IClient | Connection | number,
+  merkleHashVersionSource: MerkleHashVersionSource,
 ): number {
   if (typeof merkleHashVersionSource === "number") {
     return merkleHashVersionSource;
   }
   if ("config" in merkleHashVersionSource) {
     return merkleHashVersionSource.config.merkleHashVersion;
-  } else {
+  } else if ("client" in merkleHashVersionSource) {
     return merkleHashVersionSource.client.config.merkleHashVersion;
+  } else {
+    return merkleHashVersionSource.connection.client.config.merkleHashVersion;
   }
 }
 
@@ -252,13 +252,19 @@ export function deriveNonce(
   );
 }
 
+/**
+ * Computes the expected account ID if an account was registered with the provided auth descriptor
+ * @param authDescriptor - the auth descriptor to use to compute the expected account ID
+ * @param merkleHashVersionSource - the source to use to get the merkle hash version from, or the merkle hash version itself
+ * @returns the expected account ID
+ */
 export function getExpectedAccountIdFromMainAuthDescriptor(
   authDescriptor: AnyAuthDescriptorRegistration,
-  clientOrMerkleHashVersion: IClient | Connection | number,
+  merkleHashVersionSource: MerkleHashVersionSource,
 ) {
   const signers = aggregateSigners(authDescriptor);
   return gtv.gtvHash(
     signers.length === 1 ? signers[0] : signers.sort(Buffer.compare),
-    getMerkleHashVersion(clientOrMerkleHashVersion),
+    getMerkleHashVersion(merkleHashVersionSource),
   );
 }

@@ -1,5 +1,6 @@
-import { TransactionReceipt } from "postchain-client";
-import { OptionalPageCursor, Session } from "@ft4/ft-session";
+import { IClient, TransactionReceipt } from "postchain-client";
+import { Connection, OptionalPageCursor, Session } from "@ft4/ft-session";
+import { Account, AuthenticatedAccount } from "@ft4/accounts";
 
 export type EnumLike = Record<string, string | number>;
 
@@ -108,3 +109,10 @@ export type Filter<T extends Record<string, any>> =
       [K in keyof T]: Array<T[K]> | null;
     }
   | undefined;
+
+export type MerkleHashVersionSource =
+  | Account
+  | AuthenticatedAccount
+  | IClient
+  | Connection
+  | number;

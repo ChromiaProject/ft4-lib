@@ -76,7 +76,7 @@ describe("solve crosschain transfer", () => {
 
     it("inited and applied transfer", async () => {
       const event = (s, r, a) =>
-        createTransferAndStopIt(s, r.id, multichain02.rid, a, 1, true, 2000);
+        createTransferAndStopIt(s, r.id, multichain02.rid, a, 1, true);
 
       await testExpiredTransfer(event);
     });
