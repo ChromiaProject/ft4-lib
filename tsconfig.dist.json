@@ -8,6 +8,7 @@
     "declaration": true,
     "downlevelIteration": true,
     "strictNullChecks": true,
+    "exactOptionalPropertyTypes": false,
     "lib": [
       "ESNext.Array",
       "es2015",

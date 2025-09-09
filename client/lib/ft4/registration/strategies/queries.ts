@@ -53,7 +53,7 @@ export function pendingTransferStrategies(
     name: "ft4.get_pending_transfer_strategies",
     args: {
       recipient_id: recipientId,
-      filter: filter && { state: null, ...filter },
+      ...(filter ? { filter: { state: null, ...filter } } : {}),
     },
   };
 }

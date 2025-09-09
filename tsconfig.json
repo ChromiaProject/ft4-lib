@@ -9,6 +9,7 @@
     "declaration": true,
     "downlevelIteration": true,
     "strictNullChecks": true,
+    "exactOptionalPropertyTypes": false,
     "lib": [
       "ESNext.Array",
       "es2015",
@@ -24,7 +25,7 @@
       ],
       "@ft4-test/*": [
         "./test/*"
-      ],
+      ]
     }
   },
   "include": ["./client/lib/ft4/**/*", "./test/**/*"],
