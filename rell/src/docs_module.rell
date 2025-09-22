@@ -8,6 +8,7 @@ import ^.lib.ft4.admin.crosschain;
 // import ^.lib.ft4.test.utils;
 import ^.lib.ft4.accounts.linking;
 import ^.lib.ft4.accounts.strategies.open;
+import ^.lib.ft4.accounts.strategies.import_strategy;
 import a: ^.lib.ft4.accounts.strategies.transfer.open;
 import ^.lib.ft4.accounts.strategies.transfer.fee;
 import ^.lib.ft4.accounts.strategies.transfer.subscription;

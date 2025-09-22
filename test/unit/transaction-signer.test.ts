@@ -63,16 +63,6 @@ describe("Transaction Signer", () => {
         null,
       ),
     );
-    ftAuthenticator = createAuthenticator(
-      accountId,
-      [createFtKeyHandler(ftAd, ftKeyStore)],
-      authDataService,
-    );
-    evmAuthenticator = createAuthenticator(
-      accountId,
-      [createEvmKeyHandler(ftAd, evmKeyStore)],
-      authDataService,
-    );
     ftKeyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(ftAd);
     evmKeyHandler = createInMemoryEvmKeyStore(keyPair).createKeyHandler(evmAd);
 
@@ -84,6 +74,16 @@ describe("Transaction Signer", () => {
       },
       ["testOperation"]: { flags: [], message: "" },
     });
+    ftAuthenticator = createAuthenticator(
+      accountId,
+      [createFtKeyHandler(ftAd, ftKeyStore)],
+      authDataService,
+    );
+    evmAuthenticator = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(ftAd, evmKeyStore)],
+      authDataService,
+    );
 
     gtxTx = gtx.emptyGtx(blockchainRid);
     gtxTx.signatures = [];
@@ -132,7 +132,9 @@ describe("Transaction Signer", () => {
         evmAuth(accountId, evmKeyHandler.authDescriptor.id, []),
       ].map((o) => ({ opName: o.name, args: o.args! }));
       gtxTx.signers = [keyPair.pubKey];
-      gtxTx.signatures = [await ftKeyHandler.sign(gtxTx)];
+      gtxTx.signatures = [
+        await ftKeyHandler.sign(gtxTx, authDataService.connection),
+      ];
 
       await expect(signTransaction(evmAuthenticator, gtxTx)).rejects.toThrow(
         "Cannot add EVM signatures after GTX signature has been added",
@@ -146,21 +148,27 @@ describe("Transaction Signer", () => {
       expect(
         gtx.deserialize(await signTransaction(ftAuthenticator, gtxTx))
           .signatures,
-      ).toStrictEqual([await ftKeyHandler.sign(gtxTx)]);
+      ).toStrictEqual([
+        await ftKeyHandler.sign(gtxTx, authDataService.connection),
+      ]);
     });
 
     it("Adds missing GTX signature", async () => {
       const initialKeyPair = encryption.makeKeyPair();
 
       gtxTx.signers = [initialKeyPair.pubKey, keyPair.pubKey];
-      const initialSignature =
-        await createInMemoryFtKeyStore(initialKeyPair).sign(gtxTx);
+      const initialSignature = await createInMemoryFtKeyStore(
+        initialKeyPair,
+      ).sign(gtxTx, authDataService.connection);
       gtxTx.signatures = [initialSignature, EMPTY_SIGNATURE];
 
       expect(
         gtx.deserialize(await signTransaction(ftAuthenticator, gtxTx))
           .signatures,
-      ).toStrictEqual([initialSignature, await ftKeyHandler.sign(gtxTx)]);
+      ).toStrictEqual([
+        initialSignature,
+        await ftKeyHandler.sign(gtxTx, authDataService.connection),
+      ]);
     });
 
     it("Adds missing EVM signature to evm_signatures", async () => {
@@ -217,7 +225,14 @@ describe("Transaction Signer", () => {
         [createEvmKeyHandler(testAdFromRegistration(ad), mockKeyStore)],
         mockAuthDataService,
       );
-      const evmAuthOp = evmAuth(accountId, deriveAuthDescriptorId(ad), []);
+      const evmAuthOp = evmAuth(
+        accountId,
+        deriveAuthDescriptorId(
+          ad,
+          mockAuthDataService.connection.client.config.merkleHashVersion,
+        ),
+        [],
+      );
       evmAuthOp.args![2] = [null];
       gtxTx.operations = [evmAuthOp, nop()].map((o) => ({
         opName: o.name,
@@ -260,7 +275,14 @@ describe("Transaction Signer", () => {
         [createEvmKeyHandler(testAdFromRegistration(ad), mockKeyStore)],
         mockAuthDataService,
       );
-      const evmAuthOp = evmAuth(accountId, deriveAuthDescriptorId(ad), []);
+      const evmAuthOp = evmAuth(
+        accountId,
+        deriveAuthDescriptorId(
+          ad,
+          mockAuthDataService.connection.client.config.merkleHashVersion,
+        ),
+        [],
+      );
       evmAuthOp.args![2] = [
         EMPTY_SIGNATURE,
         EMPTY_SIGNATURE,
@@ -293,7 +315,14 @@ describe("Transaction Signer", () => {
         noopAuthDataService,
       );
 
-      const evmAuthOp = evmAuth(accountId, deriveAuthDescriptorId(ad), []);
+      const evmAuthOp = evmAuth(
+        accountId,
+        deriveAuthDescriptorId(
+          ad,
+          noopAuthDataService.connection.client.config.merkleHashVersion,
+        ),
+        [],
+      );
       gtxTx.operations = [evmAuthOp, evmAuthOp, evmAuthOp, emptyOp()].map(
         (o) => ({ opName: o.name, args: o.args ?? [] }),
       );
@@ -364,7 +393,9 @@ describe("Transaction Signer", () => {
         args: o.args!,
       }));
       gtxTx.signers = [keyPair.pubKey];
-      gtxTx.signatures = [await ftKeyHandler.sign(gtxTx)];
+      gtxTx.signatures = [
+        await ftKeyHandler.sign(gtxTx, authDataService.connection),
+      ];
 
       await expect(
         signTransactionWithKeyStores([keyStore], authDataService, gtxTx),
@@ -385,15 +416,18 @@ describe("Transaction Signer", () => {
             gtxTx,
           ),
         ).signatures,
-      ).toStrictEqual([await ftKeyHandler.sign(gtxTx)]);
+      ).toStrictEqual([
+        await ftKeyHandler.sign(gtxTx, authDataService.connection),
+      ]);
     });
 
     it("Adds missing GTX signature", async () => {
       const initialKeyPair = encryption.makeKeyPair();
 
       gtxTx.signers = [initialKeyPair.pubKey, keyPair.pubKey];
-      const initialSignature =
-        await createInMemoryFtKeyStore(initialKeyPair).sign(gtxTx);
+      const initialSignature = await createInMemoryFtKeyStore(
+        initialKeyPair,
+      ).sign(gtxTx, authDataService.connection);
       gtxTx.signatures = [initialSignature, EMPTY_SIGNATURE];
 
       expect(
@@ -404,7 +438,10 @@ describe("Transaction Signer", () => {
             gtxTx,
           ),
         ).signatures,
-      ).toStrictEqual([initialSignature, await ftKeyHandler.sign(gtxTx)]);
+      ).toStrictEqual([
+        initialSignature,
+        await ftKeyHandler.sign(gtxTx, authDataService.connection),
+      ]);
     });
 
     it("Adds missing EVM signature to evm_signatures", async () => {

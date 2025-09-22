@@ -29,7 +29,7 @@ import {
 } from "@ft4/ft-session";
 import { nop, op } from "@ft4/utils";
 import { AuthorizationError } from "@ft4/transaction-builder";
-import { MERKLE_HASH_VERSIONS, newSignatureProvider } from "postchain-client";
+import { newSignatureProvider } from "postchain-client";
 
 let connection: Connection;
 
@@ -42,8 +42,8 @@ describe("Key store interactor", () => {
   });
 
   it("returns one account if corresponding key is used in one account", async () => {
-    const keyPair1 = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
-    const keyPair2 = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const keyPair1 = newSignatureProvider();
+    const keyPair2 = newSignatureProvider();
 
     await AccountBuilder.account(connection).withSigner(keyPair1).build();
     await AccountBuilder.account(connection).withSigner(keyPair2).build();
@@ -57,8 +57,8 @@ describe("Key store interactor", () => {
   });
 
   it("returns two accounts if corresponding key is used in two accounts", async () => {
-    const keyPair1 = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
-    const keyPair2 = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const keyPair1 = newSignatureProvider();
+    const keyPair2 = newSignatureProvider();
     const keyStore2 = createInMemoryFtKeyStore(keyPair2);
 
     const account1 = await AccountBuilder.account(connection)
@@ -82,7 +82,7 @@ describe("Key store interactor", () => {
   });
 
   it("is one key handler stored in authenticator when there is only one auth descriptor with corresponding key", async () => {
-    const keyPair1 = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const keyPair1 = newSignatureProvider();
 
     const account = await AccountBuilder.account(connection)
       .withSigner(keyPair1)
@@ -109,7 +109,7 @@ describe("Key store interactor", () => {
       createTestAuthDescriptor([AuthFlag.Transfer]);
 
     const account = await AccountBuilder.account(connection)
-      .withSigner(newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, keyPair1))
+      .withSigner(newSignatureProvider(keyPair1))
       .build();
 
     await account.addAuthDescriptor(ad1, keyStore1);
@@ -125,8 +125,8 @@ describe("Key store interactor", () => {
 
   it("authenticates with the correct auth descriptor", async () => {
     const emptyAuthenticatedOp = op("test_perform_large_transfer", 10, "text");
-    const keyPair1 = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
-    const keyPair2 = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const keyPair1 = newSignatureProvider();
+    const keyPair2 = newSignatureProvider();
     const account = await AccountBuilder.account(connection)
       .withSigner(keyPair1)
       .withPoints(5)
@@ -181,7 +181,7 @@ describe("Key store interactor", () => {
 
     await expect(
       session.client.query(
-        authDescriptorCounter(account.id, deriveAuthDescriptorId(ad4)),
+        authDescriptorCounter(account.id, deriveAuthDescriptorId(ad4, session)),
       ),
     ).resolves.toBe(1);
   });
@@ -189,8 +189,8 @@ describe("Key store interactor", () => {
   it("should not authenticate if no auth descriptor is valid", async () => {
     const emptyAuthenticatedOp = op("test_perform_large_transfer", 10, "text");
 
-    const keyPair1 = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
-    const keyPair2 = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const keyPair1 = newSignatureProvider();
+    const keyPair2 = newSignatureProvider();
 
     const account = await AccountBuilder.account(connection)
       .withSigner(keyPair1)
@@ -246,12 +246,12 @@ describe("Key store interactor", () => {
       keyStore: keyStore1,
       keyPair: keyPair1,
       authDescriptor: ad1,
-    } = createTestAuthDescriptor();
+    } = createTestAuthDescriptor([AuthFlag.Account, AuthFlag.Transfer]);
     const { keyStore: keyStore2, authDescriptor: ad2 } =
       createTestAuthDescriptor([AuthFlag.Transfer]);
 
     const account = await AccountBuilder.account(connection)
-      .withSigner(newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, keyPair1))
+      .withSigner(newSignatureProvider(keyPair1))
       .build();
 
     await account.addAuthDescriptor(ad2, keyStore2);

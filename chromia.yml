@@ -167,6 +167,7 @@ blockchains:
         free_operations:
           - free_operation
         subscription_account: x"032c0b7cf95324a07d05398b240174dc0c2be444d96b159aa6c7f7b1e668680991" # Charlie
+
     test:
       modules:
         - tests.create_account_strategies
@@ -186,7 +187,7 @@ libs:
 
 compile:
   source: rell/src
-  rellVersion: 0.14.5
+  rellVersion: 0.14.12
 
 test:
   failOnError: false

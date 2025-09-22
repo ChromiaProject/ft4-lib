@@ -80,7 +80,7 @@ describe("EVM key handler", () => {
 
     const signature = await keyStore.signMessage(authData.message);
     expect(operations).toEqual([
-      evmAuth(accountId, deriveAuthDescriptorId(ad), [signature]),
+      evmAuth(accountId, deriveAuthDescriptorId(ad, client), [signature]),
       op("foo"),
     ]);
   });
@@ -93,10 +93,16 @@ describe("EVM key handler", () => {
     );
 
     const signature1 = await keyStore.signMessage(
-      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 0)),
+      message.replace(
+        "{nonce}",
+        deriveNonce(Buffer.alloc(32), op("foo"), 0, client),
+      ),
     );
     const signature2 = await keyStore.signMessage(
-      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 1)),
+      message.replace(
+        "{nonce}",
+        deriveNonce(Buffer.alloc(32), op("foo"), 1, client),
+      ),
     );
 
     const tx = await transactionBuilder(authenticator, client)
@@ -109,7 +115,7 @@ describe("EVM key handler", () => {
         opName: "ft4.evm_auth",
         args: [
           accountId,
-          deriveAuthDescriptorId(ad),
+          deriveAuthDescriptorId(ad, client),
           [[signature1.r, signature1.s, signature1.v]],
         ],
       },
@@ -121,7 +127,7 @@ describe("EVM key handler", () => {
         opName: "ft4.evm_auth",
         args: [
           accountId,
-          deriveAuthDescriptorId(ad),
+          deriveAuthDescriptorId(ad, client),
           [[signature2.r, signature2.s, signature2.v]],
         ],
       },
@@ -141,10 +147,16 @@ describe("EVM key handler", () => {
     );
 
     const signature1 = await keyStore.signMessage(
-      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 0)),
+      message.replace(
+        "{nonce}",
+        deriveNonce(Buffer.alloc(32), op("foo"), 0, client),
+      ),
     );
     const signature2 = await keyStore.signMessage(
-      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 1)),
+      message.replace(
+        "{nonce}",
+        deriveNonce(Buffer.alloc(32), op("foo"), 1, client),
+      ),
     );
 
     await transactionBuilder(authenticator, client)
@@ -157,7 +169,7 @@ describe("EVM key handler", () => {
       .add(op("foo"))
       .build();
 
-    const adId = deriveAuthDescriptorId(ad);
+    const adId = deriveAuthDescriptorId(ad, client);
     expect(gtx.deserialize(tx2).operations).toEqual([
       {
         opName: "ft4.evm_auth",
@@ -206,10 +218,16 @@ describe("EVM key handler", () => {
     ).rejects.toThrow(Error);
 
     const signature1 = await mockKeyStore.signMessage(
-      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 0)),
+      message.replace(
+        "{nonce}",
+        deriveNonce(Buffer.alloc(32), op("foo"), 0, client),
+      ),
     );
     const signature2 = await mockKeyStore.signMessage(
-      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 1)),
+      message.replace(
+        "{nonce}",
+        deriveNonce(Buffer.alloc(32), op("foo"), 1, client),
+      ),
     );
 
     const tx2 = await transactionBuilder(authenticator, client)
@@ -217,7 +235,7 @@ describe("EVM key handler", () => {
       .add(op("foo"))
       .build();
 
-    const adId = deriveAuthDescriptorId(ad);
+    const adId = deriveAuthDescriptorId(ad, client);
     expect(gtx.deserialize(tx2).operations).toEqual([
       {
         opName: "ft4.evm_auth",
@@ -256,7 +274,7 @@ describe("EVM key handler", () => {
       2,
       null,
     );
-    const adId = deriveAuthDescriptorId(ad);
+    const adId = deriveAuthDescriptorId(ad, client);
     const accountId = adId;
     const authDataService = createFakeAuthDataService({
       foo: { flags: [AuthFlag.Transfer], message: "" },

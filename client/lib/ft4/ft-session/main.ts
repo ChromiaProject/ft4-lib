@@ -147,7 +147,6 @@ export async function createClientToBlockchain(
       typeof blockchainRid == "string"
         ? blockchainRid
         : formatter.toString(blockchainRid),
-    merkleHashVersion: client.config.merkleHashVersion,
   });
 }
 

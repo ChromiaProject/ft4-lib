@@ -139,7 +139,7 @@ function addAuthDescriptor(
           getAuthDescriptorById(
             connection,
             authenticator.accountId,
-            deriveAuthDescriptorId(authDescriptor),
+            deriveAuthDescriptorId(authDescriptor, connection),
           ),
         ]),
       )
@@ -198,7 +198,7 @@ function updateMainAuthDescriptor(
           getAuthDescriptorById(
             connection,
             authenticator.accountId,
-            deriveAuthDescriptorId(authDescriptor),
+            deriveAuthDescriptorId(authDescriptor, connection),
           ),
         ]),
       )

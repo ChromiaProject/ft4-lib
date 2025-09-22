@@ -21,7 +21,8 @@ import {
   initAndCancelCrosschainTransfer,
   initApplyCancelUnapplyCrosschainTransfer,
 } from "./crosschain-helpers";
-import { encryption, gtv, MERKLE_HASH_VERSIONS } from "postchain-client";
+import { encryption } from "postchain-client";
+import { getExpectedAccountIdFromSigners } from "@ft4/utils/main";
 
 let multichain00: Blockchain;
 let multichain01: Blockchain;
@@ -30,7 +31,7 @@ let multichain04: Blockchain;
 
 describe("crosschain transfer compatibility", () => {
   beforeAll(async () => {
-    const blockchains = await fetchBlockchains(false, MERKLE_HASH_VERSIONS.ONE);
+    const blockchains = await fetchBlockchains(false);
     multichain00 = blockchains.multichain00;
     multichain01 = blockchains.multichain01;
     multichain03 = blockchains.multichain03;
@@ -43,27 +44,15 @@ describe("crosschain transfer compatibility", () => {
     let connection01: Connection;
     beforeAll(async () => {
       connection00 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain00.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.ONE,
-        ),
+        await createChromiaClientToMultichain(multichain00.rid, NODE_URL),
       );
 
       connection03 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain03.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.TWO,
-        ),
+        await createChromiaClientToMultichain(multichain03.rid, NODE_URL),
       );
 
       connection01 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain01.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.ONE,
-        ),
+        await createChromiaClientToMultichain(multichain01.rid, NODE_URL),
       );
     });
 
@@ -77,24 +66,17 @@ describe("crosschain transfer compatibility", () => {
 
         await registerCrosschainAsset(
           connection03.client,
-          adminUser(connection03.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain00.rid,
         );
 
-        const account00 = await AccountBuilder.account(
-          connection00,
-          MERKLE_HASH_VERSIONS.ONE,
-        )
+        const account00 = await AccountBuilder.account(connection00)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .withBalance(asset, createAmount(100, asset.decimals))
           .build();
 
-        const account03 = await AccountBuilder.account(
-          connection03,
-          MERKLE_HASH_VERSIONS.TWO,
-        )
+        const account03 = await AccountBuilder.account(connection03)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .build();
 
@@ -126,24 +108,17 @@ describe("crosschain transfer compatibility", () => {
 
         await registerCrosschainAsset(
           connection03.client,
-          adminUser(connection03.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain00.rid,
         );
 
-        const account00 = await AccountBuilder.account(
-          connection00,
-          MERKLE_HASH_VERSIONS.ONE,
-        )
+        const account00 = await AccountBuilder.account(connection00)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .withBalance(asset, createAmount(100, asset.decimals))
           .build();
 
-        const account03 = await AccountBuilder.account(
-          connection03,
-          MERKLE_HASH_VERSIONS.TWO,
-        )
+        const account03 = await AccountBuilder.account(connection03)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .build();
 
@@ -161,7 +136,7 @@ describe("crosschain transfer compatibility", () => {
           account03.id,
           asset,
           [multichain03.rid],
-          Date.now(),
+          Date.now() + 1000,
           sourceTb,
           destinationTb,
           connection03,
@@ -177,31 +152,23 @@ describe("crosschain transfer compatibility", () => {
 
         await registerCrosschainAsset(
           connection03.client,
-          adminUser(connection03.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain00.rid,
         );
 
-        const account00 = await AccountBuilder.account(
-          connection00,
-          MERKLE_HASH_VERSIONS.ONE,
-        )
+        const account00 = await AccountBuilder.account(connection00)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .withBalance(asset, createAmount(100, asset.decimals))
           .build();
 
-        const account03 = await AccountBuilder.account(
-          connection03,
-          MERKLE_HASH_VERSIONS.TWO,
-        )
+        const account03 = await AccountBuilder.account(connection03)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .build();
 
         await registerCrosschainAsset(
           connection01.client,
-          adminUser(connection01.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain03.rid,
         );
@@ -239,16 +206,12 @@ describe("crosschain transfer compatibility", () => {
 
         await registerCrosschainAsset(
           connection03.client,
-          adminUser(connection03.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain00.rid,
         );
 
-        const account00 = await AccountBuilder.account(
-          connection00,
-          MERKLE_HASH_VERSIONS.ONE,
-        )
+        const account00 = await AccountBuilder.account(connection00)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .withBalance(asset, createAmount(100, asset.decimals))
           .build();
@@ -264,9 +227,9 @@ describe("crosschain transfer compatibility", () => {
         );
 
         const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
-        const unregisteredRecipientAccountId = gtv.gtvHash(
-          keyStore.id,
-          MERKLE_HASH_VERSIONS.TWO,
+        const unregisteredRecipientAccountId = getExpectedAccountIdFromSigners(
+          [keyStore.id],
+          connection03,
         );
 
         await initAndApplyCrosschainTransfer(
@@ -287,16 +250,12 @@ describe("crosschain transfer compatibility", () => {
 
         await registerCrosschainAsset(
           connection03.client,
-          adminUser(connection03.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain00.rid,
         );
 
-        const account00 = await AccountBuilder.account(
-          connection00,
-          MERKLE_HASH_VERSIONS.ONE,
-        )
+        const account00 = await AccountBuilder.account(connection00)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .withBalance(asset, createAmount(100, asset.decimals))
           .build();
@@ -312,9 +271,9 @@ describe("crosschain transfer compatibility", () => {
         );
 
         const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
-        const unregisteredRecipientAccountId = gtv.gtvHash(
-          keyStore.id,
-          MERKLE_HASH_VERSIONS.TWO,
+        const unregisteredRecipientAccountId = getExpectedAccountIdFromSigners(
+          [keyStore.id],
+          connection03,
         );
 
         await initAndCancelCrosschainTransfer(
@@ -337,24 +296,19 @@ describe("crosschain transfer compatibility", () => {
 
         await registerCrosschainAsset(
           connection03.client,
-          adminUser(connection03.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain00.rid,
         );
 
-        const account00 = await AccountBuilder.account(
-          connection00,
-          MERKLE_HASH_VERSIONS.ONE,
-        )
+        const account00 = await AccountBuilder.account(connection00)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .withBalance(asset, createAmount(100, asset.decimals))
           .build();
 
         await registerCrosschainAsset(
           connection01.client,
-          adminUser(connection01.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain03.rid,
         );
@@ -370,9 +324,9 @@ describe("crosschain transfer compatibility", () => {
         );
 
         const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
-        const unregisteredRecipientAccountId = gtv.gtvHash(
-          keyStore.id,
-          MERKLE_HASH_VERSIONS.TWO,
+        const unregisteredRecipientAccountId = getExpectedAccountIdFromSigners(
+          [keyStore.id],
+          connection01,
         );
 
         await initApplyCancelUnapplyCrosschainTransfer(
@@ -395,27 +349,15 @@ describe("crosschain transfer compatibility", () => {
     let connection04: Connection;
     beforeAll(async () => {
       connection03 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain03.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.TWO,
-        ),
+        await createChromiaClientToMultichain(multichain03.rid, NODE_URL),
       );
 
       connection00 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain00.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.ONE,
-        ),
+        await createChromiaClientToMultichain(multichain00.rid, NODE_URL),
       );
 
       connection04 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain04.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.TWO,
-        ),
+        await createChromiaClientToMultichain(multichain04.rid, NODE_URL),
       );
     });
     describe("accounts are registered before transfer", () => {
@@ -428,24 +370,17 @@ describe("crosschain transfer compatibility", () => {
 
         await registerCrosschainAsset(
           connection00.client,
-          adminUser(connection00.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain03.rid,
         );
 
-        const account03 = await AccountBuilder.account(
-          connection03,
-          MERKLE_HASH_VERSIONS.TWO,
-        )
+        const account03 = await AccountBuilder.account(connection03)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .withBalance(asset, createAmount(100, asset.decimals))
           .build();
 
-        const account00 = await AccountBuilder.account(
-          connection00,
-          MERKLE_HASH_VERSIONS.ONE,
-        )
+        const account00 = await AccountBuilder.account(connection00)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .build();
 
@@ -477,24 +412,17 @@ describe("crosschain transfer compatibility", () => {
 
         await registerCrosschainAsset(
           connection00.client,
-          adminUser(connection00.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain03.rid,
         );
 
-        const account03 = await AccountBuilder.account(
-          connection03,
-          MERKLE_HASH_VERSIONS.TWO,
-        )
+        const account03 = await AccountBuilder.account(connection03)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .withBalance(asset, createAmount(100, asset.decimals))
           .build();
 
-        const account00 = await AccountBuilder.account(
-          connection00,
-          MERKLE_HASH_VERSIONS.ONE,
-        )
+        const account00 = await AccountBuilder.account(connection00)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .build();
 
@@ -528,31 +456,23 @@ describe("crosschain transfer compatibility", () => {
 
         await registerCrosschainAsset(
           connection00.client,
-          adminUser(connection00.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain03.rid,
         );
 
-        const account03 = await AccountBuilder.account(
-          connection03,
-          MERKLE_HASH_VERSIONS.TWO,
-        )
+        const account03 = await AccountBuilder.account(connection03)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .withBalance(asset, createAmount(100, asset.decimals))
           .build();
 
-        const account00 = await AccountBuilder.account(
-          connection00,
-          MERKLE_HASH_VERSIONS.ONE,
-        )
+        const account00 = await AccountBuilder.account(connection00)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .build();
 
         await registerCrosschainAsset(
           connection04.client,
-          adminUser(connection04.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain00.rid,
         );
@@ -590,16 +510,12 @@ describe("crosschain transfer compatibility", () => {
 
         await registerCrosschainAsset(
           connection00.client,
-          adminUser(connection00.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain03.rid,
         );
 
-        const account03 = await AccountBuilder.account(
-          connection03,
-          MERKLE_HASH_VERSIONS.TWO,
-        )
+        const account03 = await AccountBuilder.account(connection03)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .withBalance(asset, createAmount(100, asset.decimals))
           .build();
@@ -615,9 +531,9 @@ describe("crosschain transfer compatibility", () => {
         );
 
         const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
-        const unregisteredRecipientAccountId = gtv.gtvHash(
-          keyStore.id,
-          MERKLE_HASH_VERSIONS.ONE,
+        const unregisteredRecipientAccountId = getExpectedAccountIdFromSigners(
+          [keyStore.id],
+          connection00,
         );
 
         await initAndApplyCrosschainTransfer(
@@ -638,16 +554,12 @@ describe("crosschain transfer compatibility", () => {
 
         await registerCrosschainAsset(
           connection00.client,
-          adminUser(connection00.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain03.rid,
         );
 
-        const account03 = await AccountBuilder.account(
-          connection03,
-          MERKLE_HASH_VERSIONS.TWO,
-        )
+        const account03 = await AccountBuilder.account(connection03)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .withBalance(asset, createAmount(100, asset.decimals))
           .build();
@@ -663,9 +575,9 @@ describe("crosschain transfer compatibility", () => {
         );
 
         const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
-        const unregisteredRecipientAccountId = gtv.gtvHash(
-          keyStore.id,
-          MERKLE_HASH_VERSIONS.ONE,
+        const unregisteredRecipientAccountId = getExpectedAccountIdFromSigners(
+          [keyStore.id],
+          connection00,
         );
 
         await initAndCancelCrosschainTransfer(
@@ -688,24 +600,19 @@ describe("crosschain transfer compatibility", () => {
 
         await registerCrosschainAsset(
           connection00.client,
-          adminUser(connection00.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain03.rid,
         );
 
-        const account03 = await AccountBuilder.account(
-          connection03,
-          MERKLE_HASH_VERSIONS.TWO,
-        )
+        const account03 = await AccountBuilder.account(connection03)
           .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
           .withBalance(asset, createAmount(100, asset.decimals))
           .build();
 
         await registerCrosschainAsset(
           connection04.client,
-          adminUser(connection04.client.config.merkleHashVersion)
-            .signatureProvider,
+          adminUser().signatureProvider,
           asset.id,
           multichain00.rid,
         );
@@ -721,9 +628,9 @@ describe("crosschain transfer compatibility", () => {
         );
 
         const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
-        const unregisteredRecipientAccountId = gtv.gtvHash(
-          keyStore.id,
-          MERKLE_HASH_VERSIONS.ONE,
+        const unregisteredRecipientAccountId = getExpectedAccountIdFromSigners(
+          [keyStore.id],
+          connection04,
         );
 
         await initApplyCancelUnapplyCrosschainTransfer(
@@ -748,35 +655,19 @@ describe("crosschain transfer compatibility", () => {
 
     beforeAll(async () => {
       connection00 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain00.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.ONE,
-        ),
+        await createChromiaClientToMultichain(multichain00.rid, NODE_URL),
       );
 
       connection01 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain01.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.ONE,
-        ),
+        await createChromiaClientToMultichain(multichain01.rid, NODE_URL),
       );
 
       connection03 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain03.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.TWO,
-        ),
+        await createChromiaClientToMultichain(multichain03.rid, NODE_URL),
       );
 
       connection04 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain04.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.TWO,
-        ),
+        await createChromiaClientToMultichain(multichain04.rid, NODE_URL),
       );
     });
 
@@ -789,24 +680,17 @@ describe("crosschain transfer compatibility", () => {
 
       await registerCrosschainAsset(
         connection01.client,
-        adminUser(connection01.client.config.merkleHashVersion)
-          .signatureProvider,
+        adminUser().signatureProvider,
         asset.id,
         multichain00.rid,
       );
 
-      const account00 = await AccountBuilder.account(
-        connection00,
-        MERKLE_HASH_VERSIONS.ONE,
-      )
+      const account00 = await AccountBuilder.account(connection00)
         .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
         .withBalance(asset, createAmount(100, asset.decimals))
         .build();
 
-      const account01 = await AccountBuilder.account(
-        connection01,
-        MERKLE_HASH_VERSIONS.ONE,
-      )
+      const account01 = await AccountBuilder.account(connection01)
         .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
         .build();
 
@@ -860,24 +744,17 @@ describe("crosschain transfer compatibility", () => {
 
       await registerCrosschainAsset(
         connection04.client,
-        adminUser(connection04.client.config.merkleHashVersion)
-          .signatureProvider,
+        adminUser().signatureProvider,
         asset.id,
         multichain03.rid,
       );
 
-      const account03 = await AccountBuilder.account(
-        connection03,
-        MERKLE_HASH_VERSIONS.TWO,
-      )
+      const account03 = await AccountBuilder.account(connection03)
         .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
         .withBalance(asset, createAmount(100, asset.decimals))
         .build();
 
-      const account04 = await AccountBuilder.account(
-        connection04,
-        MERKLE_HASH_VERSIONS.TWO,
-      )
+      const account04 = await AccountBuilder.account(connection04)
         .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
         .build();
 

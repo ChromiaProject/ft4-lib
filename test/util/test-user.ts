@@ -7,29 +7,35 @@ import {
   SingleSig,
 } from "@ft4/accounts";
 import { createInMemoryFtKeyStore, FtKeyStore } from "@ft4/authentication";
+import { getMerkleHashVersion, MerkleHashVersionSource } from "@ft4/utils";
 import {
   encryption,
   gtv,
   gtx,
   KeyPair,
-  MERKLE_HASH_VERSIONS,
   SignatureProvider,
 } from "postchain-client";
 
 export const FT4_USER_TYPE = "FT4_USER";
 
-export function singleSigUser(rule: AuthDescriptorRules | null = null): User {
-  return newSingleSigUser(encryption.makeKeyPair(), rule);
+export function singleSigUser(
+  merkleHashVersionSource: MerkleHashVersionSource,
+  rule: AuthDescriptorRules | null = null,
+): User {
+  return newSingleSigUser(
+    encryption.makeKeyPair(),
+    merkleHashVersionSource,
+    rule,
+  );
 }
 
 export function newSingleSigUser(
   keyPair: KeyPair,
+  merkleHashVersionSource: MerkleHashVersionSource,
   rule: AuthDescriptorRules | null = null,
 ): User {
-  const signatureProvider = gtx.newSignatureProvider(
-    MERKLE_HASH_VERSIONS.ONE,
-    keyPair,
-  );
+  const merkleHashVersion = getMerkleHashVersion(merkleHashVersionSource);
+  const signatureProvider = gtx.newSignatureProvider(keyPair);
   const singleSigAuthDescriptor = createSingleSigAuthDescriptorRegistration(
     [AuthFlag.Account, AuthFlag.Transfer],
     signatureProvider.pubKey,
@@ -39,8 +45,8 @@ export function newSingleSigUser(
     signatureProvider,
     authDescriptor: {
       ...singleSigAuthDescriptor,
-      id: deriveAuthDescriptorId(singleSigAuthDescriptor),
-      accountId: gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE),
+      id: deriveAuthDescriptorId(singleSigAuthDescriptor, merkleHashVersion),
+      accountId: gtv.gtvHash(keyPair.pubKey, merkleHashVersion),
       accountType: FT4_USER_TYPE,
       created: new Date(),
     },

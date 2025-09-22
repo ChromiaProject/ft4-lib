@@ -9,6 +9,7 @@ export function open(
   loginConfig: LoginConfigOptions | null = null,
 ): Strategy {
   return Object.freeze({
+    requiresSignature: true,
     getRegistrationDetails: async (
       connection: Connection,
     ): Promise<RegistrationDetails> => {

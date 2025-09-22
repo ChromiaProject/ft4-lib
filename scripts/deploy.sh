@@ -34,19 +34,19 @@ echo "\nBuilding..."
 if [ $which = "stable" ]; then
     printf "// stable" >> rell/src/main/module.rell # makes unique brid
 fi
-chr build -s configs/devnet1.yaml --hide-lib-warnings
+chr build -s configs/devnet1.yml --hide-lib-warnings
 
 echo "\nPausing the old network..."
-sed -E -i 's/x"[0-9A-F]{64}" #'$which'/x"'$OLD_BRID'" #'$which'/' configs/devnet1.yaml
-chr deployment pause -d $which -bc ft_deploy -s configs/devnet1.yaml
+sed -E -i 's/x"[0-9A-F]{64}" #'$which'/x"'$OLD_BRID'" #'$which'/' configs/devnet1.yml
+chr deployment pause -d $which -bc ft_deploy -s configs/devnet1.yml
 
 PAUSED_OLD_CHAIN=$?
 [ $PAUSED_OLD_CHAIN -eq 0 ] && echo "Old chain paused" || echo "Couldn't pause old chain"
 
-sed -E -i 'N;s/chains:\n\s+ft_deploy: x"[0-9A-F]{64}" #'$which'/#'$which'/;P;D' configs/devnet1.yaml
+sed -E -i 'N;s/chains:\n\s+ft_deploy: x"[0-9A-F]{64}" #'$which'/#'$which'/;P;D' configs/devnet1.yml
 
 echo -n "\nDeploying a new one... "
-BRID=$( echo y | chr deployment create -d $which -bc ft_deploy -s configs/devnet1.yaml | grep -oE '[0-9A-F]{64}' )
+BRID=$( echo y | chr deployment create -d $which -bc ft_deploy -s configs/devnet1.yml | grep -oE '[0-9A-F]{64}' )
 
 if [ -z "$BRID" ]; then
     printf "Error during deployment!\n" >&2

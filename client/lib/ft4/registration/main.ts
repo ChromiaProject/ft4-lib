@@ -18,6 +18,7 @@ import {
   TransactionEvent,
   Web3PromiEvent,
   gtv,
+  gtx,
 } from "postchain-client";
 import { registerAccount as registerAccountOp } from "./operations";
 import { registerAccountMessage } from "./queries";
@@ -29,6 +30,7 @@ import {
   createSession,
 } from "@ft4/ft-session";
 import { evmSignatures } from "@ft4/transaction-builder/utils";
+import { createGtxTransaction } from "@ft4/utils/main";
 
 /**
  * Registers an account.
@@ -55,10 +57,18 @@ export function registerAccount(
       sent: Buffer;
     }
   >((resolve, reject) => {
-    const connection = createConnection(client);
-    return strategy
-      .getRegistrationDetails(connection, masterKeyStore)
-      .then(({ strategyOperation, loginKeyStore, disposableKeyStore }) => {
+    const executeRegistration = async () => {
+      try {
+        const connection = createConnection(client);
+
+        // Get registration details from strategy
+        const {
+          strategyOperation,
+          additionalOperations,
+          loginKeyStore,
+          disposableKeyStore,
+        } = await strategy.getRegistrationDetails(connection, masterKeyStore);
+
         const ftKeyStores: FtKeyStore[] = [];
         let evmKeyStore: EvmKeyStore | null = null;
 
@@ -72,73 +82,78 @@ export function registerAccount(
           ftKeyStores.push(disposableKeyStore);
         }
 
-        return Promise.all([
-          loginKeyStore,
-          disposableKeyStore,
-          strategyOperation,
-          evmKeyStore,
-          ftKeyStores,
-          evmKeyStore &&
-            evmSignaturesOperation(
-              connection,
-              evmKeyStore,
-              strategyOperation,
-              registerAccountOperation,
-            ),
-        ]);
-      })
-      .then(
-        ([
-          loginKeyStore,
-          disposableKeyStore,
-          strategyOperation,
-          evmKeyStore,
-          ftKeyStores,
-          signaturesOperation,
-        ]) => {
-          return Promise.all([
-            loginKeyStore,
-            disposableKeyStore,
-            compactArray([evmKeyStore, ...ftKeyStores]),
-            createAndSignTransaction(
-              connection,
-              compactArray([
-                signaturesOperation,
+        const keyStores = compactArray([evmKeyStore, ...ftKeyStores]);
+
+        let transaction: Buffer;
+        if (strategy.requiresSignature) {
+          // Prepare all operations and signatures
+          const signaturesOperation = evmKeyStore
+            ? await evmSignaturesOperation(
+                connection,
+                evmKeyStore,
                 strategyOperation,
                 registerAccountOperation,
-              ]),
-              ftKeyStores,
-            ),
-          ]);
-        },
-      )
-      .then(([loginKeyStore, disposableKeyStore, keyStores, transaction]) => {
+              )
+            : null;
+
+          // Create and sign transaction
+          transaction = await createAndSignTransaction(
+            connection,
+            compactArray([
+              ...(additionalOperations || []),
+              signaturesOperation,
+              strategyOperation,
+              registerAccountOperation,
+            ]),
+            ftKeyStores,
+          );
+        } else {
+          const gtxTransaction = await createGtxTransaction(
+            connection,
+            compactArray([
+              ...(additionalOperations || []),
+              strategyOperation,
+              registerAccountOperation,
+            ]),
+            ftKeyStores,
+          );
+          gtxTransaction.signers = [];
+          transaction = gtx.serialize(gtxTransaction);
+        }
+
         promiEvent.emit("built", transaction);
-        return Promise.all([
-          loginKeyStore,
-          disposableKeyStore,
-          keyStores,
-          connection.client
+
+        // Send transaction
+        if (additionalOperations?.find((x) => x.name === "iccf_proof")) {
+          await connection.client
+            .sendTransactionWithRetries(transaction)
+            .on(TransactionEvent.Rejected, (receipt) => {
+              console.log("Transaction rejected: ", receipt);
+            })
+            .on(TransactionEvent.DappReceived, (receipt) => {
+              promiEvent.emit("sent", receipt.transactionRid);
+            });
+        } else {
+          await connection.client
             .sendTransaction(transaction)
             .on(TransactionEvent.DappReceived, (receipt) => {
               promiEvent.emit("sent", receipt.transactionRid);
-            }),
-        ]);
-      })
-      .then(([loginKeyStore, disposableKeyStore, keyStores, _]) => {
+            });
+        }
+
+        // Create account ID and get key handlers
         const accountId = gtv.gtvHash(
           masterKeyStore.id,
-          MERKLE_HASH_VERSIONS.ONE,
+          MERKLE_HASH_VERSIONS.ONE, //the version doesn't matter, it's a buffer
         );
 
-        return Promise.all([
-          loginKeyStore,
-          disposableKeyStore,
+        const keyHandlers = await getKeyHandlersForKeyStores(
+          connection,
           accountId,
-          getKeyHandlersForKeyStores(connection, accountId, keyStores),
-        ]);
-      })
-      .then(([loginKeyStore, disposableKeyStore, accountId, keyHandlers]) => {
+          keyStores,
+        );
+
+        // Create authenticator and session
         const authenticator = createAuthenticator(
           accountId,
           keyHandlers,
@@ -146,14 +161,19 @@ export function registerAccount(
         );
 
         const session = createSession(connection, authenticator);
+
         resolve(
           Object.freeze({
             session,
             logout: logoutSession(session, disposableKeyStore, loginKeyStore),
           }),
         );
-      })
-      .catch((reason) => reject(reason));
+      } catch (reason) {
+        reject(reason);
+      }
+    };
+
+    executeRegistration();
   });
   return promiEvent;
 }

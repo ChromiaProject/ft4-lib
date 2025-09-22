@@ -1,0 +1,226 @@
+@mount("ft4")
+module;
+
+import ^^^^.core.auth;
+import ^^^^.core.assets;
+import ^^^^.core.accounts;
+import ^^^^.core.accounts.strategies;
+import external_auth: ^^^^.external.auth;
+import ^^^^.utils;
+import ^^^^^.iccf;
+import module_args_utils: ^;
+
+/**
+ * When an account is imported using the `ft4.ras_import` strategy, the original account and source chain are stored in 
+ * the `imported_account` entity.
+ * This allows the system to track the origin of the account and its associated chain, ensuring no additional accounts can be created
+ *  on the target chain in case one of the signers changes.
+ */
+entity imported_account {
+    chain: byte_array;
+    account_id: byte_array;
+    created_account_id: byte_array;
+    transaction_rid: byte_array;
+    key chain, account_id;
+}
+
+/**
+ * The operation that defines the import strategy. The import strategy allows importing
+ * an existing account from a trusted chain by providing ICCF proof of the account's
+ * existence and authentication on the origin chain.
+ * This strategy requires verification of signatures and an ICCF proof to ensure
+ * the account being imported is legitimate.
+ * 
+ * Throws if the next operation in the transaction is not accepted by
+ * `require_register_account_next_operation`
+ * 
+ * @see core.accounts.strategies._strategy for information on how to register an account
+ * using this strategy
+ * 
+ * @param iccf_proof_transaction the ICCF proof transaction containing the account verification
+ * @param main                   the main auth descriptor for the account that will be registered
+ * @param disposable             optionally, the disposable auth descriptor for the same account
+ * @param flags_on_other_chain   the flags that are set on the auth descriptor on the other chain
+ */
+operation ras_import(
+    iccf_proof_transaction: gtx_transaction,
+    main: accounts.auth_descriptor,
+    disposable: accounts.auth_descriptor? = null,
+    flags_on_other_chain: list<text> = accounts.get_auth_flags_config().mandatory
+) {
+    val signers = accounts.get_signers(main);
+    val expected_account_id = accounts.get_account_id_from_signers(signers);
+    val operations = op_context.get_all_operations();
+
+    val sender_chain_rid = iccf_proof_transaction.body.blockchain_rid;
+
+    require(
+        sender_chain_rid in trusted_chains(),
+        "INVALID ORIGIN CHAIN: The proof comes from an untrusted chain"
+    );
+
+    var iccf_operations = iccf.require_valid_proof(
+        iccf_proof_transaction,
+        require_anchored_proof = true,
+        verify_signers = false,
+        min_timestamp = op_context.last_block_time - import_account_timeout()
+    );
+
+    var auth_operation: gtx_operation? = extract_auth_op_for_verify_account(iccf_operations);
+
+    // any operation allowed, and verify account is not called
+    if (auth_operation == null and allow_any_operation()) {
+        for (op in iccf_operations) {
+            if (auth.is_auth_op(op) and auth.extract_account_id(op) == expected_account_id) {
+                auth_operation = op;
+                break;
+            }
+        }
+        require(
+            auth_operation != null,
+            "INVALID AUTH: At least one operation in the proof must be authorized by the signers that created the account. Did you use the original main auth descriptor?"
+        );
+        require(
+            disposable == null,
+            "INVALID DISPOSABLE AUTH: The disposable auth descriptor is not allowed when verify_account is not used"
+        );
+    }
+    // verify_account was used
+    else {
+        require(
+            auth_operation,
+            "INVALID VERIFY ACCOUNT: The proof does not contain a verify_account operation"
+        );
+
+        require(
+            auth.is_auth_op(auth_operation),
+            "INVALID PRECEDING AUTH: The preceding auth is not a valid auth operation"
+        );
+        
+        // verify that signers are the same in main and preceding auth
+        val (account_id, auth_descriptor_id) = auth.extract_account_and_auth_descriptor(auth_operation.args);
+
+        if (accounts.get_flags(main) == set<text>(flags_on_other_chain)) {
+            require(
+                main.hash() == auth_descriptor_id,
+                "INVALID MAIN AUTH DESCRIPTOR: The main auth descriptor does not match the main auth descriptor in verify_account"
+            );
+        } else {
+            val other_args: list<gtv> = [flags_on_other_chain.to_gtv()];
+            other_args.add_all(main.args.sub(1));
+
+            val other_main = accounts.auth_descriptor(
+                auth_type = main.auth_type,
+                args = other_args,
+                rules = main.rules
+            );
+
+            require(
+                other_main.hash() == auth_descriptor_id,
+                "INVALID MAIN AUTH DESCRIPTOR: The main auth descriptor does not match the main auth descriptor in verify_account"
+            );
+        }
+    }
+
+    strategies.require_register_account_next_operation();
+
+    //TODO:  check if this is the right place, since the account is not registered yet
+
+    val extracted_account_id = auth.extract_account_id(auth_operation!!);
+    val previously_imported: list<imported_account> = imported_account @* {
+        .account_id == extracted_account_id,
+        .chain == sender_chain_rid
+    };
+
+    require(
+        previously_imported.size() == 0,
+        "INVALID IMPORT: The account <%s> has already been imported from chain <%s>".format(
+            extracted_account_id,
+            sender_chain_rid
+        )
+    );
+
+    create imported_account (
+        chain = sender_chain_rid,
+        account_id = extracted_account_id,
+        created_account_id = expected_account_id,
+        transaction_rid = op_context.transaction.tx_rid
+    );
+}
+
+operation verify_account() {
+    var account = auth.authenticate();
+}
+
+function verify_account_resolver(args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>) {
+    val main_auth_descriptor = require(
+        accounts.main_auth_descriptor @? { .account.id == account_id } .auth_descriptor,
+        "Account <%s> does not have main auth descriptor set".format(account_id)
+    );
+
+    return if (main_auth_descriptor.id in auth_descriptor_ids) main_auth_descriptor.id else null;
+}
+/**
+ * Calculates the account details for the account that will be registered using the
+ * `ft4.ras_import` strategy.
+ * 
+ * @param gtv   the parameters for the `ras_import` operation, GTV-encoded
+ */
+function account_details(gtv) {
+    val params = struct<ras_import>.from_gtv(gtv);
+    val signers = accounts.get_signers(params.main);
+    return strategies.account_details(
+        account_id = accounts.get_account_id_from_signers(signers),
+        main = params.main,
+        disposable = params.disposable
+    );
+}
+
+@extend(strategies.strategy)
+function () = strategies.add_strategy(
+    op = rell.meta(ras_import),
+    account_details = account_details(*),
+    action = null,
+    required_signers = required_signers_import(*)
+);
+
+@extend(auth.auth_handler)
+function () = auth.add_overridable_auth_handler(
+    scope = rell.meta(verify_account).mount_name,
+    flags = [],
+    message = verify_account_message(*),
+    resolver = verify_account_resolver(*)
+);
+
+function required_signers_import(gtv) {
+    val params = struct<ras_import>.from_gtv(gtv);
+    if (params.disposable??) {
+        return accounts.get_signers(params.disposable);
+    }
+    return list<byte_array>();
+}
+
+function verify_account_message(gtv) {
+    return "Please sign the message\nto verify account:\n{account_id}";
+}
+
+function is_signers_account_equal_to_account(signers: list<byte_array>, account: byte_array): boolean {
+    val account_id = accounts.get_account_id_from_signers(signers);
+    return account_id == account;
+}
+
+function extract_auth_op_for_verify_account(tx_operations: list<gtx_operation>) {
+    // find the verify_account operation in the transaction
+    var op_index: integer? = null;
+    for (op in tx_operations) {
+        if (op.name == rell.meta(verify_account).mount_name) {
+            op_index = tx_operations.index_of(op);
+            break;
+        }
+    }
+    if (op_index != null) {
+        require(op_index > 0, "INVALID VERIFY ACCOUNT: The proof does not contain a preceding auth operation");
+        return tx_operations[op_index - 1];
+    }
+    return null;
+}

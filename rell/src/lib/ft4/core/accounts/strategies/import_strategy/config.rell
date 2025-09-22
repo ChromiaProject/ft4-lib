@@ -1,0 +1,24 @@
+/** The configuration for this module, to be defined in the `chromia.yml` */
+struct module_args {
+
+    /**
+     * The chains that are trusted to import accounts.
+     * 
+     * @see utils.rid for more info on RIDs
+     */
+    trusted_chains: gtv = list<byte_array>().to_gtv();
+    /**
+     * The time in milliseconds after which the iccf proof expires.
+     */
+    import_account_timeout: integer = 0;
+    /**
+     * Whether to allow any operation to import an account, rather than just the `ft4.ras_import` operation.
+     */
+    allow_any_operation: boolean = false;
+}
+
+function trusted_chains(): list<byte_array> = list<byte_array>.from_gtv(chain_context.args.trusted_chains);
+
+function import_account_timeout(): integer = chain_context.args.import_account_timeout;
+
+function allow_any_operation(): boolean = chain_context.args.allow_any_operation;

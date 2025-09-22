@@ -95,7 +95,15 @@ async function authorize(
       formatter.toString(formatter.ensureBuffer(authDescriptor.id)),
     )
     .replace(BLOCKCHAIN_RID_PLACEHOLDER, formatter.toString(blockchainRid))
-    .replace(NONCE_PLACEHOLDER, deriveNonce(blockchainRid, operation, counter));
+    .replace(
+      NONCE_PLACEHOLDER,
+      deriveNonce(
+        blockchainRid,
+        operation,
+        counter,
+        authDataService.connection,
+      ),
+    );
 
   const signers = aggregateSigners(authDescriptor);
   const signatures = await Promise.all(

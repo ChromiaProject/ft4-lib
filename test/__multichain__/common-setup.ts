@@ -17,7 +17,6 @@ import {
   createConnection,
   createSession,
 } from "@ft4/ft-session";
-import { MERKLE_HASH_VERSIONS } from "postchain-client";
 
 export type TestContext = {
   connection0: Connection;
@@ -40,33 +39,18 @@ const gen = numberGenerator();
 export async function setupTestEnvironment(
   testName: string,
   mintAmount?: Amount,
-  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
 ) {
-  const { multichain00, multichain01, multichain02 } = await fetchBlockchains(
-    false,
-    merkleHashVersion,
-  );
+  const { multichain00, multichain01, multichain02 } =
+    await fetchBlockchains(false);
 
   const connection0 = createConnection(
-    await createChromiaClientToMultichain(
-      multichain00.rid,
-      NODE_URL,
-      merkleHashVersion,
-    ),
+    await createChromiaClientToMultichain(multichain00.rid, NODE_URL),
   );
   const connection1 = createConnection(
-    await createChromiaClientToMultichain(
-      multichain01.rid,
-      NODE_URL,
-      merkleHashVersion,
-    ),
+    await createChromiaClientToMultichain(multichain01.rid, NODE_URL),
   );
   const connection2 = createConnection(
-    await createChromiaClientToMultichain(
-      multichain02.rid,
-      NODE_URL,
-      merkleHashVersion,
-    ),
+    await createChromiaClientToMultichain(multichain02.rid, NODE_URL),
   );
 
   const num = gen.next().value;
@@ -78,7 +62,7 @@ export async function setupTestEnvironment(
   );
   await registerCrosschainAsset(
     connection2.client, // Leaf
-    adminUser(merkleHashVersion).signatureProvider,
+    adminUser().signatureProvider,
     asset.id,
     multichain00.rid, // Branch
   );
@@ -103,7 +87,7 @@ export async function setupTestEnvironment(
 
   await mint(
     connection0.client,
-    adminUser(merkleHashVersion).signatureProvider,
+    adminUser().signatureProvider,
     account0.id,
     asset.id,
     amountToMint,
