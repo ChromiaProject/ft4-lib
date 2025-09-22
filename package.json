@@ -37,6 +37,7 @@
     "build:umd": "tsc --project tsconfig.umd.json && tsc-alias --resolve-full-paths -p tsconfig.umd.json",
     "build:cjs": "tsc --project tsconfig.cjs.json && tsc-alias -p tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
     "build": "npm run build:clean && npm run build:types && npm run build:esm && npm run build:umd && npm run build:cjs",
+    "prepack": "npm run build",
     "prepublishOnly": "npm run build",
     "prepare": "husky install",
     "generate:docs-rell": "chr generate docs-site --target doc/api/rell -s doc/docs-chromia.yml",
@@ -94,7 +95,7 @@
   "peerDependencies": {
     "buffer": "^5.x || ^6.x",
     "events": "^3.3.0",
-    "postchain-client": "^2.0.2"
+    "postchain-client": "^2.0.3"
   },
   "jest-junit": {
     "suiteName": "jest tests",

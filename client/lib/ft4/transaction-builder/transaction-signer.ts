@@ -21,7 +21,7 @@ import {
   gtx,
 } from "postchain-client";
 import { EVM_SIGNATURES, signOperation } from "./utils";
-import { compactArray } from "@ft4/utils";
+import { compactArray, MerkleHashVersionSource } from "@ft4/utils";
 
 /**
  * Signs a transaction using an authenticator. This function will add all the necessary missing
@@ -109,6 +109,7 @@ export async function signTransaction(
   await gtxSign(
     gtxTx,
     authenticator.keyHandlers.map((kh) => kh.keyStore),
+    authenticator.authDataService.connection,
   );
 
   return gtx.serialize(gtxTx);
@@ -169,7 +170,7 @@ export async function signTransactionWithKeyStores(
     }),
   );
 
-  await gtxSign(gtxTx, keyStores);
+  await gtxSign(gtxTx, keyStores, authDataService.connection);
 
   return gtx.serialize(gtxTx);
 }
@@ -267,7 +268,11 @@ function getOpIndexToAuth(
   return opIndex;
 }
 
-async function gtxSign(gtxTx: GTX, keyStores: KeyStore[]) {
+async function gtxSign(
+  gtxTx: GTX,
+  keyStores: KeyStore[],
+  merkleHashVersionSource: MerkleHashVersionSource,
+) {
   const ftKeyStores = keyStores.filter(isFtKeyStore);
 
   for (let index = 0; index < gtxTx.signers.length; index++) {
@@ -276,7 +281,10 @@ async function gtxSign(gtxTx: GTX, keyStores: KeyStore[]) {
     );
     if (keyStore) {
       if (gtxTx.signatures![index].equals(EMPTY_SIGNATURE)) {
-        gtxTx.signatures![index] = await keyStore.sign(gtxTx);
+        gtxTx.signatures![index] = await keyStore.sign(
+          gtxTx,
+          merkleHashVersionSource,
+        );
       }
     }
   }

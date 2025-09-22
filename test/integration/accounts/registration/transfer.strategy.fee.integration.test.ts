@@ -20,7 +20,7 @@ import {
   registerAccount,
   registrationStrategy,
 } from "@ft4/registration";
-import { encryption, gtv, MERKLE_HASH_VERSIONS } from "postchain-client";
+import { encryption, gtv } from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;
@@ -48,7 +48,10 @@ describe("Test transfer with fee", () => {
   beforeEach(async () => {
     // Create a recipient
     const keyPair = encryption.makeKeyPair();
-    recipientId = gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE);
+    recipientId = gtv.gtvHash(
+      keyPair.pubKey,
+      connection.client.config.merkleHashVersion,
+    );
     keyStore = createInMemoryFtKeyStore(keyPair);
     authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],

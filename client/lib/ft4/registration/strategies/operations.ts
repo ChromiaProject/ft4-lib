@@ -11,3 +11,10 @@ export function renewSubscription(assetId: BufferId | null): Operation {
     assetId ? formatter.ensureBuffer(assetId) : null,
   );
 }
+
+/**
+ * Creates a `verify_account` - operation object
+ */
+export function verifyAccount(): Operation {
+  return op("ft4.verify_account");
+}

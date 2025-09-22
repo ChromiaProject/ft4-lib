@@ -91,6 +91,7 @@ export async function createOrchestrator(
     try {
       const data = await transactionBuilder(authenticator, connection.client)
         .add(initTransfer(recipientId, assetId, amount, path, Date.now() + ttl))
+        //TODO timebomb
         .add(nop())
         .buildAndSendWithAnchoring()
         .on("built", (tx) => {
@@ -389,6 +390,7 @@ export async function createRevertOrchestrator(
         nextHopIndex: path.length - 2,
       };
     } catch (error) {
+      console.log("error:::::::::::: ", JSON.stringify(error, null, 2));
       throw new OrchestratorError(
         `Unable to fetch proof: ${(error as any)?.message ?? error}`,
         error as Error,
@@ -542,8 +544,11 @@ async function createOrchestratorCore(
       connection,
       Buffer.from(connection.client.config.blockchainRid, "hex"),
     );
+
+    const iccfOp = await state.systemConfirmationProof(targetChainRid);
+
     await tb
-      .add(await state.systemConfirmationProof(targetChainRid))
+      .add(iccfOp)
       .add(completeTransfer(gtx.gtxToRawGtx(state.tx), state.opIndex))
       .buildAndSend();
   }

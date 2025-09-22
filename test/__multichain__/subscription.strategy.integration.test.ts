@@ -30,12 +30,7 @@ import {
   registrationStrategy,
   subscriptionAssets,
 } from "@ft4/registration";
-import {
-  encryption,
-  gtv,
-  MERKLE_HASH_VERSIONS,
-  newSignatureProvider,
-} from "postchain-client";
+import { encryption, gtv, newSignatureProvider } from "postchain-client";
 
 let asset: Asset;
 let nonExistentChain00Asset: Asset;
@@ -68,7 +63,7 @@ describe("Subscription account creation single step", () => {
     // (name, blockchain_rid).hash()
     const missingAssetId = gtv.gtvHash(
       ["subscription_strategy_missing_test_asset_00", multichain00.rid],
-      MERKLE_HASH_VERSIONS.ONE,
+      senderConnection.client.config.merkleHashVersion,
     );
 
     nonExistentChain00Asset = {
@@ -102,7 +97,7 @@ describe("Subscription account creation single step", () => {
   });
 
   it("can register account which receives transferred assets, minus subscription fee", async () => {
-    const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
@@ -126,7 +121,10 @@ describe("Subscription account creation single step", () => {
       startingAmount,
     );
 
-    const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
+    const recipientId = gtv.gtvHash(
+      sigProv.pubKey,
+      senderConnection.client.config.merkleHashVersion,
+    );
     expect(senderAccount.id).toEqual(recipientId);
 
     const _allowedAssets = (await recipientConnection.query(
@@ -184,7 +182,7 @@ describe("Subscription account creation single step", () => {
   });
 
   it("can resume account creation when transfer is interrupted", async () => {
-    const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
@@ -215,7 +213,10 @@ describe("Subscription account creation single step", () => {
       subscriptionAmount,
     );
 
-    const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
+    const recipientId = gtv.gtvHash(
+      sigProv.pubKey,
+      recipientConnection.client.config.merkleHashVersion,
+    );
 
     await senderSession
       .transactionBuilder()
@@ -277,7 +278,10 @@ describe("Subscription account creation single step", () => {
       subscriptionAmount,
     );
 
-    const recipientId = gtv.gtvHash(keyStore.id, MERKLE_HASH_VERSIONS.ONE);
+    const recipientId = gtv.gtvHash(
+      keyStore.id,
+      recipientConnection.client.config.merkleHashVersion,
+    );
     expect(senderAccount.id).toEqual(recipientId);
 
     await senderSession.account.crosschainTransfer(
@@ -303,7 +307,7 @@ describe("Subscription account creation single step", () => {
   });
 
   it("handles asset coming from wrong chain properly", async () => {
-    const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
@@ -342,7 +346,10 @@ describe("Subscription account creation single step", () => {
       startingAmount,
     );
 
-    const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
+    const recipientId = gtv.gtvHash(
+      sigProv.pubKey,
+      recipientConnection.client.config.merkleHashVersion,
+    );
     expect(unrelatedAccount.id).toEqual(recipientId);
 
     const _allowedAssets = (await recipientConnection.query(
@@ -379,7 +386,7 @@ describe("Subscription account creation single step", () => {
   });
 
   it("handles asset missing on source chain properly", async () => {
-    const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
@@ -392,7 +399,10 @@ describe("Subscription account creation single step", () => {
       registrationStrategy.open(authDescriptor),
     );
 
-    const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
+    const recipientId = gtv.gtvHash(
+      sigProv.pubKey,
+      recipientConnection.client.config.merkleHashVersion,
+    );
 
     const recipientSessionPromise = registerAccount(
       recipientConnection.client,
@@ -416,14 +426,17 @@ describe("Subscription account creation single step", () => {
   });
 
   it("handles missing account on source chain properly", async () => {
-    const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
     );
 
-    const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
+    const recipientId = gtv.gtvHash(
+      sigProv.pubKey,
+      recipientConnection.client.config.merkleHashVersion,
+    );
 
     const recipientSessionPromise = registerAccount(
       recipientConnection.client,
@@ -446,7 +459,7 @@ describe("Subscription account creation single step", () => {
   });
 
   it("handles insufficient balance on source chain properly", async () => {
-    const sigProv = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
@@ -470,7 +483,10 @@ describe("Subscription account creation single step", () => {
       startingAmount,
     );
 
-    const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
+    const recipientId = gtv.gtvHash(
+      sigProv.pubKey,
+      recipientConnection.client.config.merkleHashVersion,
+    );
 
     const recipientSessionPromise = registerAccount(
       recipientConnection.client,

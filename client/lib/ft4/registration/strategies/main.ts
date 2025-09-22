@@ -45,7 +45,7 @@ export async function fetchLoginDetails(
   };
 }
 
-function getAccountIdFromSigners(signers: Buffer[]): Buffer {
+export function getAccountIdFromSigners(signers: Buffer[]): Buffer {
   if (!signers.length)
     throw new Error("Cannot derive account id. Signers list is empty");
 

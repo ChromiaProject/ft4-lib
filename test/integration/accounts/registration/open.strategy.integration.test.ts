@@ -10,12 +10,7 @@ import {
 import { Connection, createConnection } from "@ft4/ft-session";
 import { registrationStrategy, registerAccount } from "@ft4/registration";
 import { useChromiaNode } from "@ft4-test/util";
-import {
-  KeyPair,
-  MERKLE_HASH_VERSIONS,
-  encryption,
-  gtv,
-} from "postchain-client";
+import { KeyPair, encryption, gtv } from "postchain-client";
 import {
   AnyAuthDescriptorRegistration,
   AuthFlag,
@@ -62,7 +57,7 @@ describe("Test open strategy", () => {
       registrationStrategy.open(ftAuthDescriptor),
     );
     expect(session.account.id).toEqual(
-      gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE),
+      gtv.gtvHash(keyPair.pubKey, _connection.client.config.merkleHashVersion),
     );
   });
 
@@ -101,7 +96,10 @@ describe("Test open strategy", () => {
       );
 
       expect(session.account.id).toEqual(
-        gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE),
+        gtv.gtvHash(
+          keyPair.pubKey,
+          _connection.client.config.merkleHashVersion,
+        ),
       );
 
       const disposableKeyStore = await options.loginKeyStore!.getKeyStore(
@@ -148,7 +146,10 @@ describe("Test open strategy", () => {
     );
 
     expect(session.account.id).toEqual(
-      gtv.gtvHash(evmKeyStore.address, MERKLE_HASH_VERSIONS.ONE),
+      gtv.gtvHash(
+        evmKeyStore.address,
+        _connection.client.config.merkleHashVersion,
+      ),
     );
   });
 

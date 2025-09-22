@@ -35,6 +35,7 @@ describe("FT key handler", () => {
 
   it("signs a transaction with ft signatures", async () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
+    const merkleHashVersion = MERKLE_HASH_VERSIONS.ONE;
 
     const transaction = {
       blockchainRid: Buffer.from(
@@ -49,12 +50,11 @@ describe("FT key handler", () => {
 
     const keyHandler =
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
-    transaction.signatures = [await keyHandler.sign(transaction)];
+    transaction.signatures = [
+      await keyHandler.sign(transaction, merkleHashVersion),
+    ];
 
-    const digestToSign = gtx.getDigestToSign(
-      transaction,
-      MERKLE_HASH_VERSIONS.ONE,
-    );
+    const digestToSign = gtx.getDigestToSign(transaction, merkleHashVersion);
     const signature2 = encryption.signDigest(digestToSign, keyPair.privKey);
 
     expect(transaction.signatures).toEqual([signature2]);

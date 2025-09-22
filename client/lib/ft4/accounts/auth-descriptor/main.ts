@@ -1,4 +1,4 @@
-import { gtv, MERKLE_HASH_VERSIONS } from "postchain-client";
+import { gtv } from "postchain-client";
 import { authDescriptorRegistrationToGtv } from "./auth-descriptor-mapper";
 import { AuthDescriptorRules } from "./rules";
 import {
@@ -14,9 +14,13 @@ import {
   RawAnyAuthDescriptorRegistration,
   SingleSig,
 } from "./types";
+import { getMerkleHashVersion, MerkleHashVersionSource } from "@ft4/utils";
 
-function hashAuthDescriptor(ad: RawAnyAuthDescriptorRegistration) {
-  return gtv.gtvHash(ad, MERKLE_HASH_VERSIONS.ONE);
+function hashAuthDescriptor(
+  ad: RawAnyAuthDescriptorRegistration,
+  merkleHashVersion: MerkleHashVersionSource,
+) {
+  return gtv.gtvHash(ad, getMerkleHashVersion(merkleHashVersion));
 }
 
 /**
@@ -29,11 +33,12 @@ export function deriveAuthDescriptorId(
   authDescriptor:
     | RawAnyAuthDescriptorRegistration
     | AnyAuthDescriptorRegistration,
+  merkleHashVersion: MerkleHashVersionSource,
 ): Buffer {
   const ad = isRawAnyAuthDescriptorRegistration(authDescriptor)
     ? authDescriptor
     : authDescriptorRegistrationToGtv(authDescriptor);
-  return hashAuthDescriptor(ad);
+  return hashAuthDescriptor(ad, merkleHashVersion);
 }
 
 /**
