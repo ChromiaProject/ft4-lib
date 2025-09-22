@@ -32,12 +32,12 @@ describe("Blockchain", () => {
   it("should provide ft4 rell-side version number", async () => {
     const info = await connection.getVersion();
 
-    expect(info).toEqual("1.1.0");
+    expect(info).toEqual("1.1.1");
   });
 
   it("should provide ft4 rell-side API version number", async () => {
     const info = await connection.getApiVersion();
 
-    expect(info).toEqual(1);
+    expect(info).toEqual(2);
   });
 });

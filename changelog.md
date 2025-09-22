@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.3] - 2025-09-22
+
+### Added ✅
+- ts support for the new `ras_import` strategy - the exported function `importStrategy` and a respective options type `ImportStrategyOptions`. The import can now be done while forcing a signature or without forcing a signature - in case another operation is used to verify the account on the origin chain (e.g. transfer op). 
+
+### Fixed 🔧
+- all hardcoded instances of the merklehash version have been removed (except where it makes no difference, e.g. the nop operation). The clients will always try to fetch the version implicitly from the features endpoint. 
+
 ## [2.0.2] - 2025-07-04
 
 ### Changed 🪙
