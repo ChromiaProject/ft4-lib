@@ -104,7 +104,7 @@ export function transactionBuilder(
     for (const opContext of opContexts) {
       const { operation, authenticator, signers, skipFtSigning } = opContext;
 
-      if (operation.name === "nop") {
+      if (operation.name === "nop" || operation.name === "timeb") {
         processedOperations.push(operation);
         opContext.opIndex = opIndex;
         opIndex++;

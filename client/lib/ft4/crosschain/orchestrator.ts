@@ -94,8 +94,8 @@ export async function createOrchestrator(
     try {
       const data = await transactionBuilder(authenticator, connection.client)
         .add(initTransfer(recipientId, assetId, amount, path, Date.now() + ttl))
-        .add(timeb(ttlInit))
         .add(nop())
+        .add(timeb(ttlInit))
         .buildAndSendWithAnchoring()
         .on("built", (tx) => {
           eventEmitter.emit("TransferSigned", tx);
