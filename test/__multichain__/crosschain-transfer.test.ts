@@ -310,7 +310,7 @@ describe("Crosschain transfer", () => {
     expect(senderRecord.blockchainRid).toEqual(connection00.blockchainRid);
   });
 
-  it.only("crosschain transfer fails if timebomb is triggered", async () => {
+  it("crosschain transfer fails if timebomb is triggered", async () => {
     const { multichain00, multichain01 } = await fetchBlockchains();
 
     const connection00 = createConnection(
