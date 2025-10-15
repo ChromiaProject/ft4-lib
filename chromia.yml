@@ -76,6 +76,15 @@ blockchains:
 
       lib.ft4.core.accounts.strategies.transfer:
         rules:
+          - sender_blockchain: "$"
+            sender: "*"
+            recipient: "*"
+            asset:
+              - name: test_multiple_internal_transfers
+                min_amount: 10L
+            timeout_days: 10
+            strategy: "fee"
+
           - sender_blockchain:
               - x"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
               - "$"
@@ -110,6 +119,7 @@ blockchains:
               - name: test2 # issued by current blockchain
                 min_amount: 2L
               - id: x"eb72b0d3de2ce5c8ec5ccf15ee8a9fbe4bed074f6d4385fdbf552904fc0b8dce" # "test" issued by other blockchain
+                issuing_blockchain_rid: x"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
                 min_amount: 5L
               - issuing_blockchain_rid: x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
                 name: test1
@@ -143,6 +153,8 @@ blockchains:
 
       lib.ft4.core.accounts.strategies.transfer.fee:
         asset:
+          - name: test_multiple_internal_transfers
+            amount: 100L
           - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa" # "test" issued by current blockchain
             amount: 10L
           - name: test1 # issued by current blockchain

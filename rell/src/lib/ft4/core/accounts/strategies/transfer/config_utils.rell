@@ -392,8 +392,11 @@ function parse_asset_limit(input: map<name, gtv>): asset_limit {
     require(not ("id" in input and "name" in input), _CONFIG_ERROR_TEXT + "asset limit cannot have both 'id' and 'name'");
     return asset_limit(
         id = if ("id" in input) byte_array.from_gtv(input["id"]) else null,
-        issuing_blockchain_rid = if ("name" in input)
-            (if ("issuing_blockchain_rid" in input) byte_array.from_gtv(input["issuing_blockchain_rid"]) else chain_context.blockchain_rid)
+        issuing_blockchain_rid =
+            if ("issuing_blockchain_rid" in input) 
+                byte_array.from_gtv(input["issuing_blockchain_rid"])
+            else if ("name" in input)
+                chain_context.blockchain_rid
             else null,
         name = if ("name" in input) text.from_gtv(input["name"]) else null,
         min_amount = parse_amount(input["min_amount"])

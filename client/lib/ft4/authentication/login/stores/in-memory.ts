@@ -1,6 +1,11 @@
-import { LoginKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
+import {
+  LoginKeyStore,
+  cleanupOldLoginSession,
+  createInMemoryFtKeyStore,
+} from "@ft4/authentication";
+import { Connection } from "@ft4/ft-session";
 import { Buffer } from "buffer";
-import { KeyPair, encryption } from "postchain-client";
+import { BufferId, KeyPair, encryption } from "postchain-client";
 
 /**
  * Creates a `LoginKeyStore` which will only keep its keys in memory.
@@ -15,7 +20,7 @@ export function createInMemoryLoginKeyStore(): LoginKeyStore {
     return Promise.resolve();
   }
 
-  return Object.freeze({
+  const ks = Object.freeze({
     clear,
     getKeyStore: (accountId: Buffer) => {
       const keyPair = accountIdKeyPairMap.get(accountId.toString("hex"));
@@ -34,5 +39,8 @@ export function createInMemoryLoginKeyStore(): LoginKeyStore {
       accountIdKeyPairMap.set(accountId.toString("hex"), keyPair);
       return Promise.resolve(createInMemoryFtKeyStore(keyPair));
     },
+    cleanup: (accountId: BufferId, connection: Connection) =>
+      cleanupOldLoginSession(accountId, connection, ks),
   });
+  return ks;
 }

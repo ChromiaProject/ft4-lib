@@ -26,15 +26,17 @@ function is_create_on_crosschain_transfer_enabled(): boolean = false;
  * 
  * @see core.assets.create_on_internal_transfer for more information on this function
  * 
- * @param sender_blockchain_rid     the RID of the blockchain where the transfer originated
- * @param sender_id                 the ID of the sender account
- * @param recipient_id              the ID of the account that received this transfer
- * @param asset                     the asset that was transferred
- * @param amount                    the amount that was transferred
+ * @param sender_blockchain_rid         the RID of the blockchain where the transfer originated
+ * @param previous_hop_blockchain_rid   the RID of the blockchain of the previous hop in the crosschain transfer
+ * @param sender_id                     the ID of the sender account
+ * @param recipient_id                  the ID of the account that received this transfer
+ * @param asset                         the asset that was transferred
+ * @param amount                        the amount that was transferred
  */
 @extendable
 function create_on_crosschain_transfer(
     sender_blockchain_rid: byte_array,
+    previous_hop_blockchain_rid: byte_array,
     sender_id: byte_array,
     recipient_id: byte_array,
     assets.asset,

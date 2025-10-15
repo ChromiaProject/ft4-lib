@@ -1,4 +1,5 @@
 import {
+  AccountBuilder,
   adminUser,
   createChromiaClientToMultichain,
   fetchBlockchains,
@@ -49,33 +50,33 @@ import { transactionBuilder } from "@ft4/transaction-builder/index";
 let asset: Asset;
 let timeoutAsset: Asset;
 let nonExistentChain00Asset: Asset;
-let senderConnection: Connection;
-let recipientConnection: Connection;
-let unrelatedConnection: Connection;
+let connection0: Connection;
+let connection1: Connection;
+let connection2: Connection;
 
 describe("Fee account creation single step", () => {
   beforeAll(async () => {
     const { multichain00, multichain01, multichain02 } =
       await fetchBlockchains();
-    senderConnection = createConnection(
+    connection0 = createConnection(
       await createChromiaClientToMultichain(multichain00.rid),
     );
-    recipientConnection = createConnection(
+    connection1 = createConnection(
       await createChromiaClientToMultichain(multichain01.rid),
     );
-    unrelatedConnection = createConnection(
+    connection2 = createConnection(
       await createChromiaClientToMultichain(multichain02.rid),
     );
 
     asset = await getNewAsset(
-      senderConnection.client,
+      connection0.client,
       "fee_strategy_test_asset_00",
       "FEE_STRATEGY_TEST_ASSET_00",
       5,
     );
 
     timeoutAsset = await getNewAsset(
-      senderConnection.client,
+      connection0.client,
       "fee_strategy_timeout_test_asset_00",
       "FEE_STRATEGY_TIMEOUT_TEST_ASSET_00",
       5,
@@ -99,27 +100,27 @@ describe("Fee account creation single step", () => {
       type: ASSET_TYPE_FT4,
     };
     await adminRegisterCrosschainAsset(
-      recipientConnection.client,
+      connection1.client,
       adminUser().signatureProvider,
       asset.id,
       multichain00.rid,
     );
     await adminRegisterCrosschainAsset(
-      recipientConnection.client,
+      connection1.client,
       adminUser().signatureProvider,
       timeoutAsset.id,
       multichain00.rid,
     );
 
     await registerCrosschainAsset(
-      recipientConnection,
+      connection1,
       adminUser().signatureProvider,
       mapAssetToCrosschainAssetRegistration(nonExistentChain00Asset),
       multichain00.rid,
     );
 
     await adminRegisterCrosschainAsset(
-      unrelatedConnection.client,
+      connection2.client,
       adminUser().signatureProvider,
       asset.id,
       multichain01.rid,
@@ -136,7 +137,7 @@ describe("Fee account creation single step", () => {
 
     const { account: senderAccount } = (
       await registerAccount(
-        senderConnection.client,
+        connection0.client,
         keyStore,
         registrationStrategy.open(authDescriptor),
       )
@@ -144,7 +145,7 @@ describe("Fee account creation single step", () => {
 
     const startingAmount = createAmount(20, 5);
     await mint(
-      senderConnection.client,
+      connection0.client,
       adminUser().signatureProvider,
       senderAccount.id,
       asset.id,
@@ -154,12 +155,8 @@ describe("Fee account creation single step", () => {
     const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
     expect(senderAccount.id).toEqual(recipientId);
 
-    const _allowedAssets = (await recipientConnection.query(
-      allowedAssets(
-        senderConnection.blockchainRid,
-        senderAccount.id,
-        recipientId,
-      ),
+    const _allowedAssets = (await connection1.query(
+      allowedAssets(connection0.blockchainRid, senderAccount.id, recipientId),
     ))!;
 
     expect(_allowedAssets).toBeTruthy();
@@ -167,7 +164,7 @@ describe("Fee account creation single step", () => {
       v.asset_id.equals(asset.id),
     )?.min_amount;
 
-    const _feeAssets = await recipientConnection.query(feeAssets());
+    const _feeAssets = await connection1.query(feeAssets());
     expect(_feeAssets).toBeTruthy();
     const feeRawAmount = _feeAssets.find((v) =>
       v.asset_id.equals(asset.id),
@@ -178,10 +175,10 @@ describe("Fee account creation single step", () => {
 
     const recipientSession = (
       await registerAccount(
-        recipientConnection.client,
+        connection1.client,
         keyStore,
         registrationStrategy.fee(
-          senderConnection.blockchainRid,
+          connection0.blockchainRid,
           asset,
           authDescriptor,
         ),
@@ -202,9 +199,85 @@ describe("Fee account creation single step", () => {
     );
 
     expect(
-      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
-        .length,
+      (await connection1.query(pendingTransferStrategies(recipientId))).length,
     ).toBe(0);
+  });
+
+  it("ZZZ doesn't mix two transfers from different rules and the same asset", async () => {
+    const asset = await getNewAsset(
+      connection0.client,
+      "fee_sum_two_transfers",
+      "FEE_SUM_TWO_TRANSFERS",
+      1,
+    );
+    await adminRegisterCrosschainAsset(
+      connection1.client,
+      adminUser().signatureProvider,
+      asset.id,
+      connection0.blockchainRid,
+    );
+    await adminRegisterCrosschainAsset(
+      connection2.client,
+      adminUser().signatureProvider,
+      asset.id,
+      connection1.blockchainRid,
+    );
+
+    const keyPair = newSignatureProvider(MERKLE_HASH_VERSIONS.TWO);
+    const keyStore = createInMemoryFtKeyStore(keyPair);
+    const sender0 = await AccountBuilder.account(connection0)
+      .withSigner(keyPair)
+      .withBalance(asset, 10)
+      .build();
+    const sender1 = await AccountBuilder.account(connection1).build();
+    const recipientId = sender0.id;
+    const recipientAuthDescriptor = createSingleSigAuthDescriptorRegistration(
+      [AuthFlag.Account, AuthFlag.Transfer],
+      keyStore.id,
+      null,
+    );
+    console.log("sender0", sender0.id.toString("hex"));
+    console.log("sender1", sender1.id.toString("hex"));
+    console.log("recipientId", recipientId.toString("hex"));
+    await sender0.crosschainTransfer(
+      connection1.blockchainRid,
+      sender1.id,
+      asset.id,
+      createAmount(5, asset.decimals),
+    );
+    await sender1.crosschainTransfer(
+      connection2.blockchainRid,
+      recipientId,
+      asset.id,
+      createAmount(5, asset.decimals),
+    );
+    await sender0.crosschainTransfer(
+      connection2.blockchainRid,
+      recipientId,
+      asset.id,
+      createAmount(5, asset.decimals),
+    );
+
+    const promise = registerAccount(
+      connection2.client,
+      keyStore,
+      registrationStrategy.fee(
+        connection0.blockchainRid,
+        asset,
+        recipientAuthDescriptor,
+      ),
+    );
+
+    await expect(promise).rejects.toThrow();
+
+    const assetBalanceSender0 = await sender0.getBalanceByAssetId(asset.id);
+    expect(assetBalanceSender0).toBe(null);
+    const assetBalanceSender1 = await sender1.getBalanceByAssetId(asset.id);
+    expect(assetBalanceSender1).toBe(null);
+
+    expect(
+      (await connection2.query(pendingTransferStrategies(recipientId))).length,
+    ).toBe(1);
   });
 
   it("can complete pending crosschain transfers when account is registered with direct strategies", async () => {
@@ -217,7 +290,7 @@ describe("Fee account creation single step", () => {
 
     const senderSession = (
       await registerAccount(
-        senderConnection.client,
+        connection0.client,
         keyStore,
         registrationStrategy.open(authDescriptor),
       )
@@ -225,7 +298,7 @@ describe("Fee account creation single step", () => {
 
     const startingAmount = createAmount(20, 5);
     await mint(
-      senderConnection.client,
+      connection0.client,
       adminUser().signatureProvider,
       senderSession.account.id,
       asset.id,
@@ -235,9 +308,9 @@ describe("Fee account creation single step", () => {
     const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
     expect(senderSession.account.id).toEqual(recipientId);
 
-    const _allowedAssets = (await recipientConnection.query(
+    const _allowedAssets = (await connection1.query(
       allowedAssets(
-        senderConnection.blockchainRid,
+        connection0.blockchainRid,
         senderSession.account.id,
         recipientId,
       ),
@@ -251,7 +324,7 @@ describe("Fee account creation single step", () => {
     expect(rawAmount).toEqual(1000000n);
 
     const transferRef = await senderSession.account.crosschainTransfer(
-      recipientConnection.blockchainRid,
+      connection1.blockchainRid,
       recipientId,
       asset.id,
       createAmountFromBalance(rawAmount!, asset.decimals),
@@ -259,7 +332,7 @@ describe("Fee account creation single step", () => {
 
     const recipientSession = (
       await registerAccount(
-        recipientConnection.client,
+        connection1.client,
         keyStore,
         registrationStrategy.open(authDescriptor),
       )
@@ -279,8 +352,7 @@ describe("Fee account creation single step", () => {
     );
 
     expect(
-      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
-        .length,
+      (await connection1.query(pendingTransferStrategies(recipientId))).length,
     ).toBe(0);
 
     await expect(
@@ -298,21 +370,21 @@ describe("Fee account creation single step", () => {
 
     const senderSession = (
       await registerAccount(
-        senderConnection.client,
+        connection0.client,
         keyStore,
         registrationStrategy.open(authDescriptor),
       )
     ).session;
     const senderAccount = senderSession.account;
 
-    const feeAmounts = await recipientConnection.query(feeAssets());
+    const feeAmounts = await connection1.query(feeAssets());
     const amount = feeAmounts.find((amt) =>
       amt.asset_id.equals(asset.id),
     )!.amount;
 
     const feeAmount = createAmountFromBalance(amount, asset.decimals);
     await mint(
-      senderConnection.client,
+      connection0.client,
       adminUser().signatureProvider,
       senderAccount.id,
       asset.id,
@@ -329,7 +401,7 @@ describe("Fee account creation single step", () => {
           recipientId,
           asset.id,
           feeAmount,
-          [recipientConnection.blockchainRid],
+          [connection1.blockchainRid],
           Date.now() + days(1),
         ),
       )
@@ -337,10 +409,10 @@ describe("Fee account creation single step", () => {
 
     const recipientSession = (
       await registerAccount(
-        recipientConnection.client,
+        connection1.client,
         keyStore,
         registrationStrategy.fee(
-          senderConnection.blockchainRid,
+          connection0.blockchainRid,
           asset,
           authDescriptor,
         ),
@@ -358,21 +430,21 @@ describe("Fee account creation single step", () => {
 
     const senderSession = (
       await registerAccount(
-        senderConnection.client,
+        connection0.client,
         keyStore,
         registrationStrategy.open(authDescriptor),
       )
     ).session;
     const senderAccount = senderSession.account;
 
-    const feeAmounts = await recipientConnection.query(feeAssets());
+    const feeAmounts = await connection1.query(feeAssets());
     const amount = feeAmounts.find((amt) =>
       amt.asset_id.equals(asset.id),
     )!.amount;
 
     const feeAmount = createAmountFromBalance(amount, asset.decimals);
     await mint(
-      senderConnection.client,
+      connection0.client,
       adminUser().signatureProvider,
       senderAccount.id,
       asset.id,
@@ -383,7 +455,7 @@ describe("Fee account creation single step", () => {
     expect(senderAccount.id).toEqual(recipientId);
 
     const transferRef = await senderAccount.crosschainTransfer(
-      recipientConnection.blockchainRid,
+      connection1.blockchainRid,
       recipientId,
       asset.id,
       feeAmount,
@@ -395,10 +467,10 @@ describe("Fee account creation single step", () => {
 
     const recipientSession = (
       await registerAccount(
-        recipientConnection.client,
+        connection1.client,
         keyStore,
         registrationStrategy.fee(
-          senderConnection.blockchainRid,
+          connection0.blockchainRid,
           asset,
           authDescriptor,
         ),
@@ -417,7 +489,7 @@ describe("Fee account creation single step", () => {
 
     const { account: unrelatedAccount } = (
       await registerAccount(
-        unrelatedConnection.client,
+        connection2.client,
         keyStore,
         registrationStrategy.open(authDescriptor),
       )
@@ -425,7 +497,7 @@ describe("Fee account creation single step", () => {
 
     const senderSession = (
       await registerAccount(
-        senderConnection.client,
+        connection0.client,
         keyStore,
         registrationStrategy.open(authDescriptor),
       )
@@ -433,7 +505,7 @@ describe("Fee account creation single step", () => {
 
     const startingAmount = createAmount(20, 5);
     await mint(
-      senderConnection.client,
+      connection0.client,
       adminUser().signatureProvider,
       senderSession.account.id,
       asset.id,
@@ -441,7 +513,7 @@ describe("Fee account creation single step", () => {
     );
 
     await senderSession.account.crosschainTransfer(
-      unrelatedConnection.client.config.blockchainRid + "",
+      connection2.client.config.blockchainRid + "",
       unrelatedAccount.id,
       asset.id,
       startingAmount,
@@ -450,9 +522,9 @@ describe("Fee account creation single step", () => {
     const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
     expect(unrelatedAccount.id).toEqual(recipientId);
 
-    const _allowedAssets = (await recipientConnection.query(
+    const _allowedAssets = (await connection1.query(
       allowedAssets(
-        unrelatedConnection.blockchainRid,
+        connection2.blockchainRid,
         unrelatedAccount.id,
         recipientId,
       ),
@@ -460,14 +532,14 @@ describe("Fee account creation single step", () => {
 
     expect(_allowedAssets.length).toBe(0);
 
-    const _feeAssets = await recipientConnection.query(feeAssets());
+    const _feeAssets = await connection1.query(feeAssets());
     expect(_feeAssets).toBeTruthy();
 
     const recipientSessionPromise = registerAccount(
-      recipientConnection.client,
+      connection1.client,
       keyStore,
       registrationStrategy.fee(
-        unrelatedConnection.blockchainRid,
+        connection2.blockchainRid,
         asset,
         authDescriptor,
       ),
@@ -476,10 +548,9 @@ describe("Fee account creation single step", () => {
     await expect(recipientSessionPromise).rejects.toThrow();
 
     expect(
-      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
-        .length,
+      (await connection1.query(pendingTransferStrategies(recipientId))).length,
     ).toBe(0);
-    expect(await recipientConnection.getAccountById(recipientId)).toBeNull();
+    expect(await connection1.getAccountById(recipientId)).toBeNull();
   });
 
   it("handles asset missing on source chain properly", async () => {
@@ -491,7 +562,7 @@ describe("Fee account creation single step", () => {
     );
 
     await registerAccount(
-      senderConnection.client,
+      connection0.client,
       keyStore,
       registrationStrategy.open(authDescriptor),
     );
@@ -499,10 +570,10 @@ describe("Fee account creation single step", () => {
     const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
 
     const recipientSessionPromise = registerAccount(
-      recipientConnection.client,
+      connection1.client,
       keyStore,
       registrationStrategy.fee(
-        senderConnection.blockchainRid,
+        connection0.blockchainRid,
         nonExistentChain00Asset,
         authDescriptor,
       ),
@@ -513,10 +584,9 @@ describe("Fee account creation single step", () => {
     );
 
     expect(
-      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
-        .length,
+      (await connection1.query(pendingTransferStrategies(recipientId))).length,
     ).toBe(0);
-    expect(await recipientConnection.getAccountById(recipientId)).toBeNull();
+    expect(await connection1.getAccountById(recipientId)).toBeNull();
   });
 
   it("handles missing account on source chain properly", async () => {
@@ -530,10 +600,10 @@ describe("Fee account creation single step", () => {
     const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
 
     const recipientSessionPromise = registerAccount(
-      recipientConnection.client,
+      connection1.client,
       keyStore,
       registrationStrategy.fee(
-        senderConnection.blockchainRid,
+        connection0.blockchainRid,
         asset,
         authDescriptor,
       ),
@@ -543,10 +613,9 @@ describe("Fee account creation single step", () => {
     await expect(recipientSessionPromise).rejects.toThrow();
 
     expect(
-      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
-        .length,
+      (await connection1.query(pendingTransferStrategies(recipientId))).length,
     ).toBe(0);
-    expect(await recipientConnection.getAccountById(recipientId)).toBeNull();
+    expect(await connection1.getAccountById(recipientId)).toBeNull();
   });
 
   it("handles insufficient balance on source chain properly", async () => {
@@ -559,7 +628,7 @@ describe("Fee account creation single step", () => {
 
     const { account: senderAccount } = (
       await registerAccount(
-        senderConnection.client,
+        connection0.client,
         keyStore,
         registrationStrategy.open(authDescriptor),
       )
@@ -567,7 +636,7 @@ describe("Fee account creation single step", () => {
 
     const startingAmount = createAmount(0.01, 5);
     await mint(
-      senderConnection.client,
+      connection0.client,
       adminUser().signatureProvider,
       senderAccount.id,
       asset.id,
@@ -577,10 +646,10 @@ describe("Fee account creation single step", () => {
     const recipientId = gtv.gtvHash(sigProv.pubKey, MERKLE_HASH_VERSIONS.ONE);
 
     const recipientSessionPromise = registerAccount(
-      recipientConnection.client,
+      connection1.client,
       keyStore,
       registrationStrategy.fee(
-        senderConnection.blockchainRid,
+        connection0.blockchainRid,
         asset,
         authDescriptor,
       ),
@@ -590,10 +659,9 @@ describe("Fee account creation single step", () => {
     await expect(recipientSessionPromise).rejects.toThrow();
 
     expect(
-      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
-        .length,
+      (await connection1.query(pendingTransferStrategies(recipientId))).length,
     ).toBe(0);
-    expect(await recipientConnection.getAccountById(recipientId)).toBeNull();
+    expect(await connection1.getAccountById(recipientId)).toBeNull();
   });
 
   it("throws error when account is already registered", async () => {
@@ -604,12 +672,12 @@ describe("Fee account creation single step", () => {
     );
 
     const { session } = await registerAccount(
-      senderConnection.client,
+      connection0.client,
       keyStore,
       registrationStrategy.open(authDescriptor),
     );
 
-    const feeAmounts = await recipientConnection.query(feeAssets());
+    const feeAmounts = await connection1.query(feeAssets());
     const amount = feeAmounts.find((amount) =>
       amount.asset_id.equals(asset.id),
     )!.amount;
@@ -617,7 +685,7 @@ describe("Fee account creation single step", () => {
     const feeAmount = createAmountFromBalance(amount, asset.decimals);
 
     await mint(
-      senderConnection.client,
+      connection0.client,
       adminUser().signatureProvider,
       session.account.id,
       asset.id,
@@ -625,27 +693,27 @@ describe("Fee account creation single step", () => {
     );
 
     await registerAccount(
-      recipientConnection.client,
+      connection1.client,
       keyStore,
       registrationStrategy.fee(
-        senderConnection.blockchainRid,
+        connection0.blockchainRid,
         asset,
         authDescriptor,
       ),
     );
 
     const promise = registerAccount(
-      recipientConnection.client,
+      connection1.client,
       keyStore,
       registrationStrategy.fee(
-        senderConnection.blockchainRid,
+        connection0.blockchainRid,
         asset,
         authDescriptor,
       ),
     );
 
     await expect(promise).rejects.toThrow(
-      `Account <${session.account.id.toString("hex")}> already registered on blockchain <${recipientConnection.blockchainRid.toString("hex")}>`,
+      `Account <${session.account.id.toString("hex")}> already registered on blockchain <${connection1.blockchainRid.toString("hex")}>`,
     );
   });
 
@@ -658,21 +726,21 @@ describe("Fee account creation single step", () => {
 
     const senderSession = (
       await registerAccount(
-        senderConnection.client,
+        connection0.client,
         keyStore,
         registrationStrategy.open(authDescriptor),
       )
     ).session;
     const senderAccount = senderSession.account;
 
-    const feeAmounts = await recipientConnection.query(feeAssets());
+    const feeAmounts = await connection1.query(feeAssets());
     const amount = feeAmounts.find((amt) =>
       amt.asset_id.equals(timeoutAsset.id),
     )!.amount;
 
     const feeAmount = createAmountFromBalance(amount, timeoutAsset.decimals);
     await mint(
-      senderConnection.client,
+      connection0.client,
       adminUser().signatureProvider,
       senderAccount.id,
       timeoutAsset.id,
@@ -683,9 +751,9 @@ describe("Fee account creation single step", () => {
     expect(senderAccount.id).toEqual(recipientId);
 
     const transferRef = await crosschainTransfer(
-      senderConnection,
+      connection0,
       senderAccount.authenticator,
-      recipientConnection.blockchainRid,
+      connection1.blockchainRid,
       recipientId,
       timeoutAsset.id,
       feeAmount,
@@ -696,7 +764,7 @@ describe("Fee account creation single step", () => {
 
     expect(await senderAccount.getBalanceByAssetId(timeoutAsset.id)).toBeNull();
     expect(
-      await recipientConnection.query(pendingTransferStrategies(recipientId)),
+      await connection1.query(pendingTransferStrategies(recipientId)),
     ).toContain("fee");
 
     await senderSession.account.recallUnclaimedCrosschainTransfer(transferRef);
@@ -705,11 +773,10 @@ describe("Fee account creation single step", () => {
       (await senderAccount.getBalanceByAssetId(timeoutAsset.id))!.amount.value,
     ).toBe(amount);
     expect(
-      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
-        .length,
+      (await connection1.query(pendingTransferStrategies(recipientId))).length,
     ).toBe(0);
     await expect(
-      transactionBuilder(noopAuthenticator, recipientConnection.client)
+      transactionBuilder(noopAuthenticator, connection1.client)
         .add(recallUnclaimedTransfer(transferRef.tx, transferRef.opIndex), {
           authenticator: noopAuthenticator,
         })

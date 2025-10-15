@@ -1,0 +1,28 @@
+      lib.ft4.core.accounts.strategies.transfer:
+        rules:
+          - timeout_days: 10
+            asset:
+              - name: fee_sum_two_transfers
+                issuing_blockchain_rid: {chain00_rid}
+                min_amount: 50L
+            strategy:
+              - fee
+            sender_blockchain: {chain00_rid}
+            sender: "X"
+            recipient: "X"
+        rules:
+          - timeout_days: 10
+            asset:
+              - name: fee_sum_two_transfers
+                issuing_blockchain_rid: {chain00_rid}
+                min_amount: 50L
+            strategy:
+              - fee
+            sender_blockchain: {chain01_rid}
+            sender: "*"
+            recipient: "*"
+      lib.ft4.core.accounts.strategies.transfer.fee: 
+          asset:
+            - name: fee_sum_two_transfers
+              issuing_blockchain_rid: {chain00_rid}
+              amount: 100L

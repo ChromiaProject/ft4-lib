@@ -8,10 +8,12 @@ import lib.ft4.accounts.strategies;
 import test: lib.ft4.test.core;
 import create_on_transfer: lib.ft4.accounts.strategies.transfer;
 import lib.ft4.accounts.strategies.transfer.open;
+import lib.ft4.accounts.strategies.transfer.fee;
 import xc: lib.ft4.crosschain;
 import test_op: lib.ft4.test.operations;
 import ^^^.crosschain.mocks;
 import common_helpers: ^^^.common.helpers;
+import ^.helpers;
 
 function test_create_account_on_internal_transfer_success() {
     val alice = test.register_alice();
@@ -162,6 +164,95 @@ function test_multiple_internal_transfers_success() {
         (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
         2
     );
+}
+
+function test_multiple_internal_transfers_sum_success() {
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    helpers.create_system_account(
+        rell.test.pubkeys.trudy,
+        create_on_transfer.ACCOUNT_TYPE_FEE
+    ).run();
+    val fee_account = accounts.Account(rell.test.pubkeys.trudy);
+    val recipient_id = rell.test.pubkeys.dave.hash();
+
+    val asset = test.create_asset("test_multiple_internal_transfers", "TEST", 1);
+    test.mint(alice.account, asset, 50L);
+    test.mint(bob.account, asset, 60L);
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, 50L))
+        .sign(alice.keypair)
+        .run();
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(bob.account.id, bob.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, 60L))
+        .sign(bob.keypair)
+        .run();
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), 110L);
+    assert_equals(
+        (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.pending}).size(),
+        2
+    );
+
+    assert_true("fee" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
+
+    rell.test.tx()
+        .op(fee.ras_transfer_fee(asset.id, test.create_auth_descriptor(rell.test.pubkeys.dave, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
+        .op(strategies.external.register_account())
+        .sign(rell.test.keypairs.dave)
+        .run();
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), 0L);
+    assert_true(empty(create_on_transfer.get_pending_transfer_strategies(recipient_id)));
+
+    val dave = accounts.account_by_id(recipient_id);
+    assert_equals(assets.get_asset_balance(fee_account, asset), 100L);
+    assert_equals(assets.get_asset_balance(dave, asset), 10L);
+
+    assert_equals(
+        (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
+        2
+    );
+}
+
+function test_multiple_internal_transfers_sum_failure() {
+    val alice = test.register_alice();
+    helpers.create_system_account(
+        rell.test.pubkeys.trudy,
+        create_on_transfer.ACCOUNT_TYPE_FEE
+    ).run();
+    val fee_account = accounts.Account(rell.test.pubkeys.trudy);
+    val recipient_id = rell.test.pubkeys.dave.hash();
+
+    val asset = test.create_asset("test_multiple_internal_transfers", "TEST", 1);
+    test.mint(alice.account, asset, 99L);
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, 9L))
+        .sign(alice.keypair)
+        .run_must_fail("TRANSFER NOT ALLOWED");
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, 50L))
+        .sign(alice.keypair)
+        .run();
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, 49L))
+        .sign(alice.keypair)
+        .run();
+
+    rell.test.tx()
+        .op(fee.ras_transfer_fee(asset.id, test.create_auth_descriptor(rell.test.pubkeys.dave, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
+        .op(strategies.external.register_account())
+        .sign(rell.test.keypairs.dave)
+        .run_must_fail("INSUFFICIENT BALANCE");
 }
 
 function test_create_account_on_internal_transfer_success_with_any_asset() {

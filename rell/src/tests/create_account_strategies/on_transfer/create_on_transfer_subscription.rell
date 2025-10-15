@@ -299,7 +299,7 @@ function test_get_subscriptions_filtered() {
         .op(assets.external.transfer(recipient_id, asset.id, amount))
         .sign(eve.keypair)
         .run();    
-
+print("====================");
     rell.test.tx()
         .op(subscription.ras_transfer_subscription(asset.id, test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
         .op(strategies.external.register_account())

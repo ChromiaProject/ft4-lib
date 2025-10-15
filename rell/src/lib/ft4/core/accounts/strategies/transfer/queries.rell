@@ -116,6 +116,9 @@ query has_pending_create_account_transfer_for_strategy(
  * to register a new account. For a transaction to be allowed, it must fulfill all criteria
  * for at least one of the rules. 
  * 
+ * Throws `CONFIG ERROR` if a rule specifies an asset ID and issuing BRID, but an asset registered
+ * with that ID exists with a different issuing BRID.
+ * 
  * Throws if any rule found in the `chromia.yml` is misconfigured. Common cases of
  * misconfiguration can be found on the API docs for `get_config`
  * 
@@ -132,11 +135,28 @@ query get_transfer_rules() {
     for (rule in rules) {
         val _assets = list<asset_limit>();
         
-        for (asset in rule.asset_limits) {
-            if (asset.id != null) continue;
+        for (rule_asset in rule.asset_limits) {
+            if (rule_asset.id != null) {
+                val found_asset = assets.asset @? { .id == rule_asset.id };
+                if (found_asset??) {
+                    val brid = rule_asset.issuing_blockchain_rid;
+                    if (brid??) require(
+                            brid == found_asset.issuing_blockchain_rid,
+                            "CONFIG ERROR: Asset with ID <%s> has issuing chain <%s>, but rule specifies <%s>"
+                                .format(rule_asset.id, found_asset.issuing_blockchain_rid, brid)
+                        );
+                    _assets.add(
+                        asset_limit(
+                            id = found_asset.id,
+                            min_amount = rule_asset.min_amount,
+                        )
+                    );
+                }
+                continue;
+            };
 
-            val name = asset.name!!;
-            val brid = asset.issuing_blockchain_rid!!;
+            val name = rule_asset.name!!;
+            val brid = rule_asset.issuing_blockchain_rid!!;
 
             var _asset = assets_cache.get_or_null(brid)?.get_or_null(name);
             if (empty(_asset)) {
@@ -155,7 +175,7 @@ query get_transfer_rules() {
                     id = _asset.id,
                     name = _asset.name,
                     issuing_blockchain_rid = _asset.issuing_blockchain_rid,
-                    min_amount = asset.min_amount
+                    min_amount = rule_asset.min_amount
                 )
             );
         }
