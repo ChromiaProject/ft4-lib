@@ -53,6 +53,7 @@ import {
   OrchestratorData,
   OrchestratorEventHandler,
 } from "./types";
+import { timeb } from "@ft4/utils/main";
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
  * @param connection - The connection.
@@ -62,6 +63,7 @@ import {
  * @param assetId - ID of the asset to be transferred.
  * @param amount - The amount to be transferred.
  * @param ttl - The number of milliseconds after which the transaction can only be reverted.
+ * @param ttlInit - The number of milliseconds after which the transaction will not be posted.
  * @returns The orchestrator instance with functionalities like initiating transfers,
  * subscribing/unsubscribing to various transfer events.
  */
@@ -73,6 +75,7 @@ export async function createOrchestrator(
   assetId: BufferId,
   amount: Amount,
   ttl: number = days(1),
+  ttlInit: number = days(1),
 ): Promise<Orchestrator> {
   const asset = await connection.getAssetById(assetId);
   if (!asset) {
@@ -91,7 +94,7 @@ export async function createOrchestrator(
     try {
       const data = await transactionBuilder(authenticator, connection.client)
         .add(initTransfer(recipientId, assetId, amount, path, Date.now() + ttl))
-        //TODO timebomb
+        .add(timeb(ttlInit))
         .add(nop())
         .buildAndSendWithAnchoring()
         .on("built", (tx) => {

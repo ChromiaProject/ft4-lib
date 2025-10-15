@@ -27,6 +27,13 @@ export function nop(): Operation {
 }
 
 /**
+ * Creates a timeb operation that can be included in a transaction
+ */
+export function timeb(timer: number): Operation {
+  return { name: "timeb", args: [Date.now(), Date.now() + timer] };
+}
+
+/**
  * Uses the provided arguments to produce an operation that can be included in a transaction
  * @param name - the name of the operation
  * @param args - the arguments of the operation

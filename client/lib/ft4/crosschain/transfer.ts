@@ -25,6 +25,8 @@ import { createRevertOrchestrator } from "@ft4/crosschain/orchestrator";
  * @param amount - how much of the asset to transfer
  * @param ttl - timeout of this transfer in milliseconds. If the transfer has not been completed within this timeout, it can be reverted.
  * This argument is designed to be combined with one of the time functions, e.g., {@link days}.
+ * @param ttlInit - The number of milliseconds after which the transaction will not be posted.
+ * This argument is designed to be combined with one of the time functions, e.g., {@link days}.
  * @returns a promi-event that will emit once when transaction is signed, once when init_transfer has been sent on the source chain
  * and once for each hop during the transfer. It will resolve once the transfer is completed.
  */
@@ -36,6 +38,7 @@ export function crosschainTransfer(
   assetId: BufferId,
   amount: Amount,
   ttl: number = days(1),
+  ttlInit: number = days(1),
 ): Web3PromiEvent<
   TransferRef,
   {
@@ -60,6 +63,7 @@ export function crosschainTransfer(
       assetId,
       amount,
       ttl,
+      ttlInit,
     )
       .then((orchestrator) => {
         orchestrator.onTransferSigned((tx) => {

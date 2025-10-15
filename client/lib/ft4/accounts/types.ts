@@ -445,6 +445,8 @@ export interface AuthenticatedAccount extends Account {
    * @param ttl - timeout of this transfer in milliseconds. If the transfer has not been
    * completed within this timeout, it can be reverted.
    * This argument is designed to be combined with one of the time functions, e.g., {@link authentication.days}.
+   * @param ttlInit - The number of milliseconds after which the transaction will not be posted.
+   * This argument is designed to be combined with one of the time functions, e.g., {@link authentication.days}.
    */
   crosschainTransfer: (
     targetChainRid: BufferId,
@@ -452,6 +454,7 @@ export interface AuthenticatedAccount extends Account {
     assetId: BufferId,
     amount: Amount,
     ttl?: number,
+    ttlInit?: number,
   ) => Web3PromiEvent<
     TransferRef,
     {

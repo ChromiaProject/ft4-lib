@@ -310,6 +310,54 @@ describe("Crosschain transfer", () => {
     expect(senderRecord.blockchainRid).toEqual(connection00.blockchainRid);
   });
 
+  it.only("crosschain transfer fails if timebomb is triggered", async () => {
+    const { multichain00, multichain01 } = await fetchBlockchains();
+
+    const connection00 = createConnection(
+      await createChromiaClientToMultichain(multichain00.rid),
+    );
+    const connection01 = createConnection(
+      await createChromiaClientToMultichain(multichain01.rid),
+    );
+
+    // Register asset on chain A
+    const asset00 = await addNewAssetIfNeeded(
+      connection00.client,
+      "crosschain-transfer-original-sender-test-asset",
+      "CROSSCHAIN-transfer-original-sender-test-asset",
+    );
+
+    // Register asset on chain B
+    await registerCrosschainAsset(
+      connection01.client,
+      adminUser().signatureProvider,
+      asset00.id,
+      multichain00.rid,
+    );
+
+    // Cerate sender account on chain A
+    const account00 = await AccountBuilder.account(connection00)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+      .withBalance(asset00, createAmount(100, asset00.decimals))
+      .build();
+
+    // Transfer assets from A to B (no recipient account exists yet)
+    const promise = crosschainTransfer(
+      connection00,
+      account00.authenticator,
+      connection01.blockchainRid,
+      account00.id, // We will get the same account id on the target chain
+      asset00.id,
+      createAmount(10, asset00.decimals),
+      days(1),
+      0,
+    );
+
+    await expect(promise).rejects.toThrow(
+      "Failed to send transaction: Transaction was rejected, [lib.ft4.core.auth:require_regular_next_operation(lib/ft4/core/auth/module.rell:584)] Operation 'lib.ft4.external.auth:ft_auth' failed: AUTH OP FORBIDDEN: <ft4.ft_auth> cannot authorize <timeb>",
+    );
+  });
+
   describe("getCrosschainTransferHistoryEntriesFiltered", () => {
     const mockBuffer = Buffer.alloc(32);
     it("returns empty pagination without filter", async () => {

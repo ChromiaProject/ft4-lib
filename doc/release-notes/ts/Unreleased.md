@@ -5,6 +5,7 @@
 ### Changed 🪙
 
 ### Added ✅
+- timeb param added to xchain transfer (Date.now + timer)
 
 ### Fixed 🔧
 
