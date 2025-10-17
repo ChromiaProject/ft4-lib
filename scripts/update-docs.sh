@@ -6,8 +6,8 @@ git clone https://x-token-auth:$DOCS_REPO_API_TOKEN@bitbucket.org/chromawallet/c
 ./scripts/install-chr-and-pmc.sh
 
 # create TS docs
-npm ci
-npx typedoc --out docs-repo/static/pages/ft4-ts-client/client
+#npm ci
+#npx typedoc --out docs-repo/static/pages/ft4-ts-client/client
 
 # create rell docs
 chr install
@@ -25,13 +25,13 @@ echo '---' >> $RELL_CHGLOG
 echo >> $RELL_CHGLOG
 cat rell-changelog.md >> $RELL_CHGLOG
 
-echo 'Writing changelog page for TS'
-TS_CHGLOG='docs-repo/docs/ft4/release-history/ts.mdx'
-echo '---' > $TS_CHGLOG
-echo 'sidebar_position: 2' >> $TS_CHGLOG
-echo '---' >> $TS_CHGLOG
-echo >> $TS_CHGLOG
-cat changelog.md >> $TS_CHGLOG
+#echo 'Writing changelog page for TS'
+#TS_CHGLOG='docs-repo/docs/ft4/release-history/ts.mdx'
+#echo '---' > $TS_CHGLOG
+#echo 'sidebar_position: 2' >> $TS_CHGLOG
+#echo '---' >> $TS_CHGLOG
+#echo >> $TS_CHGLOG
+#cat changelog.md >> $TS_CHGLOG
 
 echo 'Done!'
 
