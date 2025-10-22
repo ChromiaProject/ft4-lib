@@ -36,7 +36,7 @@ cat rell-changelog.md >> $RELL_CHGLOG
 echo 'Done!'
 
 
-VERSION=`fix`
+VERSION='fix'
 cd docs-repo
 
 # Check if there are changes 
