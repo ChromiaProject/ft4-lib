@@ -13,7 +13,7 @@ function () = auth.add_auth_handler(
 
 /**
  * Operation to register a new asset on the blockchain with the provided info. 
- * Note however that the initial balance of this asset is alway 0 so to actually
+ * Note however that the initial balance of this asset is always 0 so to actually
  * use this newly created asset, you will have to mint some of it.
  * 
  * @see mint
