@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>transfer_detail</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="FT4 Library::lib.ft4.core.assets/transfer_detail///PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../../index.html">FT4 Library</a><span class="delimiter">/</span><a href="../index.html">lib.ft4.core.assets</a><span class="delimiter">/</span><span class="current">transfer_detail</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>transfer_detail</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">struct </span><a href="index.html">transfer_detail</a><span class="clearfix"><span class="floating-right">(<a href="https://gitlab.com/chromaway/ft4-lib/src/development/rell/src/lib/ft4/core/assets/structs.rell#lines-51">source</a>)</span></span></div><p class="paragraph">Details about a transfer. It contains a limited set of information that can be used to describe a <code class="lang-kotlin">transfer_history_entry</code> and a <code class="lang-kotlin">crosschain_transfer_history_entry</code>.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="-1119370355%2FProperties%2F-350584692" anchor-label="account_id" id="-1119370355%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="account_id.html"><span><span>account_id</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1119370355%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="account_id.html">account_id</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a></div><div class="brief "><p class="paragraph">The account whose balance was affected</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1126864880%2FProperties%2F-350584692" anchor-label="asset_id" id="-1126864880%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="asset_id.html"><span><span>asset_id</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1126864880%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="asset_id.html">asset_id</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a></div><div class="brief "><p class="paragraph">The asset that was moved</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-759801736%2FProperties%2F-350584692" anchor-label="blockchain_rid" id="-759801736%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="blockchain_rid.html"><span><span>blockchain_rid</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-759801736%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="blockchain_rid.html">blockchain_rid</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a></div><div class="brief "><p class="paragraph">The blockchain on which the transfer happened</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-782254416%2FProperties%2F-350584692" anchor-label="delta" id="-782254416%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="delta.html"><span><span>delta</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-782254416%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="delta.html">delta</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a></div><div class="brief "><p class="paragraph">The amount that was moved</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-545624379%2FProperties%2F-350584692" anchor-label="is_input" id="-545624379%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is_input.html"><span><span>is_input</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-545624379%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="is_input.html">is_input</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a></div><div class="brief "><p class="paragraph">If true, this movement of tokens went into a transfer (and out of this account)</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1652555558%2FProperties%2F-350584692" anchor-label="op_index" id="1652555558%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="op_index.html"><span><span>op_index</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1652555558%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="op_index.html">op_index</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a></div><div class="brief "><p class="paragraph">The index of the operation in the transaction</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1610326163%2FProperties%2F-350584692" anchor-label="rowid" id="1610326163%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="rowid.html"><span><span>rowid</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1610326163%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="rowid.html">rowid</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/rowid/index.html">rowid</a></div><div class="brief "><p class="paragraph">The rowid of the entity associated with the transfer history entry</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1560883196%2FProperties%2F-350584692" anchor-label="transaction_rid" id="1560883196%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="transaction_rid.html"><span><span>transaction_rid</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1560883196%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="transaction_rid.html">transaction_rid</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a></div><div class="brief "><p class="paragraph">The transaction RID of the transaction containing the transfer details</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

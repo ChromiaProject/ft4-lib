@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>rule</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="FT4 Library::lib.ft4.core.accounts.strategies/rule///PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../../index.html">FT4 Library</a><span class="delimiter">/</span><a href="../index.html">lib.ft4.core.accounts.strategies</a><span class="delimiter">/</span><span class="current">rule</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>rule</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">struct </span><a href="index.html">rule</a><span class="clearfix"><span class="floating-right">(<a href="https://gitlab.com/chromaway/ft4-lib/src/development/rell/src/lib/ft4/core/accounts/strategies/config_utils.rell#lines-70">source</a>)</span></span></div><p class="paragraph">A set of requirements to be satisfied to register an account.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="2008519548%2FProperties%2F-350584692" anchor-label="allow_all_assets" id="2008519548%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="allow_all_assets.html"><span><span>allow_all_assets</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2008519548%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="allow_all_assets.html">allow_all_assets</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></div><div class="brief "><p class="paragraph">Whether all assets can be sent. If true, <code class="lang-kotlin">asset_limits</code> won't be parsed - minimum amounts cannot be set.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1251498804%2FProperties%2F-350584692" anchor-label="asset_limits" id="-1251498804%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="asset_limits.html"><span><span>asset_limits</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1251498804%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="asset_limits.html">asset_limits</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="../asset_limit/index.html">asset_limit</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">What minimum amounts of each assets must be sent to register an account.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1422715600%2FProperties%2F-350584692" anchor-label="blockchains" id="-1422715600%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="blockchains.html"><span><span>blockchains</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1422715600%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="blockchains.html">blockchains</a><span class="token operator">: </span><a href="../allowlist/index.html">allowlist</a></div><div class="brief "><p class="paragraph">From which blockchains must assets arrive to create an account. For on-chain transfers, this blockchain's ID will appear in the <code class="lang-kotlin">allowlist</code></p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1256330375%2FProperties%2F-350584692" anchor-label="recipients" id="-1256330375%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="recipients.html"><span><span>recipients</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1256330375%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="recipients.html">recipients</a><span class="token operator">: </span><a href="../allowlist/index.html">allowlist</a></div><div class="brief "><p class="paragraph">Which accounts can be registered</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1399363870%2FProperties%2F-350584692" anchor-label="require_same_address" id="1399363870%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="require_same_address.html"><span><span>require_same_address</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1399363870%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="require_same_address.html">require_same_address</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a><span class="token operator"> = </span><span class="token boolean">false</span></div><div class="brief "><p class="paragraph">Whether a certain sender can only register an account with its same ID. Only makes sense for cross-chain transfers.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="730289361%2FProperties%2F-350584692" anchor-label="senders" id="730289361%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="senders.html"><span><span>senders</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="730289361%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="senders.html">senders</a><span class="token operator">: </span><a href="../allowlist/index.html">allowlist</a></div><div class="brief "><p class="paragraph">Which accounts can send to a non-existing account to register it</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1655720322%2FProperties%2F-350584692" anchor-label="strategies" id="1655720322%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="strategies.html"><span><span>strategies</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1655720322%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="strategies.html">strategies</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">What strategies can be used to register an account if all requirements of this rule are met.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="990123102%2FProperties%2F-350584692" anchor-label="timeout_days" id="990123102%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="timeout_days.html"><span><span>timeout_days</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="990123102%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="timeout_days.html">timeout_days</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token operator"> = </span><span class="token constant">0</span></div><div class="brief "><p class="paragraph">How many days must pass after the transfer being received by the non-existing account before the account can no longer be registered and the transfer can be recalled.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

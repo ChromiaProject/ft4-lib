@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>complete_transfer</title>
+    <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="member" id="content" pageIds="FT4 Library::lib.ft4.external.crosschain//complete_transfer/#final_apply_transfer_tx[gtx_transaction]#op_index[integer]/PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../index.html">FT4 Library</a><span class="delimiter">/</span><a href="index.html">lib.ft4.external.crosschain</a><span class="delimiter">/</span><span class="current">complete_transfer</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>complete_transfer</span></span></h1>
+  </div>
+  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@mount</span><span class="token punctuation">(&quot;</span>ft4.crosschain.complete_transfer<span class="token punctuation">&quot;)
+</span><span class="token keyword">operation </span><a href="complete_transfer.html">complete_transfer</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">final_apply_transfer_tx<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtx_transaction/index.html">gtx_transaction</a><span class="token punctuation">, </span></span><span class="parameter ">op_index<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a></span></span><span class="token punctuation">)</span><span class="clearfix"><span class="floating-right">(<a href="https://gitlab.com/chromaway/ft4-lib/src/development/rell/src/lib/ft4/external/crosschain/operations.rell#lines-368">source</a>)</span></span></div><p class="paragraph">This operation is to be called on the initial chain (the chain for which a crosschain transfer originated) once all hops are completed and the transfer has been successfully delivered to the recipient. Even if this operation is not called, the recipient will still receive their assets, but calling this operation will allow clients to stop displaying it as ongoing to the user that sent it.</p><p class="paragraph">Anyone can call this operation, but it needs to include an <code class="lang-kotlin">iccf_proof</code> operation that the final <code class="lang-kotlin">apply_transfer</code> was performed.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;</code>INPUT ERROR&quot;<code class="lang-kotlin">if </code>op_index<code class="lang-kotlin">does not point to an </code>apply_transfer` operation</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;INCOMPLETE TRANSFER&quot;</code> if the given <code class="lang-kotlin">apply_transfer</code> was not called on the last chain; that is, if the <code class="lang-kotlin">hop_index</code> parameter does not correspond to the last hop index.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;WRONG DESTINATION&quot;</code> if the given <code class="lang-kotlin">apply_transfer</code> was called on a chain that does not correspond to the <code class="lang-kotlin">init_transfer</code>'s last chain in the <code class="lang-kotlin">hops</code> parameter</p><p class="paragraph">Throws if the transaction is missing the <code class="lang-kotlin">iccf_proof</code> operation, which demonstrates that the block containing the <code class="lang-kotlin">final_apply_transfer_tx</code> has been anchored from the target chain.</p><p class="paragraph">Requires no flags - no authorization is performed to complete a transfer.</p><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>final_apply_transfer_tx</span></span></u></div></span></div><div><div class="title"><p class="paragraph">the transaction that was submitted and applied on the target chain                                  in order to complete the crosschain transfer.</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>op_index</span></span></u></div></span></div><div><div class="title"><p class="paragraph">the index for the <code class="lang-kotlin">apply_transfer</code> operation in question in                                  <code class="lang-kotlin">final_apply_transfer_tx</code></p></div></div></div></div></div></div></div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

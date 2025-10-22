@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>account_link</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="FT4 Library::lib.ft4.core.accounts.linking/account_link///PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../../index.html">FT4 Library</a><span class="delimiter">/</span><a href="../index.html">lib.ft4.core.accounts.linking</a><span class="delimiter">/</span><span class="current">account_link</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>account_link</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">entity </span><a href="index.html">account_link</a><span class="clearfix"><span class="floating-right">(<a href="https://gitlab.com/chromaway/ft4-lib/src/development/rell/src/lib/ft4/core/accounts/linking/model.rell#lines-31">source</a>)</span></span></div><p class="paragraph">Represents a link between two accounts.</p><p class="paragraph">This module by itself does not attach any meaning to this entity, so it can be used as any developer sees fit. It is used, for example, to create lock accounts, for which more information can be found in <code class="lang-kotlin">core.assets.locking.ACCOUNT_TYPE_LOCK</code>.</p><p class="paragraph">In general, it is used to relate two accounts, and allows giving a custom description of the relationship.</p><p class="paragraph">Custom account types allow developers to create accounts that are not managed by users. Sometimes, a user will be able to control the non-user account within certain limits, as is the case for lock accounts. Sometimes they might have no control over it, as will be the case for many types of system accounts. These accounts are useful to hold assets outside of a user's reach, in scenarios like staking, bidding in an auction, or any other scenario where the user renounces the ability to freely spend a certain amount of tokens.</p><p class="paragraph">If a link between the account where tokens are temporarily held and the account the tokens came from is needed, this entity will allow keeping this information on chain.</p><p class="paragraph">Being a generic entity, however, nothing prevents it being used to link two user accounts or two non-user accounts, or putting the user account as <code class="lang-kotlin">secondary</code>, if that is what seems fit for the role.</p><h4 class="">See also</h4><div class="table"><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span>core.</span><wbr></wbr><span>assets.</span><wbr></wbr><span>locking</span></div></span></div><div><div class="title"><p class="paragraph">for an example usage of this entity</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span>core.</span><wbr></wbr><span>accounts.</span><wbr></wbr><span>account.</span><wbr></wbr><span>type</span></div></span></div><div><div class="title"><p class="paragraph">for information on custom account types</p></div></div></div></div></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="717592661%2FProperties%2F-350584692" anchor-label="account" id="717592661%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="account.html"><span><span>account</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="717592661%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="account.html">account</a><span class="token operator">: </span><a href="../../lib.ft4.core.accounts/account/index.html">account</a></div><div class="brief "><p class="paragraph">The primary account in this relation between two accounts. Generally, it will be a user account.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1923123538%2FProperties%2F-350584692" anchor-label="secondary" id="-1923123538%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="secondary.html"><span><span>secondary</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1923123538%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="secondary.html">secondary</a><span class="token operator">: </span><a href="../../lib.ft4.core.accounts/account/index.html">account</a></div><div class="brief "><p class="paragraph">The secondary account in this relation between two accounts. Generally, it will be a non-user account.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1820070438%2FProperties%2F-350584692" anchor-label="type" id="1820070438%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="type.html"><span><span>type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1820070438%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="type.html">type</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a></div><div class="brief "><p class="paragraph">The type of relation being represented here. For example, &quot;stake&quot; or &quot;bid&quot;</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

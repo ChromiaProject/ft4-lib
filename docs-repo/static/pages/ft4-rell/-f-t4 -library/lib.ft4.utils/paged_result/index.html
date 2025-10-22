@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>paged_result</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="FT4 Library::lib.ft4.utils/paged_result///PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../../index.html">FT4 Library</a><span class="delimiter">/</span><a href="../index.html">lib.ft4.utils</a><span class="delimiter">/</span><span class="current">paged_result</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>paged_result</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">struct </span><a href="index.html">paged_result</a><span class="clearfix"><span class="floating-right">(<a href="https://gitlab.com/chromaway/ft4-lib/src/development/rell/src/lib/ft4/utils/pagination.rell#lines-57">source</a>)</span></span></div><p class="paragraph">The return type of all paginated queries. It contains a list of results of the query, and a cursor which can be used to retrieve the next page.</p><p class="paragraph">In general, when a paginated query looks like this: <code class="lang-kotlin">get_my_data(page_size: integer?, page_cursor: text?)</code></p><ul><li><p class="paragraph"><code class="lang-kotlin">page_size</code> determines the number of results to be returned, defaulting to   <code class="lang-kotlin">query_max_page_size</code> as defined in the module args if null or higher than that value.</p></li><li><p class="paragraph"><code class="lang-kotlin">page_cursor</code> determines where the results should start from, defaulting to the first page.</p></li></ul><p class="paragraph">The returned results will be a paged result with:</p><ul><li><p class="paragraph"><code class="lang-kotlin">data</code>: a list of the expected data, encoded as GTVs</p></li><li><p class="paragraph"><code class="lang-kotlin">next_cursor</code>: a base64 encoded <code class="lang-kotlin">page_cursor</code> that can be passed as <code class="lang-kotlin">page_cursor</code> to the   same query to retrieve the next page of data</p></li></ul><p class="paragraph">The cursors are not supposed to be interpreted in any way on the front-end. To avoid unexpected behavior, only pass cursors received from a query to that same query.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="484459951%2FProperties%2F-350584692" anchor-label="data" id="484459951%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="data.html"><span><span>data</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="484459951%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="data.html">data</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">list of GTV-encoded entries, of the return type expected from the query</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-206978713%2FProperties%2F-350584692" anchor-label="next_cursor" id="-206978713%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="next_cursor.html"><span><span>next_cursor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-206978713%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="next_cursor.html">next_cursor</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">base64-encoded <code class="lang-kotlin">page_cursor</code>, that can be passed back to the query to retrieve the next page</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

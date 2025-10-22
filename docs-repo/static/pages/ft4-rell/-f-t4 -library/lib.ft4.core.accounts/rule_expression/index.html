@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>rule_expression</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="FT4 Library::lib.ft4.core.accounts/rule_expression///PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../../index.html">FT4 Library</a><span class="delimiter">/</span><a href="../index.html">lib.ft4.core.accounts</a><span class="delimiter">/</span><span class="current">rule_expression</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>rule_expression</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">struct </span><a href="index.html">rule_expression</a><span class="clearfix"><span class="floating-right">(<a href="https://gitlab.com/chromaway/ft4-lib/src/development/rell/src/lib/ft4/core/accounts/auth_descriptor_rule_expression.rell#lines-55">source</a>)</span></span></div><p class="paragraph">The expression of a single rule.</p><p class="paragraph">Three statuses of the expression are of interest. We want to know whether a rule is:</p><ul><li><p class="paragraph">violated or valid;</p></li><li><p class="paragraph">active or inactive;</p></li><li><p class="paragraph">expired or not.</p></li></ul><p class="paragraph">A rule can be <strong>violated</strong>, which means that the given rule condition is currently false.</p><p class="paragraph">A rule can also be <strong>inactive</strong>, which means that the given rule condition has never been true, but will be in the future.</p><p class="paragraph">The status of every possible rule expression can either:</p><ul><li><p class="paragraph">always be &quot;active&quot;;</p></li><li><p class="paragraph">trigger once, going from &quot;inactive&quot; to &quot;active&quot;.</p></li></ul><p class="paragraph">This gives us the definition of expired: A rule is <strong>expired</strong> if it is both violated and active, meaning that it doesn't allow the auth descriptor to be used and will never change state.</p><p class="paragraph">Examples:</p><table><thead><tr><th>Rule</th><th>active</th><th>violated</th><th>expired</th></tr></thead><tbody><tr><td>&quot;time < 1000&quot;</td><td>true</td><td>true</td><td>true</td></tr><tr><td>&quot;time < 1e10&quot;</td><td>true</td><td>false</td><td>false</td></tr><tr><td>&quot;time 1000&quot;</td><td>true</td><td>false</td><td>false</td></tr><tr><td>&quot;time 1e10&quot;</td><td>false</td><td>true</td><td>false</td></tr></tbody></table></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="154350255%2FProperties%2F-350584692" anchor-label="operator" id="154350255%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="operator.html"><span><span>operator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="154350255%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="operator.html">operator</a><span class="token operator">: </span><a href="../rule_operator/index.html">rule_operator</a></div><div class="brief "><p class="paragraph">The operator of the rule, e.g. &quot;greater than&quot;</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-947854210%2FProperties%2F-350584692" anchor-label="value" id="-947854210%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="value.html"><span><span>value</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-947854210%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="value.html">value</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a></div><div class="brief "><p class="paragraph">The value the variable should be checked against, e.g. &quot;1000&quot;</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-698954793%2FProperties%2F-350584692" anchor-label="variable" id="-698954793%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="variable.html"><span><span>variable</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-698954793%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="variable.html">variable</a><span class="token operator">: </span><a href="../rule_variable/index.html">rule_variable</a></div><div class="brief "><p class="paragraph">The variable to check for validity, e.g. &quot;timestamp&quot;</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

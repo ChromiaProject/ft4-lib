@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>add_strategy</title>
+    <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="member" id="content" pageIds="FT4 Library::lib.ft4.core.accounts.strategies//add_strategy/#op[rell.meta]#account_details[(gtv)-&gt;lib.ft4.core.accounts.strategies:account_details]#(lib.ft4.core.accounts:account,gtv)-&gt;unit?#(gtv)-&gt;list&lt;byte_array&gt;?/PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../index.html">FT4 Library</a><span class="delimiter">/</span><a href="index.html">lib.ft4.core.accounts.strategies</a><span class="delimiter">/</span><span class="current">add_strategy</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>add_strategy</span></span></h1>
+  </div>
+  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="add_strategy.html">add_strategy</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">op<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/rell/meta/index.html">meta</a><span class="token punctuation">, </span></span><span class="parameter ">account_details<span class="token operator">: </span><span class="token operator">(</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a><span class="token operator">)</span><span class="token operator"> -&gt; </span><a href="account_details/index.html">account_details</a><span class="token punctuation">, </span></span><span class="parameter ">action<span class="token operator">: </span><span class="token operator">(</span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a><span class="token operator">)</span><span class="token operator"> -&gt; </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/unit/index.html">unit</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">required_signers<span class="token operator">: </span><span class="token operator">(</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a><span class="token operator">)</span><span class="token operator"> -&gt; </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/map/index.html">map</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span><a href="_strategy/index.html">_strategy</a><span class="token operator">&gt;</span><span class="clearfix"><span class="floating-right">(<a href="https://gitlab.com/chromaway/ft4-lib/src/development/rell/src/lib/ft4/core/accounts/strategies/module.rell#lines-192">source</a>)</span></span></div><p class="paragraph">Used to add new strategies to the dapp. This does not need to be called for FT4-defined strategies.</p><p class="paragraph">This function helps avoid a common issue where a strategy is registered with the wrong name. If that happens, many functions of this module will throw errors pointing to that strategy as missing, since they won't be able to find it.</p><p class="paragraph">Example usage:</p><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">operation my_strategy(<br>    main: accounts.auth_descriptor,<br>    disposable: accounts.auth_descriptor? = null<br>) {<br>    strategies.require_register_account_next_operation();<br>}<br><br>function account_details(gtv) {<br>    val params = struct&lt;ras_open&gt;.from_gtv(gtv);<br>    val signers = accounts.get_signers(params.main);<br>    return strategies.account_details(<br>        account_id = accounts.get_account_id_from_signers(signers),<br>        main = params.main,<br>        disposable = params.disposable<br>    );<br>}<br><br>function my_custom_logic(accounts.account, gtv) {<br>    // custom logic that the strategy has to follow<br>}<br><br>@extend(strategies.strategy)<br>function () = strategies.add_strategy(<br>    op = rell.meta(my_strategy),<br>    account_details = account_details(*),<br>    action = my_custom_logic(*)<br>);</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>op</span></span></u></div></span></div><div><div class="title"><p class="paragraph">the custom operation that defines the strategy and its name</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>account_details</span></span></u></div></span></div><div><div class="title"><p class="paragraph">the function that retrieves the account details from <code class="lang-kotlin">op</code></p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>action</span></span></u></div></span></div><div><div class="title"><p class="paragraph">the function that implements the strategy logic. If null,                          <code class="lang-kotlin">_no_action</code> is called.</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>required_signers</span></span></u></div></span></div><div><div class="title"><p class="paragraph">the function that determines the list of signers required. If it is null or the list is empty no signature is required</p></div></div></div></div></div><h4 class="">See also</h4><div class="table"><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span><span>_strategy</span></span></div></span></div><div><div class="title"><p class="paragraph">for more information about the parameters of this function</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span><span>_no_action</span></span></div></span></div><div><div class="title"><p class="paragraph">for more information on performing no action</p></div></div></div></div></div></div></div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

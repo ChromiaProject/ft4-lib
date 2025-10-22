@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>evm_auth</title>
+    <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="member" id="content" pageIds="FT4 Library::lib.ft4.external.auth//evm_auth/#account_id[byte_array]#auth_descriptor_id[byte_array]#signatures[list&lt;lib.ft4.core.auth:signature?&gt;]/PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../index.html">FT4 Library</a><span class="delimiter">/</span><a href="index.html">lib.ft4.external.auth</a><span class="delimiter">/</span><span class="current">evm_auth</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>evm_auth</span></span></h1>
+  </div>
+  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@mount</span><span class="token punctuation">(&quot;</span>ft4.evm_auth<span class="token punctuation">&quot;)
+</span><span class="token keyword">operation </span><a href="evm_auth.html">evm_auth</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">account_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">auth_descriptor_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">signatures<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="../lib.ft4.core.auth/signature/index.html">signature</a><span class="token operator">?</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="clearfix"><span class="floating-right">(<a href="https://gitlab.com/chromaway/ft4-lib/src/development/rell/src/lib/ft4/external/auth/operations.rell#lines-40">source</a>)</span></span></div><p class="paragraph">For an operation to be authorized by an EVM signer, a specific message must be retrieved using <code class="lang-kotlin">get_auth_message_template</code>. That template will contain some of the following placeholders:</p><ul><li><p class="paragraph">core.auth.ACCOUNT_ID_PLACEHOLDER</p></li><li><p class="paragraph">core.auth.AUTH_DESCRIPTOR_ID_PLACEHOLDER</p></li><li><p class="paragraph">core.auth.NONCE_PLACEHOLDER</p></li><li><p class="paragraph">core.auth.BLOCKCHAIN_RID_PLACEHOLDER</p></li></ul><p class="paragraph">Those must be replaced with the corresponding value:</p><ul><li><p class="paragraph">the ID of the account and auth descriptor that are currently being used to sign the   operation auth message for the first two;</p></li><li><p class="paragraph">a valid nonce, as would be created by <code class="lang-kotlin">utils.derive_nonce</code> with the current counter value   of the auth descriptor being used; if multiple operations are authenticated with evm_auth   using the same auth descriptor, the counter must increase by one on every subsequent   operation;</p></li><li><p class="paragraph">the rid of the blockchain.</p></li></ul><p class="paragraph">The message must be signed following a standard EIP-191 implementation by all signers defined in the auth descriptor used to authenticate, and the signatures must be passed to the <code class="lang-kotlin">signatures</code> parameter in the same order as they can be found in the auth descriptor's <code class="lang-kotlin">signer</code> field (inside <code class="lang-kotlin">args</code>). If any signer did not need to sign (e.g. the auth descriptor is a multi-sig, and only some signatures are required), that signature must be left null.</p><p class="paragraph">The transaction will then contain</p><ul><li><p class="paragraph">evm_auth</p></li><li><p class="paragraph">the operation that is being authorized</p></li></ul><p class="paragraph">with nothing else inbetween them. Other operations may be added before and after these two.</p><p class="paragraph">Throws if the next operation is blacklisted or this is the last operation in the transaction</p><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>account_id</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The ID of the account that is calling the next operation</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>auth_descriptor_id</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The ID of the auth descriptor that is authorizing the operation</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>signatures</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The signatures of the operation's auth message</p></div></div></div></div></div><h4 class="">See also</h4><div class="table"><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span>core.</span><wbr></wbr><span>auth.</span><wbr></wbr><span><span>_auth_handler</span></span></div></span></div><div><div class="title"><p class="paragraph">for more details on operation authorization</p></div></div></div></div></div></div></div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

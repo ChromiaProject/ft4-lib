@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>lib.ft4.external.admin</title>
+    <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="package" id="content" pageIds="FT4 Library::lib.ft4.external.admin////PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../index.html">FT4 Library</a><span class="delimiter">/</span><span class="current">lib.ft4.external.admin</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Module-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="OPERATION">Operations</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="OPERATION">
+        <h2 class="">Operations</h2>
+        <div class="table"><a data-name="816812678%2FFunctions%2F-350584692" anchor-label="add_rate_limit_points" id="816812678%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="add_rate_limit_points.html"><span><span>add_rate_limit_points</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="816812678%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@mount</span><span class="token punctuation">(&quot;</span>ft4.admin.add_rate_limit_points<span class="token punctuation">&quot;)
+</span><span class="token keyword">operation </span><a href="add_rate_limit_points.html">add_rate_limit_points</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">account_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Adds rate limit points to an account, allowing it to send more transactions even if it reached the limit. If the new amount of points is greater than the maximum amount of allowed points, the account will have the maximum amount of points.</p><p class="paragraph">Throws if not signed by the admin.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;NEGATIVE RATE LIMIT&quot;</code> when amount is less than 1</p><p class="paragraph">Throws if the account or its <code class="lang-kotlin">rl_config</code> does not exist</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-113547386%2FFunctions%2F-350584692" anchor-label="mint" id="-113547386%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="mint.html"><span><span>mint</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-113547386%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@mount</span><span class="token punctuation">(&quot;</span>ft4.admin.mint<span class="token punctuation">&quot;)
+</span><span class="token keyword">operation </span><a href="mint.html">mint</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">account_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">asset_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Mints assets and gives them to an account.</p><p class="paragraph">Throws if not signed by the admin.</p><p class="paragraph">Throws if the account or the asset is not found.</p><p class="paragraph">Throws if the asset cannot be minted. Common cases include:</p><ul><li><p class="paragraph">the amount to mint is not in the accepted range (0, 2^256) (exclusive)</p></li><li><p class="paragraph">some conditions added in development through mint extensions (<code class="lang-kotlin">before_mint</code> or   <code class="lang-kotlin">after_mint</code>) aren't met</p></li><li><p class="paragraph">the asset's issuing blockchain is not this blockchain</p></li><li><p class="paragraph">the asset's total supply, increased by the amount being minted, is higher than 2^256</p></li></ul></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-563359923%2FFunctions%2F-350584692" anchor-label="register_account" id="-563359923%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="register_account.html"><span><span>register_account</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-563359923%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@mount</span><span class="token punctuation">(&quot;</span>ft4.admin.register_account<span class="token punctuation">&quot;)
+</span><span class="token keyword">operation </span><a href="register_account.html">register_account</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">auth_descriptor<span class="token operator">: </span><a href="../lib.ft4.core.accounts/auth_descriptor/index.html">auth_descriptor</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Registers a new account on this chain.</p><p class="paragraph">Throws if not signed by the admin.</p><p class="paragraph">Throws if the account cannot be created. Common cases include:</p><ul><li><p class="paragraph">errors with the <code class="lang-kotlin">args</code> field:</p></li><ul><li><p class="paragraph">some required flags are missing</p></li><li><p class="paragraph">in multi-sig auth descriptors, the <code class="lang-kotlin">required_signatures</code> field:</p></li><ul><li><p class="paragraph">is 0 or less</p></li><li><p class="paragraph">is greater than the number of signers</p></li></ul></ul><li><p class="paragraph">errors with the <code class="lang-kotlin">rules</code> field:</p></li><ul><li><p class="paragraph"><code class="lang-kotlin">rules</code> is not <code class="lang-kotlin">null.to_gtv().to_bytes()</code></p></li></ul></ul></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-921952816%2FFunctions%2F-350584692" anchor-label="register_asset" id="-921952816%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="register_asset.html"><span><span>register_asset</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-921952816%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@mount</span><span class="token punctuation">(&quot;</span>ft4.admin.register_asset<span class="token punctuation">&quot;)
+</span><span class="token keyword">operation </span><a href="register_asset.html">register_asset</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span></span><span class="parameter ">symbol<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span></span><span class="parameter ">decimals<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token punctuation">, </span></span><span class="parameter ">icon_url<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Registers a new asset on this chain, with this chain as issuer of the token.</p><p class="paragraph">Throws if not signed by the admin.</p><p class="paragraph">Throws if the asset cannot be registered. Common cases include:</p><ul><li><p class="paragraph">the input parameters do not follow this criteria:</p></li><ul><li><p class="paragraph">strings are longer than 1024</p></li><li><p class="paragraph">decimals is not in the accepted range 0, 78 (inclusive)</p></li></ul><li><p class="paragraph"><code class="lang-kotlin">icon_url</code> is not a valid URL</p></li></ul></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1410620012%2FFunctions%2F-350584692" anchor-label="register_asset_with_type" id="-1410620012%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="register_asset_with_type.html"><span><span>register_asset_with_type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1410620012%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@mount</span><span class="token punctuation">(&quot;</span>ft4.admin.register_asset_with_type<span class="token punctuation">&quot;)
+</span><span class="token keyword">operation </span><a href="register_asset_with_type.html">register_asset_with_type</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span></span><span class="parameter ">symbol<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span></span><span class="parameter ">decimals<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token punctuation">, </span></span><span class="parameter ">icon_url<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span></span><span class="parameter ">type<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Like <code class="lang-kotlin">register_asset</code>, but allows specifying a type for the asset as well.</p><p class="paragraph">Throws if not signed by the admin.</p><p class="paragraph">Throws if the asset cannot be registered. Common cases include:</p><ul><li><p class="paragraph">the input parameters do not follow this criteria:</p></li><ul><li><p class="paragraph">strings are longer than 1024 characters</p></li><li><p class="paragraph">type is empty</p></li><li><p class="paragraph">decimals is not in the accepted range 0, 78 (inclusive)</p></li></ul><li><p class="paragraph"><code class="lang-kotlin">icon_url</code> is not a valid URL</p></li></ul></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

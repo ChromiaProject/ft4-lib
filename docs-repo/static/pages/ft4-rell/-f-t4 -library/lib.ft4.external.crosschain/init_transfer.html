@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>init_transfer</title>
+    <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="member" id="content" pageIds="FT4 Library::lib.ft4.external.crosschain//init_transfer/#recipient_id[byte_array]#asset_id[byte_array]#amount[big_integer]#hops[list&lt;byte_array&gt;]#deadline[integer]/PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../index.html">FT4 Library</a><span class="delimiter">/</span><a href="index.html">lib.ft4.external.crosschain</a><span class="delimiter">/</span><span class="current">init_transfer</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>init_transfer</span></span></h1>
+  </div>
+  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@mount</span><span class="token punctuation">(&quot;</span>ft4.crosschain.init_transfer<span class="token punctuation">&quot;)
+</span><span class="token keyword">operation </span><a href="init_transfer.html">init_transfer</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">recipient_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">asset_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a><span class="token punctuation">, </span></span><span class="parameter ">hops<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">deadline<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a></span></span><span class="token punctuation">)</span><span class="clearfix"><span class="floating-right">(<a href="https://gitlab.com/chromaway/ft4-lib/src/development/rell/src/lib/ft4/external/crosschain/operations.rell#lines-88">source</a>)</span></span></div><p class="paragraph">Initializes a crosschain transfer, which is a transfer that goes to a different blockchain on the Chromia network.</p><p class="paragraph">Since this chain cannot communicate with any other chain, it is up to the client to perform the necessary steps to complete this transfer. Furthermore, this chain will not validate if the sender is allowed to send assets to the target chain or if the recipient account exists, meaning that when the client tries to apply the transfer on the target chain, it might not be accepted. Should that happen, the sender can recall their transfer after the deadline has expired.</p><p class="paragraph">Must be signed by an auth descriptor with <code class="lang-kotlin">accounts.auth_flags.TRANSFER</code></p><p class="paragraph">The functionality provided by <code class="lang-kotlin">init_transfer</code> can be modified by extending <code class="lang-kotlin">before_init_transfer</code> and <code class="lang-kotlin">after_init_transfer</code></p><p class="paragraph">Throws <code class="lang-kotlin">&quot;INVALID RECIPIENT ID&quot;</code> if the recipient's id length is longer than 1024 bytes</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;</code>TRANSFER EXPIRED&quot;` if deadline is a past timestamp</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;MISSING ASSET&quot;</code> if the asset does not exist on this chain</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;HOPS SIZE EXCEEDED&quot;</code> if the hops list size is not less than 100</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;INVALID BRID&quot;</code> if the hops RIDs length are not 32 bytes</p><p class="paragraph">Throws if additional conditions provided through extensions of <code class="lang-kotlin">before_init_transfer</code> and <code class="lang-kotlin">after_init_transfer</code> are not satisfied</p><p class="paragraph">Throws if the first transfer is misconfigured. Common cases are:</p><ul><li><p class="paragraph"><code class="lang-kotlin">hops[0]</code> is:</p></li><ul><li><p class="paragraph">equal to the sender account ID</p></li><li><p class="paragraph">this blockchain's RID</p></li><li><p class="paragraph">the ID of an account on this chain which is not a blockchain account</p></li></ul><li><p class="paragraph">amount is:</p></li><ul><li><p class="paragraph">not in the accepted range (0, 2^256) (exclusive)</p></li><li><p class="paragraph">higher than the account's balance</p></li></ul><li><p class="paragraph">sender account ID is equal to this chain's ID</p></li></ul><p class="paragraph">Requires the Transfer flag to be present on the auth descriptor that authorizes this operation.</p><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>recipient_id</span></span></u></div></span></div><div><div class="title"><p class="paragraph">the account that will receive the transfers on the final chain</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>asset_id</span></span></u></div></span></div><div><div class="title"><p class="paragraph">the ID of the asset that is being transferred</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>amount</span></span></u></div></span></div><div><div class="title"><p class="paragraph">the amount that is being transferred</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>hops</span></span></u></div></span></div><div><div class="title"><p class="paragraph">an array of all the blockchain rids which this transfer needs to                      go through in order to reach the recipient on the target chain, which                      will be the last entry in the array. The rid of this blockchain must                      not be included in the array.</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>deadline</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Time in milliseconds for which this transfer is valid, if the                      transfer were not completed within this deadline, it will be                      possible for the sender to recall it.</p></div></div></div></div></div><h4 class="">See also</h4><div class="table"><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span>core.</span><wbr></wbr><span>crosschain.</span><wbr></wbr><span><span>before_init_transfer</span></span></div></span></div><div><div class="title"><p class="paragraph">to add custom logic before this operation</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span>core.</span><wbr></wbr><span>crosschain.</span><wbr></wbr><span><span>after_init_transfer</span></span></div></span></div><div><div class="title"><p class="paragraph">to add custom logic after this operation</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span>core.</span><wbr></wbr><span>crosschain.</span><wbr></wbr><span><span>applied_transfers</span></span></div></span></div><div><div class="title"><p class="paragraph">to know more about the crosschain transfer workflow</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span>core.</span><wbr></wbr><span>crosschain.</span><wbr></wbr><span><span>ACCOUNT_TYPE_BLOCKCHAIN</span></span></div></span></div><div><div class="title"><p class="paragraph">for more info on blockchain account entities</p></div></div></div></div></div></div></div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

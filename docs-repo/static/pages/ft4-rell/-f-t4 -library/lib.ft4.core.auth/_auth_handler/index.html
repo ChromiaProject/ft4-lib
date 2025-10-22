@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>_auth_handler</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="FT4 Library::lib.ft4.core.auth/_auth_handler///PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../../index.html">FT4 Library</a><span class="delimiter">/</span><a href="../index.html">lib.ft4.core.auth</a><span class="delimiter">/</span><span class="current">_auth_handler</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>_auth_handler</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">struct </span><a href="index.html">_auth_handler</a><span class="clearfix"><span class="floating-right">(<a href="https://gitlab.com/chromaway/ft4-lib/src/development/rell/src/lib/ft4/core/auth/module.rell#lines-75">source</a>)</span></span></div><p class="paragraph">An auth handler defines who can and should call a specific operation. A new auth handler should be defined for each operation in the dapp.</p><h4 class="">See also</h4><div class="table"><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span><span>add_auth_handler</span></span></div></span></div><div><div class="title"><p class="paragraph">for a usage example</p></div></div></div></div></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="1981012143%2FProperties%2F-350584692" anchor-label="flags" id="1981012143%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="flags.html"><span><span>flags</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1981012143%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="flags.html">flags</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">The flags an auth descriptor should have to be authorized to call this operation. In this way, access levels can be defined, and a function can be setup in a way that calling it requires special permissions.</p><p class="paragraph">By default, two flags are defined in FT4 operations:</p><ul><li><p class="paragraph"><code class="lang-kotlin">T</code> - Transfer. Everything that requires transferring assets requires this flag.</p></li><li><p class="paragraph"><code class="lang-kotlin">A</code> - Account. Everything that modifies the account and its auth descriptors requires         this flag</p></li></ul><p class="paragraph">If multiple flags appear here, an auth descriptor is required to have them all to be able to call the operation.</p><p class="paragraph">No flags means any auth descriptor can be used.</p><p class="paragraph">The <code class="lang-kotlin">resolver</code> field of the auth handler might partially or completely override this field.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1843805060%2FProperties%2F-350584692" anchor-label="message_formatter" id="1843805060%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="message_formatter.html"><span><span>message_formatter</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1843805060%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="message_formatter.html">message_formatter</a><span class="token operator">: </span><span class="token operator">(</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a><span class="token operator">)</span><span class="token operator"> -&gt; </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator">?</span><span class="token operator"> = </span>null</div><div class="brief "><p class="paragraph">A function that receives the the arguments of the operation and returns a message that should be signed if the signer that is authorizing is an EVM signer.</p><p class="paragraph">This text will thus appear on the EVM wallet of the user to approve the operation.</p><p class="paragraph">If null, a default message will be created by <code class="lang-kotlin">generate_operation_auth_message</code>. It is suggested to only use the default messages in development environments.</p><p class="paragraph">An example function that could be used as a message formatter is:</p><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">operation send_chroma_tokens (amount: big_integer, account) { ... }<br><br>function message_formatter_for_send_chroma_tokens (gtv) {<br>    val params = struct&lt;send_chroma_tokens&gt;.from_gtv(gtv);<br>    return &quot;Do you want to send %s CHR to account %s?&quot;.format(<br>        params.amount,<br>        params.account<br>    );<br>}</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">The function can be as complex or simple as needed, and it can as well make no use of the gtv parameters by returning a default message in all cases - the message will have a nonce that prevents replay attacks.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1173234598%2FProperties%2F-350584692" anchor-label="resolver" id="1173234598%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="resolver.html"><span><span>resolver</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1173234598%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="resolver.html">resolver</a><span class="token operator">: </span><span class="token operator">(</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a><span class="token punctuation">, </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token operator">&gt;</span><span class="token operator">)</span><span class="token operator"> -&gt; </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token operator">?</span><span class="token operator">?</span><span class="token operator"> = </span>null</div><div class="brief "><p class="paragraph">Either null, or a function that receives:</p><ul><li><p class="paragraph">the arguments of the operation</p></li><li><p class="paragraph">the account ID</p></li><li><p class="paragraph">a list of auth descriptor IDs and returns the ID of the auth descriptor that should be used to authorize the operation, or null if none is acceptable.</p></li></ul><p class="paragraph">If this function is defined, it will be called by the client to pick the best auth descriptor to use between the ones that are available.</p><p class="paragraph">If flags is not an empty list, it will be used to preselect which auth descriptors to pass to the resolver - otherwise, all auth descriptors can be passed, and the resolver could manually check flags if needed.</p><p class="paragraph">This behavior allows the resolver to define cases in which one of the auth descriptors could call a certain operation with some flags, while a different auth descriptor needs a different flag to call the same operation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

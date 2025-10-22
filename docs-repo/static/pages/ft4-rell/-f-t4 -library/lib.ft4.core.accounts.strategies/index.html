@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>lib.ft4.core.accounts.strategies</title>
+    <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="package" id="content" pageIds="FT4 Library::lib.ft4.core.accounts.strategies////PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../index.html">FT4 Library</a><span class="delimiter">/</span><span class="current">lib.ft4.core.accounts.strategies</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Module-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button><button class="section-tab" data-togglable="FUNCTION,EXTENSION_FUNCTION">Functions</button><button class="section-tab" data-togglable="PROPERTY,EXTENSION_PROPERTY">Properties</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="-268265453%2FClasslikes%2F-350584692" anchor-label="_strategy" id="-268265453%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="_strategy/index.html"><span><span>_strategy</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-268265453%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">struct </span><a href="_strategy/index.html">_strategy</a></div><div class="brief "><p class="paragraph">Represents a single strategy which can be used to register accounts. It is composed of three parts:</p><ul><li><p class="paragraph">an operation, used to represent the usage of this strategy</p></li><li><p class="paragraph">a function that extracts <code class="lang-kotlin">account_details</code> from the operation arguments</p></li><li><p class="paragraph">a function that performs any action required by the strategy, given the account and the   operation arguments</p></li></ul><p class="paragraph">The transaction that will actually perform the registration will be composed of:</p><ul><li><p class="paragraph">optionally, <code class="lang-kotlin">evm_signers</code></p></li><li><p class="paragraph">the operation defined here</p></li><li><p class="paragraph"><code class="lang-kotlin">register_account</code></p></li></ul><p class="paragraph"><code class="lang-kotlin">evm_signers</code> must contain the signatures of all the EVM participants to the account that will be registered. If the account will be registered with two auth descriptors, all EVM signers of both auth descriptors must add their signatures there. The message to sign can be retrieved by <code class="lang-kotlin">get_register_account_message</code>. FT signers must simply sign the whole transaction instead. If all signers are FT signers, <code class="lang-kotlin">evm_signers</code> must be omitted.</p><p class="paragraph">The operation will contain some parameters which will be used by <code class="lang-kotlin">account_details</code> and <code class="lang-kotlin">action</code>. It should not run any code, except checking requirements to call the operation. One common requirement is that it is being used to register an account, and it can be checked with <code class="lang-kotlin">require_register_account_next_operation</code>. Most other requirements should be checked in the <code class="lang-kotlin">action</code> function. The mount name of the operation must be the name of the strategy in the map returned by <code class="lang-kotlin">strategy</code>.</p><p class="paragraph">The <code class="lang-kotlin">register_account</code> operation will take the name of the previous operation, find out the <code class="lang-kotlin">_strategy</code> it represents, use the parameters in conjunction with <code class="lang-kotlin">_strategy.account_details</code> to extract information about the account it needs to create, and call the <code class="lang-kotlin">_strategy.action</code> function to run the code for the strategy.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1225407115%2FClasslikes%2F-350584692" anchor-label="account_details" id="-1225407115%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="account_details/index.html"><span><span>account_details</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1225407115%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">struct </span><a href="account_details/index.html">account_details</a></div><div class="brief "><p class="paragraph">Represents information about an account that will be created using a strategy.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1488353506%2FClasslikes%2F-350584692" anchor-label="allowlist" id="-1488353506%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="allowlist/index.html"><span><span>allowlist</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1488353506%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">struct </span><a href="allowlist/index.html">allowlist</a></div><div class="brief "><p class="paragraph">Represents a list of allowed values. Used by rules to represent allowed senders, recipients, assets, and blockchain senders.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-584727687%2FClasslikes%2F-350584692" anchor-label="asset_limit" id="-584727687%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="asset_limit/index.html"><span><span>asset_limit</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-584727687%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">struct </span><a href="asset_limit/index.html">asset_limit</a></div><div class="brief "><p class="paragraph">Represents an asset's lower limit, below which a transfer is deemed not sufficient for account registration. This struct must contain either of these options:</p><ul><li><p class="paragraph"><code class="lang-kotlin">id</code></p></li><li><p class="paragraph"><code class="lang-kotlin">name</code> and <code class="lang-kotlin">blockchain_rid</code></p></li></ul><p class="paragraph">If <code class="lang-kotlin">id</code> and <code class="lang-kotlin">name</code> are missing or both present, functions using this struct will consider it invalid.</p><p class="paragraph">If this value is being parsed from a GTV and <code class="lang-kotlin">name</code> is present instead of <code class="lang-kotlin">id</code>, <code class="lang-kotlin">blockchain_rid</code> is optional. If missing, its value will be this chain's RID.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="785757121%2FClasslikes%2F-350584692" anchor-label="rule" id="785757121%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="rule/index.html"><span><span>rule</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="785757121%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">struct </span><a href="rule/index.html">rule</a></div><div class="brief "><p class="paragraph">A set of requirements to be satisfied to register an account.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="1777252539%2FProperties%2F-350584692" anchor-label="_CONFIG_ERROR_TEXT" id="1777252539%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="_-c-o-n-f-i-g_-e-r-r-o-r_-t-e-x-t.html"><span><span>_CONFIG_ERROR_TEXT</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1777252539%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="_-c-o-n-f-i-g_-e-r-r-o-r_-t-e-x-t.html">_CONFIG_ERROR_TEXT</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator"> = </span>&quot;CONFIG ERROR: Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): &quot;</div><div class="brief "><p class="paragraph">A starting string for configuration errors</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2055268827%2FProperties%2F-350584692" anchor-label="ANY_REF" id="-2055268827%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-a-n-y_-r-e-f.html"><span><span>ANY_REF</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2055268827%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="-a-n-y_-r-e-f.html">ANY_REF</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator"> = </span>&quot;*&quot;</div><div class="brief "><p class="paragraph">Used in transfer strategy rules to specify that any value is accepted. All accounts, blockchains or assets (depending on the field this is found in) will be allowed for that rule.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="309086890%2FProperties%2F-350584692" anchor-label="CURRENT_ACCOUNT_REF" id="309086890%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-c-u-r-r-e-n-t_-a-c-c-o-u-n-t_-r-e-f.html"><span><span>CURRENT_ACCOUNT_REF</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="309086890%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="-c-u-r-r-e-n-t_-a-c-c-o-u-n-t_-r-e-f.html">CURRENT_ACCOUNT_REF</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator"> = </span>&quot;X&quot;</div><div class="brief "><p class="paragraph">Used in transfer strategy rules to specify current account for the scenario when transfer rule requires that sender and recipient is the same.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-858253034%2FProperties%2F-350584692" anchor-label="CURRENT_CHAIN_REF" id="-858253034%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-c-u-r-r-e-n-t_-c-h-a-i-n_-r-e-f.html"><span><span>CURRENT_CHAIN_REF</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-858253034%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="-c-u-r-r-e-n-t_-c-h-a-i-n_-r-e-f.html">CURRENT_CHAIN_REF</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator"> = </span>&quot;$&quot;</div><div class="brief "><p class="paragraph">Used in transfer strategy rules config to specify current chain</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="1753045441%2FFunctions%2F-350584692" anchor-label="_default_signers" id="1753045441%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="_default_signers.html"><span><span>_default_signers</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1753045441%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="_default_signers.html">_default_signers</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">account_details<span class="token operator">: </span><span class="token operator">(</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a><span class="token operator">)</span><span class="token operator"> -&gt; </span><a href="account_details/index.html">account_details</a><span class="token punctuation">, </span></span><span class="parameter ">gtv<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Sets the default signers based on the provided account details, used only when adding a strategy and the required signers are not provided</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="675335305%2FFunctions%2F-350584692" anchor-label="_no_action" id="675335305%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="_no_action.html"><span><span>_no_action</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="675335305%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="_no_action.html">_no_action</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">account<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span></span><span class="parameter ">strategy_params<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">An empty function that can be used if a strategy does not need to perform checks for the account creation.</p><p class="paragraph">This should generally not be the function to use, but it can be useful for debugging and testing. Sometimes the <code class="lang-kotlin">_strategy.account_details</code> function will be forced to have some requirements, and if those are considered enough this function could be passed in <code class="lang-kotlin">_strategy.action</code> (by leaving <code class="lang-kotlin">action</code> null in <code class="lang-kotlin">add_strategy</code>, if used).</p><p class="paragraph">If your strategy will use no action, please double check that it does not have requirements that are so loose that they let users create infinite accounts, or your dapp may be vulnerable to DoS attacks.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1105883340%2FFunctions%2F-350584692" anchor-label="add_strategy" id="1105883340%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="add_strategy.html"><span><span>add_strategy</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1105883340%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="add_strategy.html">add_strategy</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">op<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/rell/meta/index.html">meta</a><span class="token punctuation">, </span></span><span class="parameter ">account_details<span class="token operator">: </span><span class="token operator">(</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a><span class="token operator">)</span><span class="token operator"> -&gt; </span><a href="account_details/index.html">account_details</a><span class="token punctuation">, </span></span><span class="parameter ">action<span class="token operator">: </span><span class="token operator">(</span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a><span class="token operator">)</span><span class="token operator"> -&gt; </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/unit/index.html">unit</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">required_signers<span class="token operator">: </span><span class="token operator">(</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a><span class="token operator">)</span><span class="token operator"> -&gt; </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/map/index.html">map</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span><a href="_strategy/index.html">_strategy</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Used to add new strategies to the dapp. This does not need to be called for FT4-defined strategies.</p><p class="paragraph">This function helps avoid a common issue where a strategy is registered with the wrong name. If that happens, many functions of this module will throw errors pointing to that strategy as missing, since they won't be able to find it.</p><p class="paragraph">Example usage:</p><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">operation my_strategy(<br>    main: accounts.auth_descriptor,<br>    disposable: accounts.auth_descriptor? = null<br>) {<br>    strategies.require_register_account_next_operation();<br>}<br><br>function account_details(gtv) {<br>    val params = struct&lt;ras_open&gt;.from_gtv(gtv);<br>    val signers = accounts.get_signers(params.main);<br>    return strategies.account_details(<br>        account_id = accounts.get_account_id_from_signers(signers),<br>        main = params.main,<br>        disposable = params.disposable<br>    );<br>}<br><br>function my_custom_logic(accounts.account, gtv) {<br>    // custom logic that the strategy has to follow<br>}<br><br>@extend(strategies.strategy)<br>function () = strategies.add_strategy(<br>    op = rell.meta(my_strategy),<br>    account_details = account_details(*),<br>    action = my_custom_logic(*)<br>);</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="380737806%2FFunctions%2F-350584692" anchor-label="after_register_account" id="380737806%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="after_register_account.html"><span><span>after_register_account</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="380737806%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@extendable </span><span class="token keyword">function </span><a href="after_register_account.html">after_register_account</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">account<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Extendable function that allows the developer to add more functionality to the <code class="lang-kotlin">register_account</code> function, after the registration happens.</p><p class="paragraph">This allows, for example, to add fees on registration or check that any given condition is present after the registration can be completed.</p><p class="paragraph">If this function throws an exception, the registration will not happen.</p><p class="paragraph">When using the transfer submodule, the strategies defined there already implement extensions of this function, requiring no additional code from the developer. This function should only be extended if functionality that is not found in the predefined strategies is required.</p><p class="paragraph">In some cases, creating a new strategy is a better alternative: this function will run on all account registrations, regardless of the strategy they used.</p><p class="paragraph">Throws if any extension of this function throws.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1832060393%2FFunctions%2F-350584692" anchor-label="auth_message_auth_descriptor" id="1832060393%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="auth_message_auth_descriptor.html"><span><span>auth_message_auth_descriptor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1832060393%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="auth_message_auth_descriptor.html">auth_message_auth_descriptor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">auth_descriptor<span class="token operator">: </span><a href="../lib.ft4.core.accounts/auth_descriptor/index.html">auth_descriptor</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a></div><div class="brief "><p class="paragraph">Builds a text description of an auth descriptor. It's used to represent the auth descriptor in the account registration message.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1826896170%2FFunctions%2F-350584692" anchor-label="auth_message_auth_descriptors_details" id="-1826896170%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="auth_message_auth_descriptors_details.html"><span><span>auth_message_auth_descriptors_details</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1826896170%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="auth_message_auth_descriptors_details.html">auth_message_auth_descriptors_details</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">main<span class="token operator">: </span><a href="../lib.ft4.core.accounts/auth_descriptor/index.html">auth_descriptor</a><span class="token punctuation">, </span></span><span class="parameter ">disposable<span class="token operator">: </span><a href="../lib.ft4.core.accounts/auth_descriptor/index.html">auth_descriptor</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a></div><div class="brief "><p class="paragraph">Builds a portion of the message that will be used to authorize account registration. This portion gives the information about the auth descriptors that will be added to the newly created account</p><p class="paragraph">In a standard usage of the library, this operation would have the mount name of <code class="lang-kotlin">ft4.register_account</code>, found at <code class="lang-kotlin">external.accounts.registration.register_account</code></p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="717874030%2FFunctions%2F-350584692" anchor-label="auth_message_multi_sig" id="717874030%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="auth_message_multi_sig.html"><span><span>auth_message_multi_sig</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="717874030%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="auth_message_multi_sig.html">auth_message_multi_sig</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">args<span class="token operator">: </span><a href="../lib.ft4.core.accounts/multi_sig_args/index.html">multi_sig_args</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a></div><div class="brief "><p class="paragraph">Builds a text description of a multi-sig auth descriptor. It's used to represent the auth descriptor in the account registration message.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="497717431%2FFunctions%2F-350584692" anchor-label="auth_message_operation_details" id="497717431%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="auth_message_operation_details.html"><span><span>auth_message_operation_details</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="497717431%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="auth_message_operation_details.html">auth_message_operation_details</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">op<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtx_operation/index.html">gtx_operation</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a></div><div class="brief "><p class="paragraph">Builds a portion of the message that will be used to authorize account registration. This portion gives the information about the operation that called <code class="lang-kotlin">register_account</code>.</p><p class="paragraph">In a standard usage of the library, this operation would have the mount name of <code class="lang-kotlin">ft4.register_account</code>, found at <code class="lang-kotlin">external.accounts.registration.register_account</code></p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-297554428%2FFunctions%2F-350584692" anchor-label="auth_message_single_sig" id="-297554428%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="auth_message_single_sig.html"><span><span>auth_message_single_sig</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-297554428%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="auth_message_single_sig.html">auth_message_single_sig</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">args<span class="token operator">: </span><a href="../lib.ft4.core.accounts/single_sig_args/index.html">single_sig_args</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a></div><div class="brief "><p class="paragraph">Builds a text description of a single-sig auth descriptor. It's used to represent the auth descriptor in the account registration message.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-257688377%2FFunctions%2F-350584692" anchor-label="before_register_account" id="-257688377%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="before_register_account.html"><span><span>before_register_account</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-257688377%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@extendable </span><span class="token keyword">function </span><a href="before_register_account.html">before_register_account</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">account_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Extendable function that allows the developer to add more functionality to the <code class="lang-kotlin">register_account</code> function, before the registration happens.</p><p class="paragraph">This allows, for example, to add fees on registration or check that any given condition is present before the registration can be completed.</p><p class="paragraph">If this function throws an exception, the registration will not happen.</p><p class="paragraph">When using the transfer submodule, the strategies defined there already implement extensions of this function, requiring no additional code from the developer. This function should only be extended if functionality that is not found in the predefined strategies is required.</p><p class="paragraph">In some cases, creating a new strategy is a better alternative: this function will run on all account registrations, regardless of the strategy they used.</p><p class="paragraph">Throws if any extension of this function throws.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1857043730%2FFunctions%2F-350584692" anchor-label="get_account_id_for_strategy" id="-1857043730%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get_account_id_for_strategy.html"><span><span>get_account_id_for_strategy</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1857043730%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="get_account_id_for_strategy.html">get_account_id_for_strategy</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">strategy_op<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtx_operation/index.html">gtx_operation</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a></div><div class="brief "><p class="paragraph">Retrieves an account id given the strategy operation, using the <code class="lang-kotlin">account_details</code> function defined for the <code class="lang-kotlin">_strategy</code> in question.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-878931345%2FFunctions%2F-350584692" anchor-label="get_register_account_message" id="-878931345%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get_register_account_message.html"><span><span>get_register_account_message</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-878931345%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="get_register_account_message.html">get_register_account_message</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">strategy_operation<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtx_operation/index.html">gtx_operation</a><span class="token punctuation">, </span></span><span class="parameter ">register_account_operation<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtx_operation/index.html">gtx_operation</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a></div><div class="brief "><p class="paragraph">Gives a default message used by EVM wallets to authorize the account registration.</p><p class="paragraph">Throws if the strategy cannot be found. If <code class="lang-kotlin">strategy_name</code> is correct, this could also be caused by having misconfigured the registration defined in the function that extends <code class="lang-kotlin">strategy</code> in such a way that the strategy name and the <code class="lang-kotlin">_strategy.op.mount_name</code> are not the same value.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="346759664%2FFunctions%2F-350584692" anchor-label="get_strategy" id="346759664%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get_strategy.html"><span><span>get_strategy</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="346759664%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="get_strategy.html">get_strategy</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">strategy_name<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="_strategy/index.html">_strategy</a></div><div class="brief "><p class="paragraph">Returns a strategy, given the mount name of the operation that defines it.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;MISSING STRATEGY&quot;</code> if the strategy cannot be found. If <code class="lang-kotlin">strategy_name</code> is correct, this could also be caused by having misconfigured the registration defined in the function that extends <code class="lang-kotlin">strategy</code> in such a way that the strategy name and the <code class="lang-kotlin">_strategy.op.mount_name</code> are not the same value.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1576508340%2FFunctions%2F-350584692" anchor-label="is_strategy_op" id="1576508340%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is_strategy_op.html"><span><span>is_strategy_op</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1576508340%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="is_strategy_op.html">is_strategy_op</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">op<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtx_operation/index.html">gtx_operation</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a></div><div class="brief "><p class="paragraph">Checks whether an operation is a strategy operation that can be used on this chain. Strategy operations not registered through extensions of <code class="lang-kotlin">strategy</code> will return false, as they won't be usable on this chain.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="774502249%2FFunctions%2F-350584692" anchor-label="parse_account_id_single_value_from_gtv" id="774502249%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="parse_account_id_single_value_from_gtv.html"><span><span>parse_account_id_single_value_from_gtv</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="774502249%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="parse_account_id_single_value_from_gtv.html">parse_account_id_single_value_from_gtv</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">gtv<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span class="token operator">(</span>allow_all<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a><span class="token punctuation">, </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token operator">?</span><span class="token punctuation">, </span>is_x<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a><span class="token operator">)</span></div><div class="brief "><p class="paragraph">Reads a GTV-encoded moduleArgs field containing a single account ID.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;CONFIG ERROR&quot;</code> if the ID cannot be parsed as hex <code class="lang-kotlin">byte_array</code></p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1177996483%2FFunctions%2F-350584692" anchor-label="parse_account_ids_from_gtv" id="1177996483%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="parse_account_ids_from_gtv.html"><span><span>parse_account_ids_from_gtv</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1177996483%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="parse_account_ids_from_gtv.html">parse_account_ids_from_gtv</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">gtv<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span class="token operator">(</span>allowlist<span class="token operator">: </span><a href="allowlist/index.html">allowlist</a><span class="token punctuation">, </span>require_same<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a><span class="token operator">)</span></div><div class="brief "><p class="paragraph">Reads a GTV-encoded moduleArgs field containing account IDs.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;CONFIG ERROR&quot;</code> if the config cannot be parsed. Common cases are:</p><ul><li><p class="paragraph">a list of values is received, alongside which <code class="lang-kotlin">CURRENT_ACCOUNT_REF</code> or <code class="lang-kotlin">ANY_REF</code> are found</p></li><li><p class="paragraph">IDs cannot be parsed as hex <code class="lang-kotlin">byte_array</code>s</p></li></ul></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-319282439%2FFunctions%2F-350584692" anchor-label="parse_amount" id="-319282439%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="parse_amount.html"><span><span>parse_amount</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-319282439%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="parse_amount.html">parse_amount</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">input<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a></div><div class="brief "><p class="paragraph">Reads a GTV-encoded moduleArgs field containing asset limits.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="450928734%2FFunctions%2F-350584692" anchor-label="parse_asset_limit" id="450928734%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="parse_asset_limit.html"><span><span>parse_asset_limit</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="450928734%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="parse_asset_limit.html">parse_asset_limit</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">input<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/map/index.html">map</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="asset_limit/index.html">asset_limit</a></div><div class="brief "><p class="paragraph">Reads a moduleArgs field containing a single asset limit, structured like a dictionary.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;CONFIG ERROR&quot;</code> if the asset limits are invalid.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1053650578%2FFunctions%2F-350584692" anchor-label="parse_asset_limits_from_gtv" id="1053650578%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="parse_asset_limits_from_gtv.html"><span><span>parse_asset_limits_from_gtv</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1053650578%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="parse_asset_limits_from_gtv.html">parse_asset_limits_from_gtv</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">gtv<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="asset_limit/index.html">asset_limit</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Reads a GTV-encoded moduleArgs field containing asset limits.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;CONFIG ERROR&quot;</code> if the asset limits are invalid.</p><p class="paragraph">Throws if the asset limits are improperly formatted.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="936466850%2FFunctions%2F-350584692" anchor-label="parse_blockchain_single_value_from_gtv" id="936466850%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="parse_blockchain_single_value_from_gtv.html"><span><span>parse_blockchain_single_value_from_gtv</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="936466850%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="parse_blockchain_single_value_from_gtv.html">parse_blockchain_single_value_from_gtv</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">gtv<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span class="token operator">(</span>allow_all<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a><span class="token punctuation">, </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token operator">?</span><span class="token operator">)</span></div><div class="brief "><p class="paragraph">Reads a GTV-encoded moduleArgs field containing a single blockchain RID.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;CONFIG ERROR&quot;</code> if the RID cannot be parsed as hex <code class="lang-kotlin">byte_array</code></p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1576860796%2FFunctions%2F-350584692" anchor-label="parse_blockchains_from_gtv" id="1576860796%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="parse_blockchains_from_gtv.html"><span><span>parse_blockchains_from_gtv</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1576860796%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="parse_blockchains_from_gtv.html">parse_blockchains_from_gtv</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">gtv<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/gtv/index.html">gtv</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="allowlist/index.html">allowlist</a></div><div class="brief "><p class="paragraph">Reads a GTV-encoded moduleArgs field containing blockchain RIDs.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;CONFIG ERROR&quot;</code> if the config cannot be parsed. Common cases are:</p><ul><li><p class="paragraph">a list of values is received, alongside which <code class="lang-kotlin">ANY_REF</code> are found</p></li><li><p class="paragraph">IDs cannot be parsed as hex <code class="lang-kotlin">byte_array</code>s</p></li></ul></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2100125839%2FFunctions%2F-350584692" anchor-label="register_account" id="-2100125839%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="register_account.html"><span><span>register_account</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2100125839%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="register_account.html">register_account</a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a></div><div class="brief "><p class="paragraph">Registers an account on this chain, using a certain strategy.</p><p class="paragraph">Can only be called from an operation.</p><p class="paragraph">It will register the account with the <code class="lang-kotlin">account_details</code> retrieved by <code class="lang-kotlin">_strategy.account_details</code>, and using the logic found in <code class="lang-kotlin">_strategy.action</code>.</p><p class="paragraph">The new account will have a main auth descriptor given by <code class="lang-kotlin">account_details.main</code>, and optionally a disposable auth descriptor given by <code class="lang-kotlin">account_details.disposable</code></p><p class="paragraph">It expects all signers of both auth descriptors to have signed this transaction.</p><p class="paragraph">Throws if the operation that came just before this one cannot be handled. Common cases are:</p><ul><li><p class="paragraph">the operation is not registered as a strategy operation through extensions of <code class="lang-kotlin">strategy</code></p></li><li><p class="paragraph">the operation has been misconfigured, and its name does not match the operation mount name</p></li></ul><p class="paragraph">Throws if the signature verification is unsuccessful. Common cases are:</p><ul><li><p class="paragraph"><code class="lang-kotlin">evm_signatures</code> is misconfigured:</p></li><ul><li><p class="paragraph">any of the signers and signatures don't match in the exact order they're found</p></li><li><p class="paragraph">any of the signatures is null</p></li><li><p class="paragraph">there's more signatures than signers</p></li></ul><li><p class="paragraph">a signature from one of the auth descriptor participants is missing:</p></li><ul><li><p class="paragraph">an EVM signer is specified but the signature is not found in <code class="lang-kotlin">evm_signatures</code></p></li><li><p class="paragraph">an FT signer is specified but the signature is not in the transaction</p></li><li><p class="paragraph">a signer passed is neither an EVM nor an FT signer (its length does not match either of     <code class="lang-kotlin">core.auth.EVM_ADDRESS_SIZE</code> and <code class="lang-kotlin">core.auth.FT_PUBKEY_SIZE</code>)</p></li></ul></ul><p class="paragraph">Throws if either auth descriptor is invalid. Common cases include:</p><ul><li><p class="paragraph">the main auth descriptor has expiration rules instead of <code class="lang-kotlin">core.accounts.GTV_NULL</code></p></li><li><p class="paragraph">the disposable auth descriptor's expiration rules:</p></li><ul><li><p class="paragraph">is a complex rule with too many rule components</p></li><li><p class="paragraph">has already expired</p></li><li><p class="paragraph">is not the valid GTV representation of a rule</p></li></ul><li><p class="paragraph">errors with the <code class="lang-kotlin">args</code> field:</p></li><ul><li><p class="paragraph">some required flags are missing</p></li><li><p class="paragraph">in multi-sig auth descriptors, the <code class="lang-kotlin">required_signatures</code> field:</p></li><ul><li><p class="paragraph">is 0 or less</p></li><li><p class="paragraph">is greater than the number of signers</p></li></ul></ul></ul><p class="paragraph">Throws if <code class="lang-kotlin">core.accounts.AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND</code> is set to 1 and <code class="lang-kotlin">account_details.disposable</code> is not null.</p><p class="paragraph">Throws if some conditions added in development through extensions (<code class="lang-kotlin">before_register_account</code> or <code class="lang-kotlin">after_register_account</code>) aren't met</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="454947881%2FFunctions%2F-350584692" anchor-label="require_register_account_next_operation" id="454947881%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="require_register_account_next_operation.html"><span><span>require_register_account_next_operation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="454947881%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="require_register_account_next_operation.html">require_register_account_next_operation</a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Verifies that the next operation in the transaction is an operation that can be used to register accounts. Any operation that is whitelisted to be called after <code class="lang-kotlin">evm_signatures</code> is considered valid here.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;MISSING REGISTER ACCOUNT&quot;</code> if:</p><ul><li><p class="paragraph">the next operation is not whitelisted</p></li><li><p class="paragraph">this is the last operation in the transaction</p></li></ul><p class="paragraph">Throws if the <code class="lang-kotlin">chromia.yml</code> cannot be parsed for <code class="lang-kotlin">evm_signatures_authorized_operations</code>, e.g. if some elements are not text or there are duplicates.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1443160113%2FFunctions%2F-350584692" anchor-label="strategy" id="-1443160113%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="strategy.html"><span><span>strategy</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1443160113%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@extendable </span><span class="token keyword">function </span><a href="strategy.html">strategy</a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/map/index.html">map</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span><a href="_strategy/index.html">_strategy</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns a map of all possible strategies used to register accounts on this chain. Can be extended to add custom strategies and make them work seamlessly with the existing <code class="lang-kotlin">register_account</code> framework.</p><p class="paragraph">The map pairs up a strategy operation mount name and the <code class="lang-kotlin">_strategy</code> struct representing it. The name must be the mount name of <code class="lang-kotlin">_strategy.op</code></p><p class="paragraph">To avoid misconfiguring strategies, it is strongly recommended to add extensions to this function using <code class="lang-kotlin">add_strategy</code>.</p><p class="paragraph">Throws if any extension of this function throws.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

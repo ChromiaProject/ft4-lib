@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>lib.ft4.core.crosschain</title>
+    <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="package" id="content" pageIds="FT4 Library::lib.ft4.core.crosschain////PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../index.html">FT4 Library</a><span class="delimiter">/</span><span class="current">lib.ft4.core.crosschain</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Module-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button><button class="section-tab" data-togglable="FUNCTION,EXTENSION_FUNCTION">Functions</button><button class="section-tab" data-togglable="PROPERTY,EXTENSION_PROPERTY">Properties</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="1529225691%2FClasslikes%2F-350584692" anchor-label="applied_transfers" id="1529225691%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="applied_transfers/index.html"><span><span>applied_transfers</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1529225691%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">entity </span><a href="applied_transfers/index.html">applied_transfers</a></div><div class="brief "><p class="paragraph">Represents a crosschain transfer that has been applied on this chain.</p><p class="paragraph">When a transfer is going from chain A to C, passing through chain B, this is what will happen on the chains:</p><ul><li><p class="paragraph"><code class="lang-kotlin">init_transfer</code> gets called on chain A</p></li><li><p class="paragraph"><code class="lang-kotlin">crosschain_transfer_history_entry</code> is created for this transfer on chain A</p></li><li><p class="paragraph"><code class="lang-kotlin">pending_transfer</code> is created for this transfer on chain A</p></li><li><p class="paragraph"><code class="lang-kotlin">apply_transfer</code> is called on chain B</p></li><li><p class="paragraph"><code class="lang-kotlin">applied_transfer</code> is created for this transfer on chain B</p></li><li><p class="paragraph"><code class="lang-kotlin">apply_transfer</code> is called on chain C</p></li><li><p class="paragraph"><code class="lang-kotlin">crosschain_transfer_history_entry</code> is created for this transfer on chain C</p></li><li><p class="paragraph"><code class="lang-kotlin">applied_transfer</code> is created for this transfer on chain C</p></li><li><p class="paragraph"><code class="lang-kotlin">complete_transfer</code> is called on chain A</p></li><li><p class="paragraph"><code class="lang-kotlin">pending_transfer</code> created in step 3 on chain A is removed</p></li></ul><p class="paragraph">Chain A is the &quot;init chain&quot;, chain B and C are &quot;hops&quot;. Chain C is also the &quot;target chain&quot; for this transfer.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1911888660%2FClasslikes%2F-350584692" anchor-label="asset_origin" id="-1911888660%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="asset_origin/index.html"><span><span>asset_origin</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1911888660%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">entity </span><a href="asset_origin/index.html">asset_origin</a></div><div class="brief "><p class="paragraph">The origin of a crosschain asset that can be used on this chain.</p><p class="paragraph">An asset can be issued on this chain, or a different one. If it is issued on a different chain, it's considered a crosschain asset, and it will have an <code class="lang-kotlin">asset_origin</code> linked to it.</p><p class="paragraph">An asset has an <code class="lang-kotlin">asset_origin</code> if it is a crosschain asset and vice versa.</p><p class="paragraph">The origin of the asset might be different from the issuing chain, although in many cases it will be the same. The origin chain represents a chain that is providing the assets to this chain, considered its parent. Assets can only be transferred from a parent to a child chain and vice versa, and only one parent chain can exist for a given asset. Different assets can have different origins.</p><p class="paragraph">When this chain sends assets to chains that are not the parent chain (children), it will keep track of the balance of each child chain through blockchain account entities; the children chain cannot send assets among themselves - they must send them through the parent chain. On the other hand, children chains will not keep track of the parent chain balance.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-606990753%2FClasslikes%2F-350584692" anchor-label="asset_origin_filter" id="-606990753%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="asset_origin_filter/index.html"><span><span>asset_origin_filter</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-606990753%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">struct </span><a href="asset_origin_filter/index.html">asset_origin_filter</a></div><div class="brief "><p class="paragraph">Filter used for the query get_asset_origin_filtered to fetch asset origins based on selected criteria</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-433852641%2FClasslikes%2F-350584692" anchor-label="canceled_transfers" id="-433852641%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="canceled_transfers/index.html"><span><span>canceled_transfers</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-433852641%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">entity </span><a href="canceled_transfers/index.html">canceled_transfers</a></div><div class="brief "><p class="paragraph">Represents a crosschain transfer that has been canceled.</p><p class="paragraph">A cross-chain transfer that is past its deadline can be canceled if it never was applied (with <code class="lang-kotlin">apply_transfer</code> on the last chain). To do so, <code class="lang-kotlin">cancel_transfer</code> needs to be called (instead of <code class="lang-kotlin">apply_transfer</code>) on the chain that would be next in the flow.</p><p class="paragraph">For example, if a chain going A -> B -> C expired after <code class="lang-kotlin">init_transfer</code> and never got applied on chain B, <code class="lang-kotlin">cancel_transfer</code> must be called on chain B. If it instead expired after applying it on chain B, it must be canceled on chain C.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1227122798%2FClasslikes%2F-350584692" anchor-label="pending_transfer" id="1227122798%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="pending_transfer/index.html"><span><span>pending_transfer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1227122798%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">entity </span><a href="pending_transfer/index.html">pending_transfer</a></div><div class="brief "><p class="paragraph">Represents a crosschain transfer that has been initialized.</p><p class="paragraph">This entity will be created on the starting chain, and it will be deleted when the transfer is completed (by calling <code class="lang-kotlin">complete_transfer</code> on the starting chain) or when it is reverted (by calling <code class="lang-kotlin">revert_transfer</code> on the starting chain).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="484963485%2FClasslikes%2F-350584692" anchor-label="pending_transfer_filter" id="484963485%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="pending_transfer_filter/index.html"><span><span>pending_transfer_filter</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="484963485%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">struct </span><a href="pending_transfer_filter/index.html">pending_transfer_filter</a></div><div class="brief "><p class="paragraph">Filter used for the query get_pending_transfers_filtered to fetch pending transfers based on selected criteria</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="947341544%2FClasslikes%2F-350584692" anchor-label="recalled_transfers" id="947341544%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="recalled_transfers/index.html"><span><span>recalled_transfers</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="947341544%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">entity </span><a href="recalled_transfers/index.html">recalled_transfers</a></div><div class="brief "><p class="paragraph">Represents a crosschain transfer that has been recalled.</p><p class="paragraph">A cross-chain transfer can be used to register accounts if the chain was configured to do so. If it is possible, the transfer must be &quot;claimed&quot; on the end chain by using the correct register account strategy. This will end upregistering the account, moving the funds to it, and removing any funds that should be consumed on account registration, if applicable.</p><p class="paragraph">For example, if a chain going A -> B -> C has been sent to an account which does not exist on chain C, chain C will consider that transfer to be aimed at registering that account. There will be no way for the user that sent the funds to retrieve them until the expiration date. After the transfer has expired, if the account wasn't registered, the user that sent the funds will be able to call <code class="lang-kotlin">recall_unclaimed_transfer</code> on chain C; the transfer must then be unapplied on chain B and reverted on chain A.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1910578810%2FClasslikes%2F-350584692" anchor-label="reverted_transfer" id="1910578810%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="reverted_transfer/index.html"><span><span>reverted_transfer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1910578810%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">entity </span><a href="reverted_transfer/index.html">reverted_transfer</a></div><div class="brief "><p class="paragraph">Represents a crosschain transfer that has been reverted.</p><p class="paragraph">A cross-chain transfer that is past its deadline must be recalled or canceled. If there are intermediate chains where the transfer was applied, it must be unapplied there, and then it can be reverted on the initial chain.</p><p class="paragraph">For example, if a chain going A -> B -> C got cancelled or recalled on chain C, it must be unapplied on chain B, then reverted on chain A.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="882224082%2FClasslikes%2F-350584692" anchor-label="transfers_filter" id="882224082%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="transfers_filter/index.html"><span><span>transfers_filter</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="882224082%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">struct </span><a href="transfers_filter/index.html">transfers_filter</a></div><div class="brief "><p class="paragraph">Filter used for the queries get_applied_transfers_filtered, get_canceled_transfers_filtered, get_unapplied_transfers_filtered, get_recalled_transfers_filtered and get_reverted_transfers_filtered to fetch crosschain transfers of several states based on selected criteria</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1675541812%2FClasslikes%2F-350584692" anchor-label="unapplied_transfers" id="1675541812%2FClasslikes%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="unapplied_transfers/index.html"><span><span>unapplied_transfers</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1675541812%2FClasslikes%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">entity </span><a href="unapplied_transfers/index.html">unapplied_transfers</a></div><div class="brief "><p class="paragraph">Represents a crosschain transfer that has been unapplied.</p><p class="paragraph">A cross-chain transfer that is past its deadline must be recalled or canceled. After doing so, <code class="lang-kotlin">unapply_transfer</code> needs to be called on all chains where the transfer was applied before reverting it on the starting chain.</p><p class="paragraph">For example, if a chain going A -> B -> C -> D got cancelled or recalled on chain D, it must be unapplied on chain C, then on chain B, then reverted on chain A.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="1142026074%2FProperties%2F-350584692" anchor-label="ACCOUNT_TYPE_BLOCKCHAIN" id="1142026074%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-a-c-c-o-u-n-t_-t-y-p-e_-b-l-o-c-k-c-h-a-i-n.html"><span><span>ACCOUNT_TYPE_BLOCKCHAIN</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1142026074%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="-a-c-c-o-u-n-t_-t-y-p-e_-b-l-o-c-k-c-h-a-i-n.html">ACCOUNT_TYPE_BLOCKCHAIN</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator"> = </span>&quot;FT4_BLOCKCHAIN&quot;</div><div class="brief "><p class="paragraph">The account type for blockchain accounts.</p><p class="paragraph">These accounts represent the balance of chains that are downstream of this one, in the scheme of crosschain transfers.</p><ul><li><p class="paragraph">If tokens are sent to that chain, its account balance is increased.</p></li><li><p class="paragraph">If tokens are received from that chain, its account balance is decreased.</p></li><li><p class="paragraph">If tokens are sent to or received from an upstream chain, its account balance is not modified.</p></li></ul></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="796139932%2FProperties%2F-350584692" anchor-label="MAX_PATH_LENGTH" id="796139932%2FProperties%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-m-a-x_-p-a-t-h_-l-e-n-g-t-h.html"><span><span>MAX_PATH_LENGTH</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="796139932%2FProperties%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">val </span><a href="-m-a-x_-p-a-t-h_-l-e-n-g-t-h.html">MAX_PATH_LENGTH</a><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token operator"> = </span>100</div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="585219071%2FFunctions%2F-350584692" anchor-label="after_apply_transfer" id="585219071%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="after_apply_transfer.html"><span><span>after_apply_transfer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="585219071%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@extendable </span><span class="token keyword">function </span><a href="after_apply_transfer.html">after_apply_transfer</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">sender_blockchain_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">sender_account_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">recipient_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">asset<span class="token operator">: </span><a href="../lib.ft4.core.assets/asset/index.html">asset</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a><span class="token punctuation">, </span></span><span class="parameter ">hop_index<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token punctuation">, </span></span><span class="parameter ">is_final<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a><span class="token punctuation">, </span></span><span class="parameter ">applied_transfers<span class="token operator">: </span><a href="applied_transfers/index.html">applied_transfers</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Extendable function that allows the developer to add more functionality to the <code class="lang-kotlin">apply_transfer</code> function, after the transfer is applied.</p><p class="paragraph">This allows, for example, to check that any condition is met after the transfer is applied on this chain.</p><p class="paragraph">If this function throws, the transfer will not be applied.</p><p class="paragraph">Throws when any extension of this function throws.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1403913166%2FFunctions%2F-350584692" anchor-label="after_crosschain_balance_change" id="1403913166%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="after_crosschain_balance_change.html"><span><span>after_crosschain_balance_change</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1403913166%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@extendable </span><span class="token keyword">function </span><a href="after_crosschain_balance_change.html">after_crosschain_balance_change</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">sender<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span></span><span class="parameter ">recipient<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span></span><span class="parameter ">asset<span class="token operator">: </span><a href="../lib.ft4.core.assets/asset/index.html">asset</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a><span class="token punctuation">, </span></span><span class="parameter ">has_changed_sender<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a><span class="token punctuation">, </span></span><span class="parameter ">has_changed_recipient<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Extendable function that allows the developer to add more functionality to the <code class="lang-kotlin">update_balances_if_needed</code> function, after the balance change is applied.</p><p class="paragraph">This allows, for example, to check that any condition is met after the balance change is applied. Or to modify the balance or amount after it is changed.</p><p class="paragraph">If this function throws, the balance change will not be applied.</p><p class="paragraph">Throws when any extension of this function throws.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-154628955%2FFunctions%2F-350584692" anchor-label="after_init_transfer" id="-154628955%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="after_init_transfer.html"><span><span>after_init_transfer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-154628955%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@extendable </span><span class="token keyword">function </span><a href="after_init_transfer.html">after_init_transfer</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">sender<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span></span><span class="parameter ">recipient_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">asset<span class="token operator">: </span><a href="../lib.ft4.core.assets/asset/index.html">asset</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a><span class="token punctuation">, </span></span><span class="parameter ">hops<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">deadline<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token punctuation">, </span></span><span class="parameter ">pending_transfer<span class="token operator">: </span><a href="pending_transfer/index.html">pending_transfer</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Extendable function that allows the developer to add more functionality to the <code class="lang-kotlin">init_transfer</code> function, after the transfer is initialised.</p><p class="paragraph">This allows, for example, to check that any condition is met after the transfer is initialised.</p><p class="paragraph">If this function throws, the transfer will not be initialized.</p><p class="paragraph">Throws when any extension of this function throws.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1072995520%2FFunctions%2F-350584692" anchor-label="before_apply_transfer" id="-1072995520%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="before_apply_transfer.html"><span><span>before_apply_transfer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1072995520%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@extendable </span><span class="token keyword">function </span><a href="before_apply_transfer.html">before_apply_transfer</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">sender_blockchain_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">sender_account_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">recipient_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">asset<span class="token operator">: </span><a href="../lib.ft4.core.assets/asset/index.html">asset</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a><span class="token punctuation">, </span></span><span class="parameter ">hop_index<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token punctuation">, </span></span><span class="parameter ">is_final<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Extendable function that allows the developer to add more functionality to the <code class="lang-kotlin">apply_transfer</code> function, before the transfer is applied.</p><p class="paragraph">This allows, for example,to check that any condition is met before the transfer is applied on this chain.</p><p class="paragraph">If this function throws, the transfer will not be applied.</p><p class="paragraph">Throws when any extension of this function throws.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-371131923%2FFunctions%2F-350584692" anchor-label="before_crosschain_balance_change" id="-371131923%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="before_crosschain_balance_change.html"><span><span>before_crosschain_balance_change</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-371131923%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@extendable </span><span class="token keyword">function </span><a href="before_crosschain_balance_change.html">before_crosschain_balance_change</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">sender<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span></span><span class="parameter ">recipient<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span></span><span class="parameter ">asset<span class="token operator">: </span><a href="../lib.ft4.core.assets/asset/index.html">asset</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a><span class="token punctuation">, </span></span><span class="parameter ">will_change_sender<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a><span class="token punctuation">, </span></span><span class="parameter ">will_change_recipient<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Extendable function that allows the developer to add more functionality to the <code class="lang-kotlin">update_balances_if_needed</code> function, before the balance change is applied.</p><p class="paragraph">This allows, for example, to check that any condition is met before the balance change is applied. Or to modify the balance or amount before it is changed.</p><p class="paragraph">If this function throws, the balance change will not be applied.</p><p class="paragraph">Throws when any extension of this function throws.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="68974916%2FFunctions%2F-350584692" anchor-label="before_init_transfer" id="68974916%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="before_init_transfer.html"><span><span>before_init_transfer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="68974916%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@extendable </span><span class="token keyword">function </span><a href="before_init_transfer.html">before_init_transfer</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">sender<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span></span><span class="parameter ">recipient_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">asset<span class="token operator">: </span><a href="../lib.ft4.core.assets/asset/index.html">asset</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a><span class="token punctuation">, </span></span><span class="parameter ">hops<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">deadline<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Extendable function that allows the developer to add more functionality to the <code class="lang-kotlin">init_transfer</code> function, before the transfer is initialised.</p><p class="paragraph">This allows, for example, to check that any condition is met before the transfer is initialised.</p><p class="paragraph">If this function throws, the transfer will not be initialized.</p><p class="paragraph">Throws when any extension of this function throws.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="410575984%2FFunctions%2F-350584692" anchor-label="create_on_crosschain_transfer" id="410575984%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="create_on_crosschain_transfer.html"><span><span>create_on_crosschain_transfer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="410575984%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@extendable </span><span class="token keyword">function </span><a href="create_on_crosschain_transfer.html">create_on_crosschain_transfer</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">sender_blockchain_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">sender_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">recipient_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">asset<span class="token operator">: </span><a href="../lib.ft4.core.assets/asset/index.html">asset</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">The crosschain equivalent of <code class="lang-kotlin">core.assets.create_on_internal_transfer</code>.</p><p class="paragraph">Throws if any extension of this function throws.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="168176695%2FFunctions%2F-350584692" anchor-label="ensure_blockchain_account" id="168176695%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="ensure_blockchain_account.html"><span><span>ensure_blockchain_account</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="168176695%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="ensure_blockchain_account.html">ensure_blockchain_account</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">blockchain_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a></div><div class="brief "><p class="paragraph">Returns the blockchain account with the given ID, creating it if needed.</p><p class="paragraph">Can only be called from an operation.</p><p class="paragraph">Throws when an account with given ID exists, but the type is not <code class="lang-kotlin">ACCOUNT_TYPE_BLOCKCHAIN</code>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1044715001%2FFunctions%2F-350584692" anchor-label="get_applied_transfers_filtered" id="-1044715001%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get_applied_transfers_filtered.html"><span><span>get_applied_transfers_filtered</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1044715001%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="get_applied_transfers_filtered.html">get_applied_transfers_filtered</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applied_transfers_filter<span class="token operator">: </span><a href="transfers_filter/index.html">transfers_filter</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_size<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_cursor<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="../lib.ft4.utils/pagination_result/index.html">pagination_result</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves all applied transfers based on the selected filter of transfers_filter, paginated</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="344352387%2FFunctions%2F-350584692" anchor-label="get_asset_origin_filtered" id="344352387%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get_asset_origin_filtered.html"><span><span>get_asset_origin_filtered</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="344352387%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="get_asset_origin_filtered.html">get_asset_origin_filtered</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">asset_origin_filter<span class="token operator">: </span><a href="asset_origin_filter/index.html">asset_origin_filter</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_size<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_cursor<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="../lib.ft4.utils/pagination_result/index.html">pagination_result</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves all asset origins based on the selected filter of asset_origin_filter, paginated</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="181366515%2FFunctions%2F-350584692" anchor-label="get_canceled_transfers_filtered" id="181366515%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get_canceled_transfers_filtered.html"><span><span>get_canceled_transfers_filtered</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="181366515%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="get_canceled_transfers_filtered.html">get_canceled_transfers_filtered</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">canceled_transfers_filter<span class="token operator">: </span><a href="transfers_filter/index.html">transfers_filter</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_size<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_cursor<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="../lib.ft4.utils/pagination_result/index.html">pagination_result</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves all canceled transfers based on the selected filter of transfers_filter, paginated</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-213686792%2FFunctions%2F-350584692" anchor-label="get_last_pending_transfer_for_account" id="-213686792%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get_last_pending_transfer_for_account.html"><span><span>get_last_pending_transfer_for_account</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-213686792%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="get_last_pending_transfer_for_account.html">get_last_pending_transfer_for_account</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">sender_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">target_blockchain_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">recipient_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">asset_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span class="token operator">(</span>tx_data<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span>op_index<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token punctuation">, </span>sender_account<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/immutable_mirror_struct/index.html">immutable_mirror_struct</a><span class="token operator">&lt;</span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token operator">&gt;</span><span class="token operator">)</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Retrieves only the last transfer that was not yet completed, based on the parameters specified.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1837348677%2FFunctions%2F-350584692" anchor-label="get_paginated_pending_transfers" id="1837348677%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get_paginated_pending_transfers.html"><span><span>get_paginated_pending_transfers</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1837348677%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="get_paginated_pending_transfers.html">get_paginated_pending_transfers</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">account_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">page_size<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_cursor<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="../lib.ft4.utils/pagination_result/index.html">pagination_result</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves all transfers that were not yet completed, paginated.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-480481658%2FFunctions%2F-350584692" anchor-label="get_pending_transfers_filtered" id="-480481658%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get_pending_transfers_filtered.html"><span><span>get_pending_transfers_filtered</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-480481658%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="get_pending_transfers_filtered.html">get_pending_transfers_filtered</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">pending_transfer_filter<span class="token operator">: </span><a href="pending_transfer_filter/index.html">pending_transfer_filter</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_size<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_cursor<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="../lib.ft4.utils/pagination_result/index.html">pagination_result</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves all pending transfers based on the selected filter of pending_transfer_filter, paginated</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="8459850%2FFunctions%2F-350584692" anchor-label="get_recalled_transfers_filtered" id="8459850%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get_recalled_transfers_filtered.html"><span><span>get_recalled_transfers_filtered</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="8459850%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="get_recalled_transfers_filtered.html">get_recalled_transfers_filtered</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">recalled_transfers_filter<span class="token operator">: </span><a href="transfers_filter/index.html">transfers_filter</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_size<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_cursor<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="../lib.ft4.utils/pagination_result/index.html">pagination_result</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves all recalled transfers based on the selected filter of transfers_filter, paginated</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1095891677%2FFunctions%2F-350584692" anchor-label="get_reverted_transfers_filtered" id="1095891677%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get_reverted_transfers_filtered.html"><span><span>get_reverted_transfers_filtered</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1095891677%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="get_reverted_transfers_filtered.html">get_reverted_transfers_filtered</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">reverted_transfer_filter<span class="token operator">: </span><a href="transfers_filter/index.html">transfers_filter</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_size<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_cursor<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="../lib.ft4.utils/pagination_result/index.html">pagination_result</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves all reverted transfers based on the selected filter of transfers_filter, paginated</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1006974926%2FFunctions%2F-350584692" anchor-label="get_unapplied_transfers_filtered" id="1006974926%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get_unapplied_transfers_filtered.html"><span><span>get_unapplied_transfers_filtered</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1006974926%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="get_unapplied_transfers_filtered.html">get_unapplied_transfers_filtered</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">unapplied_transfers_filter<span class="token operator">: </span><a href="transfers_filter/index.html">transfers_filter</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_size<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">page_cursor<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/list/index.html">list</a><span class="token operator">&lt;</span><a href="../lib.ft4.utils/pagination_result/index.html">pagination_result</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves all unapplied transfers based on the selected filter of transfers_filter, paginated</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1484840614%2FFunctions%2F-350584692" anchor-label="is_blockchain" id="1484840614%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is_blockchain.html"><span><span>is_blockchain</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1484840614%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="is_blockchain.html">is_blockchain</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">account_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a></div><div class="brief "><p class="paragraph">Whether a certain account is a blockchain account</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1379375547%2FFunctions%2F-350584692" anchor-label="is_create_on_crosschain_transfer_enabled" id="-1379375547%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is_create_on_crosschain_transfer_enabled.html"><span><span>is_create_on_crosschain_transfer_enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1379375547%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@extendable </span><span class="token keyword">function </span><a href="is_create_on_crosschain_transfer_enabled.html">is_create_on_crosschain_transfer_enabled</a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/boolean/index.html">boolean</a></div><div class="brief "><p class="paragraph">Returns whether crosschain transfers can be used to create new accounts. Developers should not generally extend this function, as it is handled by the account registration module. Importing the corresponding module should be enough.</p><p class="paragraph">Throws if any extension of this function throws.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-172068697%2FFunctions%2F-350584692" anchor-label="map_applied_transfer" id="-172068697%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="map_applied_transfer.html"><span><span>map_applied_transfer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-172068697%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="map_applied_transfer.html">map_applied_transfer</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applied_transfers<span class="token operator">: </span><a href="applied_transfers/index.html">applied_transfers</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span class="token operator">(</span>init_tx_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span>init_op_index<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token punctuation">, </span>transaction_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span>op_index<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token operator">)</span></div><div class="brief "><p class="paragraph">Maps an applied_transfers into a readable format for the frontend.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="422997631%2FFunctions%2F-350584692" anchor-label="map_asset_origin" id="422997631%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="map_asset_origin.html"><span><span>map_asset_origin</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="422997631%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="map_asset_origin.html">map_asset_origin</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">asset_origin<span class="token operator">: </span><a href="asset_origin/index.html">asset_origin</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span class="token operator">(</span><span class="token operator">(</span>id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span>name<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span>symbol<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span>decimals<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token punctuation">, </span>blockchain_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span>icon_url<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span>type<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span>supply<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a><span class="token operator">)</span><span class="token punctuation">, </span>origin_blockchain_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token operator">)</span></div><div class="brief "><p class="paragraph">Maps an asset_origin into a readable format for the frontend.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1283418943%2FFunctions%2F-350584692" anchor-label="map_pending_transfer" id="-1283418943%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="map_pending_transfer.html"><span><span>map_pending_transfer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1283418943%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="map_pending_transfer.html">map_pending_transfer</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">pending_transfer<span class="token operator">: </span><a href="pending_transfer/index.html">pending_transfer</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span class="token operator">(</span>tx_data<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span>op_index<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token punctuation">, </span>sender_account<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/immutable_mirror_struct/index.html">immutable_mirror_struct</a><span class="token operator">&lt;</span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token operator">&gt;</span><span class="token operator">)</span></div><div class="brief "><p class="paragraph">Maps a pending_transfer into a readable format for the frontend.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="529904567%2FFunctions%2F-350584692" anchor-label="map_transfer" id="529904567%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="map_transfer.html"><span><span>map_transfer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="529904567%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="map_transfer.html">map_transfer</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">init_tx_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">init_op_index<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span class="token operator">(</span>init_tx_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span>init_op_index<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token operator">)</span></div><div class="brief "><p class="paragraph">Maps a transfer's init_tx_rid and init_op_index into a readable format for the frontend.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2015421307%2FFunctions%2F-350584692" anchor-label="recall_on_crosschain_transfer" id="-2015421307%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="recall_on_crosschain_transfer.html"><span><span>recall_on_crosschain_transfer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2015421307%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">@extendable </span><span class="token keyword">function </span><a href="recall_on_crosschain_transfer.html">recall_on_crosschain_transfer</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">sender_blockchain_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">sender_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">transfer_tx_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">transfer_op_index<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">The crosschain equivalent of <code class="lang-kotlin">core.assets.recall_on_internal_transfer</code>.</p><p class="paragraph">Throws if any extension of this function throws.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

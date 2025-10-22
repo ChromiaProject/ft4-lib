@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>authenticate_and_return_context</title>
+    <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="member" id="content" pageIds="FT4 Library::lib.ft4.core.auth//authenticate_and_return_context/#/PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../index.html">FT4 Library</a><span class="delimiter">/</span><a href="index.html">lib.ft4.core.auth</a><span class="delimiter">/</span><span class="current">authenticate_and_return_context</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>authenticate_and_return_context</span></span></h1>
+  </div>
+  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="authenticate_and_return_context.html">authenticate_and_return_context</a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span class="token operator">(</span>account<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span>used_auth_descriptor<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account_auth_descriptor/index.html">account_auth_descriptor</a><span class="token punctuation">, </span>deleted_descriptors<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/set/index.html">set</a><span class="token operator">&lt;</span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/immutable_mirror_struct/index.html">immutable_mirror_struct</a><span class="token operator">&lt;</span><a href="../lib.ft4.core.accounts/account_auth_descriptor/index.html">account_auth_descriptor</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token operator">)</span><span class="clearfix"><span class="floating-right">(<a href="https://gitlab.com/chromaway/ft4-lib/src/development/rell/src/lib/ft4/core/auth/authentication.rell#lines-110">source</a>)</span></span></div><p class="paragraph">Verifies that:</p><ol><li><p class="paragraph">the transaction is properly signed</p></li><li><p class="paragraph">the signer(s) is allowed to call that operation in the name of an account</p></li><li><p class="paragraph">the account is not currently rate limited</p></li></ol><p class="paragraph">For point 2, auth flags of the auth descriptor that signed the operation are checked.</p><p class="paragraph">This function expects to find an auth operation before the one we're currently in. That operation receives as parameters the account the user wants to access, and the auth descriptor that allows them to access it.</p><p class="paragraph">Given that information, this function checks that the requirements for the current operation (found in the <code class="lang-kotlin">_auth_handler</code>) are satisfied.</p><p class="paragraph">It will then delete all expired auth descriptors, except the one being used.</p><p class="paragraph">Can only be called from an operation.</p><p class="paragraph">The code of this function can be expanded by the developers by extending either of <code class="lang-kotlin">before_authenticate</code> and <code class="lang-kotlin">after_authenticate</code>.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;MISSING AUTH OP&quot;</code> if there is no previous operation in the transaction, or it is not an auth operation.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;INVALID AUTH DESCRIPTOR&quot;</code> if the authenticating auth descriptor is not accepted by the <code class="lang-kotlin">_auth_handler</code>'s <code class="lang-kotlin">resolver</code>.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;EXPIRED AUTH DESCRIPTOR&quot;</code> if the auth descriptor used to authenticate has expired.</p><p class="paragraph">Throws when the user is for some reason not allowed to call this operation. The most common reasons include:</p><ul><li><p class="paragraph">the account the user wants to access does not exist</p></li><li><p class="paragraph">the auth descriptor that the user uses to authenticate does not exist, or it is not   attached to the account that is being accessed</p></li><li><p class="paragraph">the account does not have enough rate limit points</p></li><li><p class="paragraph">the rules for the auth descriptor cannot be parsed</p></li><li><p class="paragraph">the requirements for the operation cannot be found</p></li><li><p class="paragraph">the auth descriptor does not give the user sufficient permissions given the operation's   requirements</p></li><li><p class="paragraph">any additional requirement added by extending the <code class="lang-kotlin">before_authenticate</code> and   <code class="lang-kotlin">after_authenticate</code> functions is infringed.</p></li><li><p class="paragraph">any part of the <code class="lang-kotlin">_auth_handler</code> is broken (the message is improperly formatted, or either   of the two functions found in the <code class="lang-kotlin">message_formatter</code> or <code class="lang-kotlin">resolver</code> fields throw)</p></li></ul><span class="kdoc-tag"><h4 class="">Return</h4><p class="paragraph">the context for the user authentication :</p><ul><li><p class="paragraph">the account they authenticated as,</p></li><li><p class="paragraph">the auth descriptor used to authenticate,</p></li><li><p class="paragraph">a set of deleted descriptors that had expired prior to this function being called and had to be deleted</p></li></ul></span><h4 class="">See also</h4><div class="table"><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span>core.</span><wbr></wbr><span>accounts.</span><wbr></wbr><span>rl_state</span></div></span></div><div><div class="title"><p class="paragraph">for more information on rate limiting</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span>external.</span><wbr></wbr><span>auth.</span><wbr></wbr><span>evm_auth</span></div></span></div><div><div class="title"><p class="paragraph">for evm authorization</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span>external.</span><wbr></wbr><span>auth.</span><wbr></wbr><span>ft_auth</span></div></span></div><div><div class="title"><p class="paragraph">for FT authorization</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span><span>is_auth_op</span></span></div></span></div><div><div class="title"><p class="paragraph">for more information on what operations are auth operations</p></div></div></div></div><div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><span><span>_auth_handler</span></span></div></span></div><div><div class="title"><p class="paragraph">for more information on the requirements a user must meet to be able to call a certain operation</p></div></div></div></div></div></div></div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

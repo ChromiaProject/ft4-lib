@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>lib.ft4.core.assets.Unsafe</title>
+    <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../styles/chromia-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../index.html">
+                            FT4 Library
+                    </a>
+            </div>
+            <div class="library-version">
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector wasm-like" data-active="" data-filter="main/dapp">dapp</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="package" id="content" pageIds="FT4 Library::lib.ft4.core.assets.Unsafe////PointingToDeclaration//-350584692">
+  <div class="breadcrumbs"><a href="../../index.html">FT4 Library</a><span class="delimiter">/</span><span class="current">lib.ft4.core.assets.Unsafe</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Namespace</span></span> <span><span>Unsafe</span></span></h1>
+    <div class="platform-hinted UnderCoverText" data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><p class="paragraph"></p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="FUNCTION,EXTENSION_FUNCTION">Functions</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="300040777%2FFunctions%2F-350584692" anchor-label="burn" id="300040777%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="burn.html"><span><span>burn</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="300040777%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="burn.html">burn</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">account<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span></span><span class="parameter ">asset<span class="token operator">: </span><a href="../lib.ft4.core.assets/asset/index.html">asset</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Deletes tokens from an account's balance, decreasing the total supply by the amount being burned. It's marked as Unsafe, as it doesn't check who is authorizing the burning, meaning any user could burn tokens from any account if this was exposed.</p><p class="paragraph">The functionality of <code class="lang-kotlin">burn</code> can be expanded by using <code class="lang-kotlin">before_burn</code> and <code class="lang-kotlin">after_burn</code></p><p class="paragraph">Throws if the required assets cannot be burned. Common cases include:</p><ul><li><p class="paragraph">the amount to burn is not in the accepted range (0; 2^256) (exclusive)</p></li><li><p class="paragraph">some conditions added in development through burn extensions (<code class="lang-kotlin">before_burn</code> or   <code class="lang-kotlin">after_burn</code>) aren't met</p></li><li><p class="paragraph">the account balance is lower than <code class="lang-kotlin">amount</code></p></li></ul><p class="paragraph">Throws <code class="lang-kotlin">&quot;UNAUTHORIZED BURNING&quot;</code> if the asset's issuing blockchain is not this blockchain</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;INSUFFICIENT BALANCE&quot;</code> if the account does not have enough of the asset to burn</p><p class="paragraph">Can only be called from an operation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1644959396%2FFunctions%2F-350584692" anchor-label="mint" id="-1644959396%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="mint.html"><span><span>mint</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1644959396%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="mint.html">mint</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">account<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span></span><span class="parameter ">asset<span class="token operator">: </span><a href="../lib.ft4.core.assets/asset/index.html">asset</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Creates new tokens, increasing the total supply by the amount being minted, and gives them to an account. It's marked as Unsafe, as it doesn't check who is authorizing the minting, meaning any user could mint tokens to any account if this was exposed.</p><p class="paragraph">The functionality of <code class="lang-kotlin">mint</code> can be expanded by using <code class="lang-kotlin">before_mint</code> and <code class="lang-kotlin">after_mint</code></p><p class="paragraph">Throws <code class="lang-kotlin">&quot;UNAUTHORIZED MINTING&quot;</code> if the asset's issuing blockchain is not this blockchain</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;INVALID AMOUNT&quot;</code> if the asset's total supply, increased by the amount being minted, is higher than 2^256.</p><p class="paragraph">Throws if the required assets cannot be minted. Common cases include:</p><ul><li><p class="paragraph">the amount to mint is not in the accepted range (0; 2^256) (exclusive)</p></li><li><p class="paragraph">some conditions added in development through mint extensions (<code class="lang-kotlin">before_mint</code> or   <code class="lang-kotlin">after_mint</code>) aren't met</p></li></ul><p class="paragraph">Can only be called from an operation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2028257206%2FFunctions%2F-350584692" anchor-label="recall_unclaimed_transfer" id="-2028257206%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="recall_unclaimed_transfer.html"><span><span>recall_unclaimed_transfer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2028257206%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="recall_unclaimed_transfer.html">recall_unclaimed_transfer</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">account<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span></span><span class="parameter ">transfer_tx_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">transfer_op_index<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Allows recalling a transfer that was sent to a non-existing account and was not used to create the account.</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;RECALL INACTIVE&quot;</code> if <code class="lang-kotlin">is_create_on_internal_transfer_enabled</code> returns false.</p><p class="paragraph">Throws when any extension of <code class="lang-kotlin">recall_on_internal_transfer</code> throws.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-343537787%2FFunctions%2F-350584692" anchor-label="register_asset" id="-343537787%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="register_asset.html"><span><span>register_asset</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-343537787%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="register_asset.html">register_asset</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">name<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span></span><span class="parameter ">symbol<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span></span><span class="parameter ">decimals<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/integer/index.html">integer</a><span class="token punctuation">, </span></span><span class="parameter ">blockchain_rid<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">icon_url<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a><span class="token punctuation">, </span></span><span class="parameter ">type<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/text/index.html">text</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../lib.ft4.core.assets/asset/index.html">asset</a></div><div class="brief "><p class="paragraph">Registers a new asset on this chain. It's marked as Unsafe, as it allows creating entities and its usage must be restricted to ensure disk usage doesn't grow indefinitely. The starting supply will be 0.</p><p class="paragraph">Throws if the input parameters are invalid. Common cases include:</p><ul><li><p class="paragraph"><code class="lang-kotlin">blockchain_rid</code> is not 32 bytes long</p></li><li><p class="paragraph">strings are longer than 1024 characters</p></li><li><p class="paragraph">type is empty</p></li><li><p class="paragraph">uniqueness resolver is longer than 1024 bytes</p></li><li><p class="paragraph">decimals is not in the accepted range 0, 78 (inclusive)</p></li><li><p class="paragraph"><code class="lang-kotlin">icon_url</code> is not a valid URL</p></li></ul><p class="paragraph">Can only be called from an operation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="900783111%2FFunctions%2F-350584692" anchor-label="transfer" id="900783111%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="transfer.html"><span><span>transfer</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="900783111%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="transfer.html">transfer</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">from<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span></span><span class="parameter ">to<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span></span><span class="parameter ">asset<span class="token operator">: </span><a href="../lib.ft4.core.assets/asset/index.html">asset</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Transfers tokens to an existing account. Marked as Unsafe because it does not check whether the account authorized the transfer.</p><p class="paragraph">Throws if the required assets cannot be transferred. Common cases include:</p><ul><li><p class="paragraph">the amount to transfer is not in the accepted range (0, 2^256) (exclusive)</p></li><li><p class="paragraph">some conditions added in development through transfer extensions (<code class="lang-kotlin">before_transfer</code> or   <code class="lang-kotlin">after_transfer</code>) aren't met</p></li><li><p class="paragraph">the sender account's balance is lower than <code class="lang-kotlin">amount</code></p></li></ul><p class="paragraph">Throws <code class="lang-kotlin">&quot;SELF TRANSFER&quot;</code> if <code class="lang-kotlin">from</code> equals <code class="lang-kotlin">to</code></p><p class="paragraph">Can only be called from operations.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="514138927%2FFunctions%2F-350584692" anchor-label="transfer_to_recipient_id" id="514138927%2FFunctions%2F-350584692" data-filterable-set="main/dapp"></a>
+          <div class="table-row" data-filterable-current="main/dapp" data-filterable-set="main/dapp">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="transfer_to_recipient_id.html"><span><span>transfer_to_recipient_id</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="514138927%2FFunctions%2F-350584692"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable="main/dapp"><div class="symbol monospace"><span class="token keyword">function </span><a href="transfer_to_recipient_id.html">transfer_to_recipient_id</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">sender<span class="token operator">: </span><a href="../lib.ft4.core.accounts/account/index.html">account</a><span class="token punctuation">, </span></span><span class="parameter ">recipient_id<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/byte_array/index.html">byte_array</a><span class="token punctuation">, </span></span><span class="parameter ">asset<span class="token operator">: </span><a href="../lib.ft4.core.assets/asset/index.html">asset</a><span class="token punctuation">, </span></span><span class="parameter ">amount<span class="token operator">: </span><a href="https://docs.chromia.com/pages/rell/-rell -system -library/[root]/big_integer/index.html">big_integer</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Transfers tokens to a certain recipient. If the recipient exists, a normal transfer will take place. Otherwise, if account creation on transfer is enabled, the account creation procedure will be started. Marked as Unsafe because it does not check whether the account authorized the transfer.</p><p class="paragraph">Throws if the required assets cannot be transferred. Common cases include:</p><ul><li><p class="paragraph">the amount to transfer is not in the accepted range (0, 2^256) (exclusive)</p></li><li><p class="paragraph">some conditions added in development through transfer extensions (<code class="lang-kotlin">before_transfer</code> or   <code class="lang-kotlin">after_transfer</code>) aren't met</p></li><li><p class="paragraph">the sender account's balance is lower than <code class="lang-kotlin">amount</code></p></li></ul><p class="paragraph">Throws <code class="lang-kotlin">&quot;INVALID RECIPIENT ID&quot;</code> if the recipient's id length is longer than 1024 bytes</p><p class="paragraph">Throws <code class="lang-kotlin">&quot;INVALID RECIPIENT&quot;</code> if the recipient does not exist and <code class="lang-kotlin">is_create_on_internal_transfer_enabled</code> returns false.</p><p class="paragraph">Can only be called from operations.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Chromia</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
