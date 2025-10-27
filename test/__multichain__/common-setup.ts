@@ -17,7 +17,7 @@ import {
   createConnection,
   createSession,
 } from "@ft4/ft-session";
-import { IClient, MERKLE_HASH_VERSIONS } from "postchain-client";
+import { IClient } from "postchain-client";
 
 export type TestContext = {
   connection0: Connection;
@@ -55,7 +55,6 @@ const gen = numberGenerator();
 export async function setupTestEnvironment(
   testName: string,
   mintAmount?: Amount,
-  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
 ): Promise<TestContext> {
   const num = gen.next().value;
 
@@ -67,7 +66,6 @@ export async function setupTestEnvironment(
     symbol,
     0,
     mintAmount,
-    merkleHashVersion,
   )) as TestContext;
 }
 
@@ -76,34 +74,19 @@ export async function setupTestEnvironmentWithAssetInfo(
   assetSymbol: string,
   assetDecimals: number,
   mintAmount?: Amount,
-  merkleHashVersion?: number,
   skipAccounts: [chain1: boolean, chain2: boolean] = [false, false],
 ): Promise<TestContextWithOptionalAccounts> {
-  const { multichain00, multichain01, multichain02 } = await fetchBlockchains(
-    false,
-    merkleHashVersion,
-  );
+  const { multichain00, multichain01, multichain02 } =
+    await fetchBlockchains(false);
 
   const connection0 = createConnection(
-    await createChromiaClientToMultichain(
-      multichain00.rid,
-      NODE_URL,
-      merkleHashVersion,
-    ),
+    await createChromiaClientToMultichain(multichain00.rid, NODE_URL),
   );
   const connection1 = createConnection(
-    await createChromiaClientToMultichain(
-      multichain01.rid,
-      NODE_URL,
-      merkleHashVersion,
-    ),
+    await createChromiaClientToMultichain(multichain01.rid, NODE_URL),
   );
   const connection2 = createConnection(
-    await createChromiaClientToMultichain(
-      multichain02.rid,
-      NODE_URL,
-      merkleHashVersion,
-    ),
+    await createChromiaClientToMultichain(multichain02.rid, NODE_URL),
   );
 
   const asset = await getNewAsset(
@@ -146,8 +129,8 @@ export async function setupTestEnvironmentWithAssetInfo(
 
   await mint(
     connection0.client,
-    adminUser(connection0.client.config.merkleHashVersion).signatureProvider,
-    account0!.id,
+    adminUser().signatureProvider,
+    account0.id,
     asset.id,
     amountToMint,
   );
@@ -179,7 +162,7 @@ async function getOrRegisterCrosschainAsset(
   try {
     await registerCrosschainAsset(
       client,
-      adminUser(client.config.merkleHashVersion).signatureProvider,
+      adminUser().signatureProvider,
       assetId,
       originMultichainRid,
     );

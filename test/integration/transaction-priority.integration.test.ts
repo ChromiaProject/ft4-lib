@@ -21,7 +21,7 @@ describe("Transaction priority", () => {
 
   describe("Transaction queue", () => {
     it("rejects transactions with too many operations with specific error message", async () => {
-      const user = TestUser();
+      const user = TestUser(_connection);
 
       const account = await AccountBuilder.account(_connection)
         .withSigner(user.signatureProvider)

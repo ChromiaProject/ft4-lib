@@ -1,4 +1,5 @@
 import { KeyStore } from "@ft4/authentication";
+import { MerkleHashVersionSource } from "@ft4/utils";
 import { GTX, RawGtx } from "postchain-client";
 
 /**
@@ -17,7 +18,11 @@ export interface FtKeyStore extends KeyStore, FtSigner {
   /**
    * Signs a transaction
    * @param transaction - the transaction to sign
+   * @param merkleHashVersionSource - the source of the merkle hash version
    * @returns the signed transaction, serialized to a `Buffer`
    */
-  sign(transaction: GTX | RawGtx): Promise<Buffer>;
+  sign(
+    transaction: GTX | RawGtx,
+    merkleHashVersionSource: MerkleHashVersionSource,
+  ): Promise<Buffer>;
 }

@@ -17,11 +17,7 @@ import {
   createConnection,
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
-import {
-  IClient,
-  MERKLE_HASH_VERSIONS,
-  newSignatureProvider,
-} from "postchain-client";
+import { IClient, newSignatureProvider } from "postchain-client";
 
 let asset: Asset;
 let connection: Connection;
@@ -43,7 +39,7 @@ describe("Transfer history", () => {
 
   describe("Transfer history iterator", () => {
     it("should have one transfer history entry when mint is made", async () => {
-      const keyPair = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+      const keyPair = newSignatureProvider();
 
       const account1 = await AccountBuilder.account(connection)
         .withSigner(keyPair)
@@ -62,7 +58,7 @@ describe("Transfer history", () => {
     });
 
     it("should have two transfer history entry when mint + transfer is made", async () => {
-      const keyPair = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+      const keyPair = newSignatureProvider();
 
       const account1 = await AccountBuilder.account(connection)
         .withSigner(keyPair)
@@ -126,7 +122,7 @@ describe("Transfer history", () => {
     });
 
     it("includes the name of the operation causing the history entry", async () => {
-      const keyPair = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+      const keyPair = newSignatureProvider();
 
       const account1 = await AccountBuilder.account(connection)
         .withSigner(keyPair)
@@ -151,7 +147,7 @@ describe("Transfer history", () => {
     });
 
     it("should have three transfer history entries if mint + two transfers made", async () => {
-      const user = TestUser();
+      const user = TestUser(connection);
 
       const account1 = await AccountBuilder.account(connection)
         .withSigner(user.signatureProvider)
@@ -179,7 +175,7 @@ describe("Transfer history", () => {
     });
 
     it("should have more than one page if number of entries is greater than page size", async () => {
-      const user = TestUser();
+      const user = TestUser(connection);
 
       const account1 = await AccountBuilder.account(connection)
         .withSigner(user.signatureProvider)
@@ -207,7 +203,7 @@ describe("Transfer history", () => {
     });
 
     it("is possible to get transfer history from via the IAccount interface", async () => {
-      const user = TestUser();
+      const user = TestUser(connection);
 
       const account1 = await AccountBuilder.account(connection)
         .withSigner(user.signatureProvider)
@@ -303,7 +299,7 @@ describe("Transfer history", () => {
   });
 
   it("is possible to get a single entry from IAccount interface", async () => {
-    const user = TestUser();
+    const user = TestUser(connection);
 
     const account1 = await AccountBuilder.account(connection)
       .withSigner(user.signatureProvider)

@@ -1,6 +1,7 @@
 import {
   AccountBuilder,
   singleSigUser as TestUser,
+  User,
   adminUser,
   createTestAuthDescriptor,
   getNewAsset,
@@ -23,16 +24,12 @@ import {
   createConnection,
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
-import {
-  IClient,
-  MERKLE_HASH_VERSIONS,
-  newSignatureProvider,
-} from "postchain-client";
+import { IClient, newSignatureProvider } from "postchain-client";
 
 let asset: Asset;
 let connection: Connection;
 let client: IClient;
-const admin = adminUser();
+let admin: User;
 
 describe("Transfer", () => {
   const getClient = useChromiaNode();
@@ -41,6 +38,7 @@ describe("Transfer", () => {
     client = getClient();
     connection = createConnection(client);
     asset = await getNewAsset(connection.client, "transfer", "TRANSFER", 5);
+    admin = adminUser();
   });
 
   it("should succeed when balance is higher than amount to transfer", async () => {
@@ -119,8 +117,8 @@ describe("Transfer", () => {
   });
 
   it("should succeed if transferring tokens to a multisig account", async () => {
-    const user2 = TestUser();
-    const user3 = TestUser();
+    const user2 = TestUser(client);
+    const user3 = TestUser(client);
 
     const account1 = await AccountBuilder.account(connection)
       .withBalance(asset, 200)
@@ -161,7 +159,7 @@ describe("Transfer", () => {
   });
 
   it("should succeed burning tokens", async () => {
-    const keyPair = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const keyPair = newSignatureProvider();
 
     const account = await AccountBuilder.account(connection)
       .withSigner(keyPair)

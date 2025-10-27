@@ -25,7 +25,7 @@ describe("Rate Limit", () => {
 
   describe("Test the account rate limit", () => {
     it("should show 10 at request count", async () => {
-      const user = TestUser();
+      const user = TestUser(_connection);
 
       const account = await AccountBuilder.account(_connection)
         .withSigner(user.signatureProvider)
@@ -37,7 +37,7 @@ describe("Rate Limit", () => {
     });
 
     it("can make 4 operations", async () => {
-      const user = TestUser();
+      const user = TestUser(_connection);
 
       const account = await AccountBuilder.account(_connection)
         .withSigner(user.signatureProvider)
@@ -58,7 +58,7 @@ describe("Rate Limit", () => {
     });
 
     it("can't make another operation because she has 0 points", async () => {
-      const user = TestUser();
+      const user = TestUser(_connection);
 
       const account = await AccountBuilder.account(_connection)
         .withSigner(user.signatureProvider)

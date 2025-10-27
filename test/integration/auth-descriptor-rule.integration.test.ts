@@ -29,11 +29,7 @@ import {
   createConnection,
   createSession,
 } from "@ft4/ft-session";
-import {
-  IClient,
-  MERKLE_HASH_VERSIONS,
-  newSignatureProvider,
-} from "postchain-client";
+import { IClient, newSignatureProvider } from "postchain-client";
 
 let _connection: Connection;
 let asset: Asset;
@@ -51,7 +47,7 @@ async function getAuthedAccountsFromAuthDescriptorRule(
 ): Promise<
   [limitedAccount: AuthenticatedAccount, accountAdmin: AuthenticatedAccount]
 > {
-  const user2 = testUser(rule);
+  const user2 = testUser(_connection, rule);
   const accountAdmin = await sourceAccount();
 
   await accountAdmin.addAuthDescriptor(user2.authDescriptor, user2.keyStore);
@@ -88,7 +84,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should add auth descriptors", async () => {
-    const user3 = testUser(lessOrEqual(opCount(1)));
+    const user3 = testUser(_connection, lessOrEqual(opCount(1)));
 
     const [, accountAdmin] = await getAuthedAccountsFromAuthDescriptorRule(
       lessOrEqual(opCount(1)),
@@ -117,15 +113,15 @@ describe("Auth Descriptor Rule", () => {
     addRateLimitPoints(client, adminUser().signatureProvider, accountId, 1);
 
     const user1 = {
-      signatureProvider: newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, kp1),
+      signatureProvider: newSignatureProvider(kp1),
       authDescriptor: ad1,
     };
     const user2 = {
-      signatureProvider: newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, kp2),
+      signatureProvider: newSignatureProvider(kp2),
       authDescriptor: ad2,
     };
     const user3 = {
-      signatureProvider: newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, kp3),
+      signatureProvider: newSignatureProvider(kp3),
       authDescriptor: ad3,
     };
 
@@ -190,11 +186,11 @@ describe("Auth Descriptor Rule", () => {
     const accountId = await createAccount(_connection.client, ad1);
 
     const user1 = {
-      signatureProvider: newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, kp1),
+      signatureProvider: newSignatureProvider(kp1),
       authDescriptor: ad1,
     };
     const user2 = {
-      signatureProvider: newSignatureProvider(MERKLE_HASH_VERSIONS.ONE, kp2),
+      signatureProvider: newSignatureProvider(kp2),
       authDescriptor: ad2,
     };
 

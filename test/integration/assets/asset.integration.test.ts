@@ -11,12 +11,7 @@ import { Connection, createConnection } from "@ft4/ft-session";
 import { op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { randomBytes } from "crypto";
-import {
-  IClient,
-  MERKLE_HASH_VERSIONS,
-  formatter,
-  gtv,
-} from "postchain-client";
+import { IClient, formatter, gtv } from "postchain-client";
 
 let connection: Connection;
 let client: IClient;
@@ -99,7 +94,7 @@ describe("Asset", () => {
     );
     const assetId = gtv.gtvHash(
       [assetName, blockchainRid],
-      MERKLE_HASH_VERSIONS.ONE,
+      connection.client.config.merkleHashVersion,
     );
     await getNewAsset(client, assetName, assetSymbol, 3);
 
@@ -116,7 +111,7 @@ describe("Asset", () => {
     const assetSymbol = "ASSET_SYMBOL";
     const assetId = gtv.gtvHash(
       [assetName, blockchainRid],
-      MERKLE_HASH_VERSIONS.ONE,
+      connection.client.config.merkleHashVersion,
     );
     const iconUrl = "http://example.com/";
     await getNewAsset(client, assetName, assetSymbol, 3, iconUrl);
@@ -130,7 +125,7 @@ describe("Asset", () => {
     const crosschainAssetType = "FT4";
     const crosschainRes = gtv.gtvHash(
       [crosschainAssetName, crosschainBlockchainRid],
-      MERKLE_HASH_VERSIONS.ONE,
+      connection.client.config.merkleHashVersion,
     );
 
     await registerCrosschainAsset(

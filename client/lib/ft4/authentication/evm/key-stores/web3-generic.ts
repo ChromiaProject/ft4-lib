@@ -29,6 +29,10 @@ export async function createGenericEvmKeyStore(config: {
    * Is this an interactive keystore
    */
   isInteractive: boolean | undefined;
+  /**
+   * The merkle hash version to use
+   */
+  merkleHashVersion: number;
 }): Promise<EvmKeyStore> {
   const address = Buffer.from(config.address.slice(2), "hex");
   const keyStore = Object.freeze({

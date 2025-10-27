@@ -4,8 +4,14 @@ import admin_crosschain: lib.ft4.admin.crosschain;
 import lib.ft4.crosschain;
 import test_op: tests.operations;
 import lib.ft4.test.operations;
+
 import lib.ft4.accounts.strategies.open; //00
+import lib.ft4.accounts.strategies.import_strategy; //00
+
 import lib.ft4.accounts.strategies.open; //01
-import lib.ft4.accounts.strategies.open; //02
+import lib.ft4.accounts.strategies.import_strategy; //01
 import lib.ft4.accounts.strategies.transfer.fee; //01
 import lib.ft4.accounts.strategies.transfer.subscription; //01
+
+import lib.ft4.accounts.strategies.import_strategy; //02
+import lib.ft4.accounts.strategies.open; //02

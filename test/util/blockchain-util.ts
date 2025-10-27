@@ -20,7 +20,6 @@ export const NODE_URL = "http://localhost:7740";
 export async function createChromiaClientToMultichain(
   blockchainRid: BufferId,
   nodeUrl?: string,
-  merkleHashVersion?: number,
 ) {
   // const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
 
@@ -29,22 +28,16 @@ export async function createChromiaClientToMultichain(
   return createClient({
     directoryNodeUrlPool: url,
     blockchainRid: blockchainRid.toString("hex"),
-    merkleHashVersion: merkleHashVersion,
   });
 }
 
-export async function createChromiaClient(
-  nodeUrl?: string,
-  iid = 0,
-  merkleHashVersion?: number,
-) {
+export async function createChromiaClient(nodeUrl?: string, iid = 0) {
   const url =
     // nodeUrl || process.env.TEST_NODE_URL || "http://thedockerhost:7740";
     nodeUrl || process.env.TEST_NODE_URL || NODE_URL;
   return createClient({
     nodeUrlPool: url,
     blockchainIid: iid,
-    merkleHashVersion: merkleHashVersion,
   });
 }
 
@@ -55,9 +48,7 @@ export async function getNewAsset(
   decimals = 0,
   iconUrl = "",
 ): Promise<Asset> {
-  const adminSignatureProvider = adminUser(
-    client.config.merkleHashVersion,
-  ).signatureProvider;
+  const adminSignatureProvider = adminUser().signatureProvider;
 
   try {
     await registerAsset(
@@ -146,7 +137,6 @@ let blockchainsCache: { [key: string]: Blockchain } | null = null;
  */
 export async function fetchBlockchains(
   force = false,
-  merkleHashVersion?: number,
 ): Promise<{ [key: string]: Blockchain }> {
   if (blockchainsCache && !force) {
     return blockchainsCache;
@@ -155,7 +145,6 @@ export async function fetchBlockchains(
     // nodeUrlPool: "http://thedockerhost:7740",
     nodeUrlPool: NODE_URL,
     blockchainIid: 0,
-    merkleHashVersion: merkleHashVersion,
   });
 
   const result = await client.query<

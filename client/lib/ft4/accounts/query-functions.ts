@@ -104,9 +104,11 @@ export async function getRateLimit(
 export function createAccountObject(
   connection: Connection,
   accountId: BufferId,
+  type?: string,
 ): Account {
   return Object.freeze({
     connection,
+    type,
     id: formatter.ensureBuffer(accountId),
     blockchainRid: formatter.toBuffer(connection.client.config.blockchainRid),
     getBalanceByAssetId: (assetId: BufferId) =>
@@ -194,7 +196,7 @@ export async function getAccountsFiltered(
     connection,
     accountsFiltered(filter, limit, cursor),
     (accounts) =>
-      accounts.map((acc) => createAccountObject(connection, acc.id)),
+      accounts.map((acc) => createAccountObject(connection, acc.id, acc.type)),
   );
 }
 
@@ -365,10 +367,15 @@ export async function getAccountLinksFiltered(
     accountLinksFiltered(accountLinkFilter, limit, cursor),
     (accountLinkResponses) =>
       accountLinkResponses.map((accountLinkResponse) => ({
-        account: createAccountObject(connection, accountLinkResponse.account),
+        account: createAccountObject(
+          connection,
+          accountLinkResponse.account,
+          accountLinkResponse.account_type,
+        ),
         secondary: createAccountObject(
           connection,
           accountLinkResponse.secondary,
+          accountLinkResponse.secondary_type,
         ),
       })),
   );
@@ -415,7 +422,7 @@ export async function getById(
 
   if (Buffer.isBuffer(account)) return createAccountObject(connection, account);
 
-  return createAccountObject(connection, account.id);
+  return createAccountObject(connection, account.id, account.type);
 }
 
 /**
@@ -431,11 +438,11 @@ export async function getBySigner(
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Account>> {
-  return retrievePaginatedEntity<Account, { id: Buffer }>(
+  return retrievePaginatedEntity<Account, { id: Buffer; type: string }>(
     connection,
     accountsBySigner(id, limit, cursor),
     (accounts) =>
-      accounts.map((acc) => createAccountObject(connection, acc.id)),
+      accounts.map((acc) => createAccountObject(connection, acc.id, acc.type)),
   );
 }
 

@@ -35,14 +35,7 @@ import {
   transactionBuilder,
 } from "@ft4/transaction-builder";
 import { getExpectedAccountIdFromMainAuthDescriptor, op } from "@ft4/utils";
-import {
-  IClient,
-  KeyPair,
-  MERKLE_HASH_VERSIONS,
-  encryption,
-  gtv,
-  gtx,
-} from "postchain-client";
+import { IClient, KeyPair, encryption, gtv, gtx } from "postchain-client";
 
 describe("Transaction Signing", () => {
   let connection: Connection;
@@ -112,13 +105,13 @@ describe("Transaction Signing", () => {
       const evmKeyStore = createInMemoryEvmKeyStore(keyPair1);
       const ftKeyStore = createInMemoryFtKeyStore(keyPair1);
       const ad1 = createTestAuthDescriptorWithSigner(
-        gtv.gtvHash(keyPair1.pubKey, MERKLE_HASH_VERSIONS.ONE),
+        gtv.gtvHash(keyPair1.pubKey, client.config.merkleHashVersion),
         evmKeyStore.id,
         [...Object.values(AuthFlag)],
         null,
       );
       const ad2 = createTestAuthDescriptorWithSigner(
-        gtv.gtvHash(keyPair1.pubKey, MERKLE_HASH_VERSIONS.ONE),
+        gtv.gtvHash(keyPair1.pubKey, client.config.merkleHashVersion),
         ftKeyStore.id,
         [...Object.values(AuthFlag)],
         null,
@@ -170,13 +163,13 @@ describe("Transaction Signing", () => {
       const evmKeyStore = createInMemoryEvmKeyStore(keyPair1);
       const ftKeyStore = createInMemoryFtKeyStore(keyPair1);
       const ad1 = createTestAuthDescriptorWithSigner(
-        gtv.gtvHash(keyPair1.pubKey, MERKLE_HASH_VERSIONS.ONE),
+        gtv.gtvHash(keyPair1.pubKey, client.config.merkleHashVersion),
         evmKeyStore.id,
         [...Object.values(AuthFlag)],
         null,
       );
       const ad2 = createTestAuthDescriptorWithSigner(
-        gtv.gtvHash(keyPair1.pubKey, MERKLE_HASH_VERSIONS.ONE),
+        gtv.gtvHash(keyPair1.pubKey, client.config.merkleHashVersion),
         ftKeyStore.id,
         [...Object.values(AuthFlag)],
         null,
@@ -474,7 +467,7 @@ describe("Transaction Signing", () => {
 
       const accountId = gtv.gtvHash(
         ftKeyStore.pubKey,
-        MERKLE_HASH_VERSIONS.ONE,
+        client.config.merkleHashVersion,
       );
       const authDataService = createAuthDataService(connection);
       const authenticator1 = createAuthenticator(
@@ -541,13 +534,13 @@ describe("Transaction Signing", () => {
       const evmKeyStore = createInMemoryEvmKeyStore(keyPair);
       const ftKeyStore = createInMemoryFtKeyStore(keyPair);
       const ad1 = createTestAuthDescriptorWithSigner(
-        gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE),
+        gtv.gtvHash(keyPair.pubKey, client.config.merkleHashVersion),
         evmKeyStore.id,
         [...Object.values(AuthFlag)],
         null,
       );
       const ad2 = createTestAuthDescriptorWithSigner(
-        gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE),
+        gtv.gtvHash(keyPair.pubKey, client.config.merkleHashVersion),
         ftKeyStore.id,
         [...Object.values(AuthFlag)],
         null,

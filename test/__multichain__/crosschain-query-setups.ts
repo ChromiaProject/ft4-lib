@@ -26,23 +26,18 @@ import {
 import { createSession } from "@ft4/ft-session";
 import { adminUser, emptyOp } from "@ft4-test/util";
 import { registerCrosschainAsset } from "@ft4/admin";
-import { IClient, MERKLE_HASH_VERSIONS } from "postchain-client";
+import { IClient } from "postchain-client";
 
 export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   assetName: string = "asset-name",
   filter: TransferFilter | null = null,
-  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
 ): Promise<{
   testContext: TestContext;
   appliedTransfer: AppliedTransfer;
   appliedTransfersFiltered: PaginatedEntity<AppliedTransfer>;
 }> {
   const mintAmount = createAmount(100, 0);
-  const testContext = await setupTestEnvironment(
-    assetName,
-    mintAmount,
-    merkleHashVersion,
-  );
+  const testContext = await setupTestEnvironment(assetName, mintAmount);
 
   const txRids: Buffer[] = [];
 
@@ -74,18 +69,13 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
 
 export async function cancelCrosschainTransferAndGetCanceledTransfer(
   assetName: string = "asset-name",
-  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
 ): Promise<{
   testContext: TestContext;
   canceledTransfer: Transfer;
   canceledTransferFiltered: PaginatedEntity<Transfer>;
 }> {
   const mintAmount = createAmount(100, 0);
-  const testContext = await setupTestEnvironment(
-    assetName,
-    mintAmount,
-    merkleHashVersion,
-  );
+  const testContext = await setupTestEnvironment(assetName, mintAmount);
 
   const state = {} as any;
   await testContext.session0
@@ -154,22 +144,17 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
 export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
   assetName: string = "asset-name",
   filter: TransferFilter | null = null,
-  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
 ): Promise<{
   unappliedTransfersFiltered: PaginatedEntity<Transfer>;
   testContext: TestContext;
   unappliedTransfer: Transfer;
 }> {
   const mintAmount = createAmount(100, 0);
-  const testContext = await setupTestEnvironment(
-    assetName,
-    mintAmount,
-    merkleHashVersion,
-  );
+  const testContext = await setupTestEnvironment(assetName, mintAmount);
 
   await registerCrosschainAsset(
     testContext.connection1.client,
-    adminUser(merkleHashVersion).signatureProvider,
+    adminUser().signatureProvider,
     testContext.sampleAsset.id,
     testContext.multichain2.rid,
   );
@@ -304,7 +289,6 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(): Promise<
     "FEE_STRATEGY_TIMEOUT_TEST_ASSET_00",
     5,
     undefined,
-    undefined,
     [true, true],
   );
 
@@ -351,18 +335,13 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(): Promise<
 export async function initCrosschainTransferAndGetPendingTransfer(
   assetName: string = "asset-name",
   filter: PendingTransferFilter | null = null,
-  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
 ): Promise<{
   pendingTransfersFiltered: PaginatedEntity<PendingTransfer>;
   testContext: TestContext;
   pendingTransfer: PendingTransfer;
 }> {
   const mintAmount = createAmount(100, 0);
-  const testContext = await setupTestEnvironment(
-    assetName,
-    mintAmount,
-    merkleHashVersion,
-  );
+  const testContext = await setupTestEnvironment(assetName, mintAmount);
 
   const initOperation = initTransfer(
     testContext.account2.id,
@@ -394,18 +373,13 @@ export async function initCrosschainTransferAndGetPendingTransfer(
 export async function revertTransferAndGetRevertedTransfer(
   assetName: string = "asset-name",
   filter: TransferFilter | null = null,
-  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
 ): Promise<{
   revertedTransfersFiltered: PaginatedEntity<Transfer>;
   testContext: TestContext;
   revertedTransfer: Transfer;
 }> {
   const mintAmount = createAmount(100, 0);
-  const testContext = await setupTestEnvironment(
-    assetName,
-    mintAmount,
-    merkleHashVersion,
-  );
+  const testContext = await setupTestEnvironment(assetName, mintAmount);
 
   const initOperation = initTransfer(
     testContext.account2.id,
@@ -486,7 +460,7 @@ async function getOrRegisterCrosschainAsset(
   try {
     await registerCrosschainAsset(
       client,
-      adminUser(client.config.merkleHashVersion).signatureProvider,
+      adminUser().signatureProvider,
       assetId,
       originMultichainRid,
     );

@@ -13,6 +13,7 @@ import {
   singleSigUser as testUser,
   useChromiaNode,
   FT4_USER_TYPE,
+  User,
 } from "@ft4-test/util";
 import {
   AuthDescriptorRegistration,
@@ -40,6 +41,7 @@ import {
 } from "@ft4/ft-session";
 import { AuthorizationError } from "@ft4/transaction-builder";
 import {
+  MerkleHashVersionSource,
   getExpectedAccountIdFromMainAuthDescriptor,
   nop,
   op,
@@ -48,15 +50,19 @@ import { Buffer } from "buffer";
 import * as pcl from "postchain-client";
 
 let _connection: Connection;
-const admin = adminUser();
+let admin: User;
 
 async function multiSigCall(
   accountId: pcl.BufferId,
   multiSigAuthDescriptor: AuthDescriptorRegistration<MultiSig>,
   signers: (pcl.SignatureProvider | pcl.KeyPair)[],
+  merkleHashVersion: MerkleHashVersionSource,
   ...ops: pcl.Operation[]
 ) {
-  const adId = deriveAuthDescriptorId(multiSigAuthDescriptor);
+  const adId = deriveAuthDescriptorId(
+    multiSigAuthDescriptor,
+    merkleHashVersion,
+  );
   let signedTx: Buffer | pcl.Transaction = {
     operations: [ftAuth(accountId, adId), ...ops, nop()],
     signers: signers
@@ -75,10 +81,11 @@ describe("Test the account", () => {
   beforeAll(async () => {
     const client = getClient();
     _connection = createConnection(client);
+    admin = adminUser();
   });
 
   it("Register account on blockchain", async () => {
-    const user = testUser();
+    const user = testUser(_connection);
     const ad = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Account, AuthFlag.Transfer],
       user.signatureProvider.pubKey,
@@ -178,8 +185,8 @@ describe("Test the account", () => {
   });
 
   it("updates account if 2 signatures provided", async () => {
-    const kp1 = pcl.newSignatureProvider(pcl.MERKLE_HASH_VERSIONS.ONE);
-    const kp2 = pcl.newSignatureProvider(pcl.MERKLE_HASH_VERSIONS.ONE);
+    const kp1 = pcl.newSignatureProvider();
+    const kp2 = pcl.newSignatureProvider();
     const ad = createMultiSigAuthDescriptorRegistration(
       [AuthFlag.Account],
       [kp1.pubKey, kp2.pubKey],
@@ -197,6 +204,7 @@ describe("Test the account", () => {
       account.id,
       ad,
       [kp1, kp2, keyPair],
+      _connection,
       addAuthDescriptor(ad2),
     );
 
@@ -204,8 +212,8 @@ describe("Test the account", () => {
   });
 
   it("fails if only one signature provided when 2 is required", async () => {
-    const user1 = testUser();
-    const user2 = testUser();
+    const user1 = testUser(_connection);
+    const user2 = testUser(_connection);
     const registration = createSingleSigAuthDescriptorRegistration(
       [AuthFlag.Transfer],
       user1.signatureProvider.pubKey,
@@ -214,8 +222,8 @@ describe("Test the account", () => {
     const user3 = {
       authDescriptor: {
         ...registration,
-        id: deriveAuthDescriptorId(registration),
-        accountId: deriveAuthDescriptorId(registration),
+        id: deriveAuthDescriptorId(registration, _connection),
+        accountId: deriveAuthDescriptorId(registration, _connection),
         accountType: FT4_USER_TYPE,
         created: new Date(),
       },
@@ -245,7 +253,7 @@ describe("Test the account", () => {
   });
 
   it("returns account when queried by signer", async () => {
-    const user = testUser();
+    const user = testUser(_connection);
 
     await AccountBuilder.account(_connection)
       .withSigner(user.signatureProvider)
@@ -263,14 +271,10 @@ describe("Test the account", () => {
 
     await Promise.all([
       AccountBuilder.account(_connection) //owned by keyPair1
-        .withSigner(
-          pcl.newSignatureProvider(pcl.MERKLE_HASH_VERSIONS.ONE, keyPair1),
-        )
+        .withSigner(pcl.newSignatureProvider(keyPair1))
         .build(),
       AccountBuilder.account(_connection) //keyPair1 is NOT the manager
-        .withSigner(
-          pcl.newSignatureProvider(pcl.MERKLE_HASH_VERSIONS.ONE, keyPair1),
-        )
+        .withSigner(pcl.newSignatureProvider(keyPair1))
         .buildAsNonManager(),
     ]);
 
@@ -522,7 +526,7 @@ describe("Test the account", () => {
   });
 
   it("registers account by directly calling 'register_account' operation", async () => {
-    const user = testUser();
+    const user = testUser(_connection);
 
     const tx = {
       operations: [
@@ -554,7 +558,7 @@ describe("Test the account", () => {
   });
 
   it("auth descriptor deletes itself without admin flag", async () => {
-    const user = testUser();
+    const user = testUser(_connection);
 
     const acc = await AccountBuilder.account(_connection)
       .withSigner(user.signatureProvider)
@@ -571,9 +575,9 @@ describe("Test the account", () => {
   });
 
   it("is not possible for descriptor without admin flag to delete other auth descriptors", async () => {
-    const user1 = testUser();
-    const user2 = testUser();
-    const user3 = testUser();
+    const user1 = testUser(_connection);
+    const user2 = testUser(_connection);
+    const user3 = testUser(_connection);
 
     const acc1 = await AccountBuilder.account(_connection)
       .withSigner(user1.signatureProvider)
@@ -605,14 +609,16 @@ describe("Test the account", () => {
 
     expect((await acc2.getAuthDescriptors()).length).toBe(3);
     await expect(
-      acc2.deleteAuthDescriptor(deriveAuthDescriptorId(authDescriptor3)),
+      acc2.deleteAuthDescriptor(
+        deriveAuthDescriptorId(authDescriptor3, _connection),
+      ),
     ).rejects.toThrow();
     expect((await acc2.getAuthDescriptors()).length).toBe(3);
   });
 
   it("also removes auth descriptor from new authenticator when it is deleted from an account", async () => {
-    const user1 = testUser();
-    const user2 = testUser();
+    const user1 = testUser(_connection);
+    const user2 = testUser(_connection);
 
     const acc1 = await AccountBuilder.account(_connection)
       .withSigner(user1.signatureProvider)
@@ -644,7 +650,7 @@ describe("Test the account", () => {
 
     expect(acc2.authenticator.keyHandlers.length).toBe(2);
     const { session } = await acc2.deleteAuthDescriptor(
-      deriveAuthDescriptorId(ad3),
+      deriveAuthDescriptorId(ad3, _connection),
     );
     expect(session.account.authenticator.keyHandlers.length).toBe(1);
   });

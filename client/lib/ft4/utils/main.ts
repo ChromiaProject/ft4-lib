@@ -4,7 +4,6 @@ import {
   BufferId,
   GTX,
   IClient,
-  MERKLE_HASH_VERSIONS,
   Operation,
   Queryable,
   RawGtv,
@@ -186,6 +185,33 @@ export async function createAndSignTransaction(
   operations: Operation[],
   keyStores: FtKeyStore[],
 ): Promise<Buffer> {
+  const transaction = await createGtxTransaction(
+    connection,
+    operations,
+    keyStores,
+  );
+
+  transaction.signatures = await Promise.all(
+    keyStores.map((keyStore) =>
+      keyStore.sign(transaction, getMerkleHashVersion(connection)),
+    ),
+  );
+
+  return gtx.serialize(transaction);
+}
+
+/**
+ * Creates a GTX transaction with the provided operations and keyStores
+ * @param connection - used to determine what blockchain the transaction will be submitted to
+ * @param operations - what operations to include in the transaction
+ * @param keyStores - the keystores which will sign the transaction
+ * @returns A GTX transaction
+ */
+export async function createGtxTransaction(
+  connection: Connection,
+  operations: Operation[],
+  keyStores: FtKeyStore[],
+): Promise<GTX> {
   const ops = operations.map(({ name, args }) => ({
     opName: name,
     args: args || [],
@@ -197,14 +223,8 @@ export async function createAndSignTransaction(
     signers: keyStores.map((keyStore) => keyStore.pubKey),
     signatures: [],
   };
-
-  transaction.signatures = await Promise.all(
-    keyStores.map((keyStore) => keyStore.sign(transaction)),
-  );
-
-  return gtx.serialize(transaction);
+  return transaction;
 }
-
 /**
  * Extracts one operation from a transaction. Useful e.g., to determine
  * what arguments was passed to a certain operation.
@@ -230,14 +250,14 @@ export function loadOperationFromTransaction(
  * @param blockchainRid - the rid of the blockchain where the nonce is used
  * @param operation - what operation the nonce will be used with
  * @param authDescriptorCounter - current counter of the auth descriptor that will be used to authenticate the operation
- * @param merkleHashVersion - the merkle hash version selection defaults to one
+ * @param merkleHashVersionSource - the source to use to get the merkle hash version from, or the merkle hash version itself
  * @returns the computed nonce value
  */
 export function deriveNonce(
   blockchainRid: BufferId,
   operation: Operation,
   authDescriptorCounter: number,
-  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
+  merkleHashVersionSource: MerkleHashVersionSource,
 ): string {
   return formatter.toString(
     gtv.gtvHash(
@@ -247,7 +267,7 @@ export function deriveNonce(
         operation.args || [],
         authDescriptorCounter,
       ],
-      merkleHashVersion,
+      getMerkleHashVersion(merkleHashVersionSource),
     ),
   );
 }
@@ -263,6 +283,20 @@ export function getExpectedAccountIdFromMainAuthDescriptor(
   merkleHashVersionSource: MerkleHashVersionSource,
 ) {
   const signers = aggregateSigners(authDescriptor);
+
+  return getExpectedAccountIdFromSigners(signers, merkleHashVersionSource);
+}
+
+/**
+ * Computes the expected account ID if an account was registered with the provided signers
+ * @param signers - the signers to use to compute the expected account ID (just one if single sig)
+ * @param merkleHashVersionSource - the source to use to get the merkle hash version from, or the merkle hash version itself
+ * @returns the expected account ID
+ */
+export function getExpectedAccountIdFromSigners(
+  signers: Buffer[],
+  merkleHashVersionSource: MerkleHashVersionSource,
+) {
   return gtv.gtvHash(
     signers.length === 1 ? signers[0] : signers.sort(Buffer.compare),
     getMerkleHashVersion(merkleHashVersionSource),

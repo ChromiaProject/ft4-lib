@@ -60,3 +60,7 @@
               amount: 1000L
           subscription_period_days: 30
           free_operations: []
+      lib.ft4.core.accounts.strategies.import_strategy:  
+        trusted_chains:
+          - {chain00_rid}
+        import_account_timeout: 30000  

@@ -15,10 +15,15 @@ export interface Strategy {
     connection: Connection,
     keyStore: KeyStore,
   ): Promise<RegistrationDetails>;
+  /**
+   * Whether the strategy requires a signature on the endchain
+   */
+  requiresSignature: boolean;
 }
 
 export type RegistrationDetails = {
   strategyOperation: Operation;
+  additionalOperations?: Operation[];
   loginKeyStore: LoginKeyStore | null;
   disposableKeyStore: FtKeyStore | null;
 };

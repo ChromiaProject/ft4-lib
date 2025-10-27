@@ -14,6 +14,7 @@ export function transferFee(
   loginConfig: LoginConfigOptions | null = null,
 ): Strategy {
   return Object.freeze({
+    requiresSignature: true,
     getRegistrationDetails: async (
       connection: Connection,
     ): Promise<RegistrationDetails> => {
@@ -50,6 +51,7 @@ export function transferOpen(
   loginConfig: LoginConfigOptions | null = null,
 ): Strategy {
   return Object.freeze({
+    requiresSignature: true,
     getRegistrationDetails: async (
       connection: Connection,
     ): Promise<RegistrationDetails> => {
@@ -86,6 +88,7 @@ export function transferSubscription(
   loginConfig: LoginConfigOptions | null = null,
 ): Strategy {
   return Object.freeze({
+    requiresSignature: true,
     getRegistrationDetails: async (
       connection: Connection,
     ): Promise<RegistrationDetails> => {

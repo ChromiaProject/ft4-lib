@@ -4,7 +4,7 @@ import {
   KeyHandler,
   hasAuthDescriptorFlags,
 } from "@ft4/authentication";
-import { TxContext } from "@ft4/utils";
+import { MerkleHashVersionSource, TxContext } from "@ft4/utils";
 import { BufferId, GTX, Operation } from "postchain-client";
 import { FtKeyStore } from "./types";
 import { ftAuth } from "./main";
@@ -29,7 +29,10 @@ export function createFtKeyHandler(
       _context: TxContext,
       _authDataService: AuthDataService,
     ) => authorize(accountId, authDescriptor.id, operation),
-    sign: (transaction: GTX) => keyStore.sign(transaction),
+    sign: (
+      transaction: GTX,
+      merkleHashVersionSource: MerkleHashVersionSource,
+    ) => keyStore.sign(transaction, merkleHashVersionSource),
     getSigners: () => aggregateSigners(authDescriptor),
   });
 }

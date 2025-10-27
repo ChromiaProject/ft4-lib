@@ -11,7 +11,6 @@ import {
   initApplyCancelUnapplyCrosschainTransfer,
   setupTestWithCrosschainTransfer,
 } from "./crosschain-helpers";
-import { MERKLE_HASH_VERSIONS } from "postchain-client";
 
 let multichain00: Blockchain;
 let multichain01: Blockchain;
@@ -20,7 +19,7 @@ let multichain04: Blockchain;
 
 describe("crosschain transfer compatibility", () => {
   beforeAll(async () => {
-    const blockchains = await fetchBlockchains(false, MERKLE_HASH_VERSIONS.ONE);
+    const blockchains = await fetchBlockchains(false);
     multichain00 = blockchains.multichain00;
     multichain01 = blockchains.multichain01;
     multichain03 = blockchains.multichain03;
@@ -34,27 +33,15 @@ describe("crosschain transfer compatibility", () => {
     let path: Connection[];
     beforeAll(async () => {
       connection00 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain00.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.ONE,
-        ),
+        await createChromiaClientToMultichain(multichain00.rid, NODE_URL),
       );
 
       connection03 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain03.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.TWO,
-        ),
+        await createChromiaClientToMultichain(multichain03.rid, NODE_URL),
       );
 
       connection01 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain01.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.ONE,
-        ),
+        await createChromiaClientToMultichain(multichain01.rid, NODE_URL),
       );
       path = [connection00, connection03, connection01];
     });
@@ -164,27 +151,15 @@ describe("crosschain transfer compatibility", () => {
     let path: Connection[];
     beforeAll(async () => {
       connection03 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain03.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.TWO,
-        ),
+        await createChromiaClientToMultichain(multichain03.rid, NODE_URL),
       );
 
       connection00 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain00.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.ONE,
-        ),
+        await createChromiaClientToMultichain(multichain00.rid, NODE_URL),
       );
 
       connection04 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain04.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.TWO,
-        ),
+        await createChromiaClientToMultichain(multichain04.rid, NODE_URL),
       );
       path = [connection03, connection00, connection04];
     });
@@ -275,6 +250,7 @@ describe("crosschain transfer compatibility", () => {
           "crosschain-transfer-test-asset-compatibility12",
           false,
         );
+
         await initApplyCancelUnapplyCrosschainTransfer(
           senderAccount.id,
           asset,
@@ -293,35 +269,19 @@ describe("crosschain transfer compatibility", () => {
 
     beforeAll(async () => {
       connection00 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain00.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.ONE,
-        ),
+        await createChromiaClientToMultichain(multichain00.rid, NODE_URL),
       );
 
       connection01 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain01.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.ONE,
-        ),
+        await createChromiaClientToMultichain(multichain01.rid, NODE_URL),
       );
 
       connection03 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain03.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.TWO,
-        ),
+        await createChromiaClientToMultichain(multichain03.rid, NODE_URL),
       );
 
       connection04 = createConnection(
-        await createChromiaClientToMultichain(
-          multichain04.rid,
-          NODE_URL,
-          MERKLE_HASH_VERSIONS.TWO,
-        ),
+        await createChromiaClientToMultichain(multichain04.rid, NODE_URL),
       );
     });
 

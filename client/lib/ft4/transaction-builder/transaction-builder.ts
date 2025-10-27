@@ -19,6 +19,7 @@ import {
   ChainConfirmationLevel,
   GTX,
   IClient,
+  IccfProof,
   Operation,
   SignedTransaction,
   TransactionEvent,
@@ -181,7 +182,8 @@ export function transactionBuilder(
       tx.signers.map((signer) => {
         try {
           return (
-            signersMap[signer.toString("hex")]?.sign(tx) ?? EMPTY_SIGNATURE
+            signersMap[signer.toString("hex")]?.sign(tx, client) ??
+            EMPTY_SIGNATURE
           );
         } catch (e) {
           throw new SigningError(
@@ -215,13 +217,20 @@ export function transactionBuilder(
       _build()
         .then((tx) => {
           promiEvent.emit("built", tx);
+          const proof = _operations.find(
+            (op) => op.operation.name === "iccf_proof",
+          );
+          let txPromiEvent;
+          if (proof) {
+            txPromiEvent = client.sendTransactionWithRetries(tx);
+          } else {
+            txPromiEvent = client.sendTransaction(tx);
+          }
           return Promise.all([
             tx,
-            client
-              .sendTransaction(tx)
-              .on(TransactionEvent.DappReceived, (receipt) => {
-                promiEvent.emit("sent", receipt.transactionRid);
-              }),
+            txPromiEvent.on(TransactionEvent.DappReceived, (receipt) => {
+              promiEvent.emit("sent", receipt.transactionRid);
+            }),
           ]);
         })
         .then(([tx, receipt]) => {
@@ -251,13 +260,25 @@ export function transactionBuilder(
       _build()
         .then((tx) => {
           promiEvent.emit("built", tx);
-          return client
-            .sendTransaction(
+          const proof = _operations.find(
+            (op) => op.operation.name === "iccf_proof",
+          );
+          let txPromiEvent;
+          if (proof) {
+            txPromiEvent = client.sendTransactionWithRetries(
+              tx,
+              () => {},
+              ChainConfirmationLevel.SystemAnchoring,
+            );
+          } else {
+            txPromiEvent = client.sendTransaction(
               tx,
               true,
               () => {},
               ChainConfirmationLevel.SystemAnchoring,
-            )
+            );
+          }
+          return txPromiEvent
             .on(TransactionEvent.DappReceived, (receipt) =>
               promiEvent.emit("sent", receipt.transactionRid),
             )
@@ -270,6 +291,9 @@ export function transactionBuilder(
                 client,
                 decodedTx,
               );
+              if (!systemConfirmationProof) {
+                throw new Error("Failed to get system confirmation proof");
+              }
               resolve({ tx: decodedTx, receipt, systemConfirmationProof });
             });
         })
@@ -279,7 +303,7 @@ export function transactionBuilder(
     return promiEvent;
   }
 
-  function getSignersMap(stores: FtKeyStore[]) {
+  function getSignersMap(stores: FtKeyStore[]): Record<string, FtKeyStore> {
     return stores.reduce(
       (acc, curr: FtKeyStore) => ({
         [curr.pubKey.toString("hex")]: curr,
@@ -318,8 +342,8 @@ export function getSystemAnchoringIccfProofOp(
       client.config.endpointPool.map((endpoint) => endpoint.url),
       client.config.directoryChainRid,
     );
-
-    const proofTx = await createIccfProofTx(
+    let proofTx: IccfProof | null = null;
+    proofTx = await createIccfProofTx(
       directoryClient,
       getTransactionRid(txToProve, client),
       gtx.getDigest(txToProve, client.config.merkleHashVersion),

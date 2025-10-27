@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-09-22
+
+### Changed 🪙
+- bumped the rell version to 0.14.12
+
+### Added ✅
+- import_strategy with the `ras_import` strategy, now enables users to create an account if the account is present on another trusted chain on the network. New module args added for the import strategy: `trusted_chains` (The chains that are trusted to import accounts.), `import_account_timeout` (The time in milliseconds after which the iccf proof expires) and `allow_any_operation` (Whether to allow any operation to verify the import (for instance a transfer op), rather than just the `ft4.ras_import` operation.)
+
 ## [1.1.0] - 2025-02-25
 
 ### Breaking 💔

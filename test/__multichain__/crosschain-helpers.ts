@@ -244,8 +244,7 @@ export async function setupTestWithCrosschainTransfer<T extends boolean>(
     try {
       await registerCrosschainAsset(
         assetPath[i].client,
-        adminUser(assetPath[i].client.config.merkleHashVersion)
-          .signatureProvider,
+        adminUser().signatureProvider,
         asset.id,
         assetPath[i - 1].blockchainRid,
       );
