@@ -9,6 +9,7 @@ import {
   MultiSig,
   SingleSig,
   addAuthDescriptor,
+  aggregateSigners,
   createMultiSigAuthDescriptorRegistration,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
