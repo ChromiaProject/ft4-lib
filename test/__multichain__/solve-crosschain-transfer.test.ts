@@ -12,7 +12,7 @@ import {
   initApplyCancelUnapplyCrosschainTransfer,
   setupTestWithCrosschainTransfer,
 } from "./crosschain-helpers";
-import { GTX, MERKLE_HASH_VERSIONS } from "postchain-client";
+import { GTX } from "postchain-client";
 import {
   isUnclaimedTransfer,
   recallUnclaimedCrosschainTransfer,
@@ -34,7 +34,7 @@ let path: Connection[];
 
 describe("solve crosschain transfer", () => {
   beforeAll(async () => {
-    const blockchains = await fetchBlockchains(false, MERKLE_HASH_VERSIONS.ONE);
+    const blockchains = await fetchBlockchains(false);
     multichain00 = blockchains.multichain00;
     multichain01 = blockchains.multichain01;
     multichain02 = blockchains.multichain02;
