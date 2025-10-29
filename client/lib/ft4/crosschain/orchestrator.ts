@@ -184,7 +184,7 @@ export async function createResumeOrchestrator(
         !(await isAppliedOnBlockchainRid(
           connection,
           formatter.ensureBuffer(path[i]),
-          getTransactionRid(initialData.initialTx, connection),
+          initialData.initialTx,
           initialData.initialOpIndex,
         ))
       ) {
@@ -216,7 +216,7 @@ export async function createResumeOrchestrator(
       const res = await getAppliedTx(
         connection,
         lastBlockchainRid,
-        getTransactionRid(initialData.initialTx, connection),
+        initialData.initialTx,
         initialData.initialOpIndex,
       );
       transactionToApply = formatter.rawGtxToGtx(res.tx);
@@ -282,7 +282,7 @@ export async function createRevertOrchestrator(
         !(await isAppliedOnBlockchainRid(
           connection,
           formatter.ensureBuffer(path[i]),
-          getTransactionRid(pendingTransfer.tx, connection),
+          pendingTransfer.tx,
           pendingTransfer.opIndex,
         ))
       ) {
@@ -310,7 +310,7 @@ export async function createRevertOrchestrator(
       const res = await getAppliedTx(
         connection,
         lastBlockchainRid,
-        getTransactionRid(pendingTransfer.tx, connection),
+        pendingTransfer.tx,
         pendingTransfer.opIndex,
       );
       tx = formatter.rawGtxToGtx(res.tx);
@@ -578,14 +578,14 @@ async function getTransactionBuilderForChain(
 async function getAppliedTx(
   connection: Connection,
   targetChainRid: Buffer,
-  txRid: Buffer,
+  tx: GTX,
   opIndex: number,
 ) {
   const newConnection = await createConnectionToBlockchainRid(
     connection,
     targetChainRid,
   );
-  return newConnection.query(applyTransferTx(txRid, opIndex));
+  return newConnection.query(applyTransferTx(getTransactionRid(tx, newConnection), opIndex));
 }
 
 /**
@@ -600,14 +600,14 @@ async function getAppliedTx(
 async function isAppliedOnBlockchainRid(
   connection: Connection,
   targetChainRid: Buffer,
-  txRid: Buffer,
+  tx: GTX,
   opIndex: number,
 ): Promise<boolean> {
   const newConnection = await createConnectionToBlockchainRid(
     connection,
     targetChainRid,
   );
-  return newConnection.query(isTransferApplied(txRid, opIndex));
+  return newConnection.query(isTransferApplied(getTransactionRid(tx, newConnection), opIndex));
 }
 
 /* Cross-Chain Transfer convenience event handlers */
