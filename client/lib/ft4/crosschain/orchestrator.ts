@@ -112,7 +112,7 @@ export async function createOrchestrator(
         .add(nop())
         .buildAndSendWithAnchoring()
         .on("built", (tx) => {
-          console.log(`[ORCHESTRATOR DEBUG] Transaction built with RID: ${getTransactionRid(tx, connection).toString('hex')}`);
+          console.log(`[ORCHESTRATOR DEBUG] Transaction built:`, tx);
           eventEmitter.emit("TransferSigned", tx);
         });
       const { tx, receipt, systemConfirmationProof } = data;
@@ -713,7 +713,6 @@ async function getTransactionBuilderForChain(
   
   console.log(`[ORCHESTRATOR DEBUG] New connection client config:`, {
     blockchainRid: newConnection.client.config.blockchainRid,
-    nodeUrl: newConnection.client.config.nodeUrl
   });
   console.log(`[ORCHESTRATOR DEBUG] === End getTransactionBuilderForChain ===`);
   
@@ -738,7 +737,7 @@ async function getAppliedTx(
   
   try {
     const result = await newConnection.query(applyTransferTx(txRid, opIndex));
-    console.log(`[ORCHESTRATOR DEBUG] Found applied TX with RID: ${Buffer.from(result.tx.tx_rid, 'hex').toString('hex')}`);
+    console.log(`[ORCHESTRATOR DEBUG] Found applied TX with RID: ${getTransactionRid(formatter.rawGtxToGtx(result.tx), newConnection).toString('hex')}`);
     
     // CRITICAL DEBUG: Show how the same tx gets different RIDs with different connection contexts
     const originalTx = formatter.rawGtxToGtx(result.tx);
