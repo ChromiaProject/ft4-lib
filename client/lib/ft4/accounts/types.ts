@@ -452,6 +452,7 @@ export interface AuthenticatedAccount extends Account {
     assetId: BufferId,
     amount: Amount,
     ttl?: number,
+    performAllHops?: boolean,
   ) => Web3PromiEvent<
     TransferRef,
     {

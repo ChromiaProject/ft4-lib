@@ -85,6 +85,7 @@ export function createAuthenticatedAccount(
       assetId: BufferId,
       amount: Amount,
       ttl: number = days(1),
+      performAllHops: boolean = true,
     ) =>
       crosschainTransfer(
         connection,
@@ -94,6 +95,7 @@ export function createAuthenticatedAccount(
         assetId,
         amount,
         ttl,
+        performAllHops,
       ),
     resumeCrosschainTransfer: (pendingTransfer: TransferRef) =>
       resumeCrosschainTransfer(connection, pendingTransfer),

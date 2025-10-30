@@ -36,6 +36,7 @@ export function crosschainTransfer(
   assetId: BufferId,
   amount: Amount,
   ttl: number = days(1),
+  performAllHops: boolean = true,
 ): Web3PromiEvent<
   TransferRef,
   {
@@ -71,7 +72,9 @@ export function crosschainTransfer(
         orchestrator.onTransferHop((blockchainRid) => {
           promiEvent.emit("hop", formatter.ensureBuffer(blockchainRid));
         });
-        return orchestrator.transfer();
+        return performAllHops 
+          ? orchestrator.transfer()
+          : orchestrator.transferFirstHopOnly();
       })
       .then((tr) => resolve(tr))
       .catch((reason) => reject(reason));
