@@ -74,12 +74,27 @@ export async function createOrchestrator(
   amount: Amount,
   ttl: number = days(1),
 ): Promise<Orchestrator> {
+  console.log(`[ORCHESTRATOR DEBUG] === createOrchestrator ENTRY ===`);
+  console.log(`[ORCHESTRATOR DEBUG] Source chain RID: ${connection.blockchainRid.toString('hex')}`);
+  console.log(`[ORCHESTRATOR DEBUG] Target chain ID: ${targetChainId.toString('hex')}`);
+  console.log(`[ORCHESTRATOR DEBUG] Recipient ID: ${recipientId.toString('hex')}`);
+  console.log(`[ORCHESTRATOR DEBUG] Asset ID: ${assetId.toString('hex')}`);
+  console.log(`[ORCHESTRATOR DEBUG] Amount: ${amount}`);
+  console.log(`[ORCHESTRATOR DEBUG] TTL: ${ttl}`);
+
   const asset = await connection.getAssetById(assetId);
   if (!asset) {
+    console.error(`[ORCHESTRATOR DEBUG] Asset not found: ${assetId.toString('hex')}`);
     throw new FactoryError("The specified asset could not be found");
   }
+  console.log(`[ORCHESTRATOR DEBUG] Asset found:`, asset);
 
+  console.log(`[ORCHESTRATOR DEBUG] Finding path to target chain...`);
   const path = await findPathToChainForAsset(connection, asset, targetChainId);
+  console.log(`[ORCHESTRATOR DEBUG] Path found - length: ${path.length}`);
+  path.forEach((chainRid, index) => {
+    console.log(`[ORCHESTRATOR DEBUG] Path[${index}]: ${chainRid.toString('hex')}`);
+  });
 
   let state: OrchestratorState;
   const eventEmitter = new EventEmitter<OrchestratorEvents>();
@@ -88,16 +103,20 @@ export async function createOrchestrator(
    * Initialize the transfer by creating the initial transaction.
    */
   async function performInitTransfer(): Promise<OrchestratorCore> {
+    console.log(`[ORCHESTRATOR DEBUG] === performInitTransfer ENTRY ===`);
     try {
+      console.log(`[ORCHESTRATOR DEBUG] Building init transfer transaction...`);
       const data = await transactionBuilder(authenticator, connection.client)
         .add(initTransfer(recipientId, assetId, amount, path, Date.now() + ttl))
         //TODO timebomb
         .add(nop())
         .buildAndSendWithAnchoring()
         .on("built", (tx) => {
+          console.log(`[ORCHESTRATOR DEBUG] Transaction built with RID: ${getTransactionRid(tx, connection).toString('hex')}`);
           eventEmitter.emit("TransferSigned", tx);
         });
       const { tx, receipt, systemConfirmationProof } = data;
+      console.log(`[ORCHESTRATOR DEBUG] Init transfer completed - TX RID: ${getTransactionRid(tx, connection).toString('hex')}`);
       eventEmitter.emit("TransferInit", receipt);
 
       state = {
@@ -106,13 +125,16 @@ export async function createOrchestrator(
         systemConfirmationProof,
         nextHopIndex: 0,
       };
+      console.log(`[ORCHESTRATOR DEBUG] Initial state set - opIndex: 1, nextHopIndex: 0`);
 
+      console.log(`[ORCHESTRATOR DEBUG] Creating orchestrator core...`);
       return createOrchestratorCore(eventEmitter, connection, {
         initialOpIndex: 1,
         initialTx: tx,
         path,
       });
     } catch (reason) {
+      console.error(`[ORCHESTRATOR DEBUG] performInitTransfer ERROR:`, reason);
       if (reason instanceof SigningError) {
         throw reason;
       } else {
@@ -128,20 +150,26 @@ export async function createOrchestrator(
    * Execute the transfer operation across all steps.
    */
   async function transfer(): Promise<TransferRef> {
+    console.log(`[ORCHESTRATOR DEBUG] === transfer ENTRY ===`);
     const orchestrator = await performInitTransfer();
     if (state.tx === undefined || state.opIndex === undefined) {
+      console.error(`[ORCHESTRATOR DEBUG] State not properly initialized - tx: ${!!state.tx}, opIndex: ${state.opIndex}`);
       throw new OrchestratorError(
         "Unable to perform transfer as tx was not initialized properly",
       );
     }
+    console.log(`[ORCHESTRATOR DEBUG] Performing all apply transfers...`);
     await orchestrator.performAllApplyTransfers();
+    console.log(`[ORCHESTRATOR DEBUG] Performing complete transfer...`);
     await orchestrator.performCompleteTransfer(state.tx, state.opIndex);
+    console.log(`[ORCHESTRATOR DEBUG] Transfer completed successfully`);
     return {
       tx: orchestrator.initialData.initialTx,
       opIndex: orchestrator.initialData.initialOpIndex,
     };
   }
 
+  console.log(`[ORCHESTRATOR DEBUG] === createOrchestrator EXIT ===`);
   return Object.freeze({
     ...unwrapEvents(eventEmitter),
     transfer,
@@ -159,9 +187,18 @@ export async function createResumeOrchestrator(
   connection: Connection,
   pendingTransfer: TransferRef,
 ): Promise<ResumeOrchestrator> {
+  console.log(`[ORCHESTRATOR DEBUG] === createResumeOrchestrator ENTRY ===`);
+  console.log(`[ORCHESTRATOR DEBUG] Pending transfer TX RID: ${getTransactionRid(pendingTransfer.tx, connection).toString('hex')}`);
+  console.log(`[ORCHESTRATOR DEBUG] Pending transfer opIndex: ${pendingTransfer.opIndex}`);
+  
   const operations = pendingTransfer.tx.operations;
   const initTransferOpArgs = operations[pendingTransfer.opIndex].args;
   const path = initTransferOpArgs[3] as Buffer[];
+  
+  console.log(`[ORCHESTRATOR DEBUG] Path extracted - length: ${path.length}`);
+  path.forEach((chainRid, index) => {
+    console.log(`[ORCHESTRATOR DEBUG] Path[${index}]: ${chainRid.toString('hex')}`);
+  });
 
   let state: OrchestratorState;
   const initialData: OrchestratorData = {
@@ -178,8 +215,13 @@ export async function createResumeOrchestrator(
    * has been successfully completed.
    */
   async function resumeTransfer(): Promise<void> {
+    console.log(`[ORCHESTRATOR DEBUG] === resumeTransfer starting ===`);
+    console.log(`[ORCHESTRATOR DEBUG] Path length: ${path.length}`);
+    console.log(`[ORCHESTRATOR DEBUG] Initial TX RID: ${getTransactionRid(initialData.initialTx, connection).toString('hex')}`);
+    
     let currentHopIndex: number | undefined = undefined;
     for (let i = 0; i < path.length; i++) {
+      console.log(`[ORCHESTRATOR DEBUG] Checking hop ${i} - chain: ${path[i].toString('hex')}`);
       if (
         !(await isAppliedOnBlockchainRid(
           connection,
@@ -188,13 +230,17 @@ export async function createResumeOrchestrator(
           initialData.initialOpIndex,
         ))
       ) {
+        console.log(`[ORCHESTRATOR DEBUG] Transfer not applied on hop ${i}, breaking`);
         break;
       }
+      console.log(`[ORCHESTRATOR DEBUG] Transfer applied on hop ${i}`);
       currentHopIndex = i;
     }
 
     const nextHopIndex = (currentHopIndex ?? -1) + 1;
     let lastBlockchainRid: Buffer;
+
+    console.log(`[ORCHESTRATOR DEBUG] Next hop index: ${nextHopIndex}, Current hop index: ${currentHopIndex}`);
 
     // transfer is not completed
     if (nextHopIndex < path.length) {
@@ -207,12 +253,16 @@ export async function createResumeOrchestrator(
       lastBlockchainRid = path.slice(-1)[0];
     }
 
+    console.log(`[ORCHESTRATOR DEBUG] Last blockchain RID: ${lastBlockchainRid.toString('hex')}`);
+
     let transactionToApply: GTX;
     let opIndex: number;
     if (nextHopIndex === 0) {
+      console.log(`[ORCHESTRATOR DEBUG] Using initial transaction for hop 0`);
       transactionToApply = initialData.initialTx;
       opIndex = initialData.initialOpIndex;
     } else {
+      console.log(`[ORCHESTRATOR DEBUG] Getting applied tx from chain ${lastBlockchainRid.toString('hex')}`);
       const res = await getAppliedTx(
         connection,
         lastBlockchainRid,
@@ -221,8 +271,10 @@ export async function createResumeOrchestrator(
       );
       transactionToApply = formatter.rawGtxToGtx(res.tx);
       opIndex = res.op_index;
+      console.log(`[ORCHESTRATOR DEBUG] Retrieved applied tx with RID: ${getTransactionRid(transactionToApply, connection).toString('hex')}`);
     }
 
+    console.log(`[ORCHESTRATOR DEBUG] Creating client for blockchain: ${lastBlockchainRid.toString('hex')}`);
     const previousBlockchainClient = await createClientToBlockchain(
       connection.client,
       lastBlockchainRid,
@@ -237,7 +289,9 @@ export async function createResumeOrchestrator(
         transactionToApply,
       ),
     };
+    console.log(`[ORCHESTRATOR DEBUG] Resume state set - opIndex: ${opIndex}, nextHopIndex: ${nextHopIndex}`);
 
+    console.log(`[ORCHESTRATOR DEBUG] Creating orchestrator core for resume...`);
     const orchestrator = await createOrchestratorCore(
       eventEmitter,
       connection,
@@ -245,11 +299,15 @@ export async function createResumeOrchestrator(
       state,
     );
 
+    console.log(`[ORCHESTRATOR DEBUG] Performing remaining apply transfers...`);
     await orchestrator.performAllApplyTransfers();
 
+    console.log(`[ORCHESTRATOR DEBUG] Performing complete transfer...`);
     await orchestrator.performCompleteTransfer(state.tx, state.opIndex);
+    console.log(`[ORCHESTRATOR DEBUG] === resumeTransfer EXIT ===`);
   }
 
+  console.log(`[ORCHESTRATOR DEBUG] === createResumeOrchestrator EXIT ===`);
   return Object.freeze({
     ...unwrapEvents(eventEmitter),
     resumeTransfer,
@@ -267,17 +325,28 @@ export async function createRevertOrchestrator(
   connection: Connection,
   pendingTransfer: TransferRef,
 ): Promise<RevertOrchestrator> {
+  console.log(`[ORCHESTRATOR DEBUG] === createRevertOrchestrator ENTRY ===`);
+  console.log(`[ORCHESTRATOR DEBUG] Pending transfer TX RID: ${getTransactionRid(pendingTransfer.tx, connection).toString('hex')}`);
+  console.log(`[ORCHESTRATOR DEBUG] Pending transfer opIndex: ${pendingTransfer.opIndex}`);
+  
   const operations = pendingTransfer.tx.operations;
   const initTransferOpArgs = operations[pendingTransfer.opIndex].args;
   const path = initTransferOpArgs[3] as Buffer[];
+  
+  console.log(`[ORCHESTRATOR DEBUG] Path extracted - length: ${path.length}`);
+  path.forEach((chainRid, index) => {
+    console.log(`[ORCHESTRATOR DEBUG] Path[${index}]: ${chainRid.toString('hex')}`);
+  });
 
   let state: OrchestratorState;
 
   const eventEmitter = new EventEmitter<OrchestratorEvents>();
 
   async function revertTransfer(): Promise<void> {
+    console.log(`[ORCHESTRATOR DEBUG] === revertTransfer ENTRY ===`);
     let firstNotAppliedHopIndex: number | undefined = undefined;
     for (let i = 0; i < path.length; i++) {
+      console.log(`[ORCHESTRATOR DEBUG] Checking revert hop ${i} - chain: ${path[i].toString('hex')}`);
       if (
         !(await isAppliedOnBlockchainRid(
           connection,
@@ -287,25 +356,31 @@ export async function createRevertOrchestrator(
         ))
       ) {
         firstNotAppliedHopIndex = i;
+        console.log(`[ORCHESTRATOR DEBUG] First not applied hop found at index: ${i}`);
         break;
       }
+      console.log(`[ORCHESTRATOR DEBUG] Hop ${i} is applied`);
     }
 
     if (firstNotAppliedHopIndex === undefined) {
+      console.log(`[ORCHESTRATOR DEBUG] Transfer is fully applied, cannot revert`);
       throw new OrchestratorError("Transfer is already applied, cannot revert");
     }
+    console.log(`[ORCHESTRATOR DEBUG] First not applied hop index: ${firstNotAppliedHopIndex}`);
 
     let lastBlockchainRid: Buffer;
     let tx: GTX;
     let opIndex: number;
 
     if (firstNotAppliedHopIndex === 0) {
+      console.log(`[ORCHESTRATOR DEBUG] Using original transaction (not applied hop is 0)`);
       lastBlockchainRid = formatter.toBuffer(
         connection.client.config.blockchainRid,
       );
       tx = pendingTransfer.tx;
       opIndex = pendingTransfer.opIndex;
     } else {
+      console.log(`[ORCHESTRATOR DEBUG] Getting applied tx from hop ${firstNotAppliedHopIndex - 1}`);
       lastBlockchainRid = path[firstNotAppliedHopIndex - 1];
       const res = await getAppliedTx(
         connection,
@@ -315,15 +390,20 @@ export async function createRevertOrchestrator(
       );
       tx = formatter.rawGtxToGtx(res.tx);
       opIndex = res.op_index;
+      console.log(`[ORCHESTRATOR DEBUG] Retrieved tx for revert with RID: ${getTransactionRid(tx, connection).toString('hex')}`);
     }
+    console.log(`[ORCHESTRATOR DEBUG] Last blockchain RID: ${lastBlockchainRid.toString('hex')}`);
 
     const targetBlockchainRid = path[firstNotAppliedHopIndex];
+    console.log(`[ORCHESTRATOR DEBUG] Target blockchain RID for cancel: ${targetBlockchainRid.toString('hex')}`);
 
+    console.log(`[ORCHESTRATOR DEBUG] Creating client for previous blockchain...`);
     const previousBlockchainClient = await createClientToBlockchain(
       connection.client,
       lastBlockchainRid,
     );
 
+    console.log(`[ORCHESTRATOR DEBUG] Getting ICCF proof for cancel transfer...`);
     const iccfOp = await getSystemAnchoringIccfProofOp(
       previousBlockchainClient,
       tx,
@@ -335,6 +415,7 @@ export async function createRevertOrchestrator(
     );
 
     try {
+      console.log(`[ORCHESTRATOR DEBUG] Building cancel transfer transaction...`);
       const { tx: transaction, systemConfirmationProof } = await tb
         .add(iccfOp)
         .add(
@@ -348,6 +429,7 @@ export async function createRevertOrchestrator(
         )
         .buildAndSendWithAnchoring();
 
+      console.log(`[ORCHESTRATOR DEBUG] Cancel transfer completed - TX RID: ${getTransactionRid(transaction, connection).toString('hex')}`);
       eventEmitter.emit("TransferHop", targetBlockchainRid);
       state = {
         tx: transaction,
@@ -355,17 +437,22 @@ export async function createRevertOrchestrator(
         systemConfirmationProof,
         opIndex: 1,
       };
+      console.log(`[ORCHESTRATOR DEBUG] State set for revert - nextHopIndex: ${firstNotAppliedHopIndex - 1}`);
     } catch (error) {
+      console.error(`[ORCHESTRATOR DEBUG] Error in revertTransfer:`, error);
       throw new OrchestratorError(
         `Unable to fetch proof: ${(error as any)?.message ?? error}`,
         error as Error,
       );
     }
     await performAllRevertTransfers(firstNotAppliedHopIndex);
+    console.log(`[ORCHESTRATOR DEBUG] === revertTransfer EXIT ===`);
   }
 
   async function recallUnclaimedTransfer(): Promise<void> {
+    console.log(`[ORCHESTRATOR DEBUG] === recallUnclaimedTransfer ENTRY ===`);
     const targetBlockchainRid = path[path.length - 1];
+    console.log(`[ORCHESTRATOR DEBUG] Target blockchain RID: ${targetBlockchainRid.toString('hex')}`);
 
     const tb = await getTransactionBuilderForChain(
       connection,
@@ -373,6 +460,7 @@ export async function createRevertOrchestrator(
     );
 
     try {
+      console.log(`[ORCHESTRATOR DEBUG] Building recall unclaimed transfer transaction...`);
       const { tx, systemConfirmationProof } = await tb
         .add(
           reclaimUnclaimedTransferOp(
@@ -382,6 +470,7 @@ export async function createRevertOrchestrator(
         )
         .buildAndSendWithAnchoring();
 
+      console.log(`[ORCHESTRATOR DEBUG] Recall unclaimed transfer completed - TX RID: ${getTransactionRid(tx, connection).toString('hex')}`);
       eventEmitter.emit("TransferHop", targetBlockchainRid);
       state = {
         tx,
@@ -389,7 +478,9 @@ export async function createRevertOrchestrator(
         opIndex: 0,
         nextHopIndex: path.length - 2,
       };
+      console.log(`[ORCHESTRATOR DEBUG] State set for recall - nextHopIndex: ${path.length - 2}`);
     } catch (error) {
+      console.error(`[ORCHESTRATOR DEBUG] Error in recallUnclaimedTransfer:`, error);
       console.log("error:::::::::::: ", JSON.stringify(error, null, 2));
       throw new OrchestratorError(
         `Unable to fetch proof: ${(error as any)?.message ?? error}`,
@@ -398,13 +489,17 @@ export async function createRevertOrchestrator(
     }
 
     await performAllRevertTransfers(path.length - 1);
+    console.log(`[ORCHESTRATOR DEBUG] === recallUnclaimedTransfer EXIT ===`);
   }
 
   async function performAllRevertTransfers(
     firstNotAppliedHopIndex: number,
   ): Promise<void> {
+    console.log(`[ORCHESTRATOR DEBUG] === performAllRevertTransfers ENTRY ===`);
+    console.log(`[ORCHESTRATOR DEBUG] Starting from hop: ${firstNotAppliedHopIndex - 1}, going to hop 0`);
     for (let hop = firstNotAppliedHopIndex - 1; hop >= 0; hop--) {
       const targetBlockchainRid = path[hop];
+      console.log(`[ORCHESTRATOR DEBUG] Reverting hop ${hop} - chain: ${targetBlockchainRid.toString('hex')}`);
 
       const iccfOp = await state.systemConfirmationProof(targetBlockchainRid);
 
@@ -414,6 +509,7 @@ export async function createRevertOrchestrator(
       );
 
       try {
+        console.log(`[ORCHESTRATOR DEBUG] Building unapply transfer for hop ${hop}...`);
         const { tx, systemConfirmationProof } = await tb
           .add(iccfOp)
           .add(
@@ -427,6 +523,7 @@ export async function createRevertOrchestrator(
           )
           .buildAndSendWithAnchoring();
 
+        console.log(`[ORCHESTRATOR DEBUG] Unapply transfer completed for hop ${hop} - TX RID: ${getTransactionRid(tx, connection).toString('hex')}`);
         eventEmitter.emit("TransferHop", targetBlockchainRid);
 
         state = {
@@ -435,7 +532,9 @@ export async function createRevertOrchestrator(
           opIndex: 1,
           nextHopIndex: hop - 1,
         };
+        console.log(`[ORCHESTRATOR DEBUG] State updated - nextHopIndex: ${hop - 1}`);
       } catch (error) {
+        console.error(`[ORCHESTRATOR DEBUG] Error in performAllRevertTransfers hop ${hop}:`, error);
         throw new OrchestratorError(
           `Unable to fetch proof: ${(error as any)?.message ?? error}`,
           error as Error,
@@ -443,10 +542,12 @@ export async function createRevertOrchestrator(
       }
     }
 
+    console.log(`[ORCHESTRATOR DEBUG] Performing final revert on source chain...`);
     const finalIccfOp = await state.systemConfirmationProof(
       connection.blockchainRid,
     );
 
+    console.log(`[ORCHESTRATOR DEBUG] Building final revert transaction...`);
     await transactionBuilder(noopAuthenticator, connection.client)
       .add(finalIccfOp, { authenticator: noopAuthenticator })
       .add(
@@ -458,8 +559,10 @@ export async function createRevertOrchestrator(
         ),
       )
       .buildAndSend();
+    console.log(`[ORCHESTRATOR DEBUG] === performAllRevertTransfers EXIT ===`);
   }
 
+  console.log(`[ORCHESTRATOR DEBUG] === createRevertOrchestrator EXIT ===`);
   return Object.freeze({
     ...unwrapEvents(eventEmitter),
     revertTransfer,
@@ -473,6 +576,12 @@ async function createOrchestratorCore(
   initialData: OrchestratorData,
   initialState?: OrchestratorState,
 ): Promise<OrchestratorCore> {
+  console.log(`[ORCHESTRATOR DEBUG] === createOrchestratorCore ENTRY ===`);
+  console.log(`[ORCHESTRATOR DEBUG] Initial data - TX RID: ${getTransactionRid(initialData.initialTx, connection).toString('hex')}`);
+  console.log(`[ORCHESTRATOR DEBUG] Initial data - opIndex: ${initialData.initialOpIndex}`);
+  console.log(`[ORCHESTRATOR DEBUG] Initial data - path length: ${initialData.path.length}`);
+  console.log(`[ORCHESTRATOR DEBUG] Initial state provided: ${!!initialState}`);
+  
   let state: OrchestratorState = initialState ?? {
     nextHopIndex: 0,
     tx: initialData.initialTx,
@@ -482,6 +591,8 @@ async function createOrchestratorCore(
       initialData.initialTx,
     ),
   };
+  
+  console.log(`[ORCHESTRATOR DEBUG] Core state - nextHopIndex: ${state.nextHopIndex}, opIndex: ${state.opIndex}`);
 
   /**
    * Apply the transfer operation targeting a specific blockchain.
@@ -492,6 +603,11 @@ async function createOrchestratorCore(
     hopIndex: number,
   ): Promise<OrchestratorState> {
     const targetBlockchainRid = initialData.path[state.nextHopIndex];
+
+    console.log(`[ORCHESTRATOR DEBUG] === performSingleApplyTransfer hop ${hopIndex} ===`);
+    console.log(`[ORCHESTRATOR DEBUG] Target chain RID: ${targetBlockchainRid.toString('hex')}`);
+    console.log(`[ORCHESTRATOR DEBUG] Initial TX RID: ${getTransactionRid(initialData.initialTx, connection).toString('hex')}`);
+    console.log(`[ORCHESTRATOR DEBUG] Current state TX RID: ${getTransactionRid(state.tx!, connection).toString('hex')}`);
 
     const iccfOp = await state.systemConfirmationProof(targetBlockchainRid);
     const tb = await getTransactionBuilderForChain(
@@ -512,6 +628,10 @@ async function createOrchestratorCore(
           ),
         )
         .buildAndSendWithAnchoring();
+      
+      console.log(`[ORCHESTRATOR DEBUG] New TX after applyTransfer RID: ${getTransactionRid(tx, connection).toString('hex')}`);
+      console.log(`[ORCHESTRATOR DEBUG] === End hop ${hopIndex} ===`);
+      
       emitter.emit("TransferHop", targetBlockchainRid);
       return {
         tx,
@@ -520,6 +640,7 @@ async function createOrchestratorCore(
         opIndex: 1,
       };
     } catch (error) {
+      console.error(`[ORCHESTRATOR DEBUG] Error in performSingleApplyTransfer hop ${hopIndex}:`, error);
       throw new ApplyTransferError(
         `Unable to apply transfer: ${(error as any)?.message ?? error}`,
         error as Error,
@@ -528,31 +649,45 @@ async function createOrchestratorCore(
   }
 
   async function performAllApplyTransfers() {
+    console.log(`[ORCHESTRATOR DEBUG] === performAllApplyTransfers ENTRY ===`);
+    console.log(`[ORCHESTRATOR DEBUG] Starting from hopIndex: ${state.nextHopIndex}, path length: ${initialData.path.length}`);
     for (
       let hopIndex = state.nextHopIndex;
       hopIndex < initialData.path.length;
       hopIndex++
     ) {
+      console.log(`[ORCHESTRATOR DEBUG] Performing apply transfer for hop ${hopIndex}`);
       state = await performSingleApplyTransfer(hopIndex);
+      console.log(`[ORCHESTRATOR DEBUG] Completed hop ${hopIndex}, new state - nextHopIndex: ${state.nextHopIndex}`);
     }
+    console.log(`[ORCHESTRATOR DEBUG] === performAllApplyTransfers EXIT ===`);
   }
 
   async function performCompleteTransfer() {
+    console.log(`[ORCHESTRATOR DEBUG] === performCompleteTransfer ENTRY ===`);
     const targetChainRid = initialData.path.slice(-1)[0];
+    console.log(`[ORCHESTRATOR DEBUG] Target chain RID: ${targetChainRid.toString('hex')}`);
+    console.log(`[ORCHESTRATOR DEBUG] Source chain RID: ${Buffer.from(connection.client.config.blockchainRid, "hex").toString('hex')}`);
+    console.log(`[ORCHESTRATOR DEBUG] State TX RID: ${getTransactionRid(state.tx!, connection).toString('hex')}`);
+    console.log(`[ORCHESTRATOR DEBUG] State opIndex: ${state.opIndex}`);
 
     const tb = await getTransactionBuilderForChain(
       connection,
       Buffer.from(connection.client.config.blockchainRid, "hex"),
     );
 
+    console.log(`[ORCHESTRATOR DEBUG] Getting ICCF proof for complete transfer...`);
     const iccfOp = await state.systemConfirmationProof(targetChainRid);
 
+    console.log(`[ORCHESTRATOR DEBUG] Building complete transfer transaction...`);
     await tb
       .add(iccfOp)
       .add(completeTransfer(gtx.gtxToRawGtx(state.tx), state.opIndex))
       .buildAndSend();
+    console.log(`[ORCHESTRATOR DEBUG] === performCompleteTransfer EXIT ===`);
   }
 
+  console.log(`[ORCHESTRATOR DEBUG] === createOrchestratorCore EXIT ===`);
   return Object.freeze({
     state,
     initialData,
@@ -568,10 +703,20 @@ async function getTransactionBuilderForChain(
   blockchainRid: Buffer,
   authenticator: Authenticator = noopAuthenticator,
 ) {
+  console.log(`[ORCHESTRATOR DEBUG] === getTransactionBuilderForChain ===`);
+  console.log(`[ORCHESTRATOR DEBUG] Creating connection to chain: ${blockchainRid.toString('hex')}`);
+  
   const newConnection = await createConnectionToBlockchainRid(
     connection,
     blockchainRid,
   );
+  
+  console.log(`[ORCHESTRATOR DEBUG] New connection client config:`, {
+    blockchainRid: newConnection.client.config.blockchainRid,
+    nodeUrl: newConnection.client.config.nodeUrl
+  });
+  console.log(`[ORCHESTRATOR DEBUG] === End getTransactionBuilderForChain ===`);
+  
   return transactionBuilder(authenticator, newConnection.client);
 }
 
@@ -581,11 +726,37 @@ async function getAppliedTx(
   txRid: Buffer,
   opIndex: number,
 ) {
+  console.log(`[ORCHESTRATOR DEBUG] === getAppliedTx ===`);
+  console.log(`[ORCHESTRATOR DEBUG] Target chain RID: ${targetChainRid.toString('hex')}`);
+  console.log(`[ORCHESTRATOR DEBUG] Looking for TX RID: ${txRid.toString('hex')}`);
+  console.log(`[ORCHESTRATOR DEBUG] Op index: ${opIndex}`);
+
   const newConnection = await createConnectionToBlockchainRid(
     connection,
     targetChainRid,
   );
-  return newConnection.query(applyTransferTx(txRid, opIndex));
+  
+  try {
+    const result = await newConnection.query(applyTransferTx(txRid, opIndex));
+    console.log(`[ORCHESTRATOR DEBUG] Found applied TX with RID: ${Buffer.from(result.tx.tx_rid, 'hex').toString('hex')}`);
+    
+    // CRITICAL DEBUG: Show how the same tx gets different RIDs with different connection contexts
+    const originalTx = formatter.rawGtxToGtx(result.tx);
+    const ridFromOriginalConnection = getTransactionRid(originalTx, connection);
+    const ridFromTargetConnection = getTransactionRid(originalTx, newConnection);
+    
+    console.log(`[ORCHESTRATOR DEBUG] CRITICAL RID COMPARISON:`);
+    console.log(`[ORCHESTRATOR DEBUG] TX RID calculated with original connection: ${ridFromOriginalConnection.toString('hex')}`);
+    console.log(`[ORCHESTRATOR DEBUG] TX RID calculated with target connection: ${ridFromTargetConnection.toString('hex')}`);
+    console.log(`[ORCHESTRATOR DEBUG] RIDs match: ${ridFromOriginalConnection.equals(ridFromTargetConnection)}`);
+    
+    console.log(`[ORCHESTRATOR DEBUG] === End getAppliedTx ===`);
+    return result;
+  } catch (error) {
+    console.error(`[ORCHESTRATOR DEBUG] Error in getAppliedTx:`, error);
+    console.log(`[ORCHESTRATOR DEBUG] === End getAppliedTx (ERROR) ===`);
+    throw error;
+  }
 }
 
 /**
@@ -603,11 +774,26 @@ async function isAppliedOnBlockchainRid(
   txRid: Buffer,
   opIndex: number,
 ): Promise<boolean> {
+  console.log(`[ORCHESTRATOR DEBUG] === isAppliedOnBlockchainRid ===`);
+  console.log(`[ORCHESTRATOR DEBUG] Target chain RID: ${targetChainRid.toString('hex')}`);
+  console.log(`[ORCHESTRATOR DEBUG] Checking TX RID: ${txRid.toString('hex')}`);
+  console.log(`[ORCHESTRATOR DEBUG] Op index: ${opIndex}`);
+
   const newConnection = await createConnectionToBlockchainRid(
     connection,
     targetChainRid,
   );
-  return newConnection.query(isTransferApplied(txRid, opIndex));
+  
+  try {
+    const result = await newConnection.query(isTransferApplied(txRid, opIndex));
+    console.log(`[ORCHESTRATOR DEBUG] Transfer applied result: ${result}`);
+    console.log(`[ORCHESTRATOR DEBUG] === End isAppliedOnBlockchainRid ===`);
+    return result;
+  } catch (error) {
+    console.error(`[ORCHESTRATOR DEBUG] Error in isAppliedOnBlockchainRid:`, error);
+    console.log(`[ORCHESTRATOR DEBUG] === End isAppliedOnBlockchainRid (ERROR) ===`);
+    throw error;
+  }
 }
 
 /* Cross-Chain Transfer convenience event handlers */
