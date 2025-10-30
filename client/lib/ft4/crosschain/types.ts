@@ -100,6 +100,12 @@ export type Orchestrator = OrchestratorEventHandler & {
    * @returns a reference to the performed transfer
    */
   transfer: () => Promise<TransferRef>;
+  /**
+   * Performs only the first hop of the transfer for testing purposes.
+   * This function is specifically designed for testing merkle hash compatibility issues.
+   * @returns a reference to the performed transfer (though it will fail after first hop)
+   */
+  transferFirstHopOnly: () => Promise<TransferRef>;
 };
 
 export type ResumeOrchestrator = OrchestratorEventHandler & {

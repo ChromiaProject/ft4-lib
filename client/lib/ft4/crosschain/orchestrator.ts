@@ -169,10 +169,74 @@ export async function createOrchestrator(
     };
   }
 
+  /**
+   * Execute only the first hop of the transfer operation for testing purposes.
+   * This function is specifically designed for testing merkle hash compatibility issues.
+   */
+  async function transferFirstHopOnly(): Promise<TransferRef> {
+    console.log(`[ORCHESTRATOR DEBUG] === transferFirstHopOnly ENTRY ===`);
+    const orchestrator = await performInitTransfer();
+    if (state.tx === undefined || state.opIndex === undefined) {
+      console.error(`[ORCHESTRATOR DEBUG] State not properly initialized - tx: ${!!state.tx}, opIndex: ${state.opIndex}`);
+      throw new OrchestratorError(
+        "Unable to perform transfer as tx was not initialized properly",
+      );
+    }
+    console.log(`[ORCHESTRATOR DEBUG] Performing FIRST HOP ONLY...`);
+    console.log(`[ORCHESTRATOR DEBUG] Starting hop index: ${state.nextHopIndex}, path length: ${orchestrator.initialData.path.length}`);
+    
+    // Perform only the first hop (should be index 0)
+    if (state.nextHopIndex >= orchestrator.initialData.path.length) {
+      throw new OrchestratorError("No hops available to perform");
+    }
+    
+    const targetBlockchainRid = orchestrator.initialData.path[state.nextHopIndex];
+    console.log(`[ORCHESTRATOR DEBUG] Performing single hop ${state.nextHopIndex} to chain: ${targetBlockchainRid.toString('hex')}`);
+    
+    // Manually perform the first hop logic (copied from performSingleApplyTransfer)
+    const iccfOp = await state.systemConfirmationProof(targetBlockchainRid);
+    const tb = await getTransactionBuilderForChain(
+      connection,
+      targetBlockchainRid,
+    );
+
+    try {
+      const { tx, systemConfirmationProof } = await tb
+        .add(iccfOp)
+        .add(
+          applyTransfer(
+            orchestrator.initialData.initialTx,
+            orchestrator.initialData.initialOpIndex,
+            state.tx!,
+            state.opIndex!,
+            state.nextHopIndex,
+          ),
+        )
+        .buildAndSendWithAnchoring();
+      
+      console.log(`[ORCHESTRATOR DEBUG] First hop completed successfully - TX RID: ${getTransactionRid(tx, connection).toString('hex')}`);
+      console.log(`[ORCHESTRATOR DEBUG] INTENTIONALLY FAILING after first hop for testing`);
+      
+      // Intentionally fail after first hop
+      throw new Error("Transfer stopped after first hop for testing merkle hash compatibility");
+    } catch (error) {
+      if (error.message.includes("Transfer stopped after first hop")) {
+        // Re-throw our intentional testing error
+        throw error;
+      }
+      console.error(`[ORCHESTRATOR DEBUG] Error in transferFirstHopOnly:`, error);
+      throw new ApplyTransferError(
+        `Unable to apply first hop transfer: ${(error as any)?.message ?? error}`,
+        error as Error,
+      );
+    }
+  }
+
   console.log(`[ORCHESTRATOR DEBUG] === createOrchestrator EXIT ===`);
   return Object.freeze({
     ...unwrapEvents(eventEmitter),
     transfer,
+    transferFirstHopOnly,
   });
 }
 
