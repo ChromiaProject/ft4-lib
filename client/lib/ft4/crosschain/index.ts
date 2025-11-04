@@ -11,6 +11,7 @@ export {
   getRecalledTransfersFiltered,
   getPendingTransfersFiltered,
   getRevertedTransfersFiltered,
+  isTransferFullyApplied,
 } from "./query-functions";
 
 export {

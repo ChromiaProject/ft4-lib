@@ -97,7 +97,6 @@ import {
   getRecalledTransfersFiltered,
   getRevertedTransfersFiltered,
   getUnappliedTransfersFiltered,
-  isTransferFullyApplied,
 } from "@ft4/crosschain/query-functions";
 import {
   AssetOriginFilter,
@@ -389,8 +388,6 @@ export function createConnection(client: IClient): Connection {
         limit,
         cursor,
       ),
-    isTransferFullyApplied: (transfer) =>
-      isTransferFullyApplied(connection, transfer),
   });
 
   return connection;
