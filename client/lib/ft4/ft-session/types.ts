@@ -51,6 +51,7 @@ import {
   PendingTransferFilter,
   Transfer,
   TransferFilter,
+  TransferRef,
 } from "@ft4/crosschain/types";
 
 export type PageCursor = string;
@@ -465,6 +466,12 @@ export interface Connection extends Queryable {
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Transfer>>;
+  /**
+   * {@inheritDoc crosschain.isTransferFullyApplied}
+   * @param transfer - The transfer to check (TransferRef format)
+   * @returns true if the transfer is fully applied (reached target chain), false otherwise
+   */
+  isTransferFullyApplied: (transfer: TransferRef) => Promise<boolean>;
 }
 
 /**

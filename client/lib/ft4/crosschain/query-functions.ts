@@ -1,5 +1,6 @@
 import { Buffer } from "buffer";
-import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
+import { Connection, OptionalLimit, OptionalPageCursor, createConnectionToBlockchainRid } from "@ft4/ft-session";
+import { getTransactionRid } from "@ft4/utils";
 import * as Query from "./queries";
 import {
   AppliedTransfer,
@@ -12,6 +13,7 @@ import {
   PendingTransferResponse,
   Transfer,
   TransferFilter,
+  TransferRef,
   TransferResponse,
 } from "./types";
 import { BufferId, Queryable, gtx } from "postchain-client";
@@ -330,4 +332,44 @@ function createTransferObject(transfer: TransferResponse): Transfer {
     initTxRid: transfer.init_tx_rid,
     initOpIndex: transfer.init_op_index,
   });
+}
+
+/**
+ * Helper function to extract init transfer operation arguments from a TransferRef
+ * @param transfer - the transfer to extract arguments from
+ * @returns the arguments array from the init_transfer operation
+ */
+function extractInitArgs(transfer: TransferRef) {
+  return transfer.tx.operations[transfer.opIndex].args;
+}
+
+/**
+ * Checks if a crosschain transfer is fully applied by verifying if it reached the target chain.
+ * This is sufficient because if a transfer reached the target chain, all intermediate hops 
+ * must have been successful.
+ * 
+ * @param startConnection - the connection to use to create connections to other blockchains
+ * @param transfer - the transfer to check (TransferRef format)
+ * @returns true if the transfer is fully applied (reached target chain), false otherwise
+ */
+export async function isTransferFullyApplied(
+  startConnection: Connection,
+  transfer: TransferRef,
+): Promise<boolean> {
+  const args = extractInitArgs(transfer);
+  const hops = args[3] as Buffer[];
+  
+  const targetConnection = await createConnectionToBlockchainRid(
+    startConnection,
+    hops[hops.length - 1], // target chain is last hop
+  );
+  
+  // Use targetConnection to get the correct "fake" RID for the target blockchain
+  const initTxRid = getTransactionRid(transfer.tx, targetConnection);
+  
+  return await isTransferApplied(
+    targetConnection,
+    initTxRid,
+    transfer.opIndex,
+  );
 }
