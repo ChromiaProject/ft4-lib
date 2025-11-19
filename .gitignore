@@ -13,6 +13,8 @@ node-url.txt
 # Node.js specific
 node_modules/
 **.pid
+package-lock.json
+pnpm-lock.yaml
 
 # Logs
 logs/

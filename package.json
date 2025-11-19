@@ -19,12 +19,12 @@
   },
   "scripts": {
     "version:rell": "./scripts/version.sh",
-    "test": "npm run test:rell && npm run test:js",
+    "test": "pnpm run test:rell && pnpm run test:js",
     "test:rell": "./scripts/relltest.sh",
-    "test:js-unit": "npx jest -maxWorkers=1 --testPathPattern=unit/",
-    "test:js-integration": "TESTCONTAINERS_RYUK_DISABLED=true npx jest --config=jest.config.integration.js --testPathPattern=integration/",
+    "test:js-unit": "pnpm exec jest -maxWorkers=1 --testPathPattern=unit/",
+    "test:js-integration": "TESTCONTAINERS_RYUK_DISABLED=true pnpm exec jest --config=jest.config.integration.js --testPathPattern=integration/",
     "test:js-multichain": "./scripts/multichain-jesttest.sh",
-    "test:js": "npm run test:js-unit && npm run test:js-integration && npm run test:js-multichain",
+    "test:js": "pnpm run test:js-unit && pnpm run test:js-integration && pnpm run test:js-multichain",
     "test:e2e": "./scripts/start-e2e-environment.sh --run-tests-interactive",
     "test:e2e:headless": "./scripts/start-e2e-environment.sh --run-tests-headless",
     "deploy:latest": "./scripts/deploy.sh",
@@ -36,13 +36,13 @@
     "build:esm": "tsc --project tsconfig.esm.json && tsc-alias --resolve-full-paths -p tsconfig.esm.json",
     "build:umd": "tsc --project tsconfig.umd.json && tsc-alias --resolve-full-paths -p tsconfig.umd.json",
     "build:cjs": "tsc --project tsconfig.cjs.json && tsc-alias -p tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
-    "build": "npm run build:clean && npm run build:types && npm run build:esm && npm run build:umd && npm run build:cjs",
-    "prepack": "npm run build",
-    "prepublishOnly": "npm run build",
+    "build": "pnpm run build:clean && pnpm run build:types && pnpm run build:esm && pnpm run build:umd && pnpm run build:cjs",
+    "prepack": "pnpm run build",
+    "prepublishOnly": "pnpm run build",
     "prepare": "husky install",
     "generate:docs-rell": "chr generate docs-site --target doc/api/rell",
-    "generate:docs-ts": "npm run build && (api-extractor run || true) && rimraf temp && npx typedoc || exit 1",
-    "generate:docs": "npm run generate:docs-rell && npm run generate:docs-ts"
+    "generate:docs-ts": "pnpm run build && (api-extractor run || true) && rimraf temp && pnpm exec typedoc || exit 1",
+    "generate:docs": "pnpm run generate:docs-rell && pnpm run generate:docs-ts"
   },
   "repository": {
     "type": "git",
@@ -100,5 +100,6 @@
   "jest-junit": {
     "suiteName": "jest tests",
     "outputDirectory": "test-reports/ts"
-  }
+  },
+  "packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee"
 }

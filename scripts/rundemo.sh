@@ -1,7 +1,7 @@
 #!/bin/sh
 forceexit(){
     echo
-    echo 'Remember to run "npm run stop-postchain:demo"!'
+    echo 'Remember to run "pnpm run stop-postchain:demo"!'
     exit 2
 }
 
