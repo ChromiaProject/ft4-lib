@@ -53,6 +53,7 @@ install_rell:
 install_js:
   stage: install
   script:
+    - corepack enable && corepack prepare pnpm@9.12.3 --activate
     - pnpm install --frozen-lockfile
     - pnpm run compile
   artifacts:
@@ -67,6 +68,7 @@ build_docs:
     - when: manual
   script:
     - ./scripts/install-chr-and-pmc.sh --link-only
+    - corepack enable && corepack prepare pnpm@9.12.3 --activate
     - pnpm run generate:docs
   artifacts:
     paths:
@@ -77,6 +79,7 @@ unit_rell_tests:
   needs: ["install_rell"]
   script:
     - ./scripts/install-chr-and-pmc.sh --link-only
+    - corepack enable && corepack prepare pnpm@9.12.3 --activate
     - pnpm run test:rell -- --gitlab
   artifacts:
     paths:
@@ -129,6 +132,7 @@ multichain_tests:
       when: manual
   script:
     - ./scripts/install-chr-and-pmc.sh --link-only
+    - corepack enable && corepack prepare pnpm@9.12.3 --activate
     - pnpm install --frozen-lockfile
     - chmod +x ./scripts/multichain-jesttest.sh;
       ./scripts/multichain-jesttest.sh --gitlab
