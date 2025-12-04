@@ -28,11 +28,15 @@ export function createFakeAuthDataService(data: {
       Promise.resolve({ flags: [], rules: null } as LoginConfig),
     getBlockchainRid: () => Buffer.alloc(32),
     getAuthHandlerForOperation: (operationName: string) =>
-      Promise.resolve({
-        name: operationName,
-        flags: data[operationName].flags,
-        dynamic: true,
-      }),
+      Promise.resolve(
+        data[operationName]
+          ? {
+              name: operationName,
+              flags: data[operationName].flags,
+              dynamic: true,
+            }
+          : null,
+      ),
     getAllowedAuthDescriptor: (
       operation: Operation,
       accountId: Buffer,
