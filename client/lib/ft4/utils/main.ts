@@ -72,7 +72,7 @@ export function getTransactionRid(
 
 /**
  * Gets the merkle hash version from the provided source
- * @param merkleHashVersionSource the source to get the merkle hash version from, or the merkle hash version itself
+ * @param merkleHashVersionSource - the source to get the merkle hash version from, or the merkle hash version itself
  * @returns the merkle hash version
  */
 export function getMerkleHashVersion(

@@ -201,6 +201,7 @@ export {
   PendingTransferExpirationState,
   ImportConfigRaw,
   ImportConfig,
+  ImportStrategyOptions,
   CanImportAccountResult,
   getImportConfig,
   importConfig,
