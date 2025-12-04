@@ -311,6 +311,73 @@ describe("Transaction Builder", () => {
       transactionBuilder(authenticator, client).add(op("foo")).build(),
     ).rejects.toThrow(SigningError);
   });
+
+  it("can build transaction with null authenticator for nop operation", async () => {
+    const operation = nop();
+    const tx = gtx.deserialize(
+      await transactionBuilder(null, client).add(operation).build(),
+    );
+    const { name, args } = operation;
+    expect(tx.operations).toStrictEqual([{ opName: name, args }]);
+    expect(tx.signers).toStrictEqual([]);
+    expect(tx.signatures).toStrictEqual([]);
+  });
+
+  it("can build transaction with null authenticator for operation that doesn't require auth", async () => {
+    const operation = op("testNoAuthOp");
+    const tx = gtx.deserialize(
+      await transactionBuilder(null, client).add(operation).build(),
+    );
+
+    expect(tx.operations).toStrictEqual([
+      { opName: operation.name, args: operation.args },
+    ]);
+    expect(tx.signers).toStrictEqual([]);
+    expect(tx.signatures).toStrictEqual([]);
+  });
+
+  it("can build transaction with null authenticator and noopAuthenticator behaves the same", async () => {
+    const operation = nop();
+    const txWithNull = gtx.deserialize(
+      await transactionBuilder(null, client).add(operation).build(),
+    );
+    const txWithNoop = gtx.deserialize(
+      await transactionBuilder(noopAuthenticator, client)
+        .add(operation)
+        .build(),
+    );
+
+    expect(txWithNull.operations).toStrictEqual(txWithNoop.operations);
+    expect(txWithNull.signers).toStrictEqual(txWithNoop.signers);
+    expect(txWithNull.signatures).toStrictEqual(txWithNoop.signatures);
+  });
+
+  it("throws AuthorizationError when building transaction with authenticator that can't handle auth-required operation", async () => {
+    const operationName = "ft4.transfer";
+    const args = [Buffer.alloc(32), Buffer.alloc(32), BigInt(10)] as const;
+    const authDataService = createFakeAuthDataService({
+      [operationName]: { flags: [AuthFlag.Transfer], message: "" },
+    });
+
+    // Create an authenticator that returns null for key handlers but indicates auth is required
+    const authenticatorWithoutKeyHandlers: Authenticator = {
+      accountId: Buffer.alloc(32),
+      keyHandlers: [],
+      authDataService,
+      getKeyHandlerForOperation: () => Promise.resolve(null),
+      getAuthDescriptorCounter: () => Promise.resolve(null),
+    };
+
+    await expect(
+      transactionBuilder(authenticatorWithoutKeyHandlers, client)
+        .add(transfer(args[0], args[1], createAmount(args[2].toString(), 0)))
+        .build(),
+    ).rejects.toThrow(
+      new AuthorizationError(
+        `No key handler registered to handle operation <${operationName}>`,
+      ),
+    );
+  });
 });
 
 function getMocks() {
