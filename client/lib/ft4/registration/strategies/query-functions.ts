@@ -12,6 +12,12 @@ export async function getEnabledRegistrationStrategies(
   return await queryable.query(Query.enabledRegistrationStrategies());
 }
 
+/**
+ * Retrieves the import configuration from the blockchain.
+ *
+ * @param queryable - The object to use when querying the blockchain.
+ * @returns A promise that resolves to the import configuration, including trusted chains, timeout, and operation settings.
+ */
 export async function getImportConfig(
   queryable: Queryable,
 ): Promise<ImportConfig> {
