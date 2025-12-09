@@ -6,6 +6,7 @@ import {
   SigningError,
   isFtKeyStore,
   ftSigner,
+  noopAuthenticator,
 } from "@ft4/authentication";
 import {
   TxContext,
@@ -43,17 +44,18 @@ import { EMPTY_SIGNATURE, signOperation } from "./utils";
 
 /**
  * Creates a new TransactionBuilder instance
- * @param authenticator - object that holds authentication information for the transaction
+ * @param authenticator - object that holds authentication information for the transaction. Can be null for operations that don't require authentication.
  * @param client - object that holds connection info for the transaction
  * @returns a TransactionBuilder instance
  */
 export function transactionBuilder(
-  authenticator: Authenticator,
+  authenticator: Authenticator | null,
   client: IClient,
 ): TransactionBuilder {
   const _operations: OperationContext[] = [];
   const _finalFtSigners: FtSigner[] = [];
   const _context: TxContext = {};
+  const _defaultAuthenticator = authenticator ?? noopAuthenticator;
 
   function add(
     operation: Operation,
@@ -61,7 +63,7 @@ export function transactionBuilder(
   ): TransactionBuilder {
     _operations.push({
       operation,
-      authenticator: config.authenticator ?? authenticator,
+      authenticator: config.authenticator ?? _defaultAuthenticator,
       signers: config.signers,
       skipFtSigning: config.skipFtSigning,
     });
@@ -116,7 +118,22 @@ export function transactionBuilder(
         ctx,
       );
 
+      // If no key handler is returned, check if the operation requires authentication
       if (!keyHandler) {
+        const authHandler =
+          await authenticator.authDataService.getAuthHandlerForOperation(
+            operation.name,
+          );
+
+        // If no auth handler is returned, the operation doesn't require authentication,In this case, we just add the operation without any auth operations
+        if (!authHandler) {
+          processedOperations.push(operation);
+          opContext.opIndex = opIndex;
+          opIndex++;
+          continue;
+        }
+
+        // The operation requires authentication but no key handler can handle it, this is an authorization error
         throw new AuthorizationError(
           `No key handler registered to handle operation <${operation.name}>`,
         );

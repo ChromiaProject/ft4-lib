@@ -68,11 +68,15 @@ export enum PendingTransferExpirationState {
 }
 
 /**
- * options for the import strategy
- * forceSignature - Whether the user should sign. If null, the function will try not to use
- * a signature if possible, reverting to signing if needed.
- * originAccountId - The account id of the account to import. If null, the function will infer
- * the account id from the signers of the main auth descriptor.
+ * Options for the import strategy.
+ *
+ * @remarks
+ * This type allows configuring whether a signature is required and optionally specifying the origin account ID.
+ * - If `forceSignature` is `true`, a signature will always be required.
+ * - If `forceSignature` is `false` or undefined, the function will try to import without a signature if possible,
+ *   reverting to signing if needed.
+ * - If `originAccountId` is provided, it specifies the account ID to import. If not provided, the account ID
+ *   will be inferred from the signers of the main auth descriptor.
  */
 export type ImportStrategyOptions =
   | {

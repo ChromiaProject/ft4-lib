@@ -100,6 +100,7 @@ export async function getRateLimit(
  * Creates an instance of the `Account` interface
  * @param connection - a connection to the blockchain where this account is registered
  * @param accountId - the id of the account
+ * @param type - optional type of the account
  */
 export function createAccountObject(
   connection: Connection,
@@ -384,11 +385,11 @@ export async function getAccountLinksFiltered(
 /**
  * Retrieves a paginated list of subscriptions based on the provided filter, limit, and cursor.
  *
- * @param {Connection} connection - The database connection to use for the query.
- * @param {SubscriptionFilter} [subscriptionFilter=null] - The filter criteria to apply to the subscriptions.
- * @param {OptionalLimit} [limit=null] - The maximum number of subscriptions to retrieve.
- * @param {OptionalPageCursor} [cursor=null] - The cursor for pagination.
- * @returns {Promise<PaginatedEntity<Subscription>>} A promise that resolves to a paginated list of subscriptions.
+ * @param connection - The database connection to use for the query.
+ * @param subscriptionFilter - The filter criteria to apply to the subscriptions. Defaults to null.
+ * @param limit - The maximum number of subscriptions to retrieve. Defaults to null.
+ * @param cursor - The cursor for pagination. Defaults to null.
+ * @returns A promise that resolves to a paginated list of subscriptions.
  *
  * Available since ApiVersion 1
  */

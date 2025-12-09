@@ -23,6 +23,15 @@ import { CanImportAccountResult, ImportStrategyOptions } from "./types";
 import { getImportConfig } from "./query-functions";
 import { getMerkleHashVersion } from "@ft4/utils/main";
 
+/**
+ * Creates an import strategy for registering an account from another blockchain.
+ *
+ * @param originBrid - The blockchain RID where the original account exists.
+ * @param mainAuthDescriptor - The main auth descriptor of the account to import.
+ * @param loginConfig - The config if the account should be created with an active session, otherwise null.
+ * @param options - The options for the import strategy, including whether to force signature and origin account ID.
+ * @returns A Strategy instance that can be used to retrieve registration details.
+ */
 export function importStrategy(
   originBrid: BufferId,
   mainAuthDescriptor: AnyAuthDescriptorRegistration,
@@ -228,6 +237,13 @@ async function importStrategyWithoutSignature(
   };
 }
 
+/**
+ * Checks which accounts can be imported from trusted chains.
+ *
+ * @param targetChainConnection - The connection to the target blockchain where the account would be imported.
+ * @param keyStore - The keystore to use for checking accounts on trusted chains.
+ * @returns A promise that resolves to an array of results indicating which accounts can be imported and whether they require signatures.
+ */
 export async function canImportAccount(
   targetChainConnection: Connection,
   keyStore: KeyStore,
