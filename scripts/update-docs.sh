@@ -6,8 +6,8 @@ git clone https://x-token-auth:$DOCS_REPO_API_TOKEN@bitbucket.org/chromawallet/c
 ./scripts/install-chr-and-pmc.sh
 
 # create TS docs
-npm ci
-npx typedoc --out docs-repo/static/pages/ft4-ts-client/client
+pnpm install --frozen-lockfile
+pnpm exec typedoc --out docs-repo/static/pages/ft4-ts-client/client
 
 # create rell docs
 chr install
@@ -36,7 +36,7 @@ cat changelog.md >> $TS_CHGLOG
 echo 'Done!'
 
 
-VERSION=`npm pkg get version | tr -d '"'`
+VERSION=`pnpm pkg get version | tr -d '"'`
 cd docs-repo
 
 # Check if there are changes 

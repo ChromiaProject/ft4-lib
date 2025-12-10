@@ -12,6 +12,7 @@
       "ESNext.Array",
       "es2015",
       "es2019",
+      "es2023",
       "dom"
     ],
     "resolveJsonModule": true,

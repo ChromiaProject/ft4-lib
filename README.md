@@ -2,12 +2,13 @@
 
 ## Introduction
 
-The FT4 library is a toolkit to help dApp developers build real world applications
-within the Chromia ecosystem by providing out of the box support for things such as
-account creation and access management and interaction with external signature solutions
-already familiar to the user. It also provides asset management. Allowing issuance,
-allocation and transfers and tracing of asset activities, both within a chain as well
-as across other chains within the Chromia ecosystem.
+The FT4 library is a toolkit to help dApp developers build real world
+applications within the Chromia ecosystem by providing out of the box support
+for things such as account creation and access management and interaction with
+external signature solutions already familiar to the user. It also provides
+asset management. Allowing issuance, allocation and transfers and tracing of
+asset activities, both within a chain as well as across other chains within the
+Chromia ecosystem.
 
 ## Features
 
@@ -21,7 +22,8 @@ as across other chains within the Chromia ecosystem.
   independently of asset activities.
 
 A full documentation on how to use the various features of the library can be
-found on the [official docs page](https://docs.chromia.com/category/ft4-accounts-and-tokens).
+found on the
+[official docs page](https://docs.chromia.com/category/ft4-accounts-and-tokens).
 
 ## Repository Overview
 
@@ -45,7 +47,7 @@ Clone the repository and install the dependencies:
 ```bash
 git clone git@gitlab.com:chromaway/ft4-lib.git
 cd ft4-lib
-npm install
+pnpm install
 chr install
 ```
 
@@ -54,7 +56,7 @@ chr install
 Build TypeScript library into `dist/`:
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 ## How to Run Tests
@@ -64,21 +66,22 @@ npm run build
 Run the complete set of Rell and TypeScript tests:
 
 ```bash
-npm run test
+pnpm run test
 ```
 
 Run only Rell or TypeScript tests:
 
 ```bash
-npm run test:rell
-npm run test:js
+pnpm run test:rell
+pnpm run test:js
 ```
 
 The TypeScript tests can be run with even more granularity:
+
 ```bash
-npm run test:js-unit # does not make any calls to a real blockchain
-npm run test:js-integration # stars a single blockchain which it interacts with
-npm run test:js-multichain # Stars a cluster of chains which it interacts with
+pnpm run test:js-unit # does not make any calls to a real blockchain
+pnpm run test:js-integration # stars a single blockchain which it interacts with
+pnpm run test:js-multichain # Stars a cluster of chains which it interacts with
 ```
 
 ### Running Specific Rell Tests
@@ -86,8 +89,8 @@ npm run test:js-multichain # Stars a cluster of chains which it interacts with
 To execute particular tests in Rell, use the `--tests` or `-t` option:
 
 ```bash
-npm run test:rell -- --tests=test1,test2
-npm run test:rell -- -t=test1,test2
+pnpm run test:rell -- --tests=test1,test2
+pnpm run test:rell -- -t=test1,test2
 ```
 
 ### Running Specific Jest Tests
@@ -95,14 +98,14 @@ npm run test:rell -- -t=test1,test2
 Execute specific Jest tests by string matching:
 
 ```bash
-npm run test:js 'string matching test(s)'
+pnpm run test:js 'string matching test(s)'
 ```
 
 Examples:
 
 ```bash
-npm run test:js 'user'
-npm run test:js 'rate|sso'
+pnpm run test:js 'user'
+pnpm run test:js 'rate|sso'
 ```
 
 ## Running End-to-End Tests with Cypress
@@ -112,7 +115,7 @@ npm run test:js 'rate|sso'
 Run e2e tests interactively:
 
 ```bash
-npm run test:e2e
+pnpm run test:e2e
 ```
 
 ### Headless Mode
@@ -120,14 +123,15 @@ npm run test:e2e
 Run e2e tests in headless mode:
 
 ```bash
-npm run test:e2e:headless
+pnpm run test:e2e:headless
 ```
 
 ## Changelog
 
-Update changelog in `doc/release-notes/`, then run `./scripts/compile-changelog.sh`
-script to assemble `changelog.md` and `rell-changelog.md`. Do not update
-`changelog.md` or `rell-changelog.md` directly.
+Update changelog in `doc/release-notes/`, then run
+`./scripts/compile-changelog.sh` script to assemble `changelog.md` and
+`rell-changelog.md`. Do not update `changelog.md` or `rell-changelog.md`
+directly.
 
 ## License
 
