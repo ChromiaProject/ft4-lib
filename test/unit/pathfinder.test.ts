@@ -254,23 +254,26 @@ function setOriginAssetsQueryResponsesByLength(
   let i = 0;
   const nextChain = () => Buffer.from(String(++i).repeat(4), "hex");
   // X-Y-Z
-  const commonToRootArray = commonToRootHops
-    ? [commonChainRid]
-        .concat(Array.from({ length: commonToRootHops - 1 }, nextChain))
-        .concat(formatter.ensureBuffer(rootBlockchainRid))
-    : [formatter.ensureBuffer(rootBlockchainRid)];
+  const rootBuffer = Buffer.from(formatter.ensureBuffer(rootBlockchainRid));
+  const commonToRootArray: Buffer[] = commonToRootHops
+    ? [
+        commonChainRid,
+        ...Array.from({ length: commonToRootHops - 1 }, nextChain),
+        rootBuffer,
+      ]
+    : [rootBuffer];
 
   //B-C-X-Y-Z
-  const startToRoot = Array.from(
-    { length: startToCommonHops - 1 },
-    nextChain,
-  ).concat(commonToRootArray);
+  const startToRoot: Buffer[] = [
+    ...Array.from({ length: startToCommonHops - 1 }, nextChain),
+    ...commonToRootArray,
+  ];
 
   //E-X-Y-Z
-  const endToRoot = Array.from(
-    { length: endToCommonHops - 1 },
-    nextChain,
-  ).concat(commonToRootArray);
+  const endToRoot: Buffer[] = [
+    ...Array.from({ length: endToCommonHops - 1 }, nextChain),
+    ...commonToRootArray,
+  ];
 
   setOriginAssetsQueryResponses(startToRoot, endToRoot);
 }

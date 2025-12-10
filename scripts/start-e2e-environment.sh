@@ -70,8 +70,8 @@ start_frontend() {
     echo "Starting React frontend..."
     cd $FRONTEND_PATH
 
-    npm ci
-    PORT=$FRONTEND_PORT npm start &
+    pnpm install --frozen-lockfile
+    PORT=$FRONTEND_PORT pnpm start &
 
     cd - > /dev/null
 }
