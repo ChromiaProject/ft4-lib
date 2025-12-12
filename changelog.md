@@ -17,6 +17,17 @@ and this project adheres to
 - added string 'type' property to Account interface. Allows distinguishing user
   accounts from system and lock accounts
 
+## [2.0.4] - 2025-10-10
+
+### Changed 🪙
+
+- updated postchain client version to 2.0.4
+
+### Added ✅
+
+- added string 'type' property to Account interface. Allows distinguishing user accounts from system and lock accounts
+
+
 ## [2.0.3] - 2025-09-22
 
 ### Added ✅
