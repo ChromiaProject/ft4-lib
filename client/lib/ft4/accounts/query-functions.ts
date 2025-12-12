@@ -550,7 +550,7 @@ export async function getAccountMainAuthDescriptor(
 
 /**
  * Converts an AccountResponse
- * @param account the account to map
+ * @param account - the account to map
  * @returns The id and type of the account
  */
 export function createAccountObjectFiltered(

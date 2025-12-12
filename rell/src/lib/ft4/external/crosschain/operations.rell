@@ -81,7 +81,7 @@ function () = auth.add_overridable_auth_handler(
  *                      go through in order to reach the recipient on the target chain, which 
  *                      will be the last entry in the array. The rid of this blockchain must
  *                      not be included in the array.
- * @param deadline      Time in milliseconds for which this transfer is valid, if the
+ * @param deadline      Timestamp in milliseconds until which this transfer is valid, if the
  *                      transfer were not completed within this deadline, it will be
  *                      possible for the sender to recall it.
  */
@@ -464,7 +464,12 @@ operation cancel_transfer(
             .format(init_transfer_details.args.deadline, op_context.last_block_time)
     );
 
-    create crosschain.canceled_transfers(init_transfer_details.tx_rid, init_tx_op_index);
+    create crosschain.canceled_transfers(
+        init_tx_rid=init_transfer_details.tx_rid,
+        init_op_index=init_tx_op_index,
+        transaction_rid=op_context.transaction.tx_rid,
+        op_index=op_context.op_index
+    );
 }
 
 /**
@@ -548,13 +553,13 @@ operation unapply_transfer(
     );
 
     require(
-        crosschain.canceled_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
+        crosschain.canceled_transfers @? {.init_tx_rid == init_transfer_details.tx_rid, .init_op_index==init_tx_op_index} == null,
         "INVALID TRANSFER: Transaction <%s> transfer at index <%s> has already been canceled on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 
     require(
-        crosschain.unapplied_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
+        crosschain.unapplied_transfers @? {.init_tx_rid == init_transfer_details.tx_rid, .init_op_index==init_tx_op_index} == null,
         "INVALID TRANSFER: Transaction <%s> transfer at index <%s> has already been unapplied on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
@@ -658,7 +663,12 @@ operation unapply_transfer(
         init_transfer_details.args.amount
     );
 
-    create crosschain.unapplied_transfers(init_transfer_details.tx_rid, init_tx_op_index);
+    create crosschain.unapplied_transfers(
+        init_tx_rid=init_transfer_details.tx_rid,
+        init_op_index=init_tx_op_index,
+        transaction_rid=op_context.transaction.tx_rid,
+        op_index=op_context.op_index
+    );
 }
 
 /**
@@ -824,7 +834,12 @@ operation revert_transfer(
         .is_input = true
     );
 
-    create crosschain.reverted_transfer(init_tx_rid = init_transfer_details.tx_rid, init_op_index = init_tx_op_index);
+    create crosschain.reverted_transfer(
+        init_tx_rid = init_transfer_details.tx_rid,
+        init_op_index = init_tx_op_index,
+        transaction_rid=op_context.transaction.tx_rid,
+        op_index=op_context.op_index
+    );
 }
 
 /**
@@ -900,7 +915,7 @@ operation recall_unclaimed_transfer(
     );
 
     require(
-        crosschain.recalled_transfers @? { init_transfer_details.tx_rid, init_tx_op_index } == null,
+        crosschain.recalled_transfers @? { .init_tx_rid == init_transfer_details.tx_rid, .init_op_index == init_tx_op_index } == null,
         "INVALID TRANSACTION: Transaction <%s> transfer at index <%s> has already been recalled on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
@@ -923,7 +938,12 @@ operation recall_unclaimed_transfer(
         is_input = false
     );
 
-    create crosschain.recalled_transfers(init_transfer_details.tx_rid, init_tx_op_index);
+    create crosschain.recalled_transfers(
+        init_tx_rid=init_transfer_details.tx_rid,
+        init_op_index=init_tx_op_index,
+        transaction_rid=op_context.transaction.tx_rid,
+        op_index=op_context.op_index
+    );
 }
 
 /**
@@ -987,13 +1007,13 @@ function validate_apply_transfer(
     );
 
     require(
-        crosschain.canceled_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
+        crosschain.canceled_transfers @? {.init_tx_rid == init_transfer_details.tx_rid, .init_op_index == init_tx_op_index} == null,
         "INVALID TRANSACTION: Transaction <%s> transfer at index <%s> has already been canceled on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 
     require(
-        crosschain.unapplied_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
+        crosschain.unapplied_transfers @? {.init_tx_rid == init_transfer_details.tx_rid, .init_op_index == init_tx_op_index} == null,
         "INVALID TRANSACTION: Transaction <%s> transfer at index <%s> has already been unapplied on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );

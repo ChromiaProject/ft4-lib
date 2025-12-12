@@ -2,12 +2,14 @@ import { AccountResponse } from "@ft4/accounts";
 import { Asset, AssetResponse } from "@ft4/asset";
 import { EventEmitter, Listener } from "@ft4/events";
 import {
-  BufferId,
   GTX,
   Operation,
   SignedTransaction,
   TransactionReceipt,
 } from "postchain-client";
+
+export const NO_TRANSACTION_RID = Buffer.alloc(0);
+export const NO_OP_INDEX = -1;
 
 export type GtvInitTransferArgs = [
   receiverId: Buffer,
@@ -20,7 +22,7 @@ export type GtvInitTransferArgs = [
 export type OrchestratorEvents = {
   TransferSigned: [SignedTransaction];
   TransferInit: [TransactionReceipt];
-  TransferHop: [BufferId];
+  TransferHop: [HopData];
 };
 
 export type OrchestratorState = {
@@ -40,6 +42,11 @@ export type OrchestratorData = {
   path: Buffer[];
   initialTx: GTX;
   initialOpIndex: number;
+};
+
+export type HopData = {
+  brid: Buffer;
+  txRid: Buffer;
 };
 
 export type OrchestratorEventHandler = {
@@ -67,12 +74,12 @@ export type OrchestratorEventHandler = {
    * Registers a listener that gets invoked when a transfer hop is successfully completed
    * @param listener - the listener to register
    */
-  onTransferHop: (listener: Listener<[BufferId]>) => void;
+  onTransferHop: (listener: Listener<[HopData]>) => void;
   /**
    * De-registers a listener that was previously registered for receiving events when a transfer hop is successfully completed
    * @param listener - the listener to remove
    */
-  offTransferHop: (listener: Listener<[BufferId]>) => void;
+  offTransferHop: (listener: Listener<[HopData]>) => void;
 };
 
 /**
@@ -180,9 +187,80 @@ export type AppliedTransfer = {
 export type TransferResponse = {
   init_tx_rid: Buffer;
   init_op_index: number;
+  transaction_rid?: Buffer;
+  op_index?: number;
 };
 
 export type Transfer = {
   initTxRid: Buffer;
   initOpIndex: number;
+  transactionRid?: Buffer;
+  opIndex?: number;
 };
+
+/**
+ * Events emitted by the `solvePendingCrosschainTransfer` function
+ */
+export type SolveTransferEvents = {
+  /**
+   * Emitted when the transfer is found
+   */
+  found: Buffer;
+  /**
+   * Emitted when the transfer is evaluated
+   */
+  evaluated: EvaluationResult;
+  /**
+   * Emitted when a transfer hop is successfully completed
+   */
+  hop: HopData;
+};
+
+/**
+ * Result of the evaluation of a transfer
+ */
+export type EvaluationResult = {
+  /**
+   * Whether the transfer has expired
+   */
+  expired: boolean;
+  /**
+   * Whether the transfer has reached the target chain
+   */
+  reachedTargetChain: boolean;
+  /**
+   * Whether the transfer has been claimed
+   */
+  claimed: boolean;
+  /**
+   * Whether the target account exists. If false, the user was trying to register
+   * an account with this transfer.
+   */
+  targetAccountExists: boolean;
+  /**
+   * Whether the funds must return to the sender.
+   * If this is false, the transfer can still reach the target chain.
+   */
+  fundsMustReturnToSender: boolean;
+};
+
+/**
+ * The result of calling {@link isUnclaimedTransfer}.
+ * It will work on any completed crosschain transfer, regardless of whether it
+ * was meant to create an account.
+ */
+export enum UnclaimedTransferStatus {
+  /**
+   * The transfer must be recalled because it has expired, and the account doesn't exist.
+   */
+  MustBeRecalled,
+  /**
+   * The transfer must be claimed by the recipient, and it cannot yet be recalled.
+   */
+  MustBeClaimed,
+  /**
+   * The transfer has reached the destination account, or it wasn't an account creation transfer
+   * in the first place.
+   */
+  IsDone,
+}

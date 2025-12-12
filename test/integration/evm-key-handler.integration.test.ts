@@ -1,8 +1,5 @@
-import {
-  createAccount,
-  getAccountIdFromAuthDescriptor,
-  useChromiaNode,
-} from "@ft4-test/util";
+import { createAccount, useChromiaNode } from "@ft4-test/util";
+import { getExpectedAccountIdFromMainAuthDescriptor } from "@ft4/utils";
 import {
   AuthFlag,
   createSingleSigAuthDescriptorRegistration,
@@ -34,7 +31,7 @@ describe("EVM key handler", () => {
     await createAccount(client, ad);
 
     const session = await createKeyStoreInteractor(client, keyStore).getSession(
-      getAccountIdFromAuthDescriptor(ad),
+      getExpectedAccountIdFromMainAuthDescriptor(ad, client),
     );
 
     const keyPair2 = encryption.makeKeyPair();

@@ -30,10 +30,12 @@ function map_applied_transfer(applied_transfers) {
  * @param init_tx_rid    the init_tx_rid to retrieve
  * @param init_op_index  the init_op_index to retrieve
  */
-function map_transfer(init_tx_rid: byte_array, init_op_index: integer) {
+function map_transfer(init_tx_rid: byte_array, init_op_index: integer, transaction_rid: byte_array, op_index: integer) {
     return (
         init_tx_rid = init_tx_rid,
-        init_op_index = init_op_index
+        init_op_index = init_op_index,
+        transaction_rid = if (transaction_rid == NO_TRANSACTION_RID) null else transaction_rid,
+        op_index = if (op_index == NO_OP_INDEX) null else op_index
     );
 }
 

@@ -222,7 +222,9 @@ function test_get_canceled_transfers_filtered_without_filter() {
         data = [
             crosschain.map_transfer(
                 canceled_transfer.init_tx_rid,
-                canceled_transfer.init_op_index
+                canceled_transfer.init_op_index,
+                canceled_transfer.transaction_rid,
+                canceled_transfer.op_index
             ).to_gtv_pretty()
         ]
     ));
@@ -281,7 +283,9 @@ function test_get_canceled_transfers_filtered_by_single_init_tx_rids_and_init_op
         data = [
             crosschain.map_transfer(
                 canceled_transfer.init_tx_rid,
-                canceled_transfer.init_op_index
+                canceled_transfer.init_op_index,
+                canceled_transfer.transaction_rid,
+                canceled_transfer.op_index
             ).to_gtv_pretty()
         ]
     ));
@@ -318,11 +322,15 @@ function test_get_canceled_transfers_filtered_by_multiple_init_tx_rids_using_all
         data = [
             crosschain.map_transfer(
                 canceled_transfer_one.init_tx_rid,
-                canceled_transfer_one.init_op_index
+                canceled_transfer_one.init_op_index,
+                canceled_transfer_one.transaction_rid,
+                canceled_transfer_one.op_index
             ).to_gtv_pretty(),
             crosschain.map_transfer(
                 canceled_transfer_two.init_tx_rid,
-                canceled_transfer_two.init_op_index
+                canceled_transfer_two.init_op_index,
+                canceled_transfer_two.transaction_rid,
+                canceled_transfer_two.op_index
             ).to_gtv_pretty()
         ]
     ));
@@ -372,7 +380,9 @@ function test_get_unapplied_transfers_filtered_without_filter() {
         data = [
             crosschain.map_transfer(
                 unapplied_transfer.init_tx_rid,
-                unapplied_transfer.init_op_index
+                unapplied_transfer.init_op_index,
+                unapplied_transfer.transaction_rid,
+                unapplied_transfer.op_index
             ).to_gtv_pretty()
         ]
     ));
@@ -431,7 +441,9 @@ function test_get_unapplied_transfers_filtered_by_single_init_tx_rid_and_init_op
         data = [
             crosschain.map_transfer(
                 unapplied_transfer.init_tx_rid,
-                unapplied_transfer.init_op_index
+                unapplied_transfer.init_op_index,
+                unapplied_transfer.transaction_rid,
+                unapplied_transfer.op_index
             ).to_gtv_pretty()
         ]
     ));  
@@ -469,11 +481,15 @@ function test_get_unapplied_transfers_filtered_by_multiple_init_tx_rids_using_al
         data = [
             crosschain.map_transfer(
                 unapplied_transfer_one.init_tx_rid,
-                unapplied_transfer_one.init_op_index
+                unapplied_transfer_one.init_op_index,
+                unapplied_transfer_one.transaction_rid,
+                unapplied_transfer_one.op_index
             ).to_gtv_pretty(),
             crosschain.map_transfer(
                 unapplied_transfer_two.init_tx_rid,
-                unapplied_transfer_two.init_op_index
+                unapplied_transfer_two.init_op_index,
+                unapplied_transfer_two.transaction_rid,
+                unapplied_transfer_two.op_index
             ).to_gtv_pretty()
         ]
     )); 
@@ -637,7 +653,9 @@ function test_get_reverted_transfers_filtered_without_filter() {
         data = [
             crosschain.map_transfer(
                 reverted_transfer.init_tx_rid,
-                reverted_transfer.init_op_index
+                reverted_transfer.init_op_index,
+                reverted_transfer.transaction_rid,
+                reverted_transfer.op_index
             ).to_gtv_pretty()]
         )
     );
@@ -681,7 +699,9 @@ function test_get_reverted_transfers_filtered_by_single_init_tx_rid_and_init_op_
         next_cursor = null,
         data = [crosschain.map_transfer(
             reverted_transfer.init_tx_rid,
-            reverted_transfer.init_op_index
+            reverted_transfer.init_op_index,
+            reverted_transfer.transaction_rid,
+            reverted_transfer.op_index
         ).to_gtv_pretty()]
     ));
 }
@@ -715,11 +735,15 @@ function test_get_reverted_transfers_filtered_by_multiple_init_tx_rids_using_all
         data = [
             crosschain.map_transfer(
                 reverted_transfer_one.init_tx_rid,
-                reverted_transfer_one.init_op_index
+                reverted_transfer_one.init_op_index,
+                reverted_transfer_one.transaction_rid,
+                reverted_transfer_one.op_index
             ).to_gtv_pretty(),
             crosschain.map_transfer(
                 reverted_transfer_two.init_tx_rid,
-                reverted_transfer_two.init_op_index
+                reverted_transfer_two.init_op_index,
+                reverted_transfer_two.transaction_rid,
+                reverted_transfer_two.op_index
             ).to_gtv_pretty()
         ]
     ));

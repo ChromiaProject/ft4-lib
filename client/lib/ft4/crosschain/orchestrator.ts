@@ -52,7 +52,14 @@ import {
   RevertOrchestrator,
   OrchestratorData,
   OrchestratorEventHandler,
+  Transfer,
+  HopData,
 } from "./types";
+import {
+  getCanceledTransfersFiltered,
+  getRecalledTransfersFiltered,
+  getUnappliedTransfersFiltered,
+} from "./query-functions";
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
  * @param connection - The connection.
@@ -184,7 +191,7 @@ export async function createResumeOrchestrator(
         !(await isAppliedOnBlockchainRid(
           connection,
           formatter.ensureBuffer(path[i]),
-          getTransactionRid(initialData.initialTx, connection),
+          initialData.initialTx,
           initialData.initialOpIndex,
         ))
       ) {
@@ -216,7 +223,7 @@ export async function createResumeOrchestrator(
       const res = await getAppliedTx(
         connection,
         lastBlockchainRid,
-        getTransactionRid(initialData.initialTx, connection),
+        initialData.initialTx,
         initialData.initialOpIndex,
       );
       transactionToApply = formatter.rawGtxToGtx(res.tx);
@@ -277,12 +284,26 @@ export async function createRevertOrchestrator(
 
   async function revertTransfer(): Promise<void> {
     let firstNotAppliedHopIndex: number | undefined = undefined;
+    let firstCanceledHopIndex: number | undefined = undefined;
+    let canceledTransfer: Transfer | null = null;
     for (let i = 0; i < path.length; i++) {
+      const targetChainRid = path[i];
+
+      canceledTransfer = await getCanceledOrUnappliedTransferOnBlockchainRid(
+        connection,
+        targetChainRid,
+        pendingTransfer.tx,
+        pendingTransfer.opIndex,
+      );
+      if (canceledTransfer) {
+        firstCanceledHopIndex = i;
+        break;
+      }
       if (
         !(await isAppliedOnBlockchainRid(
           connection,
-          formatter.ensureBuffer(path[i]),
-          getTransactionRid(pendingTransfer.tx, connection),
+          targetChainRid,
+          pendingTransfer.tx,
           pendingTransfer.opIndex,
         ))
       ) {
@@ -291,14 +312,33 @@ export async function createRevertOrchestrator(
       }
     }
 
-    if (firstNotAppliedHopIndex === undefined) {
+    if (
+      firstNotAppliedHopIndex === undefined &&
+      firstCanceledHopIndex === undefined
+    ) {
       throw new OrchestratorError("Transfer is already applied, cannot revert");
     }
 
+    if (firstCanceledHopIndex !== undefined) {
+      await initReversalFromCanceledTransfer(
+        firstCanceledHopIndex,
+        canceledTransfer,
+      );
+    } else {
+      await initReversalFromNotAppliedTransfer(firstNotAppliedHopIndex!);
+    }
+
+    await performAllRevertTransfers();
+  }
+
+  async function initReversalFromNotAppliedTransfer(
+    firstNotAppliedHopIndex: number,
+  ): Promise<void> {
     let lastBlockchainRid: Buffer;
     let tx: GTX;
     let opIndex: number;
 
+    // retrieve the last applied transfer
     if (firstNotAppliedHopIndex === 0) {
       lastBlockchainRid = formatter.toBuffer(
         connection.client.config.blockchainRid,
@@ -310,7 +350,7 @@ export async function createRevertOrchestrator(
       const res = await getAppliedTx(
         connection,
         lastBlockchainRid,
-        getTransactionRid(pendingTransfer.tx, connection),
+        pendingTransfer.tx,
         pendingTransfer.opIndex,
       );
       tx = formatter.rawGtxToGtx(res.tx);
@@ -335,7 +375,11 @@ export async function createRevertOrchestrator(
     );
 
     try {
-      const { tx: transaction, systemConfirmationProof } = await tb
+      const {
+        tx: transaction,
+        systemConfirmationProof,
+        receipt,
+      } = await tb
         .add(iccfOp)
         .add(
           cancelTransfer(
@@ -348,7 +392,10 @@ export async function createRevertOrchestrator(
         )
         .buildAndSendWithAnchoring();
 
-      eventEmitter.emit("TransferHop", targetBlockchainRid);
+      eventEmitter.emit("TransferHop", {
+        brid: targetBlockchainRid,
+        txRid: receipt.transactionRid,
+      });
       state = {
         tx: transaction,
         nextHopIndex: firstNotAppliedHopIndex - 1,
@@ -361,19 +408,18 @@ export async function createRevertOrchestrator(
         error as Error,
       );
     }
-    await performAllRevertTransfers(firstNotAppliedHopIndex);
   }
 
-  async function recallUnclaimedTransfer(): Promise<void> {
-    const targetBlockchainRid = path[path.length - 1];
-
+  async function initReversalFromNotRecalledTransfer(
+    targetBlockchainRid: Buffer,
+  ): Promise<void> {
     const tb = await getTransactionBuilderForChain(
       connection,
       targetBlockchainRid,
     );
 
     try {
-      const { tx, systemConfirmationProof } = await tb
+      const { tx, systemConfirmationProof, receipt } = await tb
         .add(
           reclaimUnclaimedTransferOp(
             pendingTransfer.tx,
@@ -382,7 +428,10 @@ export async function createRevertOrchestrator(
         )
         .buildAndSendWithAnchoring();
 
-      eventEmitter.emit("TransferHop", targetBlockchainRid);
+      eventEmitter.emit("TransferHop", {
+        brid: targetBlockchainRid,
+        txRid: receipt.transactionRid,
+      });
       state = {
         tx,
         systemConfirmationProof,
@@ -396,14 +445,107 @@ export async function createRevertOrchestrator(
         error as Error,
       );
     }
-
-    await performAllRevertTransfers(path.length - 1);
   }
 
-  async function performAllRevertTransfers(
-    firstNotAppliedHopIndex: number,
+  async function initReversalFromCanceledTransfer(
+    firstCanceledHopIndex: number,
+    canceledTransfer: Transfer | null,
   ): Promise<void> {
-    for (let hop = firstNotAppliedHopIndex - 1; hop >= 0; hop--) {
+    if (!canceledTransfer) {
+      throw new OrchestratorError(
+        "Transfer is canceled, but no canceled transfer was found.",
+      );
+    }
+    const lastBlockchainRid = path[firstCanceledHopIndex];
+    const canceledTransferConnection = await createConnectionToBlockchainRid(
+      connection,
+      lastBlockchainRid,
+    );
+
+    if (!canceledTransfer.transactionRid || !canceledTransfer.opIndex) {
+      const apiVersion = await canceledTransferConnection.getApiVersion();
+      if (apiVersion <= 1) {
+        throw new OrchestratorError(
+          "Transfer is already canceled, but it cannot be automatically reverted." +
+            " The chain it was canceled on does not support resuming a canceled transfer." +
+            " Please Contact an admin to help you.",
+        );
+      }
+      throw new OrchestratorError(
+        "Transfer is already canceled, but it cannot be automatically reverted." +
+          " The cancelling happened before the chain supported canceling transfers." +
+          " Please Contact an admin to help you.",
+      );
+    }
+
+    const rawTx = await canceledTransferConnection.client.getTransaction(
+      canceledTransfer.transactionRid,
+    );
+    const tx = gtx.deserialize(rawTx);
+    const opIndex = canceledTransfer.opIndex;
+
+    state = {
+      tx,
+      opIndex,
+      nextHopIndex: firstCanceledHopIndex - 1,
+      systemConfirmationProof: getSystemAnchoringIccfProofOp(
+        canceledTransferConnection.client,
+        tx,
+      ),
+    };
+  }
+
+  async function recallUnclaimedTransfer(): Promise<void> {
+    const targetBlockchainRid = path[path.length - 1];
+    const targetConnection = await createConnectionToBlockchainRid(
+      connection,
+      targetBlockchainRid,
+    );
+
+    const recalledTransfer = (
+      await getRecalledTransfersFiltered(targetConnection, {
+        initTxRids: [getTransactionRid(pendingTransfer.tx, connection)],
+        initOpIndex: pendingTransfer.opIndex,
+      })
+    ).data[0];
+
+    if (recalledTransfer) {
+      let firstCanceledHopIndex: number | undefined = undefined;
+      let canceledTransfer: Transfer | null = null;
+      for (let i = 0; i < path.length; i++) {
+        const targetChainRid = path[i];
+
+        canceledTransfer = await getCanceledOrUnappliedTransferOnBlockchainRid(
+          connection,
+          targetChainRid,
+          pendingTransfer.tx,
+          pendingTransfer.opIndex,
+        );
+        if (canceledTransfer) {
+          firstCanceledHopIndex = i;
+          break;
+        }
+      }
+      if (firstCanceledHopIndex !== undefined) {
+        await initReversalFromCanceledTransfer(
+          firstCanceledHopIndex,
+          canceledTransfer,
+        );
+      } else {
+        await initReversalFromCanceledTransfer(
+          path.length - 1,
+          recalledTransfer,
+        );
+      }
+    } else {
+      await initReversalFromNotRecalledTransfer(targetBlockchainRid);
+    }
+
+    await performAllRevertTransfers();
+  }
+
+  async function performAllRevertTransfers(): Promise<void> {
+    for (let hop = state.nextHopIndex; hop >= 0; hop--) {
       const targetBlockchainRid = path[hop];
 
       const iccfOp = await state.systemConfirmationProof(targetBlockchainRid);
@@ -414,7 +556,7 @@ export async function createRevertOrchestrator(
       );
 
       try {
-        const { tx, systemConfirmationProof } = await tb
+        const { tx, systemConfirmationProof, receipt } = await tb
           .add(iccfOp)
           .add(
             unapplyTransfer(
@@ -427,7 +569,10 @@ export async function createRevertOrchestrator(
           )
           .buildAndSendWithAnchoring();
 
-        eventEmitter.emit("TransferHop", targetBlockchainRid);
+        eventEmitter.emit("TransferHop", {
+          brid: targetBlockchainRid,
+          txRid: receipt.transactionRid,
+        });
 
         state = {
           tx,
@@ -447,7 +592,10 @@ export async function createRevertOrchestrator(
       connection.blockchainRid,
     );
 
-    await transactionBuilder(noopAuthenticator, connection.client)
+    const { receipt } = await transactionBuilder(
+      noopAuthenticator,
+      connection.client,
+    )
       .add(finalIccfOp, { authenticator: noopAuthenticator })
       .add(
         revertTransferOp(
@@ -458,6 +606,10 @@ export async function createRevertOrchestrator(
         ),
       )
       .buildAndSend();
+    eventEmitter.emit("TransferHop", {
+      brid: connection.blockchainRid,
+      txRid: receipt.transactionRid,
+    });
   }
 
   return Object.freeze({
@@ -485,8 +637,7 @@ async function createOrchestratorCore(
 
   /**
    * Apply the transfer operation targeting a specific blockchain.
-   * @param hopIndex hop index
-   * @param targetChainRid - The ID of the target blockchain.
+   * @param hopIndex - hop index
    */
   async function performSingleApplyTransfer(
     hopIndex: number,
@@ -500,7 +651,7 @@ async function createOrchestratorCore(
     );
 
     try {
-      const { tx, systemConfirmationProof } = await tb
+      const { tx, systemConfirmationProof, receipt } = await tb
         .add(iccfOp)
         .add(
           applyTransfer(
@@ -512,7 +663,10 @@ async function createOrchestratorCore(
           ),
         )
         .buildAndSendWithAnchoring();
-      emitter.emit("TransferHop", targetBlockchainRid);
+      emitter.emit("TransferHop", {
+        brid: targetBlockchainRid,
+        txRid: receipt.transactionRid,
+      });
       return {
         tx,
         systemConfirmationProof,
@@ -546,11 +700,14 @@ async function createOrchestratorCore(
     );
 
     const iccfOp = await state.systemConfirmationProof(targetChainRid);
-
-    await tb
+    const { receipt } = await tb
       .add(iccfOp)
       .add(completeTransfer(gtx.gtxToRawGtx(state.tx), state.opIndex))
       .buildAndSend();
+    emitter.emit("TransferHop", {
+      brid: connection.blockchainRid,
+      txRid: receipt.transactionRid,
+    });
   }
 
   return Object.freeze({
@@ -578,14 +735,16 @@ async function getTransactionBuilderForChain(
 async function getAppliedTx(
   connection: Connection,
   targetChainRid: Buffer,
-  txRid: Buffer,
+  tx: GTX,
   opIndex: number,
 ) {
   const newConnection = await createConnectionToBlockchainRid(
     connection,
     targetChainRid,
   );
-  return newConnection.query(applyTransferTx(txRid, opIndex));
+  return newConnection.query(
+    applyTransferTx(getTransactionRid(tx, newConnection), opIndex),
+  );
 }
 
 /**
@@ -593,21 +752,59 @@ async function getAppliedTx(
  * this blockchainRid.
  * @param connection - the Connection
  * @param targetChainRid - the blockchain rid of the chain to check
- * @param txRid - the RID of the transaction containing the transfer
+ * @param tx
  * @param opIndex - the index of the transfer in the transaction
  * @returns a promise that resolves to true if transfer is applied, otherwise resolves to false.
  */
 async function isAppliedOnBlockchainRid(
   connection: Connection,
   targetChainRid: Buffer,
-  txRid: Buffer,
+  tx: GTX,
   opIndex: number,
 ): Promise<boolean> {
   const newConnection = await createConnectionToBlockchainRid(
     connection,
     targetChainRid,
   );
-  return newConnection.query(isTransferApplied(txRid, opIndex));
+  return newConnection.query(
+    isTransferApplied(getTransactionRid(tx, newConnection), opIndex),
+  );
+}
+
+/**
+ * Checks to see whether the specified transfer is already canceled or
+ * unapplied on this blockchainRid.
+ * @param connection - the Connection
+ * @param targetChainRid - the blockchain rid of the chain to check
+ * @param tx
+ * @param opIndex - the index of the transfer in the transaction
+ * @returns a promise that resolves to the canceled transfer if found,
+ * otherwise resolves to null.
+ */
+async function getCanceledOrUnappliedTransferOnBlockchainRid(
+  connection: Connection,
+  targetChainRid: Buffer,
+  tx: GTX,
+  opIndex: number,
+): Promise<Transfer | null> {
+  const newConnection = await createConnectionToBlockchainRid(
+    connection,
+    targetChainRid,
+  );
+  const txRid = getTransactionRid(tx, newConnection);
+
+  const canceledTransfers = await getCanceledTransfersFiltered(newConnection, {
+    initTxRids: [txRid],
+    initOpIndex: opIndex,
+  });
+  const unappliedTransfers = await getUnappliedTransfersFiltered(
+    newConnection,
+    {
+      initTxRids: [txRid],
+      initOpIndex: opIndex,
+    },
+  );
+  return canceledTransfers.data[0] ?? unappliedTransfers.data[0] ?? null;
 }
 
 /* Cross-Chain Transfer convenience event handlers */
@@ -627,10 +824,10 @@ function unwrapEvents(
     offTransferSigned: (listener: Listener<[SignedTransaction]>) => {
       return emitter.off("TransferSigned", listener);
     },
-    onTransferHop: (listener: Listener<[BufferId]>) => {
+    onTransferHop: (listener: Listener<[HopData]>) => {
       return emitter.on("TransferHop", listener);
     },
-    offTransferHop: (listener: Listener<[BufferId]>) => {
+    offTransferHop: (listener: Listener<[HopData]>) => {
       return emitter.off("TransferHop", listener);
     },
   };

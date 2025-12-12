@@ -9,7 +9,6 @@ import {
   adminUser,
   createAccount,
   createTestAuthDescriptor,
-  getAccountIdFromAuthDescriptor,
   getSessionForAccount,
   singleSigUser as testUser,
   useChromiaNode,
@@ -41,7 +40,12 @@ import {
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
 import { AuthorizationError } from "@ft4/transaction-builder";
-import { MerkleHashVersionSource, nop, op } from "@ft4/utils";
+import {
+  MerkleHashVersionSource,
+  nop,
+  op,
+  getExpectedAccountIdFromMainAuthDescriptor,
+} from "@ft4/utils";
 import { Buffer } from "buffer";
 import * as pcl from "postchain-client";
 
@@ -109,7 +113,10 @@ describe("Test the account", () => {
       authDescriptor,
     );
 
-    const accountId = getAccountIdFromAuthDescriptor(authDescriptor);
+    const accountId = getExpectedAccountIdFromMainAuthDescriptor(
+      authDescriptor,
+      _connection,
+    );
     const mainAd = await getAccountMainAuthDescriptor(_connection, accountId);
 
     expect(mainAd.id).toEqual(authDescriptor.id);
@@ -232,7 +239,10 @@ describe("Test the account", () => {
 
     await registerAccountAdmin(_connection.client, admin.signatureProvider, ad);
 
-    const accountId = getAccountIdFromAuthDescriptor(ad);
+    const accountId = getExpectedAccountIdFromMainAuthDescriptor(
+      ad,
+      _connection,
+    );
     const promise = addAuthDescriptorTo(_connection.client, accountId, user1, {
       signatureProvider: user3.signatureProvider,
       authDescriptor: user3.authDescriptor,

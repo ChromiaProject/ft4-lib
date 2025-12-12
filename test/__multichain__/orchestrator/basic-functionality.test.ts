@@ -37,7 +37,7 @@ describe("Basic Functionality", () => {
 
     expect(builtListener).toHaveBeenCalledTimes(1);
     expect(initListener).toHaveBeenCalledTimes(1);
-    expect(hopListener).toHaveBeenCalledTimes(1);
+    expect(hopListener).toHaveBeenCalledTimes(2);
   });
 
   it("executes multiple hops transfer", async () => {
@@ -71,6 +71,6 @@ describe("Basic Functionality", () => {
 
     expect(builtListener).toHaveBeenCalledTimes(1);
     expect(initListener).toHaveBeenCalledTimes(1);
-    expect(hopListener).toHaveBeenCalledTimes(2);
+    expect(hopListener).toHaveBeenCalledTimes(3);
   });
 });

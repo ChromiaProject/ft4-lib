@@ -20,7 +20,11 @@ import {
   createAuthDataService,
   createConnection,
 } from "@ft4/ft-session";
-import { nop, op } from "@ft4/utils";
+import {
+  getExpectedAccountIdFromMainAuthDescriptor,
+  nop,
+  op,
+} from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
   KeyPair,
@@ -29,11 +33,7 @@ import {
   gtx,
   newSignatureProvider,
 } from "postchain-client";
-import {
-  adminUser,
-  getAccountIdFromAuthDescriptor,
-  testAdFromRegistration,
-} from "./util";
+import { adminUser, testAdFromRegistration } from "./util";
 
 export class AccountBuilder {
   private connection: Connection;
@@ -114,7 +114,6 @@ export class AccountBuilder {
       throw "You cannot add rules to manager auth descriptors.";
 
     const account = await this.registerAndBuildManagerAuthenticated();
-
     await this.addBalanceIfNeeded(account);
     await this.addPointsIfNeeded(account);
     return account;
@@ -148,7 +147,7 @@ export class AccountBuilder {
       ad,
     );
     const account = await this.connection.getAccountById(
-      getAccountIdFromAuthDescriptor(ad),
+      getExpectedAccountIdFromMainAuthDescriptor(ad, this.connection),
     );
     const keyHandler = createInMemoryFtKeyStore(
       managerSigProv,
