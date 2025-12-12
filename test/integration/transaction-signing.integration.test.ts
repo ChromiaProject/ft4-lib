@@ -2,7 +2,6 @@ import {
   adminUser,
   createTestAuthDescriptor,
   createTestAuthDescriptorWithSigner,
-  getAccountIdFromAuthDescriptor,
   testAdFromRegistration,
   useChromiaNode,
 } from "@ft4-test/util";
@@ -35,7 +34,7 @@ import {
   signTransactionWithKeyStores,
   transactionBuilder,
 } from "@ft4/transaction-builder";
-import { op } from "@ft4/utils";
+import { getExpectedAccountIdFromMainAuthDescriptor, op } from "@ft4/utils";
 import { IClient, KeyPair, encryption, gtv, gtx } from "postchain-client";
 
 describe("Transaction Signing", () => {
@@ -81,7 +80,7 @@ describe("Transaction Signing", () => {
 
       const keyStore = createInMemoryFtKeyStore(keyPair);
       const authenticator = createAuthenticator(
-        getAccountIdFromAuthDescriptor(ad),
+        getExpectedAccountIdFromMainAuthDescriptor(ad, client),
         [createFtKeyHandler(testAdFromRegistration(ad), keyStore)],
         authDataService,
       );
@@ -118,8 +117,14 @@ describe("Transaction Signing", () => {
         null,
       );
 
-      const accountId1 = getAccountIdFromAuthDescriptor(ad1);
-      const accountId2 = getAccountIdFromAuthDescriptor(ad2);
+      const accountId1 = getExpectedAccountIdFromMainAuthDescriptor(
+        ad1,
+        client,
+      );
+      const accountId2 = getExpectedAccountIdFromMainAuthDescriptor(
+        ad2,
+        client,
+      );
 
       await registerAccountAdmin(client, adminUser().signatureProvider, ad1);
       await registerAccountAdmin(client, adminUser().signatureProvider, ad2);
@@ -170,8 +175,14 @@ describe("Transaction Signing", () => {
         null,
       );
 
-      const accountId1 = getAccountIdFromAuthDescriptor(ad1);
-      const accountId2 = getAccountIdFromAuthDescriptor(ad2);
+      const accountId1 = getExpectedAccountIdFromMainAuthDescriptor(
+        ad1,
+        client,
+      );
+      const accountId2 = getExpectedAccountIdFromMainAuthDescriptor(
+        ad2,
+        client,
+      );
 
       await registerAccountAdmin(client, adminUser().signatureProvider, ad1);
       await registerAccountAdmin(client, adminUser().signatureProvider, ad2);
@@ -233,7 +244,10 @@ describe("Transaction Signing", () => {
         null,
       );
 
-      const accountId = getAccountIdFromAuthDescriptor(originalAd);
+      const accountId = getExpectedAccountIdFromMainAuthDescriptor(
+        originalAd,
+        client,
+      );
 
       await registerAccountAdmin(
         client,
@@ -284,7 +298,10 @@ describe("Transaction Signing", () => {
         null,
       );
 
-      const accountId = getAccountIdFromAuthDescriptor(originalAd);
+      const accountId = getExpectedAccountIdFromMainAuthDescriptor(
+        originalAd,
+        client,
+      );
 
       await registerAccountAdmin(
         client,
@@ -335,7 +352,10 @@ describe("Transaction Signing", () => {
         null,
       );
 
-      const accountId = getAccountIdFromAuthDescriptor(originalAd);
+      const accountId = getExpectedAccountIdFromMainAuthDescriptor(
+        originalAd,
+        client,
+      );
 
       await registerAccountAdmin(
         client,
@@ -400,7 +420,10 @@ describe("Transaction Signing", () => {
         originalAd,
       );
 
-      const accountId = getAccountIdFromAuthDescriptor(originalAd);
+      const accountId = getExpectedAccountIdFromMainAuthDescriptor(
+        originalAd,
+        client,
+      );
       const authDataService = createAuthDataService(connection);
       const authenticator1 = createAuthenticator(
         accountId,
@@ -484,7 +507,7 @@ describe("Transaction Signing", () => {
 
       const keyStore = createInMemoryFtKeyStore(keyPair);
       const authenticator = createAuthenticator(
-        getAccountIdFromAuthDescriptor(ad),
+        getExpectedAccountIdFromMainAuthDescriptor(ad, client),
         [createFtKeyHandler(testAdFromRegistration(ad), keyStore)],
         authDataService,
       );
@@ -523,8 +546,14 @@ describe("Transaction Signing", () => {
         null,
       );
 
-      const accountId1 = getAccountIdFromAuthDescriptor(ad1);
-      const accountId2 = getAccountIdFromAuthDescriptor(ad2);
+      const accountId1 = getExpectedAccountIdFromMainAuthDescriptor(
+        ad1,
+        client,
+      );
+      const accountId2 = getExpectedAccountIdFromMainAuthDescriptor(
+        ad2,
+        client,
+      );
 
       await registerAccountAdmin(client, adminUser().signatureProvider, ad1);
       await registerAccountAdmin(client, adminUser().signatureProvider, ad2);
@@ -568,7 +597,10 @@ describe("Transaction Signing", () => {
         null,
       );
 
-      const accountId = getAccountIdFromAuthDescriptor(originalAd);
+      const accountId = getExpectedAccountIdFromMainAuthDescriptor(
+        originalAd,
+        client,
+      );
 
       await registerAccountAdmin(
         client,
@@ -624,7 +656,10 @@ describe("Transaction Signing", () => {
         originalAd,
       );
 
-      const accountId = getAccountIdFromAuthDescriptor(originalAd);
+      const accountId = getExpectedAccountIdFromMainAuthDescriptor(
+        originalAd,
+        client,
+      );
       const authDataService = createAuthDataService(connection);
       const authenticator1 = createAuthenticator(
         accountId,
@@ -664,7 +699,10 @@ describe("Transaction Signing", () => {
         originalAd,
       );
 
-      const accountId = getAccountIdFromAuthDescriptor(originalAd);
+      const accountId = getExpectedAccountIdFromMainAuthDescriptor(
+        originalAd,
+        client,
+      );
       const authDataService = createAuthDataService(connection);
       const authenticator1 = createAuthenticator(
         accountId,

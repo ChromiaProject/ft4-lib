@@ -4,10 +4,10 @@ import {
   User,
   adminUser,
   createTestAuthDescriptor,
-  getAccountIdFromAuthDescriptor,
   getNewAsset,
   useChromiaNode,
 } from "@ft4-test/util";
+import { getExpectedAccountIdFromMainAuthDescriptor } from "@ft4/utils";
 import {
   AuthFlag,
   createAuthenticatedAccount,
@@ -138,7 +138,7 @@ describe("Transfer", () => {
     );
 
     const account2 = await createConnection(connection.client).getAccountById(
-      getAccountIdFromAuthDescriptor(authDescriptor),
+      getExpectedAccountIdFromMainAuthDescriptor(authDescriptor, client),
     );
 
     await account1.transfer(

@@ -453,7 +453,7 @@ export interface Connection extends Queryable {
   ) => Promise<PaginatedEntity<PendingTransfer>>;
   /**
    * {@inheritDoc crosschain.getRevertedTransfersFiltered}
-   * @param pendingTransferFilter - The pending transfer filter (array of initTxRids and initOpIndex)
+   * @param revertedTransferFilter - The reverted transfer filter (array of initTxRids and initOpIndex)
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start

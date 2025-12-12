@@ -1,8 +1,5 @@
-import { createAmount, createAmountFromBalance } from "@ft4/asset";
-import {
-  createInMemoryFtKeyStore,
-  noopAuthenticator,
-} from "@ft4/authentication";
+import { createAmount } from "@ft4/asset";
+import { noopAuthenticator } from "@ft4/authentication";
 import {
   cancelTransfer,
   crosschainTransfer,
@@ -18,22 +15,18 @@ import {
   TransferRef,
 } from "@ft4/crosschain/types";
 import { transactionBuilder } from "@ft4/transaction-builder";
-import { nop, PaginatedEntity } from "@ft4/utils";
+import { nop, PaginatedEntity, getTransactionRid } from "@ft4/utils";
 import { applyTransfer, unapplyTransfer } from "@ft4/crosschain/operations";
-import { TestContext, setupTestEnvironment } from "./common-setup";
+import {
+  TestContext,
+  setupTestEnvironment,
+  setupTestEnvironmentWithAssetInfo,
+  TestContextWithOptionalAccounts,
+} from "./common-setup";
 import { createSession } from "@ft4/ft-session";
-import { adminUser, emptyOp, getNewAsset } from "@ft4-test/util";
-import { mint, registerCrosschainAsset } from "@ft4/admin";
-import {
-  AuthFlag,
-  createSingleSigAuthDescriptorRegistration,
-} from "@ft4/accounts";
-import { encryption, gtv, IClient } from "postchain-client";
-import {
-  feeAssets,
-  registerAccount,
-  registrationStrategy,
-} from "@ft4/registration";
+import { adminUser, emptyOp } from "@ft4-test/util";
+import { registerCrosschainAsset } from "@ft4/admin";
+import { IClient } from "postchain-client";
 
 export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   assetName: string = "asset-name",
@@ -46,23 +39,29 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   const mintAmount = createAmount(100, 0);
   const testContext = await setupTestEnvironment(assetName, mintAmount);
 
-  const transferRef = await testContext.account0.crosschainTransfer(
-    testContext.multichain2.rid,
-    testContext.account2.id,
-    testContext.sampleAsset.id,
-    createAmount(10, mintAmount.decimals),
-  );
+  const txRids: Buffer[] = [];
+
+  const transferRef = await testContext.account0
+    .crosschainTransfer(
+      testContext.multichain2.rid,
+      testContext.account2.id,
+      testContext.sampleAsset.id,
+      createAmount(10, mintAmount.decimals),
+    )
+    .on("hop", (hopData) => {
+      txRids.push(hopData.txRid);
+    });
 
   const appliedTransfersFiltered =
-    await testContext.connection2.getAppliedTransfersFiltered(filter, 1);
+    await testContext.connection2.getAppliedTransfersFiltered(filter);
 
   return {
     appliedTransfersFiltered,
     testContext,
     appliedTransfer: {
-      initTxRid: appliedTransfersFiltered.data[0].initTxRid,
+      initTxRid: getTransactionRid(transferRef.tx, testContext.connection0),
       initOpIndex: transferRef.opIndex,
-      transactionId: appliedTransfersFiltered.data[0].transactionId,
+      transactionId: txRids[txRids.length - 2], // last is complete_transfer
       opIndex: transferRef.opIndex,
     },
   };
@@ -119,8 +118,8 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     0,
   );
 
-  await transactionBuilder(
-    testContext.account0.authenticator,
+  const { receipt } = await transactionBuilder(
+    noopAuthenticator,
     testContext.connection2.client,
   )
     .add(state.proof, { authenticator: noopAuthenticator })
@@ -128,14 +127,16 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     .buildAndSendWithAnchoring();
 
   const canceledTransferFiltered =
-    await testContext.connection2.getCanceledTransfersFiltered(null, 1);
+    await testContext.connection2.getCanceledTransfersFiltered(null);
 
   return {
     canceledTransferFiltered,
     testContext,
     canceledTransfer: {
-      initTxRid: canceledTransferFiltered.data[0].initTxRid,
+      initTxRid: getTransactionRid(state.initialTx, testContext.connection0),
       initOpIndex: state.opIndex,
+      transactionRid: receipt.transactionRid,
+      opIndex: 1,
     },
   };
 }
@@ -159,7 +160,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
   );
 
   const initState = {} as any;
-  await testContext.session0
+  const { receipt: initReceipt } = await testContext.session0
     .transactionBuilder()
     .add(
       initTransfer(
@@ -179,6 +180,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
       initState.proof = data.systemConfirmationProof(
         testContext.multichain2.rid,
       );
+      return data;
     });
 
   initState.proof = await initState.proof;
@@ -210,10 +212,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
   applyState.proof = await applyState.proof;
 
   // Force block building to get past deadline
-  await createSession(
-    testContext.connection1,
-    testContext.account1.authenticator,
-  )
+  await createSession(testContext.connection1, noopAuthenticator)
     .transactionBuilder()
     .add(emptyOp(), { authenticator: noopAuthenticator })
     .add(nop(), { authenticator: noopAuthenticator })
@@ -246,10 +245,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
   cancelState.proof = await cancelState.proof;
 
   // Force block building to get past deadline
-  await createSession(
-    testContext.connection2,
-    testContext.account2.authenticator,
-  )
+  await createSession(testContext.connection2, noopAuthenticator)
     .transactionBuilder()
     .add(emptyOp(), { authenticator: noopAuthenticator })
     .add(nop(), { authenticator: noopAuthenticator })
@@ -263,102 +259,75 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     0,
   );
 
-  await testContext.session2
+  const { receipt: unapplyReceipt } = await testContext.session2
     .transactionBuilder()
     .add(cancelState.proof, { authenticator: noopAuthenticator })
-    .add(unapplyOperation)
+    .add(unapplyOperation, { authenticator: noopAuthenticator })
     .buildAndSendWithAnchoring();
 
   const unappliedTransfersFiltered =
-    await testContext.connection2.getUnappliedTransfersFiltered(filter, 1);
+    await testContext.connection2.getUnappliedTransfersFiltered(filter);
 
   return {
     unappliedTransfersFiltered,
     testContext,
     unappliedTransfer: {
-      initTxRid: unappliedTransfersFiltered.data[0].initTxRid,
-      initOpIndex: initState.opIndex,
+      initTxRid: initReceipt.transactionRid,
+      initOpIndex: 1,
+      transactionRid: unapplyReceipt.transactionRid,
+      opIndex: 1,
     },
   };
 }
 
-export async function recallCrosschainTransferAndGetRecalledTransfer(
-  assetName: string = "asset-name",
-  filter: TransferFilter | null = null,
-): Promise<{
-  testContext: TestContext;
-  recalledTransfersFiltered: PaginatedEntity<Transfer>;
+export async function recallCrosschainTransferAndGetRecalledTransfer(): Promise<{
+  testContext: TestContextWithOptionalAccounts;
   recalledTransfer: Transfer;
 }> {
-  const mintAmount = createAmount(100, 0);
-  const testContext = await setupTestEnvironment(assetName, mintAmount);
-  const asset = await getNewAsset(
-    testContext.connection0.client,
+  const testContext = await setupTestEnvironmentWithAssetInfo(
     "fee_strategy_timeout_test_asset_00",
     "FEE_STRATEGY_TIMEOUT_TEST_ASSET_00",
     5,
+    undefined,
+    [true, true],
   );
 
   await getOrRegisterCrosschainAsset(
     testContext.connection1.client,
-    asset.id,
+    testContext.sampleAsset.id,
     testContext.multichain0.rid,
   );
-  const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
-  const authDescriptor = createSingleSigAuthDescriptorRegistration(
-    [AuthFlag.Account, AuthFlag.Transfer],
-    keyStore.id,
-  );
 
-  const senderSession = (
-    await registerAccount(
-      testContext.connection0.client,
-      keyStore,
-      registrationStrategy.open(authDescriptor),
-    )
-  ).session;
-  const senderAccount = senderSession.account;
-
-  const feeAmounts = await testContext.connection1.query(feeAssets());
-  const amount = feeAmounts.find((amt) =>
-    amt.asset_id.equals(asset.id),
-  )!.amount;
-
-  const feeAmount = createAmountFromBalance(amount, asset.decimals);
-  await mint(
-    testContext.connection0.client,
-    adminUser().signatureProvider,
-    senderAccount.id,
-    asset.id,
-    feeAmount,
-  );
-
-  const recipientId = gtv.gtvHash(
-    keyStore.id,
-    testContext.connection0.client.config.merkleHashVersion,
+  const balance = await testContext.account0.getBalanceByAssetId(
+    testContext.sampleAsset.id,
   );
 
   const transferRef = await crosschainTransfer(
     testContext.connection0,
-    senderAccount.authenticator,
+    testContext.account0.authenticator,
     testContext.connection1.blockchainRid,
-    recipientId,
-    asset.id,
-    feeAmount,
+    testContext.account0.id,
+    testContext.sampleAsset.id,
+    balance!.amount,
     5000, // ttl
   );
 
-  await senderSession.account.recallUnclaimedCrosschainTransfer(transferRef);
-
-  const recalledTransfersFiltered =
-    await testContext.connection1.getRecalledTransfersFiltered(filter, 1);
+  let recallTxRid: Buffer | undefined;
+  await testContext.account0
+    .recallUnclaimedCrosschainTransfer(transferRef)
+    .on("hop", (hopData) => {
+      if (recallTxRid === undefined) {
+        recallTxRid = hopData.txRid;
+      }
+    });
 
   return {
     testContext,
-    recalledTransfersFiltered,
     recalledTransfer: {
-      initTxRid: recalledTransfersFiltered.data[0].initTxRid,
+      initTxRid: getTransactionRid(transferRef.tx, testContext.connection0),
       initOpIndex: transferRef.opIndex,
+      opIndex: 0,
+      transactionRid: recallTxRid,
     },
   };
 }
@@ -388,7 +357,7 @@ export async function initCrosschainTransferAndGetPendingTransfer(
     .buildAndSendWithAnchoring();
 
   const pendingTransfersFiltered =
-    await testContext.connection0.getPendingTransfersFiltered(filter, 1);
+    await testContext.connection0.getPendingTransfersFiltered(filter);
 
   return {
     pendingTransfersFiltered,
@@ -420,16 +389,13 @@ export async function revertTransferAndGetRevertedTransfer(
     Date.now(),
   );
 
-  await testContext.session0
+  const { receipt } = await testContext.session0
     .transactionBuilder()
     .add(initOperation)
     .buildAndSendWithAnchoring();
 
   // Force block building to get past deadline
-  await createSession(
-    testContext.connection2,
-    testContext.account2.authenticator,
-  )
+  await createSession(testContext.connection2, noopAuthenticator)
     .transactionBuilder()
     .add(emptyOp(), { authenticator: noopAuthenticator })
     .add(nop(), { authenticator: noopAuthenticator })
@@ -443,17 +409,24 @@ export async function revertTransferAndGetRevertedTransfer(
     opIndex: pendingTransfers.data[0].opIndex,
   };
 
-  await testContext.account0.revertCrosschainTransfer(transferRef);
+  let finalTxRid: Buffer | undefined;
+  await testContext.account0
+    .revertCrosschainTransfer(transferRef)
+    .on("hop", (hopData) => {
+      finalTxRid = hopData.txRid;
+    });
 
   const revertedTransfersFiltered =
-    await testContext.connection0.getRevertedTransfersFiltered(filter, 1);
+    await testContext.connection0.getRevertedTransfersFiltered(filter);
 
   return {
     revertedTransfersFiltered,
     testContext,
     revertedTransfer: {
-      initTxRid: revertedTransfersFiltered.data[0].initTxRid,
-      initOpIndex: revertedTransfersFiltered.data[0].initOpIndex,
+      initTxRid: receipt.transactionRid,
+      initOpIndex: 1,
+      transactionRid: finalTxRid,
+      opIndex: 1,
     },
   };
 }
@@ -492,6 +465,8 @@ async function getOrRegisterCrosschainAsset(
       originMultichainRid,
     );
   } catch (error) {
-    console.log(`Crosschain asset with id ${assetId} already exists`);
+    console.log(
+      `Crosschain asset with id ${assetId.toString("hex")} already exists`,
+    );
   }
 }

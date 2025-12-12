@@ -23,7 +23,9 @@ function test_get_recalled_transfers_filtered_without_filter() {
         data = [
             crosschain.map_transfer(
                 recalled_transfer.init_tx_rid,
-                recalled_transfer.init_op_index
+                recalled_transfer.init_op_index,
+                recalled_transfer.transaction_rid,
+                recalled_transfer.op_index
             ).to_gtv_pretty()
         ]
     ));
@@ -68,7 +70,9 @@ function test_get_recalled_transfers_filtered_by_op_index_and_init_tx_rid() {
         data = [
             crosschain.map_transfer(
                 recalled_transfer.init_tx_rid,
-                recalled_transfer.init_op_index
+                recalled_transfer.init_op_index,
+                recalled_transfer.transaction_rid,
+                recalled_transfer.op_index
             ).to_gtv_pretty()
         ]
     ));
@@ -106,11 +110,15 @@ function test_get_recalled_transfers_using_all_filter() {
         data = [
             crosschain.map_transfer(
                 recalled_transfer_one.init_tx_rid,
-                recalled_transfer_one.init_op_index
+                recalled_transfer_one.init_op_index,
+                recalled_transfer_one.transaction_rid,
+                recalled_transfer_one.op_index
             ).to_gtv_pretty(),
             crosschain.map_transfer(
                 recalled_transfer_two.init_tx_rid,
-                recalled_transfer_two.init_op_index
+                recalled_transfer_two.init_op_index,
+                recalled_transfer_two.transaction_rid,
+                recalled_transfer_two.op_index
             ).to_gtv_pretty()
         ]
     ));

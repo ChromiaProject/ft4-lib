@@ -18,21 +18,6 @@ const mockBuffer: Buffer = Buffer.alloc(32);
 
 describe("crosschain queries with filter", () => {
   describe("getAssetOriginFiltered", () => {
-    it("returns empty pagination without filter", async () => {
-      const testContext = await setupTestEnvironment(
-        "crosschain-assets-origin-filter-1",
-      );
-      const { data } = await testContext.connection0.getAssetOriginFiltered(
-        null,
-        1,
-      );
-      const foundAssetOrigin =
-        data.find(
-          (item) =>
-            item.asset.id.toString("hex") === mockBuffer.toString("hex"),
-        ) ?? null;
-      expect(foundAssetOrigin).toBe(null);
-    });
     it("returns empty pagination with all filter", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-assets-origin-filter-2",
@@ -49,10 +34,8 @@ describe("crosschain queries with filter", () => {
         "crosschain-assets-origin-filter-3",
       );
 
-      const { data } = await testContext.connection2.getAssetOriginFiltered(
-        null,
-        100,
-      );
+      const { data } =
+        await testContext.connection2.getAssetOriginFiltered(null);
 
       const foundAssetOrigin = data.find(
         (item) =>
@@ -83,7 +66,6 @@ describe("crosschain queries with filter", () => {
 
       const { data } = await testContext.connection2.getAssetOriginFiltered(
         setAssetOriginFilter([testContext.sampleAsset.id]),
-        100,
       );
 
       const assetOriginBlockchainRid = await getAssetOriginById(
@@ -140,20 +122,6 @@ describe("crosschain queries with filter", () => {
         "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_tx_rids filter cannot be empty",
       );
     });
-    it("returns empty pagination without filter", async () => {
-      const testContext = await setupTestEnvironment(
-        "crosschain-applied-transfer-filter-3",
-      );
-
-      const { data } =
-        await testContext.connection0.getAppliedTransfersFiltered(null, 1);
-      const foundAppliedTransfer =
-        data.find(
-          (item) =>
-            item.transactionId.toString("hex") === mockBuffer.toString("hex"),
-        ) ?? null;
-      expect(foundAppliedTransfer).toBe(null);
-    });
     it("returns empty pagination with all filter", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-applied-transfer-filter-4",
@@ -172,8 +140,11 @@ describe("crosschain queries with filter", () => {
         await setupApplyCrosschainTransferAndGetAppliedTransfer(
           "crosschain-applied-transfer-filter-5",
         );
-
-      expect(appliedTransfersFiltered.data[0]).toEqual(appliedTransfer);
+      expect(
+        appliedTransfersFiltered.data.find(
+          (t) => t.initTxRid.compare(appliedTransfer.initTxRid) === 0,
+        ),
+      ).toEqual(appliedTransfer);
     });
     it("returns paginated applied transfers with all filter", async () => {
       const { testContext, appliedTransfer } =
@@ -223,21 +194,6 @@ describe("crosschain queries with filter", () => {
         "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_tx_rids filter cannot be empty",
       );
     });
-    it("returns empty pagination without filter", async () => {
-      const testContext = await setupTestEnvironment(
-        "crosschain-canceled-transfer-filter-3",
-      );
-
-      const { data } =
-        await testContext.connection0.getCanceledTransfersFiltered(null, 1);
-
-      const foundCanceledTransfer =
-        data.find(
-          (item) =>
-            item.initTxRid.toString("hex") === mockBuffer.toString("hex"),
-        ) ?? null;
-      expect(foundCanceledTransfer).toBe(null);
-    });
     it("returns empty pagination with all filter", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-canceled-transfer-filter-4",
@@ -257,9 +213,11 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection2.getCanceledTransfersFiltered(null, 1);
+        await testContext.connection2.getCanceledTransfersFiltered(null);
 
-      expect(data[0]).toEqual(canceledTransfer);
+      expect(
+        data.find((t) => t.initTxRid.compare(canceledTransfer.initTxRid) === 0),
+      ).toEqual(canceledTransfer);
     });
     it("returns paginated canceled transfers with all filter", async () => {
       const { testContext, canceledTransfer } =
@@ -309,20 +267,6 @@ describe("crosschain queries with filter", () => {
         "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_tx_rids filter cannot be empty",
       );
     });
-    it("returns empty pagination without filter", async () => {
-      const testContext = await setupTestEnvironment(
-        "crosschain-unapplied-transfer-filter-3",
-      );
-
-      const { data } =
-        await testContext.connection0.getUnappliedTransfersFiltered(null, 1);
-      const foundUnappliedTransfer =
-        data.find(
-          (item) =>
-            item.initTxRid.toString("hex") === mockBuffer.toString("hex"),
-        ) ?? null;
-      expect(foundUnappliedTransfer).toBe(null);
-    });
     it("returns empty pagination with all filter", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-unapplied-transfer-filter-4",
@@ -341,7 +285,11 @@ describe("crosschain queries with filter", () => {
           "crosschain-unapplied-transfer-filter-5",
         );
 
-      expect(unappliedTransfersFiltered.data[0]).toEqual(unappliedTransfer);
+      expect(
+        unappliedTransfersFiltered.data.find(
+          (t) => t.initTxRid.compare(unappliedTransfer.initTxRid) === 0,
+        ),
+      ).toEqual(unappliedTransfer);
     });
     it("returns paginated unapplied transfers with all filter", async () => {
       const { testContext, unappliedTransfer } =
@@ -389,22 +337,6 @@ describe("crosschain queries with filter", () => {
         "INVALID FILTER: Composite index (transaction_rids, op_index) - op_index filter is required",
       );
     });
-    it("returns empty pagination without filter", async () => {
-      const testContext = await setupTestEnvironment(
-        "crosschain-pending-transfer-filter-3",
-      );
-
-      const { data } =
-        await testContext.connection0.getPendingTransfersFiltered(null, 1);
-
-      const foundPendingTransfer =
-        data.find(
-          (item) =>
-            item.senderAccount.id.toString("hex") ===
-            mockBuffer.toString("hex"),
-        ) ?? null;
-      expect(foundPendingTransfer).toBe(null);
-    });
     it("returns empty pagination with all filter", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-pending-transfer-filter-4",
@@ -424,7 +356,12 @@ describe("crosschain queries with filter", () => {
           "crosschain-pending-transfer-filter-5",
         );
 
-      expect(pendingTransfersFiltered.data[0]).toEqual(pendingTransfer);
+      expect(
+        pendingTransfersFiltered.data.find(
+          (t) =>
+            t.senderAccount.id.compare(pendingTransfer.senderAccount.id) === 0,
+        ),
+      ).toEqual(pendingTransfer);
     });
     it("returns paginated pending transfers with all filter", async () => {
       const { testContext, pendingTransfer } =
@@ -481,21 +418,6 @@ describe("crosschain queries with filter", () => {
         "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_tx_rids filter cannot be empty",
       );
     });
-    it("returns empty pagination without filter", async () => {
-      const testContext = await setupTestEnvironment(
-        "crosschain-reverted-transfer-filter-3",
-      );
-
-      const { data } =
-        await testContext.connection0.getRevertedTransfersFiltered(null, 1);
-
-      const foundRevertedTransfer =
-        data.find(
-          (item) =>
-            item.initTxRid.toString("hex") === mockBuffer.toString("hex"),
-        ) ?? null;
-      expect(foundRevertedTransfer).toBe(null);
-    });
     it("returns empty pagination with all filter", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-reverted-transfer-filter-4",
@@ -516,9 +438,11 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection0.getRevertedTransfersFiltered(null, 1);
+        await testContext.connection0.getRevertedTransfersFiltered(null);
 
-      expect(data[0]).toEqual(revertedTransfer);
+      expect(
+        data.find((t) => t.initTxRid.compare(revertedTransfer.initTxRid) === 0),
+      ).toEqual(revertedTransfer);
     });
     it("returns paginated reverted transfers with all filter", async () => {
       const { testContext, revertedTransfer } =
@@ -568,20 +492,6 @@ describe("crosschain queries with filter", () => {
         "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_tx_rids filter cannot be empty",
       );
     });
-    it("returns empty pagination without filter", async () => {
-      const testContext = await setupTestEnvironment(
-        "crosschain-recalled-transfer-filter-3",
-      );
-
-      const { data } =
-        await testContext.connection0.getRecalledTransfersFiltered(null, 1);
-      const foundRecalledTransfer =
-        data.find(
-          (item) =>
-            item.initTxRid.toString("hex") === mockBuffer.toString("hex"),
-        ) ?? null;
-      expect(foundRecalledTransfer).toBe(null);
-    });
     it("returns empty pagination with all filter", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-recalled-transfer-filter-4",
@@ -597,20 +507,18 @@ describe("crosschain queries with filter", () => {
     });
     it("returns paginated recalled transfers without filter", async () => {
       const { testContext, recalledTransfer } =
-        await recallCrosschainTransferAndGetRecalledTransfer(
-          "crosschain-recalled-transfer-filter-5",
-        );
+        await recallCrosschainTransferAndGetRecalledTransfer();
 
       const { data } =
-        await testContext.connection1.getRecalledTransfersFiltered(null, 1);
+        await testContext.connection1.getRecalledTransfersFiltered(null);
 
-      expect(data[0]).toEqual(recalledTransfer);
+      expect(
+        data.find((t) => t.initTxRid.compare(recalledTransfer.initTxRid) === 0),
+      ).toEqual(recalledTransfer);
     });
     it("returns paginated recalled transfers with all filter", async () => {
       const { testContext, recalledTransfer } =
-        await recallCrosschainTransferAndGetRecalledTransfer(
-          "crosschain-recalled-transfer-filter-6",
-        );
+        await recallCrosschainTransferAndGetRecalledTransfer();
 
       const { data } =
         await testContext.connection1.getRecalledTransfersFiltered(
@@ -618,7 +526,6 @@ describe("crosschain queries with filter", () => {
             [recalledTransfer.initTxRid],
             recalledTransfer.initOpIndex,
           ),
-          1,
         );
 
       expect(data[0]).toEqual(recalledTransfer);

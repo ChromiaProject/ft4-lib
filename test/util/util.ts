@@ -9,7 +9,6 @@ import {
   MultiSig,
   SingleSig,
   addAuthDescriptor,
-  aggregateSigners,
   createMultiSigAuthDescriptorRegistration,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
@@ -28,7 +27,7 @@ import {
   createKeyStoreInteractor,
   createSession,
 } from "@ft4/ft-session";
-import { op } from "@ft4/utils";
+import { getExpectedAccountIdFromMainAuthDescriptor, op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
   BufferId,
@@ -232,7 +231,7 @@ export async function createAccount(
     ),
     adminUser().signatureProvider,
   );
-  return getAccountIdFromAuthDescriptor(descriptor);
+  return getExpectedAccountIdFromMainAuthDescriptor(descriptor, client);
 }
 
 export async function getSessionForAccount(
@@ -330,16 +329,6 @@ export function* asyncNumberGenerator(): Generator<Promise<number>> {
   while (true) {
     yield Promise.resolve(count++);
   }
-}
-
-export function getAccountIdFromAuthDescriptor(
-  authDescriptor: AnyAuthDescriptor | AnyAuthDescriptorRegistration,
-): Buffer {
-  const signers = aggregateSigners(authDescriptor);
-  return pclGtv.gtvHash(
-    signers.length === 1 ? signers[0] : signers.sort(Buffer.compare),
-    MERKLE_HASH_VERSIONS.ONE, // doesn't matter, it's an array of buffers or a buffer
-  );
 }
 
 export function lockAccountId(accountId: BufferId, lockType: string): Buffer {
