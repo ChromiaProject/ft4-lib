@@ -21,7 +21,7 @@
     "version:rell": "./scripts/version.sh",
     "test": "pnpm run test:rell && pnpm run test:js",
     "test:rell": "./scripts/relltest.sh",
-    "test:js-unit": "pnpm exec jest -maxWorkers=1 --testPathPattern=unit/",
+    "test:js-unit": "pnpm exec jest --testPathPattern=unit/",
     "test:js-integration": "TESTCONTAINERS_RYUK_DISABLED=true pnpm exec jest --config=jest.config.integration.js --testPathPattern=integration/",
     "test:js-multichain": "./scripts/multichain-jesttest.sh",
     "test:js": "pnpm run test:js-unit && pnpm run test:js-integration && pnpm run test:js-multichain",

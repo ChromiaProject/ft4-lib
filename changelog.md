@@ -3,19 +3,80 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to
-[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.4] - 2025-10-10
+## 2.1.0 - 2025-12-12
+
+### Breaking 💔
+
+- All crosschain functions that emitted the `hop` event with the Blockchain RID
+  of the hop will now emit the same event with the new `HopData` type.
+- If an event listener passed to crosschain transfer operations throws, the
+  transfer will be stopped and an error will be thrown.
 
 ### Changed 🪙
 
-- updated postchain client version to 2.0.4
+- The `Transfer` object now contains two extra optional fields. This keeps
+  backwards compatibility towards older chains.
+- `revertTransfer` and `recallUnclaimedTransfer` can now operate on transactions
+  that they were called on and were interrupted. This means transactions can no
+  longer get stuck, provided the chain has been updated to the latest FT4
+  version. Older stuck transactions will stay stuck and they still need some
+  manual intervention to fix.
+- The crosschain transfer operations will now also emit a `hop` event at the
+  final step, be it a `revert_transfer` or `complete_transfer`, allowing the
+  user to receive a txRid, if needed.
+- `getAppliedTx` now expects transaction body instead of transaction ID and
+  calculates the transaction RID based on the receiving chain's merkle hash
+  version, ensuring correct RID computation across chains with different merkle
+  hash versions.
 
 ### Added ✅
 
-- added string 'type' property to Account interface. Allows distinguishing user
-  accounts from system and lock accounts
+- Added `HopData` type to represent a crosschain transfer hop, containing the ID
+  of the blockchain the hop was performed on and the ID of the transaction
+  called on that hop.
+- `evaluatePendingTransfer`, which evaluates the state of a pending transaction
+  to return the current status of it.
+- `solvePendingCrosschainTransfer`, which uses `evaluatePendingTransfer` and
+  automatically decides whether to revert, recall, or complete a pending
+  transfer. If the transfer status is known, the other options are faster.
+- Type `EvaluationResult`, used to represent the return value of the
+  `evaluatePendingTransfer` function, and `SolveTransferEvents`, representing
+  the list of events returned by `solvePendingCrosschainTransfer`.
+- function `isUnclaimedTransfer`, which evaluates whether a _completed_
+  transaction is an unclaimed transfer waiting to be claimed or reverted.
+- Enum `UnclaimedTransferStatus`, the return type of `isUnclaimedTransfer`.
+- `EventEmitterError`, thrown by `EventEmitter`
+- `getMerkleHashVersion`, utility function which can extract the merkle hash
+  version from multiple sources, all part of the new type `MerkleHashSource`.
+- `getExpectedAccountIdFromMainAuthDescriptor`, which extracts the expected
+  account ID if an account were to be registered with that auth descriptor.
+- `transactionBuilder` now accepts `null` as the authenticator parameter,
+  allowing building transactions for operations that don't require
+  authentication (e.g., `nop` operations). When `null` is passed, it behaves the
+  same as using `noopAuthenticator`.
+
+- Migrated package manager from npm to pnpm. All scripts and commands now use
+  `pnpm` instead of `npm`. The `package-lock.json` file has been replaced with
+  `pnpm-lock.yaml`. Documentation files have been updated to reflect this
+  change:
+  - `README.md` - Updated installation and build instructions to use `pnpm`
+    commands
+  - `doc/release-steps.md` - Updated release workflow documentation to use
+    `pnpm` commands for versioning and publishing
+  - `scripts/update-docs.sh` - Updated documentation generation script to use
+    `pnpm` for installation and execution
+- `isTransferFullyApplied`, function to check if a transfer has been fully
+  applied across all chains.
+
+### Fixed 🔧
+
+- Fixed an error on the TSDoc for `initTransfer` operation. The functionality
+  stayed the same. This does not affect `crosschainTransfer` nor
+  `account.crosschainTransfer`.
+
+### Removed 🗑️
 
 ## [2.0.4] - 2025-10-10
 
@@ -31,18 +92,10 @@ and this project adheres to
 ## [2.0.3] - 2025-09-22
 
 ### Added ✅
-
-- ts support for the new `ras_import` strategy - the exported function
-  `importStrategy` and a respective options type `ImportStrategyOptions`. The
-  import can now be done while forcing a signature or without forcing a
-  signature - in case another operation is used to verify the account on the
-  origin chain (e.g. transfer op).
+- ts support for the new `ras_import` strategy - the exported function `importStrategy` and a respective options type `ImportStrategyOptions`. The import can now be done while forcing a signature or without forcing a signature - in case another operation is used to verify the account on the origin chain (e.g. transfer op). 
 
 ### Fixed 🔧
-
-- all hardcoded instances of the merklehash version have been removed (except
-  where it makes no difference, e.g. the nop operation). The clients will always
-  try to fetch the version implicitly from the features endpoint.
+- all hardcoded instances of the merklehash version have been removed (except where it makes no difference, e.g. the nop operation). The clients will always try to fetch the version implicitly from the features endpoint. 
 
 ## [2.0.2] - 2025-07-04
 
@@ -52,23 +105,18 @@ and this project adheres to
 
 ### Added ✅
 
-- `getSystemAnchoringIccfProofOp` now sets the last used node from the node
-  manager while calling `createIccfProofTx`
+- `getSystemAnchoringIccfProofOp` now sets the last used node from the node manager while calling `createIccfProofTx`
 
 ### Removed 🗑️
 
-- Removed the checks for exposed operations, now allowing users to call
-  operations that don't exist. This was done to prevent failure when an
-  operation was exposed but not part of the app structure, as it commonly is in
-  operations defined in GTV modules
+- Removed the checks for exposed operations, now allowing users to call operations that don't exist. This was done to prevent failure when an operation was exposed but not part of the app structure, as it commonly is in operations defined in GTV modules
 
 ## [2.0.1] - 2025-06-13
 
 ### Fixed 🔧
 
-- `getTransactionRid` now takes a second mandatory parameter for MerkleHash
-  version. It can be a number, taken from `MERKLE_HASH_VERSIONS`, or a
-  `client`/`connection`
+- `getTransactionRid` now takes a second mandatory parameter for MerkleHash version. It can be a number, taken from `MERKLE_HASH_VERSIONS`, or a `client`/`connection` 
+
 
 ## [2.0.0] - 2025-05-07
 
@@ -150,17 +198,13 @@ and this project adheres to
 
 ### Changed 🪙
 
-- The return type of the `accountById` function's `QueryObject` from
-  `AccountResponse | null` to `AccountResponse | Buffer | null`
-- Updated ft4 to use `postchain-client: 1.22.0`, this change includes support
-  for `MERKLE_HASH_VERSION: 2`
+- The return type of the `accountById` function's `QueryObject` from `AccountResponse | null` to `AccountResponse | Buffer | null`
+- Updated ft4 to use `postchain-client: 1.22.0`, this change includes support for `MERKLE_HASH_VERSION: 2`
 
 ### Fixed 🔧
 
-- A backward compatibility issue in the function `getById` to ensure it
-  correctly handles responses from the `accountById` query. Older versions that
-  return a `Buffer` (representing just the account.id), are now properly
-  supported alongside the newer `AccountResponse` type
+- A backward compatibility issue in the function `getById` to ensure it correctly handles responses from the `accountById` query. Older versions that return a `Buffer` (representing just the account.id),
+are now properly supported alongside the newer `AccountResponse` type
 - The query `accountById` now works with all previous versions of rell.
 
 ## [1.1.0] - 2025-02-25
@@ -169,40 +213,25 @@ and this project adheres to
 
 ### Changed 🪙
 
-- In `applyTransfer`, `cancelTransfer`, `unapplyTransfer`, `revertTransfer` and
-  `recallUnclaimedTransfer` the type of `initTransferTx` and `tx` input
-  arguments has been changed from `RawGtx` to `GTX`
-- The return type of `createOrchestrator` function `performInitTransfer` has
-  been changed from `Promise<TransferRef>` to `Promise<OrchestratorCore>`
-- the `createOrchestrator` functions `createResumeOrchestrator`,
-  `createRevertOrchestrator`, `resumeCrosschainTransfer`,
-  `revertCrosschainTransfer` and `recallUnclaimedCrosschainTransfer` do not take
-  the `authenticator` input argument anymore
+- In `applyTransfer`, `cancelTransfer`, `unapplyTransfer`, `revertTransfer` and `recallUnclaimedTransfer` the type of `initTransferTx` and `tx` input arguments has been changed from `RawGtx` to `GTX`
+- The return type of `createOrchestrator` function `performInitTransfer` has been changed from `Promise<TransferRef>` to `Promise<OrchestratorCore>`
+- the `createOrchestrator` functions `createResumeOrchestrator`, `createRevertOrchestrator`, `resumeCrosschainTransfer`, `revertCrosschainTransfer` and `recallUnclaimedCrosschainTransfer` do not take the `authenticator` input argument anymore
 - The type `OrchestratorState` has changed
-- In the `TransferRef` and `PendingTransfer` type the argument `tx` has been
-  changed from `RawGtx` to `GTX`
-- The `createSession` function `transactionBuilder` removed the `config` input
-  argument
-- The arguments `onAnchoredHandler` and `targetBlockchainRid` of the type
-  `OperationConfig` and `OperationContext` have been removed
-- `getTransactionRid`'s input argument `tx` type changed from `RawGtx` to
-  `RawGtx | GTX`
+- In the `TransferRef` and `PendingTransfer` type the argument `tx` has been changed from `RawGtx` to `GTX`
+- The `createSession` function `transactionBuilder` removed the `config` input argument
+- The arguments `onAnchoredHandler` and `targetBlockchainRid` of the type `OperationConfig` and `OperationContext` have been removed
+- `getTransactionRid`'s input argument `tx` type changed from `RawGtx` to `RawGtx | GTX` 
 
 ### Added ✅
 
-- Added `hasActiveLogin` to the `KeyStoreInteractor` interface, which returns
-  whether a previous login that could be reused is found
+- Added `hasActiveLogin` to the `KeyStoreInteractor` interface, which returns whether a previous login that could be reused is found
 - Added `connection` to `Account` and `AuthenticatedAccount` interface
-- Added `get_api_version`. While version looks like "1.0.3", and it's difficult
-  to parse, api version is an integer that is increased by one every time the
-  API (queries and operations) changes. It will start at 1 for version 1.0.1,
-  and it will return 0 for 1.0.0.
+- Added `get_api_version`. While version looks like "1.0.3", and it's difficult to parse, api version is an integer that is increased by one every time the API (queries and operations) changes. It will start at 1 for version 1.0.1, and it will return 0 for 1.0.0.
 - Added optional parameter `ttl` to `AuthenticatedAccount.crosschainTransfer`
 - The type `OrchestratorData`
 - The function `getSystemAnchoringIccfProofOp`
 - The type `AnchoringTransactionWithReceipt`
-- An implementation of promiEvent that replaces the implementation imported from
-  `postchain-client`
+- An implementation of promiEvent that replaces the implementation imported from `postchain-client`
 - Added:
   - `getAssetsFiltered`
   - `getBalancesFiltered`
@@ -223,26 +252,20 @@ and this project adheres to
   - `getAccountCreationTransfersFiltered`
   - `getAccountLinksFiltered`
   - `getSubscriptionsFiltered`
-
-  to the connection object. The functions all work the same - they have their
-  respective filter and page limit and cursor as arguments. The filterable
-  fields are the ones which are indexed in the corresponding rell entity.
+  
+  to the connection object. The functions all work the same - they have their respective filter and page limit and cursor as arguments. The filterable fields are the ones which are indexed in the corresponding rell entity.
 
 ### Fixed 🔧
 
 - added the `transferSubscription` strategy to `TransferStrategies`
-- fixed issue that caused invalid signature if the arguments were not specified
-  on an operation in specific cases
+- fixed issue that caused invalid signature if the arguments were not specified on an operation in specific cases
 
 ### Removed 🗑️
 
 - The interface `OrchestratorBase`
 - The type `ExternalOrchestratorBase`
 - The type `BufferId` (should now be imported from postchain-client)
-- The `transactionBuilder` functions `handleAnchoring`,
-  `waitUntilClusterAnchored`, `waitUntilAnchoredInChain`, `createCreateProof`,
-  `ensureDirectoryClient`, `ensureSystemAnchoringChain` and
-  `invokeOnAnchoringHandlers`
+- The `transactionBuilder` functions `handleAnchoring`, `waitUntilClusterAnchored`, `waitUntilAnchoredInChain`, `createCreateProof`, `ensureDirectoryClient`, `ensureSystemAnchoringChain` and `invokeOnAnchoringHandlers`
 - The class `AnchoringTimeoutError`
 - The type `TransactionBuilderConfig`
 - The type `OnAnchoredHandler`
@@ -258,23 +281,17 @@ and this project adheres to
 ## [1.0.0] - 2024-07-04
 
 ### Changed 🪙
-
-- `Amount`'s `times` and `dividedBy` functions now accept `Amount` as argument
-  as well.
+- `Amount`'s `times` and `dividedBy` functions now accept `Amount` as argument as well.
 
 ### Added ✅
-
-- Added `hasCrosschainTransferExpired` to check if a specific pending
-  cross-chain transfer has expired.
+- Added `hasCrosschainTransferExpired` to check if a specific pending cross-chain transfer has expired.
 - Add `getEnabledRegistrationStrategies` to `Connection` interface
-- Added filter for `pendingTransferStrategies` to check expired or valid
-  transfers only.
+- Added filter for `pendingTransferStrategies` to check expired or valid transfers only.
 - Added `Filter` type as a generic type to filter in queries.
 
 ## [0.8.0] - 2024-05-29
 
 ### Breaking 💔
-
 - Removed `getAssetBySymbol` (replaced with `getAssetsBySymbol`).
 - Updated `registerCrosschainAsset` to accept asset id instead of asset object.
 
@@ -283,14 +300,10 @@ and this project adheres to
 - Upgrade postchain client to 1.16.1
 
 ### Added ✅
-
 - Added `getAssetsBySymbol` to query list of all assets with the same symbol.
-- Added `getAssetDetailsForCrosschainRegistration`, used to fetch asset details
-  when registering a crosschain asset.
-- Added `getTransferStrategyRules`, used to fetch transfer strategy rules
-  configuration.
-- Added `getTransferStrategyRulesGroupedByStrategy`, used to fetch transfer
-  strategy rules configuration grouped by strategies and assets.
+- Added `getAssetDetailsForCrosschainRegistration`, used to fetch asset details when registering a crosschain asset.
+- Added `getTransferStrategyRules`, used to fetch transfer strategy rules configuration.
+- Added `getTransferStrategyRulesGroupedByStrategy`, used to fetch transfer strategy rules configuration grouped by strategies and assets.
 - Add `getEnabledRegistrationStrategies` to `Connection` interface
 - Exported `evmSignatures`, `registerAccountMessage`, `fetchLoginDetails`.
 
@@ -299,46 +312,35 @@ and this project adheres to
 ### Breaking 💔
 
 - `registration.registerAccount` now accepts an IClient instead of a Connection.
-- Removed the `buildUnsigned` method from TransactionBuilder.
-- All registration strategies can now be found inside the
-  `registrationStrategy`-object. E.g., `registrationStrategy.fee(...)`
+- Removed the `buildUnsigned` method from TransactionBuilder. 
+- All registration strategies can now be found inside the `registrationStrategy`-object. E.g., `registrationStrategy.fee(...)`
 - `registerAccount` has been renamed to `registerAccountAdmin`
 - Rename "signed" event to "built" in `crosschainTransfer` method
 - Remove function `registerAccountEvmSignatures`
-- Rename `nonce` query function to `authDescriptorCounter` and rename all the
-  functions that call the query from `getNonce` to `getAuthDescriptorCounter`.
+- Rename `nonce` query function to `authDescriptorCounter` and rename all the functions that call the query from `getNonce` to `getAuthDescriptorCounter`.
 
 ### Changed 🪙
 
-- `crosschainTransfer` function returns a `TransferRef`, which can be used when
-  resuming, reverting and recalling the transfer.
-- Changed return type of methods `call` and `callWithoutNop` in `Session` to
-  `Web3PromiEvent`
+- `crosschainTransfer` function returns a `TransferRef`, which can be used when resuming, reverting and recalling the transfer.
+- Changed return type of methods `call` and `callWithoutNop` in `Session` to `Web3PromiEvent`
 - Changed return type of methods in `AuthenticatedAccount` to `Web3PromiEvent`
 - Changed return type of `registerAccount` to `Web3PromiEvent`
 
 ### Added ✅
 
-- Added ttl to crosschainTransfer, which specifies after how much time the
-  transaction should become invalid and must be reverted back to the starting
+- Added ttl to crosschainTransfer, which specifies after how much time the transaction should become invalid and must be reverted back to the starting chain.
+- Possibility to revert uncompleted crosschain transfers after deadline has passed.
+- Possibility to recall unclaimed register account transfers after timeout has passed.
+
+- `addWithAnchoring` method in `TransactionBuilder` to get callback when transaction is anchored in a specific target
   chain.
-- Possibility to revert uncompleted crosschain transfers after deadline has
-  passed.
-- Possibility to recall unclaimed register account transfers after timeout has
-  passed.
 
-- `addWithAnchoring` method in `TransactionBuilder` to get callback when
-  transaction is anchored in a specific target chain.
-
-- `sign` and `signAndSend` methods in `Session` to add your signature to an
-  existing transaction.
-- `gtv` object that contains functions for converting objects to/from `gtv`,
-  e.g., `gtv.authDescriptorFromGtv(...)`
+- `sign` and `signAndSend` methods in `Session` to add your signature to an existing transaction.
+- `gtv` object that contains functions for converting objects to/from `gtv`, e.g., `gtv.authDescriptorFromGtv(...)`
 
 - `equals` and `compare` methods to `Amount`.
 
-- Added `deleteAllAuthDescriptorsExceptMain` to `AuthenticatedAccount`
-  interface.
+- Added `deleteAllAuthDescriptorsExceptMain` to `AuthenticatedAccount` interface.
 - Added `updateMainAuthDescriptor` function to `AuthenticateAccount` interface.
 - Added `getMainAuthDescriptor` to `Account` interface.
 - Added `getAuthDescriptorById` to `Account` interface.
@@ -347,14 +349,14 @@ and this project adheres to
 
 - Added `signTransactionWithKeyStores` function.
 
-- Added functions to query "lock" accounts and asset balances locked in those
-  accounts
+- Added functions to query "lock" accounts and asset balances locked in those accounts
   - `getLockAccounts`
   - `getLockAccountsWithNonZeroBalances`
   - `getLockedAssetBalance`
   - `getLockedAssetAggregatedBalance`
   - `getLockedAssetBalances`
   - `getLockedAssetAggregatedBalances`
+
 
 ### Fixed 🔧
 
@@ -377,22 +379,20 @@ and this project adheres to
 
 ### Breaking 💔
 
-- Rename `FlagsType` to `AuthFlag`, and changed it from an enum to an object to
-  allow adding custom flags.
+- Rename `FlagsType` to `AuthFlag`, and changed it from an enum to an object to allow adding custom flags.
 
-- Method `buildAndSend` in TransactionBuilder no longer supports
-  OnAnchoredHandler:s, use new method `buildAndSendWithAnchoring` instead.
+- Method `buildAndSend` in TransactionBuilder no longer supports OnAnchoredHandler:s, use new method 
+  `buildAndSendWithAnchoring` instead.
 
-- Removed `LoginManager` type and the `getLoginManager` method in
-  `KeyStoreInteractor`, added `login` method to `KeyStoreInteractor` instead.
+- Removed `LoginManager` type and the `getLoginManager` method in `KeyStoreInteractor`, 
+  added `login` method to `KeyStoreInteractor` instead.
 
-- Removed the Orchestrator from the public API, use new `crosschainTransfer` and
-  `resumeCrosschainTransfer` methods in `AuthenticatedAccount` instead.
+- Removed the Orchestrator from the public API, use new `crosschainTransfer` and `resumeCrosschainTransfer` 
+  methods in `AuthenticatedAccount` instead. 
 
 #### Migration
 
 Instead of making cross-chain transfer with Orchestrator:
-
 ```ts
 val orchestrator = await createOrchestrator(targetBlockchainRid, recipientId, assetId, amount, senderSession);
 
@@ -403,9 +403,7 @@ orchestrator.onTransferError((error) => { ... });
 
 await orchestrator.transfer();
 ```
-
 now it has to be done like this:
-
 ```ts
 await senderSession.account.crosschainTransfer(targetBlockchainRid, recipientId, assetId, amount)
   .on("signed", () => { ... })
@@ -414,62 +412,47 @@ await senderSession.account.crosschainTransfer(targetBlockchainRid, recipientId,
 ```
 
 Interrupted cross-chain transfers can be resumed like this:
-
 ```ts
 await senderSession.account.resumeCrosschainTransfer(pendingTransfer)
   .on("hop", (blockchainRid: Buffer) => { ... })
 ```
 
-Since `logout` method was removed from `LoginManager` in previous release, there
-is no longer need for `LoginManager` type. Login (adding disposable auth
-descriptors) can be performed by calling `login` on `KeyStoreInteractor`. So
-instead of
-
+Since `logout` method was removed from `LoginManager` in previous release, there is no longer need for `LoginManager` type. Login (adding disposable auth descriptors) can be performed by calling `login` on `KeyStoreInteractor`. So instead of
 ```ts
-const { session } = await keyStoreInteractor
-  .getLoginManager()
-  .login({ accountId });
+const { session } = await keyStoreInteractor.getLoginManager().login({ accountId });
 ```
-
 now we login like this:
-
 ```ts
 const { session } = await keyStoreInteractor.login({ accountId });
 ```
 
+
 ### Changed 🪙
 
-- TransactionBuilder will wait for transactions to be anchored in system
-  anchoring chain before invoking OnAnchoredHandler:s.
-- Methods `buildAndSend` and `buildAndSendWithAnchoring` in TransactionBuilder
-  return `Web3PromiEvent` and emits events when transaction is built, sent and
-  confirmed (only `buildAndSendWithAnchoring`).
-- `logout` function returned from `KeyStoreInteractor.login()` and
-  `registerAccount()` will delete auth descriptors for disposable key.
-- TransactionBuilder will throw `SigningError` if signing fails for some reason
-  (e.g. is rejected by user).
-- `crosschainTransfer` method will throw `SigningError` if signing fails for
-  some reason (e.g. is rejected by user).
+- TransactionBuilder will wait for transactions to be anchored in system anchoring chain before invoking 
+  OnAnchoredHandler:s.
+- Methods `buildAndSend` and `buildAndSendWithAnchoring` in TransactionBuilder return `Web3PromiEvent` and emits 
+  events when transaction is built, sent and confirmed (only `buildAndSendWithAnchoring`).
+- `logout` function returned from `KeyStoreInteractor.login()` and `registerAccount()` will delete auth descriptors 
+  for disposable key.
+- TransactionBuilder will throw `SigningError` if signing fails for some reason (e.g. is rejected by user).
+- `crosschainTransfer` method will throw `SigningError` if signing fails for some reason (e.g. is rejected by user).
 
 ### Added ✅
 
-- New method `buildAndSendWithAnchoring` in TransactionBuilder which will wait
-  for anchoring in cluster and system anchoring chains before resolving promise.
-- New event `signed` in `crosschainTransfer` method which is emitted when the
-  `initTransfer` transaction is signed.
+- New method `buildAndSendWithAnchoring` in TransactionBuilder which will wait for anchoring in cluster and system 
+  anchoring chains before resolving promise.
+- New event `signed` in `crosschainTransfer` method which is emitted when the `initTransfer` transaction is signed.
 
 - `getAssetsByType` query function
 
-- Include `isCrosschain` flag in response from queries `getTransferHistory`,
-  `getTransferHistoryFromHeight` and `getTransferHistoryEntry`.
-- Include `blockchainRid` in response from queries `getTransferDetails` and
-  `getTransferDetailsByAsset`.
+- Include `isCrosschain` flag in response from queries `getTransferHistory`, `getTransferHistoryFromHeight` 
+  and `getTransferHistoryEntry`.
+- Include `blockchainRid` in response from queries `getTransferDetails` and `getTransferDetailsByAsset`.
 
-- Include auth descriptor config (`maxRules` and `maxNumberPerAccount`) in
-  `Config`.
+- Include auth descriptor config (`maxRules` and `maxNumberPerAccount`) in `Config`.
 
-- Added `loadOperationFromTransaction` that receives `RawGtx` or
-  `SignedTransaction` (encoded tx) and returns `Operation` at provided index
+- Added `loadOperationFromTransaction` that receives `RawGtx` or `SignedTransaction` (encoded tx) and returns `Operation` at provided index
 
 - Added `getLastPendingCrosschainTransaction` to `Account` interface
 
@@ -478,10 +461,8 @@ const { session } = await keyStoreInteractor.login({ accountId });
 ### Breaking 💔
 
 - updated `postchain-client` version to 1.15.0
-- Moved `logout` function from `LoginManager` to object returned from
-  `LoginManager.login()` and `registerAccount()`.
-- Moved `loginKeyStore` parameter from `KeyStoreInteractor.getLoginManager()` to
-  `LoginManager.login(LoginOptions)`.
+- Moved `logout` function from `LoginManager` to object returned from `LoginManager.login()` and `registerAccount()`.
+- Moved `loginKeyStore` parameter from `KeyStoreInteractor.getLoginManager()` to `LoginManager.login(LoginOptions)`.
 
 ### Added ✅
 
@@ -492,34 +473,23 @@ const { session } = await keyStoreInteractor.login({ accountId });
 - functions to directly create account with fee and subscription strategies
 
 ### Fixed 🔧
-
-- uncaught exception triggered after creating evm keystore and when all accounts
-  disconnected from wallet GUI
+- uncaught exception triggered after creating evm keystore and when all accounts disconnected from wallet GUI
 
 ## [0.4.0] - 2024-02-15
 
 ### Changed 🪙
 
-- `authenticator.getKeyHandlerForOperation` will not return auth descriptors
-  whose rules don't allow them to be used.
-- `AuthDataService.getAllowedAuthDescriptors` now accepts `Buffer | string`
-  instead of `Buffer` only
+- `authenticator.getKeyHandlerForOperation` will not return auth descriptors whose rules don't allow them to be used.
+- `AuthDataService.getAllowedAuthDescriptors` now accepts `Buffer | string` instead of `Buffer` only
 - Auth descriptor queries updated to include `account_id` in response.
-- Limit how many auth descriptors can be added to an account. Default value is
-  10 and maximum is 200.
+- Limit how many auth descriptors can be added to an account. Default value is 10 and maximum is 200. 
 
 ### Added ✅
 
-- `AuthDescriptorValidator` with `hasExpired` and `isActive` methods to check
-  whether the auth descriptor is expired or active. An inactive auth descriptor
-  is one that will be valid in the future, an expired one was valid in the past.
-- `createAuthDescriptorValidator(authDataService, useCache)` to use the above
-  mentioned validator. If it uses cache, it will cache `op_count` of each auth
-  descriptor and `block_height` as soon as it needs to query them.
-- Do not allow TransactionBuilder.build() or TransactionBuilder.buildUnsigned()
-  if there are OnAnchoredHandlers
-- Default value for paginated queries has been changed from the previous 100, to
-  instead use the value configured as default in the dApp on rell side
+- `AuthDescriptorValidator` with `hasExpired` and `isActive` methods to check whether the auth descriptor is expired or active. An inactive auth descriptor is one that will be valid in the future, an expired one was valid in the past.
+- `createAuthDescriptorValidator(authDataService, useCache)` to use the above mentioned validator. If it uses cache, it will cache `op_count` of each auth descriptor and `block_height` as soon as it needs to query them.
+- Do not allow TransactionBuilder.build() or TransactionBuilder.buildUnsigned() if there are OnAnchoredHandlers
+- Default value for paginated queries has been changed from the previous 100, to instead use the value configured as default in the dApp on rell side
 - Upgrade postchain-client to 1.9.0
 - Added support for rules or TTL in login manager.
 
@@ -530,30 +500,25 @@ const { session } = await keyStoreInteractor.login({ accountId });
     - fee
 
 ### Bugfixes 🐛
-
-- Orchestrator and transaction builder waits until transaction is anchored in
-  SAC before moving to next step
+- Orchestrator and transaction builder waits until transaction is anchored in SAC before moving to next step
 
 ### Breaking 💔
 
-- Removed pagination from auth descriptor queries
+- Removed pagination from auth descriptor queries 
 - Change `assetData` to `asset` in `TransferHistoryEntry`.
 
 - Update `addAuthDescriptor` signature  
-  Old:
-
+Old:
 ```ts
 addAuthDescriptor(authDescriptor: AnyAuthDescriptorRegistration, newSigner: SignatureProvider | KeyPair)
 ```
-
 New:
-
 ```ts
 addAuthDescriptor(authDescriptor: AnyAuthDescriptorRegistration, keyStore: FtKeyStore)
 ```
 
-- Update LoginKeyStore interface Old:
-
+- Update LoginKeyStore interface
+Old:
 ```ts
 interface LoginKeyStore {
   clear(accountId: Buffer);
@@ -561,9 +526,7 @@ interface LoginKeyStore {
   createKeyPair(accountId: Buffer): Promise<KeyPair>;
 }
 ```
-
 New:
-
 ```ts
 interface LoginKeyStore {
   clear(accountId: Buffer): Promise<void>;
@@ -581,10 +544,8 @@ interface LoginKeyStore {
 ## [0.3.1] - 2024-01-19
 
 ### Changed
-
 - `Amount` type is now exported
-- A new field `opIndex` was added to the `TransferHistoryEntry` type which can
-  be passed into `getTransferDetails` and `getTransferDetailsByAsset`
+- A new field `opIndex` was added to the `TransferHistoryEntry` type which can be passed into `getTransferDetails` and `getTransferDetailsByAsset`
 
 ## [0.3.0] - 2024-01-17
 
@@ -636,114 +597,81 @@ interface LoginKeyStore {
 
 ## [0.1.9] - 2023-11-14
 
-### Changed
-
-- Use Rollup for packaging, produce output for ECMAScript, Common.JS and UMD.
+### Changed 
+- Use Rollup for packaging, produce output for ECMAScript, Common.JS and UMD. 
 - Move `cryptoUtils` module into main library (imports needs to be updated).
 - Export `createAmountFromBalance` and `createAssetObject` functions.
 
 ## [0.1.8] - 2023-10-25
 
 ### Changed
-
-- Updated cross-chain transfer orchestrator to add `nop` operation to "init",
-  "apply" and "complete" transactions to avoid tx rid conflicts
-- Updated `KeyHandler` interface. `authorize` function `nonce: number` argument
-  is replaced with `context: TxContext`
+- Updated cross-chain transfer orchestrator to add `nop` operation to "init", "apply" and "complete" transactions to avoid tx rid conflicts
+- Updated `KeyHandler` interface. `authorize` function `nonce: number` argument is replaced with `context: TxContext` 
 
 ## [0.1.7] - 2023-10-19
 
 ### Added
-
 - Added createOrchestrator for crosschain transfers
 - Refactored type exports to allow easier importing from entry index file.
-- assetOriginById: query that retrieves the "asset origin", which is the only
-  chain the asset can be received from
-- findPathToChainForAsset: traverses the tree structure of the linked chains to
-  find the path to a certain asset.
-- `TransactionBuilder` now has a function `buildAndSend` which immediately
-  submits the built transaction
-- Functions that add operations to `TransactionBuilder` now accepts an optional
-  callback which will be invoked when the transaction is included in a block
-  that has been anchored on the anchoring chain
+- assetOriginById: query that retrieves the "asset origin", which is the only chain the asset can be received from
+- findPathToChainForAsset: traverses the tree structure of the linked chains to find the path to a certain asset.
+- `TransactionBuilder` now has a function `buildAndSend` which immediately submits the built transaction
+- Functions that add operations to `TransactionBuilder` now accepts an optional callback which will be invoked when the transaction is included in a block that has been anchored on the anchoring chain
 
 ## [0.1.6] - 2023-09-29
 
 ### Fixed
-
-- addAuthDescriptor and deleteAuthDescriptor were hard to use, as you couldn't
-  easily use the new keypair you just added in subsequent operations. They now
-  return the receipt and a new session to use for future operations if you want
-  to also use the current auth descriptor.
+- addAuthDescriptor and deleteAuthDescriptor were hard to use, as you couldn't easily use the new keypair you just added in subsequent operations. They now return the receipt and a new session to use for future operations if you want to also use the current auth descriptor.
 - exported some types regarding assets that weren't available for end users
 
 ### Changed
-
-- All operations now return an TransactionCompletion, which holds the receipt
-  and (optionally) additional data
+- All operations now return an TransactionCompletion, which holds the receipt and (optionally) additional data
 
 ## [0.1.5] - 2023-09-12
 
 ### Added
-
-- createGenericEvmKeyStore: it receives an address and a sign function, to allow
-  for custom implementations with any web3 library. Metamask is still supported
-  through ethers for ease of setup.
+- createGenericEvmKeyStore: it receives an address and a sign function, to allow for custom implementations with any web3 library. Metamask is still supported through ethers for ease of setup.
 - fixed examples
-- Custom Event Emitter for handling various events like Metamask address change,
-  crosschain transfer notifications.
-- Auth messages now includes rid of the blockchain to which the tx is being
-  submitted.
+- Custom Event Emitter for handling various events like Metamask address change, crosschain transfer notifications.
+- Auth messages now includes rid of the blockchain to which the tx is being submitted.
 
 ### Changed
-
 - Transfer history's asset properties are now of the Asset type
-- Auth messages now include rid of the blockchain to which the tx is being
-  submitted.
+- Auth messages now include rid of the blockchain to which the tx is being submitted.
 
 ### Fixed
-
 - Asset queries now return Asset type with `iconUrl`, not `icon_url`
 - Balance queries now return frozen objects
 - Exports of admin functions.
-- `authenticate()` function will now try to match operation name exactly when
-  searching for auth handlers and throw an error if none is found. The old
-  behaviour where scope path was traversed to the root can be aquired again by
-  calling `authenticate(strict = false)`
+- `authenticate()` function will now try to match operation name exactly when searching for auth handlers and throw an error if none is found. The old behaviour where scope path was traversed to the root can be aquired again by calling `authenticate(strict = false)`
 - `Connection` interface is now exported and part of the public interface
 
 ## [0.1.4] - 2023-07-21
 
 ### Changed
-
 - README
 
 ## [0.1.3] - 2023-07-13
 
 ### Added
-
 - License file.
 
 ### Changed
-
 - License.
 - Updated changelog.
 - `Demo` app updated to install `v0.1.0` version of FT4 rell module.
 
-### Fixed
-
+### Fixed 
 - Added missing exports.
 
 ## [0.1.2] - 2023-07-13
 
-### Fixed
-
+### Fixed 
 - Added missing exports.
 
 ## [0.1.1] - 2023-07-12
 
-### Fixed
-
+### Fixed 
 - Added missing exports.
 
 ## [0.1.0] - 2023-07-12
@@ -751,34 +679,33 @@ interface LoginKeyStore {
 Initial version
 
 ### Added
-
 - Connection, Session, Account, AuthenticatedAccount interfaces.
 - Key store interfaces: KeyStore, EvmKeyStore and FtKeyStore.
 - Key store interactor responsible for initializing session object.
 - Login manager.
 - Modules
-  - admin
-    - operations
-      - register account
-      - register asset
-      - mint
-  - asset
-    - queries
-      - get registered assets
-      - get assets by name
-      - get asset by id
-      - get asset by symbol
-    - operations
-      - transfer
-  - accounts
-    - queries
-      - get balances
-      - get balance by asset id
-      - get account by id
-      - get accounts by participant id
-      - get auth descriptor by participant id
-      - get transfer history
-    - operations
-      - add auth descriptor
-      - delete auth descriptor
-      - delete auth descriptors exclude
+    - admin
+        - operations
+            - register account
+            - register asset
+            - mint
+    - asset 
+        - queries
+            - get registered assets
+            - get assets by name
+            - get asset by id
+            - get asset by symbol
+        - operations
+            - transfer
+    - accounts
+        - queries
+            - get balances
+            - get balance by asset id
+            - get account by id
+            - get accounts by participant id
+            - get auth descriptor by participant id
+            - get transfer history
+        - operations
+            - add auth descriptor
+            - delete auth descriptor
+            - delete auth descriptors exclude
