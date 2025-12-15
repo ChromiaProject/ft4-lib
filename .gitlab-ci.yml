@@ -91,7 +91,7 @@ unit_js_tests:
   script:
     - corepack enable && corepack prepare pnpm@9.12.3 --activate
     - export JEST_JUNIT_OUTPUT_NAME=logs/unit.xml
-    - pnpm exec jest -maxWorkers=1 --testPathPattern=unit/ --ci
+    - pnpm exec jest --testPathPattern=unit/ --ci
       --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X
       POST https://chromadev.zulipchat.com/api/v1/messages -u
       ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode
@@ -112,7 +112,7 @@ integration_js_tests:
     - corepack enable && corepack prepare pnpm@9.12.3 --activate
     - export TESTCONTAINERS_RYUK_DISABLED=true
     - export JEST_JUNIT_OUTPUT_NAME=logs/integration.xml
-    - pnpm exec jest --config=jest.config.integration.js -maxWorkers=1
+    - pnpm exec jest --config=jest.config.integration.js
       --testPathPattern=integration/ --ci --reporters=default
       --reporters=jest-junit || (curl --no-progress-meter -X POST
       https://chromadev.zulipchat.com/api/v1/messages -u
