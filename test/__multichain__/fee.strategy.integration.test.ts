@@ -85,7 +85,7 @@ describe("Fee account creation single step", () => {
     // (name, blockchain_rid).hash()
     const missingAssetId = gtv.gtvHash(
       ["fee_strategy_missing_test_asset_00", multichain00.rid],
-      senderConnection.client.config.merkleHashVersion,
+      connection0.client.config.merkleHashVersion,
     );
 
     nonExistentChain00Asset = {
@@ -153,7 +153,7 @@ describe("Fee account creation single step", () => {
 
     const recipientId = gtv.gtvHash(
       sigProv.pubKey,
-      recipientConnection.client.config.merkleHashVersion,
+      connection1.client.config.merkleHashVersion,
     );
     expect(senderAccount.id).toEqual(recipientId);
 
@@ -225,7 +225,7 @@ describe("Fee account creation single step", () => {
       connection1.blockchainRid,
     );
 
-    const keyPair = newSignatureProvider(MERKLE_HASH_VERSIONS.TWO);
+    const keyPair = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(keyPair);
     const sender0 = await AccountBuilder.account(connection0)
       .withSigner(keyPair)
@@ -309,7 +309,7 @@ describe("Fee account creation single step", () => {
 
     const recipientId = gtv.gtvHash(
       sigProv.pubKey,
-      recipientConnection.client.config.merkleHashVersion,
+      connection1.client.config.merkleHashVersion,
     );
     expect(senderSession.account.id).toEqual(recipientId);
 
@@ -398,7 +398,7 @@ describe("Fee account creation single step", () => {
 
     const recipientId = gtv.gtvHash(
       sigProv.pubKey,
-      recipientConnection.client.config.merkleHashVersion,
+      connection1.client.config.merkleHashVersion,
     );
     expect(senderAccount.id).toEqual(recipientId);
 
@@ -461,7 +461,7 @@ describe("Fee account creation single step", () => {
 
     const recipientId = gtv.gtvHash(
       keyStore.id,
-      recipientConnection.client.config.merkleHashVersion,
+      connection1.client.config.merkleHashVersion,
     );
     expect(senderAccount.id).toEqual(recipientId);
 
@@ -532,7 +532,7 @@ describe("Fee account creation single step", () => {
 
     const recipientId = gtv.gtvHash(
       sigProv.pubKey,
-      recipientConnection.client.config.merkleHashVersion,
+      connection1.client.config.merkleHashVersion,
     );
     expect(unrelatedAccount.id).toEqual(recipientId);
 
@@ -583,7 +583,7 @@ describe("Fee account creation single step", () => {
 
     const recipientId = gtv.gtvHash(
       sigProv.pubKey,
-      recipientConnection.client.config.merkleHashVersion,
+      connection1.client.config.merkleHashVersion,
     );
 
     const recipientSessionPromise = registerAccount(
@@ -616,7 +616,7 @@ describe("Fee account creation single step", () => {
 
     const recipientId = gtv.gtvHash(
       sigProv.pubKey,
-      recipientConnection.client.config.merkleHashVersion,
+      connection1.client.config.merkleHashVersion,
     );
 
     const recipientSessionPromise = registerAccount(
@@ -665,7 +665,7 @@ describe("Fee account creation single step", () => {
 
     const recipientId = gtv.gtvHash(
       sigProv.pubKey,
-      recipientConnection.client.config.merkleHashVersion,
+      connection1.client.config.merkleHashVersion,
     );
 
     const recipientSessionPromise = registerAccount(
@@ -772,7 +772,7 @@ describe("Fee account creation single step", () => {
 
     const recipientId = gtv.gtvHash(
       keyStore.id,
-      recipientConnection.client.config.merkleHashVersion,
+      connection1.client.config.merkleHashVersion,
     );
     expect(senderAccount.id).toEqual(recipientId);
 
@@ -809,7 +809,7 @@ describe("Fee account creation single step", () => {
         .add(nop())
         .buildAndSend(),
     ).rejects.toThrow(
-      `Transaction <0x${formatter.toString(gtx.getDigestToSign(transferRef.tx, recipientConnection.client.config.merkleHashVersion)).toLowerCase()}> transfer at index <${transferRef.opIndex}> has already been recalled on this chain.`,
+      `Transaction <0x${formatter.toString(gtx.getDigestToSign(transferRef.tx, connection1.client.config.merkleHashVersion)).toLowerCase()}> transfer at index <${transferRef.opIndex}> has already been recalled on this chain.`,
     );
   });
 });
