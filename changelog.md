@@ -5,6 +5,98 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.1.0 - 2025-12-12
+
+### Breaking 💔
+
+- All crosschain functions that emitted the `hop` event with the Blockchain RID
+  of the hop will now emit the same event with the new `HopData` type.
+- If an event listener passed to crosschain transfer operations throws, the
+  transfer will be stopped and an error will be thrown.
+
+### Changed 🪙
+
+- The `Transfer` object now contains two extra optional fields. This keeps
+  backwards compatibility towards older chains.
+- `revertTransfer` and `recallUnclaimedTransfer` can now operate on transactions
+  that they were called on and were interrupted. This means transactions can no
+  longer get stuck, provided the chain has been updated to the latest FT4
+  version. Older stuck transactions will stay stuck and they still need some
+  manual intervention to fix.
+- The crosschain transfer operations will now also emit a `hop` event at the
+  final step, be it a `revert_transfer` or `complete_transfer`, allowing the
+  user to receive a txRid, if needed.
+- `getAppliedTx` now expects transaction body instead of transaction ID and
+  calculates the transaction RID based on the receiving chain's merkle hash
+  version, ensuring correct RID computation across chains with different merkle
+  hash versions.
+
+### Added ✅
+
+- Added `HopData` type to represent a crosschain transfer hop, containing the ID
+  of the blockchain the hop was performed on and the ID of the transaction
+  called on that hop.
+- `evaluatePendingTransfer`, which evaluates the state of a pending transaction
+  to return the current status of it.
+- `solvePendingCrosschainTransfer`, which uses `evaluatePendingTransfer` and
+  automatically decides whether to revert, recall, or complete a pending
+  transfer. If the transfer status is known, the other options are faster.
+- Type `EvaluationResult`, used to represent the return value of the
+  `evaluatePendingTransfer` function, and `SolveTransferEvents`, representing
+  the list of events returned by `solvePendingCrosschainTransfer`.
+- function `isUnclaimedTransfer`, which evaluates whether a _completed_
+  transaction is an unclaimed transfer waiting to be claimed or reverted.
+- Enum `UnclaimedTransferStatus`, the return type of `isUnclaimedTransfer`.
+- `EventEmitterError`, thrown by `EventEmitter`
+- `getMerkleHashVersion`, utility function which can extract the merkle hash
+  version from multiple sources, all part of the new type `MerkleHashSource`.
+- `getExpectedAccountIdFromMainAuthDescriptor`, which extracts the expected
+  account ID if an account were to be registered with that auth descriptor.
+- `transactionBuilder` now accepts `null` as the authenticator parameter,
+  allowing building transactions for operations that don't require
+  authentication (e.g., `nop` operations). When `null` is passed, it behaves the
+  same as using `noopAuthenticator`.
+
+- Migrated package manager from npm to pnpm. All scripts and commands now use
+  `pnpm` instead of `npm`. The `package-lock.json` file has been replaced with
+  `pnpm-lock.yaml`. Documentation files have been updated to reflect this
+  change:
+  - `README.md` - Updated installation and build instructions to use `pnpm`
+    commands
+  - `doc/release-steps.md` - Updated release workflow documentation to use
+    `pnpm` commands for versioning and publishing
+  - `scripts/update-docs.sh` - Updated documentation generation script to use
+    `pnpm` for installation and execution
+- `isTransferFullyApplied`, function to check if a transfer has been fully
+  applied across all chains.
+
+### Fixed 🔧
+
+- Fixed an error on the TSDoc for `initTransfer` operation. The functionality
+  stayed the same. This does not affect `crosschainTransfer` nor
+  `account.crosschainTransfer`.
+
+### Removed 🗑️
+
+## [2.0.4] - 2025-10-10
+
+### Changed 🪙
+
+- updated postchain client version to 2.0.4
+
+### Added ✅
+
+- added string 'type' property to Account interface. Allows distinguishing user accounts from system and lock accounts
+
+
+## [2.0.3] - 2025-09-22
+
+### Added ✅
+- ts support for the new `ras_import` strategy - the exported function `importStrategy` and a respective options type `ImportStrategyOptions`. The import can now be done while forcing a signature or without forcing a signature - in case another operation is used to verify the account on the origin chain (e.g. transfer op). 
+
+### Fixed 🔧
+- all hardcoded instances of the merklehash version have been removed (except where it makes no difference, e.g. the nop operation). The clients will always try to fetch the version implicitly from the features endpoint. 
+
 ## [2.0.2] - 2025-07-04
 
 ### Changed 🪙
@@ -464,28 +556,41 @@ interface LoginKeyStore {
 ## [0.2.0] - 2023-12-22
 
 ### Added
+
 - Implemented an End-to-End (E2E) testing environment using Cypress.
-- Cypress tests can be run using `npm run test:e2e` for interactive mode and `npm run test:e2e:headless` for headless mode.
+- Cypress tests can be run using `pnpm run test:e2e` for interactive mode and
+  `pnpm run test:e2e:headless` for headless mode.
 
 ### Breaking
+
 - Removed `getClientVersion()` function
 - Removed `AuthenticatorSession`
 - The API for creating auth descriptor rules has been updated
 - The API for `getBalancesByAccountId()` has been updated to be paginated
-- Removed type `TransferHistoryTransferArgs` and corresponding fields in `TransferHistoryEntry`
+- Removed type `TransferHistoryTransferArgs` and corresponding fields in
+  `TransferHistoryEntry`
 - Removed entryIndex from `TransferHistoryEntry`
-- Change the type of `lastUpdate` field of the `RateLimit` type from `number` to `Date`
-- **brid -> blockchainRid** All instances of brid were changed to spell out blockchainRid, to avoid confusion over the meaning of the acronym. Where the name already said `chainBrid`, it became `chainRid`. This is a list of all the user-facing client-side changes:
-    - `Asset.brid` -> `Asset.blockchainRid`
-    - `AuthDataService.getBrid` -> `AuthDataService.getBlockchainRid`
-- **Participants, pubkeys, signers** All instances of these words, when related to auth descriptors, were now renamed to **signers**. This is a list of all the client-side changes:
-    - `Connection.getAccountsByParticipantId` -> `Connection.getAccountsBySigner`
-    - `Account.getAuthDescriptorsByParticipantId` -> `Account.getAuthDescriptorsBySigner`
+- Change the type of `lastUpdate` field of the `RateLimit` type from `number` to
+  `Date`
+- **brid -> blockchainRid** All instances of brid were changed to spell out
+  blockchainRid, to avoid confusion over the meaning of the acronym. Where the
+  name already said `chainBrid`, it became `chainRid`. This is a list of all the
+  user-facing client-side changes:
+  - `Asset.brid` -> `Asset.blockchainRid`
+  - `AuthDataService.getBrid` -> `AuthDataService.getBlockchainRid`
+- **Participants, pubkeys, signers** All instances of these words, when related
+  to auth descriptors, were now renamed to **signers**. This is a list of all
+  the client-side changes:
+  - `Connection.getAccountsByParticipantId` -> `Connection.getAccountsBySigner`
+  - `Account.getAuthDescriptorsByParticipantId` ->
+    `Account.getAuthDescriptorsBySigner`
 
-### Changed 
+### Changed
+
 - Upgrade postchain-client to 1.9.0
 - Added a function `getAccountsPaginated()` to get all accounts
-- Added methods `getTransferDetails()` and `getTransferDetailsByAsset()` in `Connection`
+- Added methods `getTransferDetails()` and `getTransferDetailsByAsset()` in
+  `Connection`
 - Added function `getTransferHistoryFromHeight`
 - Exported `RateLimit` type
 - Added `blockchainRid` to `Account` interface

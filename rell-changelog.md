@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-12-15
+
+### Breaking 💔
+
+### Changed 🪙
+
+- `map_transfer` and all crosschain transfer related queries now return the tx rid and op index of the transaction that entity was created in, besides the tx rid and op index of the initial transaction. This only affects the entities `canceled_transfers`, `unapplied_transfers`, `recalled_transfers`, `reverted_transfer`.
+
+### Added ✅
+
+- Two new fields to `canceled_transfers`, `unapplied_transfers`, `recalled_transfers`, `reverted_transfer`. They describe the operation the entity was created in, and default to `NO_TRANSACTION_RID` and `NO_OP_INDEX` to avoid breaking changes.
+
+### Fixed 🔧
+
+## [1.1.1] - 2025-09-22
+
+### Changed 🪙
+- bumped the rell version to 0.14.12
+
+### Added ✅
+- import_strategy with the `ras_import` strategy, now enables users to create an account if the account is present on another trusted chain on the network. New module args added for the import strategy: `trusted_chains` (The chains that are trusted to import accounts.), `import_account_timeout` (The time in milliseconds after which the iccf proof expires) and `allow_any_operation` (Whether to allow any operation to verify the import (for instance a transfer op), rather than just the `ft4.ras_import` operation.)
+
 ## [1.1.0] - 2025-02-25
 
 ### Breaking 💔

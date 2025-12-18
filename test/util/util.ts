@@ -9,7 +9,6 @@ import {
   MultiSig,
   SingleSig,
   addAuthDescriptor,
-  aggregateSigners,
   createMultiSigAuthDescriptorRegistration,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
@@ -28,7 +27,7 @@ import {
   createKeyStoreInteractor,
   createSession,
 } from "@ft4/ft-session";
-import { op } from "@ft4/utils";
+import { getExpectedAccountIdFromMainAuthDescriptor, op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
   BufferId,
@@ -52,6 +51,7 @@ function generateId(n: number): Buffer {
 }
 
 function blockchainAccountId(blockchainRid: Buffer) {
+  // doesn't matter, it's an array of non-array values
   return pclGtv.gtvHash(["B", blockchainRid], MERKLE_HASH_VERSIONS.ONE);
 }
 
@@ -86,18 +86,13 @@ class LocalStorageMock implements Storage {
 
 export { LocalStorageMock, blockchainAccountId, generateId };
 
-export function adminUser(
-  merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
-): User {
+export function adminUser(): User {
   const keyPair = encryption.makeKeyPair(
     process.env.TEST_ADMIN_1_PRIV ||
       "00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE",
   );
 
-  const signatureProvider = gtx.newSignatureProvider(
-    merkleHashVersion,
-    keyPair,
-  );
+  const signatureProvider = gtx.newSignatureProvider(keyPair);
   const singleSigAuthDescriptor = createSingleSigAuthDescriptorRegistration(
     [AuthFlag.Account, AuthFlag.Transfer],
     signatureProvider.pubKey,
@@ -127,6 +122,7 @@ export function createTestAuthDescriptor(
   return {
     keyPair,
     authDescriptor: createTestAuthDescriptorWithSigner(
+      // doesn't matter as it's single sig
       pclGtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE),
       keyPair.pubKey,
       flags,
@@ -151,7 +147,7 @@ export function createTestAuthDescriptorWithSigner(
   return {
     accountId: formatter.ensureBuffer(accountId),
     accountType: FT4_USER_TYPE,
-    id: deriveAuthDescriptorId(ad),
+    id: deriveAuthDescriptorId(ad, MERKLE_HASH_VERSIONS.ONE), //ok because it's single sig
     created: new Date(0),
     ...ad,
   };
@@ -182,8 +178,8 @@ export function testAdFromRegistration<T extends SingleSig | MultiSig>(
 ): AuthDescriptor<T> {
   return {
     ...reg,
-    id: deriveAuthDescriptorId(reg as any),
-    accountId: deriveAuthDescriptorId(reg as any),
+    id: deriveAuthDescriptorId(reg as any, MERKLE_HASH_VERSIONS.ONE), //ok because it's single sig
+    accountId: deriveAuthDescriptorId(reg as any, MERKLE_HASH_VERSIONS.ONE), //ok because it's single sig
     accountType: FT4_USER_TYPE,
     created: new Date(),
   };
@@ -233,9 +229,9 @@ export async function createAccount(
       "ft4.test.register_account",
       gtv.authDescriptorRegistrationToGtv(descriptor),
     ),
-    adminUser(client.config.merkleHashVersion).signatureProvider,
+    adminUser().signatureProvider,
   );
-  return getAccountIdFromAuthDescriptor(descriptor);
+  return getExpectedAccountIdFromMainAuthDescriptor(descriptor, client);
 }
 
 export async function getSessionForAccount(
@@ -335,19 +331,9 @@ export function* asyncNumberGenerator(): Generator<Promise<number>> {
   }
 }
 
-export function getAccountIdFromAuthDescriptor(
-  authDescriptor: AnyAuthDescriptor | AnyAuthDescriptorRegistration,
-): Buffer {
-  const signers = aggregateSigners(authDescriptor);
-  return pclGtv.gtvHash(
-    signers.length === 1 ? signers[0] : signers.sort(Buffer.compare),
-    MERKLE_HASH_VERSIONS.ONE,
-  );
-}
-
 export function lockAccountId(accountId: BufferId, lockType: string): Buffer {
   return pclGtv.gtvHash(
     [formatter.ensureBuffer(accountId), "FT4_LOCK", lockType],
-    MERKLE_HASH_VERSIONS.ONE,
+    MERKLE_HASH_VERSIONS.ONE, // doesn't matter, it's an array of non-array values
   );
 }

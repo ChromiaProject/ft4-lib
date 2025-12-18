@@ -353,7 +353,10 @@ async function addDisposableAuthDescriptor(
   await session.account.addAuthDescriptor(registration, ks);
   const ad = gtv.authDescriptorFromGtv(
     await connection.query(
-      authDescriptorById(accountId, deriveAuthDescriptorId(registration)),
+      authDescriptorById(
+        accountId,
+        deriveAuthDescriptorId(registration, connection),
+      ),
     ),
   );
 

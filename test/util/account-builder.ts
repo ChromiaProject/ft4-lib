@@ -20,27 +20,25 @@ import {
   createAuthDataService,
   createConnection,
 } from "@ft4/ft-session";
-import { nop, op } from "@ft4/utils";
+import {
+  getExpectedAccountIdFromMainAuthDescriptor,
+  nop,
+  op,
+} from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
   KeyPair,
-  MERKLE_HASH_VERSIONS,
   Operation,
   SignatureProvider,
   gtx,
   newSignatureProvider,
 } from "postchain-client";
-import {
-  adminUser,
-  getAccountIdFromAuthDescriptor,
-  testAdFromRegistration,
-} from "./util";
+import { adminUser, testAdFromRegistration } from "./util";
 
 export class AccountBuilder {
   private connection: Connection;
   private balances: Balance[] = [];
   private rules: AuthDescriptorRules | null = null;
-  private merkleHashVersion: number;
   private signer: SignatureProvider;
   private authDescInfo: {
     authDescriptor: AnyAuthDescriptorRegistration;
@@ -49,21 +47,14 @@ export class AccountBuilder {
   private flags: string[] = [AuthFlag.Account, AuthFlag.Transfer];
   private points = 0;
 
-  constructor(
-    connection: Connection,
-    merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
-  ) {
+  constructor(connection: Connection) {
     this.connection = connection;
-    this.merkleHashVersion = merkleHashVersion;
-    this.signer = gtx.newSignatureProvider(this.merkleHashVersion);
+    this.signer = gtx.newSignatureProvider();
   }
 
   /* Public functions */
-  static account(
-    connection: Connection,
-    merkleHashVersion: number = MERKLE_HASH_VERSIONS.ONE,
-  ): AccountBuilder {
-    return new AccountBuilder(connection, merkleHashVersion);
+  static account(connection: Connection): AccountBuilder {
+    return new AccountBuilder(connection);
   }
 
   withAuthFlags(...flags: string[]): AccountBuilder {
@@ -123,14 +114,13 @@ export class AccountBuilder {
       throw "You cannot add rules to manager auth descriptors.";
 
     const account = await this.registerAndBuildManagerAuthenticated();
-
     await this.addBalanceIfNeeded(account);
     await this.addPointsIfNeeded(account);
     return account;
   }
 
   async buildAsNonManager(): Promise<AuthenticatedAccount> {
-    const manager = newSignatureProvider(MERKLE_HASH_VERSIONS.ONE);
+    const manager = newSignatureProvider();
     const accountManager =
       await this.registerAndBuildManagerAuthenticated(manager);
     const ad = this.getAuthDescriptorRegistration();
@@ -153,11 +143,11 @@ export class AccountBuilder {
     const ad = this.getAccountManagerAuthDescriptor(managerSigProv);
     await registerAccountAdmin(
       this.connection.client,
-      adminUser(this.merkleHashVersion).signatureProvider,
+      adminUser().signatureProvider,
       ad,
     );
     const account = await this.connection.getAccountById(
-      getAccountIdFromAuthDescriptor(ad),
+      getExpectedAccountIdFromMainAuthDescriptor(ad, this.connection),
     );
     const keyHandler = createInMemoryFtKeyStore(
       managerSigProv,
@@ -178,9 +168,7 @@ export class AccountBuilder {
 
   private async addBalanceIfNeeded(account: Account) {
     if (this.balances.length) {
-      const adminSignatureProvider = adminUser(
-        this.merkleHashVersion,
-      ).signatureProvider;
+      const adminSignatureProvider = adminUser().signatureProvider;
       const tx: { operations: Operation[]; signers: Buffer[] } = {
         operations: [],
         signers: [adminSignatureProvider.pubKey],
@@ -206,9 +194,7 @@ export class AccountBuilder {
 
   private async addPointsIfNeeded(account: Account) {
     if (this.points > 0) {
-      const adminSignatureProvider = adminUser(
-        this.merkleHashVersion,
-      ).signatureProvider;
+      const adminSignatureProvider = adminUser().signatureProvider;
       await addRateLimitPoints(
         this.connection.client,
         adminSignatureProvider,

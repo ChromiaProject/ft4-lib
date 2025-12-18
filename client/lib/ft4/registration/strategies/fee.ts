@@ -26,6 +26,7 @@ export function fee(
   loginConfig: LoginConfigOptions | null = null,
 ): Strategy {
   return Object.freeze({
+    requiresSignature: true,
     getRegistrationDetails: async (
       targetConnection: Connection,
       keyStore: KeyStore,

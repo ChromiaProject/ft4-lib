@@ -1,3 +1,4 @@
+import { EventEmitterError } from "./errors";
 import { Listener } from "./types";
 
 /**
@@ -53,7 +54,7 @@ export class EventEmitter<T extends Record<string, any[]>> {
       try {
         listener(...args);
       } catch (err) {
-        console.error(`Error in listener for event "${String(event)}":`, err);
+        throw new EventEmitterError("Error in listener for event", err);
       }
     });
   }

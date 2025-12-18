@@ -6,6 +6,7 @@ import ^^^^.core.accounts;
 import ^^^^.core.crosschain;
 import ^^^^.core.accounts.strategies;
 import ^^^^.utils;
+import ^.*;
 
 /**
  * Constant that represents the account type used to temporarily store assets of transfers 

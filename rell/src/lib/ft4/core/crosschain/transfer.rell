@@ -1,6 +1,9 @@
 import ^.assets;
 import ^.accounts;
 
+val NO_TRANSACTION_RID = x"";
+val NO_OP_INDEX = -1;
+
 /**
  * Represents a crosschain transfer that has been applied on this chain.
  * 
@@ -51,6 +54,10 @@ entity canceled_transfers {
     init_tx_rid: byte_array;
     /** The index of the operation in the transaction that initialized this cross-chain transfer */
     init_op_index: integer;
+    /** The RID of the transaction that canceled this transfer, all zeros if it was created before v1.2.0 */
+    transaction_rid: byte_array = NO_TRANSACTION_RID;
+    /** The index of the operation in the transaction that canceled this transfer */
+    op_index: integer = NO_OP_INDEX;
 }
 
 /**
@@ -71,6 +78,10 @@ entity unapplied_transfers {
     init_tx_rid: byte_array;
     /** The index of the operation in the transaction that initialized this cross-chain transfer */
     init_op_index: integer;
+    /** The RID of the transaction that unapplied this transfer, all zeros if it was created before v1.2.0 */
+    transaction_rid: byte_array = NO_TRANSACTION_RID;
+    /** The index of the operation in the transaction that unapplied this transfer */
+    op_index: integer = NO_OP_INDEX;
 }
 
 /**
@@ -102,6 +113,10 @@ entity recalled_transfers {
     init_tx_rid: byte_array;
     /** The index of the operation in the transaction that initialized this cross-chain transfer */
     init_op_index: integer;
+    /** The RID of the transaction that recalled this transfer, all zeros if it was created before v1.2.0 */
+    transaction_rid: byte_array = NO_TRANSACTION_RID;
+    /** The index of the operation in the transaction that recalled this transfer */
+    op_index: integer = NO_OP_INDEX;
 }
 
 /**
@@ -143,6 +158,10 @@ entity reverted_transfer {
     init_tx_rid: byte_array;
     /** The index of the operation in the transaction that initialized this cross-chain transfer */
     init_op_index: integer;
+    /** The RID of the transaction that reverted this transfer, all zeros if it was created before v1.2.0 */
+    transaction_rid: byte_array = NO_TRANSACTION_RID;
+    /** The index of the operation in the transaction that reverted this transfer */
+    op_index: integer = NO_OP_INDEX;
 }
 
 namespace Unsafe {

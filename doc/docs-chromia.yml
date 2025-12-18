@@ -18,7 +18,7 @@ libs:
 
 compile:
   source: ../rell/src
-  rellVersion: 0.14.5
+  rellVersion: 0.14.12
 
 docs:
   title: "FT4 Library"

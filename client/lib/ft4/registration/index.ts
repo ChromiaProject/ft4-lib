@@ -5,11 +5,14 @@ import {
   feeAssets,
   fee,
   open,
+  importStrategy,
   subscription,
   transferFee,
   transferOpen,
   subscriptionAssets,
   renewSubscription,
+  verifyAccount,
+  canImportAccount,
   subscriptionPeriodMillis,
   transferSubscription,
   subscriptionDetails,
@@ -28,16 +31,37 @@ import {
   AssetLimitRaw,
   TransferStrategyRulePartial,
   AssetLimit,
+  ImportConfigRaw,
+  ImportConfig,
   TransferSenderBlockchains,
   TransferParticipants,
   TransferParticipantSingle,
   PendingTransferExpirationState,
+  ImportStrategyOptions,
+  CanImportAccountResult,
+  getImportConfig,
+  importConfig,
 } from "./strategies";
 
 /**
  * Functions that can be used to register an account
  */
 export interface RegistrationStrategy {
+  /**
+   * Creates an account using the import strategy
+   *
+   * @param originBrid - the blockchain rid where the original account exists
+   * @param mainAuthDescriptor - The main auth descriptor of the account to import
+   * @param loginConfig - the config if the account should be created with an active session, otherwise `null`
+   * @param options - the options for the import strategy
+   * @returns Strategy instance that can be used to retrieve registration details
+   */
+  importStrategy: (
+    originBrid: BufferId,
+    mainAuthDescriptor: AnyAuthDescriptorRegistration,
+    loginConfig?: LoginConfigOptions | null,
+    options?: ImportStrategyOptions | undefined,
+  ) => Strategy;
   /**
    * Registers an account using the open strategy
    *
@@ -119,6 +143,7 @@ export interface RegistrationStrategy {
 }
 
 const registrationStrategy: RegistrationStrategy = {
+  importStrategy,
   open,
   fee,
   subscription,
@@ -142,6 +167,9 @@ export {
   LoginDetails,
   allowedAssets,
   renewSubscription,
+  verifyAccount,
+  canImportAccount,
+  importStrategy,
   subscriptionDetails,
   transferSubscription,
   feeAssets,
@@ -171,4 +199,10 @@ export {
   TransferParticipants,
   TransferParticipantSingle,
   PendingTransferExpirationState,
+  ImportConfigRaw,
+  ImportConfig,
+  ImportStrategyOptions,
+  CanImportAccountResult,
+  getImportConfig,
+  importConfig,
 };

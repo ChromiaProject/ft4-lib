@@ -1,6 +1,6 @@
 import { AnyAuthDescriptor } from "@ft4/accounts";
 import { Connection } from "@ft4/ft-session";
-import { TxContext } from "@ft4/utils";
+import { MerkleHashVersionSource, TxContext } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { BufferId, GTX, Operation, RellOperation } from "postchain-client";
 import { LoginConfig } from "./login";
@@ -108,9 +108,13 @@ export interface KeyHandler {
   /**
    * Signs a transaction using the wrapped KeyStore
    * @param transaction - the transaction to sign
+   * @param merkleHashVersionSource - the source of the merkle hash version
    * @returns the signed transaction, serialized as a `Buffer`
    */
-  sign(transaction: GTX): Promise<Buffer>;
+  sign(
+    transaction: GTX,
+    merkleHashVersionSource: MerkleHashVersionSource,
+  ): Promise<Buffer>;
 
   // FIXME
   /**

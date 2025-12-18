@@ -12,7 +12,7 @@ import {
   AuthDescriptorRegistration,
   SingleSig,
 } from "@ft4/accounts";
-import { PendingTransfer, TransferRef } from "@ft4/crosschain";
+import { PendingTransfer, TransferRef, HopData } from "@ft4/crosschain";
 import {
   BufferId,
   SignedTransaction,
@@ -214,6 +214,7 @@ export interface Account {
   id: Buffer;
   blockchainRid: Buffer;
   connection: Connection;
+  type?: string;
   /**
    * Retrieves all the balances of all assets that is available on the account and returns them as
    * a paginated entity.
@@ -456,7 +457,7 @@ export interface AuthenticatedAccount extends Account {
     {
       built: SignedTransaction;
       init: TransactionReceipt;
-      hop: Buffer;
+      hop: HopData;
     }
   >;
 
@@ -473,7 +474,7 @@ export interface AuthenticatedAccount extends Account {
   resumeCrosschainTransfer: (pendingTransfer: TransferRef) => Web3PromiEvent<
     void,
     {
-      hop: Buffer;
+      hop: HopData;
     }
   >;
 
@@ -490,7 +491,7 @@ export interface AuthenticatedAccount extends Account {
   revertCrosschainTransfer: (pendingTransfer: TransferRef) => Web3PromiEvent<
     void,
     {
-      hop: Buffer;
+      hop: HopData;
     }
   >;
 
@@ -510,7 +511,7 @@ export interface AuthenticatedAccount extends Account {
   ) => Web3PromiEvent<
     void,
     {
-      hop: Buffer;
+      hop: HopData;
     }
   >;
 

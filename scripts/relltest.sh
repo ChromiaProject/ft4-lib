@@ -2,7 +2,7 @@
 DOCKER=${DOCKER:-docker}
 
 usage() {
-    echo "Usage: npm run test:rell -- [OPTIONS]"
+    echo "Usage: pnpm run test:rell -- [OPTIONS]"
     echo
     echo "Options:"
     echo "  -h, --help                          Display this help message"
@@ -14,7 +14,7 @@ usage() {
     echo "                                      blockchain or test. -bc must be specified for this flag to work properly"
     echo
     echo "Example:"
-    echo "  % npm run test:rell -- -t=tests.accounts.auth_basic_single_sig:test_not_signed"
+    echo "  % pnpm run test:rell -- -t=tests.accounts.auth_basic_single_sig:test_not_signed"
     exit 1
 }
 

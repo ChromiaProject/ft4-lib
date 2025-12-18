@@ -175,7 +175,7 @@ export function createLockAccountObject(
 ): LockAccount {
   return {
     type: account.type,
-    account: createAccountObject(connection, account.id),
+    account: createAccountObject(connection, account.id, account.type),
   };
 }
 

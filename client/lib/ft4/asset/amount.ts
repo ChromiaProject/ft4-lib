@@ -198,8 +198,6 @@ export function checkValueInRange(val: bigint) {
  * @param amount - the amount to format
  * @param removeTrailingZeroes - if true, trailing zeroes will be removed (0.800 -\> 0.8).
  *                               Defaults to true.
- *
- * @returns The amount as string
  */
 export function stringify(
   amount: AnyAssetAmount,

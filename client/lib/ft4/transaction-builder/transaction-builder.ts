@@ -6,6 +6,7 @@ import {
   SigningError,
   isFtKeyStore,
   ftSigner,
+  noopAuthenticator,
 } from "@ft4/authentication";
 import {
   TxContext,
@@ -19,6 +20,7 @@ import {
   ChainConfirmationLevel,
   GTX,
   IClient,
+  IccfProof,
   Operation,
   SignedTransaction,
   TransactionEvent,
@@ -42,17 +44,18 @@ import { EMPTY_SIGNATURE, signOperation } from "./utils";
 
 /**
  * Creates a new TransactionBuilder instance
- * @param authenticator - object that holds authentication information for the transaction
+ * @param authenticator - object that holds authentication information for the transaction. Can be null for operations that don't require authentication.
  * @param client - object that holds connection info for the transaction
  * @returns a TransactionBuilder instance
  */
 export function transactionBuilder(
-  authenticator: Authenticator,
+  authenticator: Authenticator | null,
   client: IClient,
 ): TransactionBuilder {
   const _operations: OperationContext[] = [];
   const _finalFtSigners: FtSigner[] = [];
   const _context: TxContext = {};
+  const _defaultAuthenticator = authenticator ?? noopAuthenticator;
 
   function add(
     operation: Operation,
@@ -60,7 +63,7 @@ export function transactionBuilder(
   ): TransactionBuilder {
     _operations.push({
       operation,
-      authenticator: config.authenticator ?? authenticator,
+      authenticator: config.authenticator ?? _defaultAuthenticator,
       signers: config.signers,
       skipFtSigning: config.skipFtSigning,
     });
@@ -115,7 +118,22 @@ export function transactionBuilder(
         ctx,
       );
 
+      // If no key handler is returned, check if the operation requires authentication
       if (!keyHandler) {
+        const authHandler =
+          await authenticator.authDataService.getAuthHandlerForOperation(
+            operation.name,
+          );
+
+        // If no auth handler is returned, the operation doesn't require authentication,In this case, we just add the operation without any auth operations
+        if (!authHandler) {
+          processedOperations.push(operation);
+          opContext.opIndex = opIndex;
+          opIndex++;
+          continue;
+        }
+
+        // The operation requires authentication but no key handler can handle it, this is an authorization error
         throw new AuthorizationError(
           `No key handler registered to handle operation <${operation.name}>`,
         );
@@ -181,7 +199,8 @@ export function transactionBuilder(
       tx.signers.map((signer) => {
         try {
           return (
-            signersMap[signer.toString("hex")]?.sign(tx) ?? EMPTY_SIGNATURE
+            signersMap[signer.toString("hex")]?.sign(tx, client) ??
+            EMPTY_SIGNATURE
           );
         } catch (e) {
           throw new SigningError(
@@ -215,13 +234,20 @@ export function transactionBuilder(
       _build()
         .then((tx) => {
           promiEvent.emit("built", tx);
+          const proof = _operations.find(
+            (op) => op.operation.name === "iccf_proof",
+          );
+          let txPromiEvent;
+          if (proof) {
+            txPromiEvent = client.sendTransactionWithRetries(tx);
+          } else {
+            txPromiEvent = client.sendTransaction(tx);
+          }
           return Promise.all([
             tx,
-            client
-              .sendTransaction(tx)
-              .on(TransactionEvent.DappReceived, (receipt) => {
-                promiEvent.emit("sent", receipt.transactionRid);
-              }),
+            txPromiEvent.on(TransactionEvent.DappReceived, (receipt) => {
+              promiEvent.emit("sent", receipt.transactionRid);
+            }),
           ]);
         })
         .then(([tx, receipt]) => {
@@ -251,13 +277,25 @@ export function transactionBuilder(
       _build()
         .then((tx) => {
           promiEvent.emit("built", tx);
-          return client
-            .sendTransaction(
+          const proof = _operations.find(
+            (op) => op.operation.name === "iccf_proof",
+          );
+          let txPromiEvent;
+          if (proof) {
+            txPromiEvent = client.sendTransactionWithRetries(
+              tx,
+              () => {},
+              ChainConfirmationLevel.SystemAnchoring,
+            );
+          } else {
+            txPromiEvent = client.sendTransaction(
               tx,
               true,
               () => {},
               ChainConfirmationLevel.SystemAnchoring,
-            )
+            );
+          }
+          return txPromiEvent
             .on(TransactionEvent.DappReceived, (receipt) =>
               promiEvent.emit("sent", receipt.transactionRid),
             )
@@ -270,6 +308,9 @@ export function transactionBuilder(
                 client,
                 decodedTx,
               );
+              if (!systemConfirmationProof) {
+                throw new Error("Failed to get system confirmation proof");
+              }
               resolve({ tx: decodedTx, receipt, systemConfirmationProof });
             });
         })
@@ -279,7 +320,7 @@ export function transactionBuilder(
     return promiEvent;
   }
 
-  function getSignersMap(stores: FtKeyStore[]) {
+  function getSignersMap(stores: FtKeyStore[]): Record<string, FtKeyStore> {
     return stores.reduce(
       (acc, curr: FtKeyStore) => ({
         [curr.pubKey.toString("hex")]: curr,
@@ -318,8 +359,8 @@ export function getSystemAnchoringIccfProofOp(
       client.config.endpointPool.map((endpoint) => endpoint.url),
       client.config.directoryChainRid,
     );
-
-    const proofTx = await createIccfProofTx(
+    let proofTx: IccfProof | null = null;
+    proofTx = await createIccfProofTx(
       directoryClient,
       getTransactionRid(txToProve, client),
       gtx.getDigest(txToProve, client.config.merkleHashVersion),

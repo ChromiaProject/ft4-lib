@@ -100,13 +100,16 @@ export async function getRateLimit(
  * Creates an instance of the `Account` interface
  * @param connection - a connection to the blockchain where this account is registered
  * @param accountId - the id of the account
+ * @param type - optional type of the account
  */
 export function createAccountObject(
   connection: Connection,
   accountId: BufferId,
+  type?: string,
 ): Account {
   return Object.freeze({
     connection,
+    type,
     id: formatter.ensureBuffer(accountId),
     blockchainRid: formatter.toBuffer(connection.client.config.blockchainRid),
     getBalanceByAssetId: (assetId: BufferId) =>
@@ -194,7 +197,7 @@ export async function getAccountsFiltered(
     connection,
     accountsFiltered(filter, limit, cursor),
     (accounts) =>
-      accounts.map((acc) => createAccountObject(connection, acc.id)),
+      accounts.map((acc) => createAccountObject(connection, acc.id, acc.type)),
   );
 }
 
@@ -365,10 +368,15 @@ export async function getAccountLinksFiltered(
     accountLinksFiltered(accountLinkFilter, limit, cursor),
     (accountLinkResponses) =>
       accountLinkResponses.map((accountLinkResponse) => ({
-        account: createAccountObject(connection, accountLinkResponse.account),
+        account: createAccountObject(
+          connection,
+          accountLinkResponse.account,
+          accountLinkResponse.account_type,
+        ),
         secondary: createAccountObject(
           connection,
           accountLinkResponse.secondary,
+          accountLinkResponse.secondary_type,
         ),
       })),
   );
@@ -377,11 +385,11 @@ export async function getAccountLinksFiltered(
 /**
  * Retrieves a paginated list of subscriptions based on the provided filter, limit, and cursor.
  *
- * @param {Connection} connection - The database connection to use for the query.
- * @param {SubscriptionFilter} [subscriptionFilter=null] - The filter criteria to apply to the subscriptions.
- * @param {OptionalLimit} [limit=null] - The maximum number of subscriptions to retrieve.
- * @param {OptionalPageCursor} [cursor=null] - The cursor for pagination.
- * @returns {Promise<PaginatedEntity<Subscription>>} A promise that resolves to a paginated list of subscriptions.
+ * @param connection - The database connection to use for the query.
+ * @param subscriptionFilter - The filter criteria to apply to the subscriptions. Defaults to null.
+ * @param limit - The maximum number of subscriptions to retrieve. Defaults to null.
+ * @param cursor - The cursor for pagination. Defaults to null.
+ * @returns A promise that resolves to a paginated list of subscriptions.
  *
  * Available since ApiVersion 1
  */
@@ -415,7 +423,7 @@ export async function getById(
 
   if (Buffer.isBuffer(account)) return createAccountObject(connection, account);
 
-  return createAccountObject(connection, account.id);
+  return createAccountObject(connection, account.id, account.type);
 }
 
 /**
@@ -431,11 +439,11 @@ export async function getBySigner(
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Account>> {
-  return retrievePaginatedEntity<Account, { id: Buffer }>(
+  return retrievePaginatedEntity<Account, { id: Buffer; type: string }>(
     connection,
     accountsBySigner(id, limit, cursor),
     (accounts) =>
-      accounts.map((acc) => createAccountObject(connection, acc.id)),
+      accounts.map((acc) => createAccountObject(connection, acc.id, acc.type)),
   );
 }
 
@@ -542,7 +550,7 @@ export async function getAccountMainAuthDescriptor(
 
 /**
  * Converts an AccountResponse
- * @param account the account to map
+ * @param account - the account to map
  * @returns The id and type of the account
  */
 export function createAccountObjectFiltered(

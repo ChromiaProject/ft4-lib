@@ -78,9 +78,9 @@ describe("Transaction builder signing", () => {
       gtv.encode([
         expectedTxWithoutSignatures[0],
         [
-          await ftKeyStore1.sign(expectedTxWithoutSignatures),
+          await ftKeyStore1.sign(expectedTxWithoutSignatures, client),
           EMPTY_SIGNATURE,
-          await ftKeyStore3.sign(expectedTxWithoutSignatures),
+          await ftKeyStore3.sign(expectedTxWithoutSignatures, client),
           EMPTY_SIGNATURE,
         ],
       ]),
@@ -106,7 +106,7 @@ describe("Transaction builder signing", () => {
     expect(tx).toEqual(
       gtv.encode([
         expectedTxWithoutSignatures[0],
-        [await ftKeyStore.sign(expectedTxWithoutSignatures)],
+        [await ftKeyStore.sign(expectedTxWithoutSignatures, client)],
       ]),
     );
   });
@@ -278,7 +278,10 @@ describe("Transaction builder signing", () => {
     expect(tx).toEqual(
       gtv.encode([
         expectedTxWithoutSignatures[0],
-        [await ftKeyStore3.sign(expectedTxWithoutSignatures), EMPTY_SIGNATURE],
+        [
+          await ftKeyStore3.sign(expectedTxWithoutSignatures, client),
+          EMPTY_SIGNATURE,
+        ],
       ]),
     );
   });
@@ -326,7 +329,7 @@ describe("Transaction builder signing", () => {
     expect(tx).toEqual(
       gtv.encode([
         expectedTxWithoutSignatures[0],
-        [await keyStore.sign(expectedTxWithoutSignatures)],
+        [await keyStore.sign(expectedTxWithoutSignatures, client)],
       ]),
     );
   });
@@ -451,6 +454,7 @@ describe("Transaction builder signing", () => {
     const evmKeyStore1 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
     const evmKeyStore2 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
 
+    // doesn't matter, single-sig
     const accountId = gtv.gtvHash(evmKeyStore1.id, MERKLE_HASH_VERSIONS.ONE);
     const authDescriptor = createTestAuthDescriptorWithSigner(
       accountId,
@@ -594,7 +598,7 @@ describe("Transaction builder signing", () => {
     expect(tx).toEqual(
       gtv.encode([
         expectedTxWithoutSignatures[0],
-        [await keyStore.sign(expectedTxWithoutSignatures)],
+        [await keyStore.sign(expectedTxWithoutSignatures, client)],
       ]),
     );
   });
@@ -673,7 +677,7 @@ describe("Transaction builder signing", () => {
       })
       .build();
 
-    const message = `auth message with ${formatter.toString(blockchainRid)} ${deriveNonce(blockchainRid, emptyOp(), 0)}`;
+    const message = `auth message with ${formatter.toString(blockchainRid)} ${deriveNonce(blockchainRid, emptyOp(), 0, client)}`;
 
     const expectedTx = gtv.encode([
       [

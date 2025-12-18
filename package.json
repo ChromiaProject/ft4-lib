@@ -1,6 +1,6 @@
 {
   "name": "@chromia/ft4",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "FT4 Library is a library for Rell modules (Chromia smart contract language). It can be imported and used as a token provider and manager. It allows several operations, among them: creation of different assets (type of tokens), allocation of tokens, transfer, and cross crosschain transfer. It also have some basic data structure for users (account) that can be used independently from the use of the tokens.",
   "main": "dist/cjs/index.js",
   "browser": "dist/esm/index.js",
@@ -19,12 +19,12 @@
   },
   "scripts": {
     "version:rell": "./scripts/version.sh",
-    "test": "npm run test:rell && npm run test:js",
+    "test": "pnpm run test:rell && pnpm run test:js",
     "test:rell": "./scripts/relltest.sh",
-    "test:js-unit": "npx jest -maxWorkers=1 --testPathPattern=unit/",
-    "test:js-integration": "TESTCONTAINERS_RYUK_DISABLED=true npx jest --config=jest.config.integration.js --testPathPattern=integration/",
+    "test:js-unit": "pnpm exec jest --testPathPattern=unit/",
+    "test:js-integration": "TESTCONTAINERS_RYUK_DISABLED=true pnpm exec jest --config=jest.config.integration.js --testPathPattern=integration/",
     "test:js-multichain": "./scripts/multichain-jesttest.sh",
-    "test:js": "npm run test:js-unit && npm run test:js-integration && npm run test:js-multichain",
+    "test:js": "pnpm run test:js-unit && pnpm run test:js-integration && pnpm run test:js-multichain",
     "test:e2e": "./scripts/start-e2e-environment.sh --run-tests-interactive",
     "test:e2e:headless": "./scripts/start-e2e-environment.sh --run-tests-headless",
     "deploy:latest": "./scripts/deploy.sh",
@@ -36,12 +36,13 @@
     "build:esm": "tsc --project tsconfig.esm.json && tsc-alias --resolve-full-paths -p tsconfig.esm.json",
     "build:umd": "tsc --project tsconfig.umd.json && tsc-alias --resolve-full-paths -p tsconfig.umd.json",
     "build:cjs": "tsc --project tsconfig.cjs.json && tsc-alias -p tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
-    "build": "npm run build:clean && npm run build:types && npm run build:esm && npm run build:umd && npm run build:cjs",
-    "prepublishOnly": "npm run build",
+    "build": "pnpm run build:clean && pnpm run build:types && pnpm run build:esm && pnpm run build:umd && pnpm run build:cjs",
+    "prepack": "pnpm run build",
+    "prepublishOnly": "pnpm run build",
     "prepare": "husky install",
-    "generate:docs-rell": "chr generate docs-site --target doc/api/rell -s doc/docs-chromia.yml",
-    "generate:docs-ts": "npm run build && (api-extractor run || true) && rimraf temp && npx typedoc || exit 1",
-    "generate:docs": "npm run generate:docs-rell && npm run generate:docs-ts"
+    "generate:docs-rell": "chr generate docs-site --target doc/api/rell",
+    "generate:docs-ts": "pnpm run build && (api-extractor run || true) && rimraf temp && pnpm exec typedoc || exit 1",
+    "generate:docs": "pnpm run generate:docs-rell && pnpm run generate:docs-ts"
   },
   "repository": {
     "type": "git",
@@ -87,17 +88,18 @@
     "ts-loader": "^9.5.1",
     "tsc-alias": "^1.8.8",
     "tslint": "^6.1.3",
-    "typedoc": "^0.25.13",
+    "typedoc": "^0.28.15",
     "typescript": "^5.3.2",
     "webpack": "^5.89.0"
   },
   "peerDependencies": {
     "buffer": "^5.x || ^6.x",
     "events": "^3.3.0",
-    "postchain-client": "^2.0.2"
+    "postchain-client": "^2.1.0"
   },
   "jest-junit": {
     "suiteName": "jest tests",
     "outputDirectory": "test-reports/ts"
-  }
+  },
+  "packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee"
 }

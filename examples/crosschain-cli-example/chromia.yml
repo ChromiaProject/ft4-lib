@@ -35,7 +35,7 @@ libs:
     rid: x"873D71557531E35E453587FA71C2D3CCB674F0EB49D18B30FA838C52C1155EB3"
 
 compile:
-  rellVersion: 0.14.5
+  rellVersion: 0.14.12
 
 database:
   schema: cross_chain_demo

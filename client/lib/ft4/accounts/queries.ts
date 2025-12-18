@@ -365,7 +365,7 @@ export function accountsBySigner(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  PagedResponse<{ id: Buffer }>,
+  PagedResponse<{ id: Buffer; type: string }>,
   { id: Buffer; page_size: OptionalLimit; page_cursor: OptionalPageCursor }
 > {
   return {

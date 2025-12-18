@@ -1,6 +1,5 @@
 import {
   AnyAuthDescriptorRegistration,
-  aggregateSigners,
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/accounts";
 import {
@@ -10,8 +9,8 @@ import {
 } from "@ft4/authentication";
 import { Connection, createAuthDataService } from "@ft4/ft-session";
 import { Buffer } from "buffer";
-import { gtv, MERKLE_HASH_VERSIONS } from "postchain-client";
 import { LoginDetails } from "./types";
+import { getExpectedAccountIdFromMainAuthDescriptor } from "@ft4/utils";
 
 /**
  * Fetches the login details for an auth descriptor.
@@ -35,7 +34,10 @@ export async function fetchLoginDetails(
   accountId: Buffer;
   loginDetails: LoginDetails | null;
 }> {
-  const accountId = getAccountIdFromSigners(aggregateSigners(authDescriptor));
+  const accountId = getExpectedAccountIdFromMainAuthDescriptor(
+    authDescriptor,
+    connection,
+  );
 
   return {
     accountId,
@@ -43,16 +45,6 @@ export async function fetchLoginDetails(
       loginConfig &&
       (await getLoginDetails(connection, accountId, loginConfig)),
   };
-}
-
-function getAccountIdFromSigners(signers: Buffer[]): Buffer {
-  if (!signers.length)
-    throw new Error("Cannot derive account id. Signers list is empty");
-
-  return gtv.gtvHash(
-    signers.length === 1 ? signers[0] : signers,
-    MERKLE_HASH_VERSIONS.ONE,
-  );
 }
 
 /**

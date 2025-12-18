@@ -610,14 +610,16 @@ function verify_signers(ft_and_evm_signers: list<byte_array>) {
             .replace(AUTH_DESCRIPTOR_ID_PLACEHOLDER, auth_details.auth_descriptor_id.to_hex().upper_case());
     }
 
-    verify_signers_with_message(ft_and_evm_signers, message);
+    verify_signers_with_message(
+        ft_and_evm_signers,
+        message,
+        gtx_transaction.from_bytes(op_context.transaction.tx_data)
+    );
 }
 
 /**
  * Does what `verify_signers` does, but receives the message as a parameter instead of using
  * the auth message of the current operation.
- * 
- * Can only be called from an operation.
  * 
  * Throws `"MISMATCHED SIGNATURES"` if any of the signers and signatures on the `evm_signatures`
  * operation don't match in the exact order they're found.
@@ -639,8 +641,9 @@ function verify_signers(ft_and_evm_signers: list<byte_array>) {
  * 
  * @param ft_and_evm_signers    the signers that are expected to be found.
  * @param message               the message that was signed.
+ * @param gtx_transaction       the transaction that was signed.
  */
-function verify_signers_with_message(ft_and_evm_signers: list<byte_array>, message: text) {
+function verify_signers_with_message(ft_and_evm_signers: list<byte_array>, message: text, gtx_transaction) {
     val (signers, signatures) = get_evm_signatures();
     for (i in range(signatures.size())) {
         val signer = signers[i];
@@ -660,7 +663,7 @@ function verify_signers_with_message(ft_and_evm_signers: list<byte_array>, messa
             );
         } else if (signer.size() == FT_PUBKEY_SIZE) {
             require(
-                op_context.is_signer(signer),
+                gtx_transaction.body.signers.contains(signer.to_gtv()),
                 "MISSING SIGNATURE: Missing signature for public key <%s>".format(signer)
             );
         }
@@ -688,15 +691,13 @@ function validate_signer(signer: byte_array) {
 }
 
 /**
- * Retrieves the signers and signatures from the `evm_signatures` operation. Returns empty
- * lists if the operation is not found.
+ * Retrieves the signers and signatures from the `evm_signatures` operation in the
+ * current transaction. Returns empty lists if the operation is not found.
  * 
  * Can only be called from an operation.
  * 
- * Throws `"MISMATCHED SIGNATURES"` if the length of the two lists is mismatched
- * in the `evm_signatures` operation.
- * 
- * Throws `"NULL EVM SIGNATURE"` if any signature is null.
+ * Throws if the length of the two lists is mismatched
+ * in the `evm_signatures` operation, or if any signature is null.
  */
 function get_evm_signatures(): (signers: list<byte_array>, signatures: list<signature>) {
     if (op_context.op_index == 0) return (signers = list<byte_array>(), signatures = list<signature>());
@@ -717,6 +718,18 @@ function get_evm_signatures(): (signers: list<byte_array>, signatures: list<sign
 
     if (empty(evm_signatures_op)) return (signers = list<byte_array>(), signatures = list<signature>());
 
+    return _get_evm_signatures(evm_signatures_op);
+}
+
+/**
+ * Retrieves the signers and signatures from the `evm_signatures` operation.
+ * 
+ * Throws `"MISMATCHED SIGNATURES"` if the length of the two lists is mismatched
+ * in the `evm_signatures` operation.
+ * 
+ * Throws `"NULL EVM SIGNATURE"` if any signature is null.
+ */
+function _get_evm_signatures(evm_signatures_op: gtx_operation): (signers: list<byte_array>, signatures: list<signature>) {
     val args = struct<evm_signatures>.from_gtv(evm_signatures_op.args.to_gtv());
 
     require(

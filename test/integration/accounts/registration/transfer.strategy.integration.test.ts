@@ -25,13 +25,7 @@ import {
   registerAccount,
   registrationStrategy,
 } from "@ft4/registration";
-import {
-  KeyPair,
-  MERKLE_HASH_VERSIONS,
-  TxRejectedError,
-  encryption,
-  gtv,
-} from "postchain-client";
+import { KeyPair, TxRejectedError, encryption, gtv } from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;
@@ -58,7 +52,10 @@ describe("Test transfer strategy", () => {
   let defaultAmount: Amount;
   beforeEach(async () => {
     keyPair = encryption.makeKeyPair();
-    recipientId = gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE);
+    recipientId = gtv.gtvHash(
+      keyPair.pubKey,
+      connection.client.config.merkleHashVersion,
+    );
     keyStore = createInMemoryFtKeyStore(keyPair);
     senderAccount = await AccountBuilder.account(connection)
       .withBalance(asset, 200)
@@ -236,7 +233,10 @@ describe("Test transfer strategy", () => {
 
       beforeAll(async () => {
         const keyPair = encryption.makeKeyPair();
-        recipientId = gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE);
+        recipientId = gtv.gtvHash(
+          keyPair.pubKey,
+          connection.client.config.merkleHashVersion,
+        );
 
         const account1 = await AccountBuilder.account(connection)
           .withBalance(asset, 200)
@@ -324,7 +324,10 @@ describe("Test transfer strategy", () => {
         );
 
         const keyPair = encryption.makeKeyPair();
-        recipientId = gtv.gtvHash(keyPair.pubKey, MERKLE_HASH_VERSIONS.ONE);
+        recipientId = gtv.gtvHash(
+          keyPair.pubKey,
+          connection.client.config.merkleHashVersion,
+        );
 
         const account1 = await AccountBuilder.account(connection)
           .withBalance(timeoutAsset, 200)
