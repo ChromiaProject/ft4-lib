@@ -416,7 +416,7 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
     rell.test.tx()
         .op(xc.external.apply_transfer(init_tx, 1, apply_tx, 0, hop_index))
         .sign(rell.test.keypairs.alice)
-        .run_must_fail("Argument mismatch: init_transfer hops size (%d) is greater than hop_index (%d)".format(hops.size(), hop_index));
+        .run_must_fail("Argument mismatch: init_transfer hops size (%d) is smaller than hop_index (%d)".format(hops.size(), hop_index));
 }
 
 function test_apply_transfer_fails_when_recipient_id_does_not_exists_and_create_on_transfer_strategy_is_not_enabled() {
