@@ -1,9 +1,5 @@
-import {
-  LoginKeyStore,
-  cleanupOldLoginSession,
-  createInMemoryFtKeyStore,
-} from "@ft4/authentication";
-import { Connection } from "@ft4/ft-session";
+import { LoginKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
+import { Buffer } from "buffer";
 import { BufferId, encryption } from "postchain-client";
 
 const STORAGE_KEY = "FT_LOGIN_KEY_STORE";
@@ -25,7 +21,7 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
     storage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 
-  function clear(accountId: BufferId): Promise<void> {
+  function clear(accountId: Buffer): Promise<void> {
     const values = loadData();
     delete values[ensureString(accountId)];
     saveData(values);
@@ -33,19 +29,19 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
     return Promise.resolve();
   }
 
-  const ks = Object.freeze({
+  return Object.freeze({
     clear,
-    getKeyStore: (accountId: BufferId) => {
+    getKeyStore: (accountId: Buffer) => {
       const privateKey = loadData()[ensureString(accountId)];
       if (!privateKey) return Promise.resolve(null);
       return Promise.resolve(
         createInMemoryFtKeyStore(encryption.makeKeyPair(privateKey)),
       );
     },
-    generateKey: async (accountId: BufferId) => {
+    generateKey: async (accountId: Buffer) => {
       await clear(accountId);
-      const accountIdString = ensureString(accountId);
       const values = loadData();
+      const accountIdString = ensureString(accountId);
       if (accountIdString in values) {
         throw new Error(
           `KeyPair already exists for account <${accountIdString}>`,
@@ -57,10 +53,7 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
       saveData(values);
       return Promise.resolve(createInMemoryFtKeyStore(keyPair));
     },
-    cleanup: (accountId: BufferId, connection: Connection) =>
-      cleanupOldLoginSession(accountId, connection, ks),
   });
-  return ks;
 }
 
 function ensureString(bufferId: BufferId): string {

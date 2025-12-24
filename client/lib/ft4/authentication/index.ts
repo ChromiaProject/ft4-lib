@@ -24,10 +24,6 @@ export {
   getLoginConfig,
   login,
   getConfigFromOptions,
-  getActiveLoginAuthDescriptors,
-  newLogin,
-  recoverLogin,
-  cleanupOldLoginSession,
 } from "./login";
 
 export {

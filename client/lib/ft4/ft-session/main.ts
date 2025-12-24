@@ -571,7 +571,7 @@ export function createKeyStoreInteractor(
       return createSession(connection, authenticator);
     },
     login: (loginOptions: LoginOptions) =>
-      login(connection, loginOptions, keyStore),
+      login(connection, keyStore, loginOptions),
     hasActiveLogin: async (loginOptions: LoginOptions) => {
       // if no keystore was passed, no keys are available
       if (loginOptions.loginKeyStore === undefined) return false;
