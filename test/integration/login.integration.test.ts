@@ -184,7 +184,11 @@ describe("Login", () => {
       keyStore2,
     );
 
-    await keyStoreInteractor.login({ accountId: account.id });
+    expect(keyStoreInteractor.login({ accountId: account.id })).rejects.toThrow(
+      `Admin auth descriptor does not exist for provided key store <${keyPair2.pubKey.toString(
+        "hex",
+      )}>`,
+    );
   });
 
   it("uses key pair stored in login key store", async () => {
