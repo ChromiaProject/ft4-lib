@@ -60,12 +60,12 @@ prepare_dapp_folder() {
     mkdir -p $(dirname $rell_filepath)
 
     case "$chain_num" in
-        00) merkle_hash_version=2 ;;
-        01) merkle_hash_version=2 ;;
-        02) merkle_hash_version=2 ;;
+        00) merkle_hash_version=1 ;;
+        01) merkle_hash_version=1 ;;
+        02) merkle_hash_version=1 ;;
         03) merkle_hash_version=2 ;;
         04) merkle_hash_version=2 ;;
-        *) merkle_hash_version=2 ;; # default fallback
+        *) merkle_hash_version=1 ;; # default fallback
     esac
 
     # Write the YML content to the file
@@ -159,9 +159,13 @@ run_main_logic() {
             echo "You are running macOS. If you haven't installed pmc, please do so using:"
             echo "% brew tap chromia/core https://gitlab.com/chromaway/core-tools/homebrew-chromia.git"
             echo "% brew install chromia/core/pmc"
+        elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            echo "You are running Linux. If you haven't installed pmc, please do so using:"
+            echo '% wget -q -O - https://apt.chromia.com/chromia.gpg > /usr/share/keyrings/chromia.gpg'
+            echo '% echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list'
+            echo '% apt update'
+            echo '% apt install -y pmc'
         fi
-
-        # TODO: Add some more instructions for Linux (PMC is not available in apt yet).
 
         exit 1
     fi
@@ -217,6 +221,8 @@ run_main_logic() {
         log "Editing Directory Chain for GitLab..."
         sed -i -e 's/localhost/docker/g' $DEPENDENCIES_PATH/directory-chain/chromia.yml
     fi 
+
+    echo -e ",s/require_min_merkle_hash_version: 2/require_min_merkle_hash_version: 1/\n,wq" | ed -s -q $DEPENDENCIES_PATH/directory-chain/chromia.yml > /dev/null
 
     log "Installing Directory Chain dependencies..."
     chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml > /dev/null

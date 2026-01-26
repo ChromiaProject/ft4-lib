@@ -133,6 +133,7 @@ multichain_tests:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: manual
   script:
+    - apk add ed
     - ./scripts/install-chr-and-pmc.sh --link-only
     - corepack enable && corepack prepare pnpm@9.12.3 --activate
     - pnpm install --frozen-lockfile
