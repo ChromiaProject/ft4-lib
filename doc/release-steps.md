@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- merge master to development
+- merge main to development
 
 ## Changelog
 
@@ -22,13 +22,15 @@ After having updated both Rell and TS changelog, generate change log with
 
 ## Rell version [Can be omitted if a rell version is not released]
 
-You first need to run `pnpm run version:rell -- [version or flag]` to update
+You first need to run `pnpm run version:rell -- [version or flag]` or `./scripts/version.sh [version or flag]` to update
 version in rell. Examples:
 
 - `pnpm run version:rell -- 1.1.0`
 - `pnpm run version:rell -- -p` (for patch version)
 
-After having run the above, you can make a PR to development branch, and wait
+Then update major/minor versions on the `ci/library_chain/deploy.sh` line in `.gitlab-ci.yml` if needed. 
+
+After having run the above, you can make a PR to the development branch, and wait
 for tests before merging it.
 
 Then, tag rell version `git tag vX.X.Xr` (for example `git tag v1.1.0r`)
@@ -44,7 +46,7 @@ with client version.
 ## Finalize the release
 
 - push development
-- create a pull request to main branch from development branch
+- create a merge request to main branch from development branch
 
 - if it was a rell release, find rell lib hash
 
@@ -57,4 +59,4 @@ with client version.
     - get hash from error message
 
 - publish release notes in zulip streams
-- merge master to development
+- merge main to development

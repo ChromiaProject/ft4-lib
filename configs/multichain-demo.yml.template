@@ -1,6 +1,9 @@
 blockchains:
   ft4_multichain_test_any:
     module: no_module
+    config:
+      features:
+        merkle_hash_version: 2
 
 deployments:
   local:

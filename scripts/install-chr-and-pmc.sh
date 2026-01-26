@@ -31,22 +31,16 @@ link_chr_pmc() {
     ln -s $(pwd)/bin/chromaway/management-console/bin/pmc /bin/pmc
 }
 
-
-# docker run --rm -v $(pwd):/usr/app registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.29.2 chr
-# docker run --rm -v $(pwd):/usr/app registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.29.2 chr install
-
-
 if $LINK_ONLY; then
     echo "Linking the binaries from artifacts..."
     link_chr_pmc;
 else
     echo "Downloading the binaries..."
 
-    # install chromia-cli-0.29.2-dist.tar.gz
     mkdir -p /opt/chromaway/chr
-    wget -nv -O - https://gitlab.com/chromaway/core-tools/chromia-cli/-/package_files/250333056/download | tar -C /opt/chromaway/chr -xz
+    wget -nv -O - https://gitlab.com/api/v4/projects/39844192/packages/maven/com/chromia/cli/chromia-cli/0.29.5/chromia-cli-0.29.5-dist.tar.gz | tar -C /opt/chromaway/chr -xz
 
-    wget -nv -O - https://gitlab.com/api/v4/projects/46346037/packages/maven/net/postchain/mc/management-console/3.58.1/management-console-3.58.1-dist.tar.gz | tar -C /opt/chromaway -xz
+    wget -nv -O - https://gitlab.com/api/v4/projects/46346037/packages/maven/net/postchain/mc/management-console/3.58.2/management-console-3.58.2-dist.tar.gz | tar -C /opt/chromaway -xz
 
     if $GITLAB; then
         mkdir bin

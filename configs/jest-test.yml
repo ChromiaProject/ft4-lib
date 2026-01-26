@@ -1,5 +1,8 @@
 blockchains:
   ft4_jest_test:  # Name of the blockchain
+    config:
+      features:
+        merkle_hash_version: 2
     module: tests.client_test_app_module  # Entrypoint to the project
     moduleArgs:
       lib.ft4.core.accounts:

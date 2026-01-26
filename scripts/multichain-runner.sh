@@ -9,9 +9,9 @@ API_PORT=7740
 # API_PORT=80
 
 # from https://gitlab.com/chromaway/postchain-chromia/container_registry/3630587
-CHROMIA_NODE_VERSION='3.32.13'
+CHROMIA_NODE_VERSION='3.36.4'
 # from https://gitlab.com/chromaway/core/directory-chain
-DIRECTORY_CHAIN_VERSION='1.100.1'
+DIRECTORY_CHAIN_VERSION='1.104.5'
 
 if $GITLAB; then
     BASE_CONFIG_DIR="rell/config/jest-test-gitlab/multichain"
@@ -60,12 +60,12 @@ prepare_dapp_folder() {
     mkdir -p $(dirname $rell_filepath)
 
     case "$chain_num" in
-        00) merkle_hash_version=1 ;;
-        01) merkle_hash_version=1 ;;
-        02) merkle_hash_version=1 ;;
+        00) merkle_hash_version=2 ;;
+        01) merkle_hash_version=2 ;;
+        02) merkle_hash_version=2 ;;
         03) merkle_hash_version=2 ;;
         04) merkle_hash_version=2 ;;
-        *) merkle_hash_version=1 ;; # default fallback
+        *) merkle_hash_version=2 ;; # default fallback
     esac
 
     # Write the YML content to the file
