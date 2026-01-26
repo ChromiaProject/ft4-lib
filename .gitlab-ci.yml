@@ -147,6 +147,22 @@ multichain_tests:
 #   script:
 #     - ./scripts/update-docs.sh
 
+deploy_library_chain:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^[0-9]+\.[0-9]+\.[0-9]+$/
+  variables:
+    POSTCHAIN_CLIENT_PUBKEY: "${LIBRARY_CHAIN_PUBLIC_KEY}"
+    POSTCHAIN_CLIENT_PRIVKEY: ${LIBRARY_CHAIN_PRIVATE_KEY}
+  script:
+    - apk add curl jq libxml2-utils
+    - chr install -s chromia.yml
+    - chr build --hide-lib-warnings
+    - ci/library_chain/deploy.sh -n ft4 --major 1 --minor 2
+  artifacts:
+    reports:
+      dotenv: .library_chain_releases.env
+
 workflow:
   rules:
     - if: $CI_COMMIT_BRANCH == "master"
