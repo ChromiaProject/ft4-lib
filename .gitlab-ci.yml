@@ -49,6 +49,7 @@ install_rell:
       - rell/src/lib/iccf
       - rell/src/lib/iccf_test
       - bin/
+      - build/
 
 install_js:
   stage: install
