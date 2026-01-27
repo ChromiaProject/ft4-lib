@@ -86,63 +86,63 @@ unit_rell_tests:
     paths:
       - logs/**
 
-#unit_js_tests:
-#  stage: test
-#  needs: ["install_js"]
-#  script:
-#    - corepack enable && corepack prepare pnpm@9.12.3 --activate
-#    - export JEST_JUNIT_OUTPUT_NAME=logs/unit.xml
-#    - pnpm exec jest --testPathPattern=unit/ --ci
-#      --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X
-#      POST https://chromadev.zulipchat.com/api/v1/messages -u
-#      ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode
-#      type=stream --data-urlencode 'to="Protocols - FT4 builds"'
-#      --data-urlencode 'topic=Build failed' --data-urlencode "content=TS unit
-#      tests failed on
-#      [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})."
-#      ; exit 1)
-#  artifacts:
-#    paths:
-#      - logs/**
-#
-#integration_js_tests:
-#  stage: test
-#  needs: ["install_rell", "install_js"]
-#  script:
-#    - ./scripts/install-chr-and-pmc.sh --link-only
-#    - corepack enable && corepack prepare pnpm@9.12.3 --activate
-#    - export TESTCONTAINERS_RYUK_DISABLED=true
-#    - export JEST_JUNIT_OUTPUT_NAME=logs/integration.xml
-#    - pnpm exec jest --config=jest.config.integration.js
-#      --testPathPattern=integration/ --ci --reporters=default
-#      --reporters=jest-junit || (curl --no-progress-meter -X POST
-#      https://chromadev.zulipchat.com/api/v1/messages -u
-#      ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode
-#      type=stream --data-urlencode 'to="Protocols - FT4 builds"'
-#      --data-urlencode 'topic=Build failed' --data-urlencode "content=TS
-#      integration tests failed on
-#      [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})."
-#      ; exit 1)
-#  artifacts:
-#    paths:
-#      - logs/**
+unit_js_tests:
+  stage: test
+  needs: ["install_js"]
+  script:
+    - corepack enable && corepack prepare pnpm@9.12.3 --activate
+    - export JEST_JUNIT_OUTPUT_NAME=logs/unit.xml
+    - pnpm exec jest --testPathPattern=unit/ --ci
+      --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X
+      POST https://chromadev.zulipchat.com/api/v1/messages -u
+      ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode
+      type=stream --data-urlencode 'to="Protocols - FT4 builds"'
+      --data-urlencode 'topic=Build failed' --data-urlencode "content=TS unit
+      tests failed on
+      [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})."
+      ; exit 1)
+  artifacts:
+    paths:
+      - logs/**
 
-#multichain_tests:
-#  stage: multichain
-#  needs: ["install_rell", "install_js"]
-#  rules:
-#    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-#      when: manual
-#  script:
-#    - apk add ed
-#    - ./scripts/install-chr-and-pmc.sh --link-only
-#    - corepack enable && corepack prepare pnpm@9.12.3 --activate
-#    - pnpm install --frozen-lockfile
-#    - chmod +x ./scripts/multichain-jesttest.sh;
-#      ./scripts/multichain-jesttest.sh --gitlab
-#  artifacts:
-#    paths:
-#      - logs/**
+integration_js_tests:
+  stage: test
+  needs: ["install_rell", "install_js"]
+  script:
+    - ./scripts/install-chr-and-pmc.sh --link-only
+    - corepack enable && corepack prepare pnpm@9.12.3 --activate
+    - export TESTCONTAINERS_RYUK_DISABLED=true
+    - export JEST_JUNIT_OUTPUT_NAME=logs/integration.xml
+    - pnpm exec jest --config=jest.config.integration.js
+      --testPathPattern=integration/ --ci --reporters=default
+      --reporters=jest-junit || (curl --no-progress-meter -X POST
+      https://chromadev.zulipchat.com/api/v1/messages -u
+      ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode
+      type=stream --data-urlencode 'to="Protocols - FT4 builds"'
+      --data-urlencode 'topic=Build failed' --data-urlencode "content=TS
+      integration tests failed on
+      [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})."
+      ; exit 1)
+  artifacts:
+    paths:
+      - logs/**
+
+multichain_tests:
+  stage: multichain
+  needs: ["install_rell", "install_js"]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+  script:
+    - apk add ed
+    - ./scripts/install-chr-and-pmc.sh --link-only
+    - corepack enable && corepack prepare pnpm@9.12.3 --activate
+    - pnpm install --frozen-lockfile
+    - chmod +x ./scripts/multichain-jesttest.sh;
+      ./scripts/multichain-jesttest.sh --gitlab
+  artifacts:
+    paths:
+      - logs/**
 
 # update_docs:
 #   stage: deploy
@@ -155,10 +155,7 @@ deploy_library_chain:
     - job: install_rell
       artifacts: true
   rules:
-    - if: '$CI_COMMIT_BRANCH == "development"'
-      when: manual
-      allow_failure: true
-#    - if: $CI_COMMIT_TAG =~ /^[0-9]+\.[0-9]+\.[0-9]+$/
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+r$/
   variables:
     POSTCHAIN_CLIENT_PUBKEY: "${LIBRARY_CHAIN_PUBLIC_KEY}"
     POSTCHAIN_CLIENT_PRIVKEY: ${LIBRARY_CHAIN_PRIVATE_KEY}
