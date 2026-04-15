@@ -168,7 +168,9 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
         testContext.sampleAsset.id,
         createAmount(10, mintAmount.decimals),
         [testContext.multichain2.rid, testContext.multichain1.rid],
-        Date.now() + 5000,
+        // CI can take several seconds between hops; use a wider deadline to avoid
+        // flaky "TRANSFER EXPIRED" failures in multichain query tests.
+        Date.now() + 60000,
       ),
     )
     .buildAndSendWithAnchoring()
