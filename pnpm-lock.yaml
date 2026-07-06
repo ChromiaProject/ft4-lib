@@ -30,6 +30,9 @@ importers:
       '@babel/preset-env':
         specifier: ^7.23.6
         version: 7.28.5(@babel/core@7.28.5)
+      '@jest/environment':
+        specifier: ^29.7.0
+        version: 29.7.0
       '@microsoft/api-extractor':
         specifier: ^7.43.1
         version: 7.55.0(@types/node@20.19.25)

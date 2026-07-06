@@ -75,6 +75,35 @@ build_docs:
     paths:
       - doc/api
 
+# Manual Rell API reference publish for development commits: generate the docs site with the
+# release chr (downloaded by install_rell, relinked here) and deploy it to GitLab Pages under a
+# per-commit path prefix so successive runs coexist. Mirrors rell's `pages:docs` job, except ft4
+# uses the released chromia-cli instead of a locally built snapshot chr.
+publish_api_reference:
+  stage: docs
+  needs: ["install_rell"]
+  rules:
+    - if: $CI_COMMIT_BRANCH == "development"
+      when: manual
+      allow_failure: true
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+      allow_failure: true
+  script:
+    - ./scripts/install-chr-and-pmc.sh --link-only
+    - chr generate docs-site --target public
+    - echo "FT4 Rell API reference published at - ${CI_PAGES_URL}/index.html"
+  pages:
+    path_prefix: "docs-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA"
+    expire_in: never
+  environment:
+    name: "docs/$CI_COMMIT_REF_SLUG/$CI_COMMIT_SHORT_SHA"
+    url: "$CI_PAGES_URL/index.html"
+  artifacts:
+    paths:
+      - public
+    expire_in: 30 days
+
 unit_rell_tests:
   stage: test
   needs: ["install_rell"]
