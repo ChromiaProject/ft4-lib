@@ -104,6 +104,38 @@ publish_api_reference:
       - public
     expire_in: 30 days
 
+# Manual TypeScript API reference publish for development commits: build the library and run
+# typedoc to generate the TS client docs into `public`, then deploy them to GitLab Pages under a
+# per-commit path prefix so successive runs coexist. Mirrors publish_api_reference, but publishes
+# the typedoc (TypeScript) site instead of the Rell reference.
+publish_ts_api_reference:
+  stage: docs
+  needs: ["install_js"]
+  rules:
+    - if: $CI_COMMIT_BRANCH == "development"
+      when: manual
+      allow_failure: true
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+      allow_failure: true
+  script:
+    - corepack enable && corepack prepare pnpm@9.12.3 --activate
+    - pnpm run build
+    - pnpm exec api-extractor run || true
+    - pnpm exec rimraf temp
+    - pnpm exec typedoc --out public
+    - echo "FT4 TypeScript API reference published at - ${CI_PAGES_URL}/index.html"
+  pages:
+    path_prefix: "ts-docs-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA"
+    expire_in: never
+  environment:
+    name: "ts-docs/$CI_COMMIT_REF_SLUG/$CI_COMMIT_SHORT_SHA"
+    url: "$CI_PAGES_URL/index.html"
+  artifacts:
+    paths:
+      - public
+    expire_in: 30 days
+
 unit_rell_tests:
   stage: test
   needs: ["install_rell"]
