@@ -38,7 +38,7 @@ else
     echo "Downloading the binaries..."
 
     mkdir -p /opt/chromaway/chr
-    wget -nv -O - https://gitlab.com/api/v4/projects/39844192/packages/maven/com/chromia/cli/chromia-cli/0.33.1/chromia-cli-0.33.1-dist.tar.gz | tar -C /opt/chromaway/chr -xz
+    wget -nv -O - https://gitlab.com/api/v4/projects/39844192/packages/maven/com/chromia/cli/chromia-cli/0.33.2/chromia-cli-0.33.2-dist.tar.gz | tar -C /opt/chromaway/chr -xz
 
     wget -nv -O - https://gitlab.com/api/v4/projects/46346037/packages/maven/net/postchain/mc/management-console/3.58.2/management-console-3.58.2-dist.tar.gz | tar -C /opt/chromaway -xz
 
