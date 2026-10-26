@@ -60,7 +60,7 @@ export default async function () {
       "chr install -s configs/jest-test.yml && chr node start -s configs/jest-test.yml -np rell/config/jest-test-gitlab/node-config.properties --wipe",
     ])
     .withWaitStrategy(Wait.forLogMessage("Node is initialized"))
-    .withStartupTimeout(60000)
+    .withStartupTimeout(180000)
     .withLogConsumer((stream) => {
       stream.on("data", (data) => {
         file.writeFile(data);

@@ -185,6 +185,7 @@ integration_js_tests:
       [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})."
       ; exit 1)
   artifacts:
+    when: always
     paths:
       - logs/**
 
