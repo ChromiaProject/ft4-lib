@@ -50,7 +50,7 @@ start_backend() {
         echo "Starting Postgres container..."
         $DOCKER run --name $POSTGRES_CONTAINER_NAME -e POSTGRES_USER=postchain \
             --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs -e POSTGRES_DB=postchain \
-            -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres:14.9-alpine3.18 > /dev/null
+            -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres:16.7-alpine3.21@sha256:97a14a17b1fea5ae1ab33024ca556bb4fedc8709bea5722cb8b7665a9cabb656 > /dev/null
     fi
 
     # Install Rell dependencies

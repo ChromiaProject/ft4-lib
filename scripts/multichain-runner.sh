@@ -9,9 +9,9 @@ API_PORT=7740
 # API_PORT=80
 
 # from https://gitlab.com/chromaway/postchain-chromia/container_registry/3630587
-CHROMIA_NODE_VERSION='3.36.4'
+CHROMIA_NODE_VERSION='3.40.1'
 # from https://gitlab.com/chromaway/core/directory-chain
-DIRECTORY_CHAIN_VERSION='1.104.5'
+DIRECTORY_CHAIN_VERSION='1.110.11'
 
 if $GITLAB; then
     BASE_CONFIG_DIR="rell/config/jest-test-gitlab/multichain"
@@ -178,7 +178,7 @@ run_main_logic() {
           -e POSTGRES_USER=postchain \
           -p $POSTGRES_PORT:5432 \
           --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs \
-          -d postgres:14.9-alpine3.18 > /dev/null
+          -d postgres:16.7-alpine3.21@sha256:97a14a17b1fea5ae1ab33024ca556bb4fedc8709bea5722cb8b7665a9cabb656 > /dev/null
     fi
 
     debug "Creating PMC config..."
