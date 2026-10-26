@@ -130,6 +130,7 @@ export async function createTransferAndStopIt(
   let initTxReceipt: TransactionReceipt | undefined = undefined;
   let initTx: GTX | undefined = undefined;
   const hops: Buffer[] = [senderAccount.connection.blockchainRid];
+  let deadline = 0;
 
   let i = 1;
   try {
@@ -148,6 +149,7 @@ export async function createTransferAndStopIt(
           opIndex: 1,
         } as PendingTransfer);
         hops.push(...initArgs[3]);
+        deadline = Number(initArgs[4]);
       })
       .on("init", (tx) => {
         initTxReceipt = tx;
@@ -174,6 +176,10 @@ export async function createTransferAndStopIt(
       error.message.includes("Error in listener for event")
     ) {
       if (forceExpiration) {
+        // Wait until the deadline has passed, so the transfer counts as expired
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.max(0, deadline - Date.now()) + 1000),
+        );
         for (const chain of hops) {
           const intermediateConnection = await createConnectionToBlockchainRid(
             senderAccount.connection,

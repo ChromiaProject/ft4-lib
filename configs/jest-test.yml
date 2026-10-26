@@ -79,4 +79,4 @@ libs:
 compile:
   source: ../rell/src
   target: ../rell/out
-  rellVersion: 0.14.12
+  rellVersion: 0.15.4
