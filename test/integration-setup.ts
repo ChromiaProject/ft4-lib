@@ -57,7 +57,7 @@ export default async function () {
     .withCommand([
       "sh",
       "-c",
-      "(sleep 60; ps -ef; pkill -QUIT java; sleep 30; pkill -QUIT java) & chr install -s configs/jest-test.yml && chr node start -s configs/jest-test.yml -np rell/config/jest-test-gitlab/node-config.properties --wipe",
+      "chr install -s configs/jest-test.yml && chr node start -s configs/jest-test.yml -np rell/config/jest-test-gitlab/node-config.properties --wipe",
     ])
     .withWaitStrategy(Wait.forLogMessage("Node is initialized"))
     .withStartupTimeout(180000)
