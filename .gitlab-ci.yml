@@ -174,7 +174,6 @@ integration_js_tests:
     - corepack enable && corepack prepare pnpm@9.12.3 --activate
     - export TESTCONTAINERS_RYUK_DISABLED=true
     - export JEST_JUNIT_OUTPUT_NAME=logs/integration.xml
-    - mkdir -p logs; (./scripts/tmp-dump-chr.sh > logs/dump.log 2>&1 &)
     - pnpm exec jest --config=jest.config.integration.js
       --testPathPattern=integration/ --ci --reporters=default
       --reporters=jest-junit || (curl --no-progress-meter -X POST
