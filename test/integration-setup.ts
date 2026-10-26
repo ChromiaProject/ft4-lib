@@ -21,7 +21,9 @@ export default async function () {
   const network = await new Network().start();
 
   // Start a PostgreSQL container
-  const postgres = await new PostgreSqlContainer("postgres:14.9-alpine3.18")
+  const postgres = await new PostgreSqlContainer(
+    "postgres:16.7-alpine3.21@sha256:97a14a17b1fea5ae1ab33024ca556bb4fedc8709bea5722cb8b7665a9cabb656",
+  )
     .withNetwork(network)
     .withExposedPorts(5432)
     .withDatabase("postchain")
@@ -38,7 +40,7 @@ export default async function () {
 
   // Start a Chromia node container
   const container = await new GenericContainer(
-    "registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.27.10",
+    "registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.34.3",
   )
     .withNetwork(network)
     .withCopyDirectoriesToContainer([

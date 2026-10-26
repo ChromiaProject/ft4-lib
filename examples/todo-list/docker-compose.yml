@@ -2,7 +2,7 @@ version: '3.3'
 
 services:
   todo-list-example-postgres:
-    image: postgres:14.1-alpine
+    image: postgres:16.7-alpine3.21@sha256:97a14a17b1fea5ae1ab33024ca556bb4fedc8709bea5722cb8b7665a9cabb656
     container_name: todo-list-example-postgres
     restart: always
     environment:
@@ -17,7 +17,7 @@ services:
       retries: 5      
 
   todo-list-example-postchain:
-    image: registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.26.0
+    image: registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.34.3
     container_name: todo-list-example-postchain
     command: sh -c "chr install && chr node start --wipe"
     ports:
