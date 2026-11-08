@@ -5,7 +5,10 @@
 verify_sha256() {
     local file=$1 expected=$2
     [ -n "$expected" ] || return 1
-    echo "$expected  $file" | sha256sum -c --status
+    # Compare the hash text directly: works with both GNU coreutils and BusyBox sha256sum
+    local actual
+    actual=$(sha256sum "$file" | cut -d' ' -f1) || return 1
+    [ "$actual" = "$expected" ]
 }
 
 # download_verified URL EXPECTED_SHA256 TARGET_DIR -> downloads, verifies, then extracts. Exits on any failure.
