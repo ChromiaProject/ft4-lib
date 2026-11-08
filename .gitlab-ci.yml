@@ -1,4 +1,4 @@
-image: registry.gitlab.com/chromaway/ft4-lib:latest
+image: registry.gitlab.com/chromaway/ft4-lib:latest@sha256:0ace916748b4bc6843e755aef89dc040cac51b56d767f172cfb9436fab166824
 
 stages:
   - install
@@ -8,9 +8,9 @@ stages:
   - deploy
 
 services:
-  - name: docker:dind
+  - name: docker:dind@sha256:08a98015fce594af7c382883bea080ea206de74402a95da9dc52b6428c8cd121
     command: ["--tls=false"]
-  - name: postgres
+  - name: postgres:latest@sha256:e3d24f6906d0760bf4da0dae872415391ededefad23fd471c47dc53b0ddf3c42
     alias: postgres
     variables:
       POSTGRES_DB: "postchain"
